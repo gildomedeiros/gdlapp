@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">GDL Modular Tests</string>
+    <string name="accessibility_service_description">Configurable GDL re-acquisition tests using validated DJI plus detection, fluorescent-pink selection, simulated taps, and guarded real taps.</string>
+</resources>

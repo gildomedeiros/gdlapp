@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/versionTitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GDL Modular Tests v0.15.12"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/accessibilityStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Accessibility status"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/openAccessibilitySettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Open Accessibility Settings" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="RE-ACQUIRE"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Preset" />
+        <Spinner android:id="@+id/presetSpinner" style="@style/GdlSettingSpinner" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Foreground app guard" />
+        <Spinner android:id="@+id/foregroundSpinner" style="@style/GdlSettingSpinner" />
+
+        <Switch
+            android:id="@+id/requireDjiFullscreenSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Require DJI Fly full-screen" />
+
+        <Switch
+            android:id="@+id/detectPlusSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Detect validated DJI green +" />
+
+        <Switch
+            android:id="@+id/detectPinkSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Detect fluorescent pink" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Candidate selection rule" />
+        <Spinner android:id="@+id/candidateSpinner" style="@style/GdlSettingSpinner" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Re-acquire action" />
+        <Spinner android:id="@+id/actionSpinner" style="@style/GdlSettingSpinner" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Evidence saving" />
+        <Spinner android:id="@+id/saveSpinner" style="@style/GdlSettingSpinner" />
+
+        <Switch
+            android:id="@+id/hardSaveEveryFrameSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Hard-save every captured frame" />
+
+        <Switch
+            android:id="@+id/saveGreenMaskSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Also save green threshold mask" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Re-acquire search rate (FPS)" />
+        <EditText
+            android:id="@+id/captureIntervalEdit"
+            style="@style/GdlNumberInput"
+            android:inputType="numberDecimal" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Retry cooldown (milliseconds)" />
+        <EditText android:id="@+id/retryCooldownEdit" style="@style/GdlNumberInput" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Tap duration (milliseconds)" />
+        <EditText android:id="@+id/tapDurationEdit" style="@style/GdlNumberInput" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Minimum associated pink pixels" />
+        <EditText android:id="@+id/minimumPinkEdit" style="@style/GdlNumberInput" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Pink search radius (× + size)" />
+        <EditText
+            android:id="@+id/pinkRadiusEdit"
+            style="@style/GdlNumberInput"
+            android:inputType="numberDecimal" />
+
+        <Switch
+            android:id="@+id/gimbalRecoveryEnabledSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Move gimbal down after green + timeout" />
+
+        <TextView
+            style="@style/GdlSettingLabel"
+            android:text="No validated green + gimbal timeout (milliseconds)" />
+        <EditText
+            android:id="@+id/noGreenPlusGimbalTimeoutEdit"
+            style="@style/GdlNumberInput" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="SELECT ACTIVETRACK"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="ActiveTrack action" />
+        <Spinner android:id="@+id/activeTrackActionSpinner" style="@style/GdlSettingSpinner" />
+
+        <Switch
+            android:id="@+id/expandCollapsedControlsSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Expand collapsed controls" />
+
+        <TextView
+            style="@style/GdlSettingLabel"
+            android:text="ActiveTrack panel retry interval (milliseconds)" />
+        <EditText
+            android:id="@+id/activeTrackRetryIntervalEdit"
+            style="@style/GdlNumberInput" />
+
+        <TextView
+            style="@style/GdlSettingLabel"
+            android:text="ActiveTrack cycle timeout (milliseconds)" />
+        <EditText
+            android:id="@+id/activeTrackCycleTimeoutEdit"
+            style="@style/GdlNumberInput" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Maximum ActiveTrack taps per cycle" />
+        <EditText android:id="@+id/maxActiveTrackTapsEdit" style="@style/GdlNumberInput" />
+
+        <TextView style="@style/GdlSettingLabel" android:text="Maximum chevron taps per cycle" />
+        <EditText android:id="@+id/maxChevronTapsEdit" style="@style/GdlNumberInput" />
+
+        <Switch
+            android:id="@+id/autoRearmSimulatedActiveTrackSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Auto-rearm completed simulated test" />
+
+        <Switch
+            android:id="@+id/saveActiveTrackEvidenceSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Save ActiveTrack evidence" />
+
+        <Button
+            android:id="@+id/toggleTestButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Start Re-acquire Test" />
+
+        <TextView
+            android:id="@+id/testStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Stopped."
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/flowExplanationText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Current flow explanation"
+            android:textSize="14sp" />
+    </LinearLayout>
+</ScrollView>
