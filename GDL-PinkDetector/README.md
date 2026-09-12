@@ -1,5 +1,7 @@
 # GDL Modular Re-acquire v0.15.12.1
 
+Author: Gil
+
 ## v0.15.12.1 gimbal gesture lane
 
 Both the isolated gimbal test and production gimbal recovery now start their
