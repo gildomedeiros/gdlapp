@@ -1,4 +1,10 @@
-# v0.12.3 foundation through v0.15.12.1 gimbal-lane correction
+# v0.12.3 foundation through v0.15.12.2 full-screen requirement
+
+v0.15.12.2 makes the DJI full-screen requirement mandatory in preset defaults,
+saved-setting reads/writes, the UI and the DJI-targeted service guard. Existing
+saved Off values no longer bypass it. Gallery/other test targets remain exempt
+from the DJI-specific check. This is statically reviewed behaviour; compilation
+and device validation are still pending. No detector or gesture changes.
 
 v0.15.12.1 moves both the isolated-test and production gimbal gesture from
 normalized `X=0.50` to the fixed DJI gimbal lane at `X=0.791`. The vertical

@@ -1,6 +1,16 @@
-# GDL Modular Re-acquire v0.15.12.1
+# GDL Modular Re-acquire v0.15.12.2
 
 Author: Gil
+
+## v0.15.12.2 mandatory DJI full-screen requirement
+
+“Require DJI Fly full-screen” is always On for every preset,
+including existing saved settings. The DJI-specific guard applies when the
+foreground target is DJI Fly; Gallery and other test targets remain usable.
+
+Android versionCode is 41. Gesture coordinates, timings and detection thresholds
+are unchanged. Source checks passed; APK compilation and device testing remain
+unverified because the offline build could not resolve Android Gradle plugin 8.7.3.
 
 ## v0.15.12.1 gimbal gesture lane
 

@@ -1,8 +1,14 @@
 # GDL current state
 
-Checked 2026-09-13 (Australia/Brisbane). Documentation-only recovery; no app changes, build, device test, commit, or push performed.
+Updated 2026-09-13 (Australia/Brisbane). Current source version: **0.15.12.2**, versionCode **41**. Version fields and release notes agree; APK compilation and device testing remain unverified. No commit, push, tag or GitHub Release created.
 
-## Checkout and sources
+## v0.15.12.2 full-screen requirement
+
+Worktree change based on `4025216b39daeb5535421a68a8582a2345409a92`: all preset defaults and loaded/saved settings now require DJI full-screen; the UI switch is checked and disabled. The service guard no longer honors a false flag for DJI-targeted runs, including Raw DJI diagnostics. Gallery/other test foreground targets remain exempt from this DJI-specific guard. No change to the existing navigation-bar detection algorithm, gesture coordinates, or timings. Version fields were advanced together to 0.15.12.2 / 41 for this requested source release. Applied to the original folder on 2026-09-13, preserving its existing changes. Original checkout was clean on main at 31ce12019c0a407de1886dc39b8872539e07eb48 before transfer. Copied files verified by SHA-256; no release commit or device test performed.
+
+Validation: inspected all preset defaults, persistence, UI construction and the central guard; `git diff --check` passed. Offline `:app:assembleDebug` could not resolve Android Gradle plugin 8.7.3 in the isolated cache, so compilation remains unverified.
+
+## Original checkout and sources
 
 - Transfer note (2026-09-13): these notes were prepared in the Codex worktree described below and copied to `C:\Users\gildo\gdlapp\GDL-PinkDetector`. The original project is on `main` at the same revision, with no tracked changes before transfer. It contains untracked Gradle wrapper/build and IDE files; these were preserved. Statements below about a clean detached checkout and missing tracked wrapper refer to the inspected worktree, not an absence of local build tools in the original folder.
 - Checkout: **detached HEAD**, revision `4025216b39daeb5535421a68a8582a2345409a92`. Local `main` and `origin/main` contain this revision; neither was checked out or refreshed from the network. Working tree was clean before these documents.

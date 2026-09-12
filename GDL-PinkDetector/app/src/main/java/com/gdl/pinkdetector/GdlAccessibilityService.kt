@@ -1461,7 +1461,7 @@ class GdlAccessibilityService : AccessibilityService() {
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun djiFullscreenGuardFailure(settings: ReacquireSettings): String? {
-        if (!settings.requireDjiFullscreen || settings.foreground != ForegroundTarget.DJI_FLY) {
+        if (settings.foreground != ForegroundTarget.DJI_FLY) {
             return null
         }
 

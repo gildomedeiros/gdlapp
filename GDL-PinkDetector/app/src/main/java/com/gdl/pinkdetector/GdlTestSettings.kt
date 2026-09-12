@@ -70,7 +70,7 @@ data class ReacquireSettings(
 )
 
 object GdlTestSettings {
-    const val APP_VERSION = "0.15.12.1"
+    const val APP_VERSION = "0.15.12.2"
     const val PREFS_NAME = "gdl_reacquire_settings"
     const val KEY_ENABLED = "reacquire_enabled"
     const val KEY_NOT_BEFORE_MS = "reacquire_not_before_ms"
@@ -112,13 +112,13 @@ object GdlTestSettings {
 
     fun defaults(preset: ReacquirePreset): ReacquireSettings = when (preset) {
         ReacquirePreset.PINK_DETECTOR -> ReacquireSettings(
-            preset, ForegroundTarget.SAMSUNG_GALLERY, false, false, true,
+            preset, ForegroundTarget.SAMSUNG_GALLERY, true, false, true,
             CandidateRule.STRONGEST_PINK_BLOB, ReacquireAction.DETECTION_ONLY,
             SavePolicy.EVERY_FRAME, 1_000L, 3_000L, 120L, 8, 3f, false,
             ActiveTrackAction.OFF, false, 400L, false, 8_000L, 2, 2, false, false,
             false, 15_000L)
         ReacquirePreset.PINK_PLUS_SIMULATION -> ReacquireSettings(
-            preset, ForegroundTarget.SAMSUNG_GALLERY, false, true, true,
+            preset, ForegroundTarget.SAMSUNG_GALLERY, true, true, true,
             CandidateRule.STRONGEST_PINK_PLUS, ReacquireAction.SIMULATED_TAP,
             SavePolicy.EVERY_FRAME, 1_000L, 3_000L, 120L, 8, 3f, false,
             ActiveTrackAction.OFF, false, 400L, false, 8_000L, 2, 2, false, false,
@@ -130,13 +130,13 @@ object GdlTestSettings {
             ActiveTrackAction.OFF, false, 400L, false, 8_000L, 2, 2, false, false,
             false, 15_000L)
         ReacquirePreset.RAW_DJI -> ReacquireSettings(
-            preset, ForegroundTarget.DJI_FLY, false, false, false,
+            preset, ForegroundTarget.DJI_FLY, true, false, false,
             CandidateRule.STRONGEST_PINK_BLOB, ReacquireAction.DETECTION_ONLY,
             SavePolicy.EVERY_FRAME, 400L, 3_000L, 120L, 8, 3f, true,
             ActiveTrackAction.OFF, false, 400L, false, 8_000L, 2, 2, false, false,
             false, 15_000L)
         ReacquirePreset.ACTIVE_TRACK_PANEL -> ReacquireSettings(
-            preset, ForegroundTarget.SAMSUNG_GALLERY, false, false, false,
+            preset, ForegroundTarget.SAMSUNG_GALLERY, true, false, false,
             CandidateRule.STRONGEST_PINK_BLOB, ReacquireAction.OFF,
             SavePolicy.EVERY_FRAME, 400L, 3_000L, 120L, 8, 3f, false,
             ActiveTrackAction.SIMULATED_TAP, true, 1_000L, true, 8_000L, 2, 2, true, false,
@@ -168,7 +168,7 @@ object GdlTestSettings {
         preferences(context).edit()
             .putString(KEY_PRESET, value.preset.name)
             .putString(KEY_FOREGROUND, value.foreground.name)
-            .putBoolean(KEY_REQUIRE_DJI_FULLSCREEN, value.requireDjiFullscreen)
+            .putBoolean(KEY_REQUIRE_DJI_FULLSCREEN, true)
             .putBoolean(KEY_DETECT_PLUS, value.detectGreenPlus)
             .putBoolean(KEY_DETECT_PINK, value.detectPink)
             .putString(KEY_CANDIDATE_RULE, value.candidateRule.name)
@@ -210,7 +210,7 @@ object GdlTestSettings {
         val base = defaults(preset)
         return ReacquireSettings(
             preset, enumValue(prefs.getString(KEY_FOREGROUND, null), base.foreground),
-            prefs.getBoolean(KEY_REQUIRE_DJI_FULLSCREEN, base.requireDjiFullscreen),
+            true, // Mandatory, including for previously saved configurations.
             prefs.getBoolean(KEY_DETECT_PLUS, base.detectGreenPlus),
             prefs.getBoolean(KEY_DETECT_PINK, base.detectPink),
             enumValue(prefs.getString(KEY_CANDIDATE_RULE, null), base.candidateRule),

@@ -132,7 +132,8 @@ class MainActivity : AppCompatActivity() {
         actionSpinner.setSelection(value.action.ordinal)
         activeTrackActionSpinner.setSelection(value.activeTrackAction.ordinal)
         saveSpinner.setSelection(value.savePolicy.ordinal)
-        requireDjiFullscreen.isChecked = value.requireDjiFullscreen
+        requireDjiFullscreen.isChecked = true
+        requireDjiFullscreen.isEnabled = false
         detectPlus.isChecked = value.detectGreenPlus
         detectPink.isChecked = value.detectPink
         saveGreenMask.isChecked = value.saveGreenMask
@@ -236,7 +237,7 @@ class MainActivity : AppCompatActivity() {
         ReacquireSettings(
             ReacquirePreset.values()[presetSpinner.selectedItemPosition],
             ForegroundTarget.values()[foregroundSpinner.selectedItemPosition],
-            requireDjiFullscreen.isChecked,
+            true, // DJI full-screen checking cannot be disabled.
             detectPlus.isChecked, detectPink.isChecked,
             CandidateRule.values()[candidateSpinner.selectedItemPosition],
             ReacquireAction.values()[actionSpinner.selectedItemPosition],

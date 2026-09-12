@@ -13,7 +13,7 @@
             android:id="@+id/versionTitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="GDL Modular Tests v0.15.12.1"
+            android:text="GDL Modular Tests v0.15.12.2"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -51,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Require DJI Fly full-screen" />
+            android:text="Require DJI Fly full-screen (always on)" />
 
         <Switch
             android:id="@+id/detectPlusSwitch"
