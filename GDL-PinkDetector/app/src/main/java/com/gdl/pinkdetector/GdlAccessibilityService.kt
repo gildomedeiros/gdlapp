@@ -731,11 +731,10 @@ class GdlAccessibilityService : AccessibilityService() {
             return false
         }
 
-        // The scale knob is an indicator, not the touch origin. Start a fresh
-        // continuous hold/drag in clear camera content, matching the manual
-        // gesture that revealed DJI's gimbal scale.
-        val startX = bitmap.width * 0.50f
-        val startY = bitmap.height * 0.45f
+        // Keep the continuous hold/drag on DJI's dedicated gimbal lane. The
+        // former 50% start could overlap central landing/RTH controls.
+        val startX = bitmap.width * GimbalKnobDetector.GESTURE_START_X
+        val startY = bitmap.height * GimbalKnobDetector.GESTURE_START_Y
         val endY = bitmap.height * GimbalKnobDetector.DRAG_BOTTOM_Y
         val commandDecision = decision.copy(status = "AUTOMATIC HOLD + DOWN DRAG")
 
@@ -830,8 +829,8 @@ class GdlAccessibilityService : AccessibilityService() {
             return false
         }
 
-        val startX = bitmap.width * 0.50f
-        val startY = bitmap.height * 0.45f
+        val startX = bitmap.width * GimbalKnobDetector.GESTURE_START_X
+        val startY = bitmap.height * GimbalKnobDetector.GESTURE_START_Y
         val endY = bitmap.height * GimbalKnobDetector.DRAG_BOTTOM_Y
         val commandDecision = decision.copy(status = "PRODUCTION GIMBAL RECOVERY")
         saveGimbalFrame(
@@ -1356,11 +1355,12 @@ class GdlAccessibilityService : AccessibilityService() {
             appendLine("autoRearmSimulatedActiveTrack=${settings.autoRearmSimulatedActiveTrack}")
             appendLine("gimbalRecoveryEnabled=${settings.gimbalRecoveryEnabled}")
             appendLine("noGreenPlusGimbalTimeoutMs=${settings.noGreenPlusGimbalTimeoutMs}")
-            appendLine("gimbalGestureStartNormalized=0.50,0.45")
+            appendLine("gimbalGestureStartNormalized=${GimbalKnobDetector.GESTURE_START_X},${GimbalKnobDetector.GESTURE_START_Y}")
+            appendLine("gimbalGestureEndYNormalized=${GimbalKnobDetector.DRAG_BOTTOM_Y}")
             appendLine("gimbalHoldMs=$GIMBAL_KNOB_HOLD_MS")
             appendLine("gimbalDownDragMs=$GIMBAL_DOWN_DRAG_MS")
             appendLine("gimbalBetweenDragsMs=$GIMBAL_BETWEEN_DRAGS_MS")
-            appendLine("gimbalNormalKnobRequired=false")
+            appendLine("gimbalNormalKnobDetection=false")
             appendLine("gimbalRedLimitConfirmations=$GIMBAL_KNOB_CONFIRMATIONS_REQUIRED")
             appendLine("telemetryCropNormalizedX=0.105..0.22")
             appendLine("telemetryBrightBackgroundFallback=true")

@@ -316,7 +316,7 @@ class MainActivity : AppCompatActivity() {
 
                 2. Countdown — Once the guard first passes, GDL waits 10 seconds. Losing the guard resets this countdown. No manual trigger is required.
 
-                3. Down movement — GDL presses clear camera content at 50% across and 45% down for 2 seconds and, without releasing, drags downward for 6 seconds. White/green knob and dashed-line detection do not authorize or block movement.
+                3. Down movement — GDL presses the fixed DJI gimbal lane at 79.1% across and 45% down for 2 seconds and, without releasing, drags to 79% down over 6 seconds. Only the red bottom-limit knob is detected; white/green knob states and the dashed line are not processed.
 
                 4. Repeat — After release, GDL waits 6 seconds so DJI's previous gimbal wheel disappears, rechecks the guard, then repeats if the red limit was not confirmed.
 
@@ -404,7 +404,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         val gimbalRecovery = if (value.gimbalRecoveryEnabled) {
-            "Recovery starts disarmed and arms only after the first successful real tap on a validated pink-associated green +. After it is armed, ${value.noGreenPlusGimbalTimeoutMs} ms without another validated pink-associated green + causes GDL to hold camera content for 2 seconds, drag down for 6 seconds and wait 6 seconds for the wheel to disappear. Green + is intentionally ignored during recovery. Repeat until two red bottom-limit frames, then remain at the lower limit and resume maximum-speed green + and pink-association searching."
+            "Recovery starts disarmed and arms only after the first successful real tap on a validated pink-associated green +. After it is armed, ${value.noGreenPlusGimbalTimeoutMs} ms without another validated pink-associated green + causes GDL to hold the fixed DJI gimbal lane at 79.1% across for 2 seconds, drag down for 6 seconds and wait 6 seconds for the wheel to disappear. Green + is intentionally ignored during recovery. Repeat until two red bottom-limit frames, then remain at the lower limit and resume maximum-speed green + and pink-association searching."
         } else "Production gimbal recovery is disabled."
         val evidence = (if (value.hardSaveEveryCapturedFrame) {
             "Hard-saving is ON: every successfully captured screenshot is saved as a stage-named RAW image for every preset. Detector evidence is also stage-named."

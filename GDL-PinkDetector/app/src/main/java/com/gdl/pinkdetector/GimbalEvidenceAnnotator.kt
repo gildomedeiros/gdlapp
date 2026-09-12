@@ -26,22 +26,13 @@ object GimbalEvidenceAnnotator {
         val canvas = Canvas(output)
         val scale = max(0.7f, source.width / 2048f)
         val stroke = 4f * scale
-        val strip = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0xFF00BFFF.toInt()
-            style = Paint.Style.STROKE
-            strokeWidth = stroke
-        }
         val red = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.RED
             style = Paint.Style.STROKE
             strokeWidth = stroke
         }
         val knob = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = when (decision.color) {
-                GimbalKnobDetector.KnobColor.RED -> Color.RED
-                GimbalKnobDetector.KnobColor.WHITE -> Color.WHITE
-                else -> Color.GREEN
-            }
+            color = Color.RED
             style = Paint.Style.STROKE
             strokeWidth = 6f * scale
         }
@@ -61,9 +52,6 @@ object GimbalEvidenceAnnotator {
             GimbalKnobDetector.STRIP_HALF_WIDTH)
         val right = source.width * (GimbalKnobDetector.FIXED_X +
             GimbalKnobDetector.STRIP_HALF_WIDTH)
-        val top = source.height * GimbalKnobDetector.SEARCH_TOP
-        val bottom = source.height * GimbalKnobDetector.SEARCH_BOTTOM
-        canvas.drawRect(RectF(left, top, right, bottom), strip)
         canvas.drawRect(
             RectF(left, source.height * GimbalKnobDetector.RED_LIMIT_TOP,
                 right, source.height * GimbalKnobDetector.RED_LIMIT_BOTTOM), red)
@@ -81,19 +69,26 @@ object GimbalEvidenceAnnotator {
             canvas.drawCircle(commandStartX, commandEndY, 15f * scale, command)
         }
 
-        val colour = decision.color?.name ?: "NONE"
+        val result = if (decision.redLowerLimit) "FOUND" else "NONE"
         val coordinate = if (decision.knobX != null && decision.knobY != null) {
             String.format(Locale.US, "x=%.1f y=%.1f", decision.knobX, decision.knobY)
         } else "x=UNKNOWN y=UNKNOWN"
         val action = when {
             decision.redLowerLimit -> "BOTTOM LIMIT • NO MOVEMENT"
-            commandStartX != null -> "HOLD ${holdMs}ms + DRAG ${dragMs}ms"
+            commandStartX != null -> String.format(
+                Locale.US,
+                "GESTURE X %.1f%% • Y %.1f%%->%.1f%% • HOLD %dms + DRAG %dms",
+                commandStartX / source.width * 100f,
+                commandStartY!! / source.height * 100f,
+                commandEndY!! / source.height * 100f,
+                holdMs,
+                dragMs)
             else -> "NO DRAG"
         }
         val lines = listOf(
             stage,
-            "KNOB $colour • $coordinate • confirm $confirmationCount/$confirmationRequired",
-            "FIXED X ${(GimbalKnobDetector.FIXED_X * 100).toInt()}% • $action")
+            "RED LIMIT $result • $coordinate • confirm $confirmationCount/$confirmationRequired",
+            action)
         val lineHeight = 39f * scale
         canvas.drawRect(0f, 0f, source.width.toFloat(), 18f * scale +
             lineHeight * lines.size, background)

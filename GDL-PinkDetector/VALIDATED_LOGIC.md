@@ -1,4 +1,12 @@
-# v0.12.3 foundation through v0.15.12 recovery-state correction
+# v0.12.3 foundation through v0.15.12.1 gimbal-lane correction
+
+v0.15.12.1 moves both the isolated-test and production gimbal gesture from
+normalized `X=0.50` to the fixed DJI gimbal lane at `X=0.791`. The vertical
+path remains `Y=0.45` to `Y=0.79`, with the existing two-second hold and
+six-second drag. Gimbal CV now processes only red candidates around the
+bottom-limit region; unused white/green knob states and the full-height blue
+search-strip annotation are removed. No landing/RTH CV or landing lock is
+introduced.
 
 v0.15.12 starts production recovery disarmed. A successfully completed real tap
 on a validated green `+` selected by pink association arms it. Thereafter, the
@@ -85,11 +93,12 @@ unchanged and remain independent of + retries.
 
 v0.15.10 keeps `GIMBAL_TEST` isolated but removes the manual trigger and normal
 knob/scale movement gate. After the DJI foreground/full-screen guard passes, a
-ten-second countdown runs. Movement is one continuous gesture at normalized
-camera coordinate `(0.50, 0.45)`: hold for two seconds, then drag down for six
-seconds without releasing. Each attempt is followed by a six-second interval
-so DJI's wheel disappears. Red detection has priority over gesture/interval
-states; two consecutive red frames latch completion and prevent further motion.
+ten-second countdown runs. In v0.15.12.1 movement is one continuous gesture at
+normalized gimbal-lane coordinate `(0.791, 0.45)`: hold for two seconds, then
+drag to `Y=0.79` over six seconds without releasing. Each attempt is followed
+by a six-second interval so DJI's wheel disappears. Red detection has priority
+over gesture/interval states; two consecutive red frames latch completion and
+prevent further motion.
 
 The same gesture is available to `PRODUCTION` and `COMBINED_REAL` while they
 are in Re-acquire. It defaults On for `COMBINED_REAL` and Off for the standalone

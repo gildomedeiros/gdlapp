@@ -7,23 +7,21 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * Detects only DJI's circular gimbal knob in its fixed full-screen strip.
+ * Detects DJI's red -90 degree gimbal knob in its fixed bottom-limit region.
  *
- * Deliberately does not search for the white dashed scale. Bright scenery can
- * hide that scale or create convincing vertical false positives. The strip X
- * and the -90 degree red-limit area are normalized from the verified DJI Fly
- * 2048 x 960 layout, so resolution changes do not relocate the control.
+ * Deliberately does not search for the white dashed scale or normal white/green
+ * knob states. Production recovery only needs the red bottom-limit result.
+ * Coordinates are normalized from the verified DJI Fly full-screen layout.
  */
 object GimbalKnobDetector {
     const val FIXED_X = 0.791f
     const val STRIP_HALF_WIDTH = 0.018f
-    const val SEARCH_TOP = 0.14f
-    const val SEARCH_BOTTOM = 0.84f
     const val RED_LIMIT_TOP = 0.72f
     const val RED_LIMIT_BOTTOM = 0.84f
+    const val RED_SEARCH_MARGIN = 0.02f
+    const val GESTURE_START_X = FIXED_X
+    const val GESTURE_START_Y = 0.45f
     const val DRAG_BOTTOM_Y = 0.79f
-
-    enum class KnobColor { GREEN, WHITE, RED }
 
     data class Decision(
         val knobFound: Boolean,
@@ -31,7 +29,6 @@ object GimbalKnobDetector {
         val knobY: Float? = null,
         val knobRect: RectF? = null,
         val dragBottomY: Float? = null,
-        val color: KnobColor? = null,
         val redLowerLimit: Boolean = false,
         val status: String
     )
@@ -54,28 +51,19 @@ object GimbalKnobDetector {
             val halfWidth = max(8, (width * STRIP_HALF_WIDTH).toInt())
             val left = (fixedX - halfWidth).coerceAtLeast(0)
             val right = (fixedX + halfWidth).coerceAtMost(width - 1)
-            val top = (height * SEARCH_TOP).toInt()
-            val bottom = (height * SEARCH_BOTTOM).toInt()
+            val top = (height * (RED_LIMIT_TOP - RED_SEARCH_MARGIN))
+                .toInt().coerceAtLeast(0)
+            val bottom = (height * (RED_LIMIT_BOTTOM + RED_SEARCH_MARGIN))
+                .toInt().coerceAtMost(height - 1)
 
-            val components = findComponents(pixels, width, height, left, right, top, bottom)
             val redTop = height * RED_LIMIT_TOP
             val redBottom = height * RED_LIMIT_BOTTOM
-            val red = components
-                .filter { it.color == KnobColor.RED && it.cy in redTop..redBottom }
+            val knob = findComponents(pixels, width, height, left, right, top, bottom)
+                .filter { it.cy in redTop..redBottom }
                 .maxByOrNull { it.area }
-            val normal = components
-                .filter {
-                    it.color == KnobColor.GREEN ||
-                        (it.color == KnobColor.WHITE &&
-                            abs(it.cx - fixedX) <= max(3f, width * 0.006f) &&
-                            (it.maxX - it.minX + 1).toFloat() /
-                                (it.maxY - it.minY + 1).coerceAtLeast(1) in 0.75f..1.35f)
-                }
-                .maxWithOrNull(compareBy<Component> { colorPriority(it.color) }
-                    .thenBy { it.area })
-            val knob = red ?: normal ?: return Decision(
-                knobFound = false,
-                status = "GIMBAL KNOB NOT CONFIRMED IN FIXED STRIP")
+                ?: return Decision(
+                    knobFound = false,
+                    status = "RED GIMBAL BOTTOM LIMIT NOT CONFIRMED")
 
             val sx = source.width.toFloat() / width
             val sy = source.height.toFloat() / height
@@ -89,13 +77,8 @@ object GimbalKnobDetector {
                     (knob.maxX + 1) * sx,
                     (knob.maxY + 1) * sy),
                 dragBottomY = source.height * DRAG_BOTTOM_Y,
-                color = knob.color,
-                redLowerLimit = knob.color == KnobColor.RED,
-                status = when (knob.color) {
-                    KnobColor.RED -> "GIMBAL BOTTOM LIMIT REACHED • red knob"
-                    KnobColor.GREEN -> "GIMBAL KNOB FOUND • green"
-                    KnobColor.WHITE -> "GIMBAL KNOB FOUND • white"
-                }
+                redLowerLimit = true,
+                status = "GIMBAL BOTTOM LIMIT REACHED • red knob"
             )
         } finally {
             if (bitmap !== source) bitmap.recycle()
@@ -106,7 +89,6 @@ object GimbalKnobDetector {
         val cx: Float,
         val cy: Float,
         val area: Int,
-        val color: KnobColor,
         val minX: Int,
         val minY: Int,
         val maxX: Int,
@@ -123,12 +105,9 @@ object GimbalKnobDetector {
         bottom: Int
     ): List<Component> {
         val accepted = BooleanArray(width * height)
-        val colors = arrayOfNulls<KnobColor>(width * height)
         for (y in top until bottom) for (x in left..right) {
             val index = y * width + x
-            val color = classify(pixels[index])
-            colors[index] = color
-            accepted[index] = color != null
+            accepted[index] = isRed(pixels[index])
         }
 
         val visited = BooleanArray(width * height)
@@ -140,7 +119,6 @@ object GimbalKnobDetector {
             var head = 0
             var tail = 0
             var count = 0
-            val componentColor = colors[start] ?: continue
             var minX = width
             var minY = height
             var maxX = 0
@@ -159,8 +137,7 @@ object GimbalKnobDetector {
                 sumX += x; sumY += y
                 val neighbours = intArrayOf(index - 1, index + 1, index - width, index + width)
                 for (next in neighbours) {
-                    if (next !in pixels.indices || visited[next] || !accepted[next] ||
-                        colors[next] != componentColor) continue
+                    if (next !in pixels.indices || visited[next] || !accepted[next]) continue
                     val nx = next % width
                     val ny = next / width
                     if (nx !in left..right || ny !in top until bottom) continue
@@ -182,29 +159,16 @@ object GimbalKnobDetector {
                     sumX.toFloat() / count,
                     sumY.toFloat() / count,
                     count,
-                    componentColor,
                     minX, minY, maxX, maxY)
             }
         }
         return result
     }
 
-    private fun colorPriority(color: KnobColor): Int = when (color) {
-        KnobColor.GREEN -> 3
-        KnobColor.WHITE -> 2
-        KnobColor.RED -> 0
-    }
-
-    private fun classify(color: Int): KnobColor? {
+    private fun isRed(color: Int): Boolean {
         val r = Color.red(color)
         val g = Color.green(color)
         val b = Color.blue(color)
-        return when {
-            r >= 175 && r >= g * 1.45f && r >= b * 1.35f -> KnobColor.RED
-            g >= 120 && g - r >= 35 && g - b >= 8 -> KnobColor.GREEN
-            r >= 185 && g >= 185 && b >= 185 &&
-                maxOf(r, g, b) - minOf(r, g, b) <= 35 -> KnobColor.WHITE
-            else -> null
-        }
+        return r >= 175 && r >= g * 1.45f && r >= b * 1.35f
     }
 }

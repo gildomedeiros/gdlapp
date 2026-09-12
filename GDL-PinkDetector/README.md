@@ -1,4 +1,19 @@
-# GDL Modular Re-acquire v0.15.12
+# GDL Modular Re-acquire v0.15.12.1
+
+## v0.15.12.1 gimbal gesture lane
+
+Both the isolated gimbal test and production gimbal recovery now start their
+continuous hold/down-drag at normalized `X=0.791`, the fixed DJI gimbal lane,
+instead of the previous centre-screen `X=0.50`. This avoids placing the initial
+long press on central landing/RTH controls. The existing `Y=0.45` to `Y=0.79`
+path, two-second hold, six-second drag, six-second rest, and two-frame red-limit
+confirmation are unchanged.
+
+Gimbal CV now processes only red candidates around the fixed bottom-limit
+region. The unused green/white knob classifications and full-height blue
+search-strip annotation have been removed. Evidence keeps the red bottom-limit
+region, any detected red knob, and the cyan requested gesture path. No
+landing/RTH CV or landing lock is included.
 
 ## v0.15.12 recovery state and evidence correction
 
@@ -129,6 +144,8 @@ green `+` causes GDL to perform a
 two-second hold plus six-second downward drag, waits six seconds for DJI's wheel
 to disappear, and repeats until two red bottom-limit frames are confirmed.
 Green `+` is deliberately ignored while this recovery sequence is active.
+v0.15.12.1 preserves that flow but moves the gesture from centre-screen
+`X=0.50` to the fixed gimbal-lane `X=0.791`.
 
 v0.15.4 uses unobstructed frame 279 as the normal running reference. The
 Manual/Parallel dark-ratio threshold is 0.30, while red Stop and yellow
@@ -157,7 +174,7 @@ screenshot independently of the selected preset and normal evidence policy.
 
 Real taps are intentionally permitted only with the DJI Fly foreground guard. One shared camera-area rule is used by green-plus detection, standalone pink-blob detection and pink-to-plus association. It ignores only the left and right black control rails; the entire central camera view, including the top status row, remains searchable. This configuration assumes the map stays collapsed inside the left rail. X rejection remains a locked safety rule inside the plus detector. A hollow square and its centred plus may be separate green components; GDL pairs them before selection. The fallback square needs at least two of its four sides to have 30% or greater green coverage.
 
-## Gimbal movement test (v0.15.10)
+## Gimbal movement test (v0.15.12.1)
 
 This is a separate DJI Fly-only preset. Re-acquire and ActiveTrack remain Off,
 so their existing pipelines are not involved or changed.
@@ -165,9 +182,11 @@ so their existing pipelines are not involved or changed.
 1. Start the preset and switch to full-screen DJI Fly.
 2. The separate ten-second countdown begins only after the foreground/full-screen
    guard passes. Losing the guard resets the countdown.
-3. GDL starts in clear camera content at normalized `(0.50, 0.45)`, holds for
-   two seconds and, without releasing, drags downward for six seconds.
-4. Normal white/green knob and dashed-line detection are not movement gates.
+3. GDL starts on the fixed DJI gimbal lane at normalized `(0.791, 0.45)`, holds
+   for two seconds and, without releasing, drags to normalized `Y=0.79` over
+   six seconds.
+4. Only the red bottom-limit knob is detected. The white dashed scale and
+   normal white/green knob states are not processed.
 5. After every drag, GDL waits six seconds so DJI's wheel disappears, rechecks
    the guard, and repeats the same gesture if the red limit is not confirmed.
 6. Red is checked before gesture/interval states. Two consecutive red detections
