@@ -72,7 +72,8 @@ class GdlAccessibilityService : AccessibilityService() {
     private var gimbalNextDragAllowedMs = 0L
     private var gimbalKnobConfirmations = 0
     private var gimbalBottomReached = false
-    private var reacquireNoPlusStartedMs = 0L
+    private var lastValidatedPlusDetectedMs = 0L
+    private var recoveryNotBeforeMs = 0L
     private var productionGimbalRecoveryArmed = false
     private var productionGimbalRecoveryActive = false
     private var productionGimbalBottomReached = false
@@ -223,7 +224,7 @@ class GdlAccessibilityService : AccessibilityService() {
         if (settings.activeTrackAction != ActiveTrackAction.OFF) {
             if (now - activeTrackLastEvaluationMs < settings.activeTrackRetryIntervalMs) {
                 if (combined) {
-                    val plusDecision = ReacquirePipeline.evaluate(bitmap, settings)
+                    val plusDecision = evaluatePlusAndRecordDetection(bitmap, settings, now)
                     if (plusDecision.selected) {
                         if (now < cooldownUntilMs) {
                             saveHardRaw(bitmap, settings, "S03_PLUS_RETRY_COOLDOWN")
@@ -256,7 +257,7 @@ class GdlAccessibilityService : AccessibilityService() {
             // validating + throughout ActiveTrack confirmation.
             if (combined && activeTrackDecision.state !=
                 ActiveTrackPanelDetector.State.ACTIVE_TRACK_RUNNING) {
-                val plusDecision = ReacquirePipeline.evaluate(bitmap, settings)
+                val plusDecision = evaluatePlusAndRecordDetection(bitmap, settings, now)
                 if (plusDecision.selected) {
                     if (now < cooldownUntilMs) {
                         saveHardRaw(bitmap, settings, "S03_PLUS_RETRY_COOLDOWN")
@@ -441,13 +442,13 @@ class GdlAccessibilityService : AccessibilityService() {
             return false
         }
 
+        val decision = evaluatePlusAndRecordDetection(bitmap, settings, now)
         if (settings.action == ReacquireAction.REAL_TAP && now < cooldownUntilMs) {
             saveHardRaw(bitmap, settings, "S03_PLUS_TAP_COOLDOWN")
             postMessage("${settings.foreground.label} ✓ • tap cooldown", Color.YELLOW)
             return false
         }
 
-        val decision = ReacquirePipeline.evaluate(bitmap, settings)
         if (!decision.selected && processNoPlusGimbalTimeout(bitmap, settings, now)) {
             return false
         }
@@ -556,12 +557,12 @@ class GdlAccessibilityService : AccessibilityService() {
         now: Long,
         suppliedDecision: ReacquireDecision? = null
     ): Boolean {
+        val decision = suppliedDecision ?: evaluatePlusAndRecordDetection(bitmap, settings, now)
         if (now < cooldownUntilMs) {
             saveHardRaw(bitmap, settings, "S03_PLUS_RETRY_COOLDOWN")
             postMessage("COMBINED • waiting for validated + • tap cooldown", Color.YELLOW)
             return false
         }
-        val decision = suppliedDecision ?: ReacquirePipeline.evaluate(bitmap, settings)
         if (!decision.selected) {
             if (combinedPhase == CombinedPhase.COMPLETE) {
                 combinedSawNoPlusSinceComplete = true
@@ -761,8 +762,8 @@ class GdlAccessibilityService : AccessibilityService() {
     ): Boolean {
         if (!isProductionGimbalPreset(settings) || !productionGimbalRecoveryArmed ||
             productionGimbalBottomReached) return false
-        if (reacquireNoPlusStartedMs == 0L) reacquireNoPlusStartedMs = now
-        if (now - reacquireNoPlusStartedMs < settings.noGreenPlusGimbalTimeoutMs) return false
+        if (lastValidatedPlusDetectedMs == 0L || now < recoveryNotBeforeMs) return false
+        if (now - lastValidatedPlusDetectedMs < settings.noGreenPlusGimbalTimeoutMs) return false
         productionGimbalRecoveryActive = true
         processProductionGimbalRecovery(bitmap, settings, now)
         return true
@@ -803,7 +804,6 @@ class GdlAccessibilityService : AccessibilityService() {
                 // A dispatched Accessibility gesture cannot be shortened safely.
                 // Keep ignoring green + until its callback reports completion.
                 if (!gimbalGestureInFlight.get()) productionGimbalRecoveryActive = false
-                reacquireNoPlusStartedMs = 0L
             }
             val stage = if (confirmed) "S15_REACQUIRE_GIMBAL_BOTTOM_LIMIT_REACHED"
                 else "S14_REACQUIRE_GIMBAL_BOTTOM_LIMIT_CONFIRMING"
@@ -870,7 +870,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 gimbalNextDragAllowedMs = 0L
                 if (productionRecovery) {
                     productionGimbalRecoveryActive = false
-                    reacquireNoPlusStartedMs = 0L
+                    recoveryNotBeforeMs = SystemClock.elapsedRealtime() + settings.noGreenPlusGimbalTimeoutMs
                     productionGimbalPendingOutcomeStage =
                         "S18_REACQUIRE_GIMBAL_GESTURE_CANCELLED_GUARD_FAILED"
                 }
@@ -886,7 +886,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 gimbalNextDragAllowedMs = 0L
                 if (productionRecovery) {
                     productionGimbalRecoveryActive = false
-                    reacquireNoPlusStartedMs = 0L
+                    recoveryNotBeforeMs = SystemClock.elapsedRealtime() + settings.noGreenPlusGimbalTimeoutMs
                     productionGimbalPendingOutcomeStage =
                         "S18_REACQUIRE_GIMBAL_GESTURE_CANCELLED_MAP_FAILED"
                 }
@@ -923,7 +923,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 if (productionRecovery) {
                     gimbalNextDragAllowedMs = 0L
                     productionGimbalRecoveryActive = false
-                    reacquireNoPlusStartedMs = 0L
+                    recoveryNotBeforeMs = SystemClock.elapsedRealtime() + settings.noGreenPlusGimbalTimeoutMs
                     productionGimbalPendingOutcomeStage =
                         "S18_REACQUIRE_GIMBAL_GESTURE_REJECTED"
                     overlayView?.showMessage("GIMBAL $label REJECTED", Color.RED)
@@ -1033,8 +1033,24 @@ class GdlAccessibilityService : AccessibilityService() {
         gimbalBottomReached = false
         gimbalGestureInFlight.set(false)
         productionGimbalRecoveryArmed = false
+        lastValidatedPlusDetectedMs = 0L
+        recoveryNotBeforeMs = 0L
         productionGimbalPendingOutcomeStage = null
         resetProductionGimbalRecovery(rearm = false)
+    }
+
+    /** Existing CV only; record detection time even when a tap is cooling down. */
+    private fun evaluatePlusAndRecordDetection(
+        bitmap: Bitmap,
+        settings: ReacquireSettings,
+        now: Long
+    ): ReacquireDecision {
+        val decision = ReacquirePipeline.evaluate(bitmap, settings)
+        if (isProductionGimbalPreset(settings) && isValidatedGreenPlusWithPink(decision, settings)) {
+            lastValidatedPlusDetectedMs = now
+            recoveryNotBeforeMs = 0L
+        }
+        return decision
     }
 
     private fun isValidatedGreenPlusWithPink(
@@ -1046,7 +1062,6 @@ class GdlAccessibilityService : AccessibilityService() {
         decision.associations.any { it.pinkPixelCount >= settings.minimumPinkPixels }
 
     private fun resetProductionGimbalRecovery(rearm: Boolean) {
-        reacquireNoPlusStartedMs = 0L
         productionGimbalRecoveryActive = false
         productionGimbalBottomReached = false
         productionGimbalRedConfirmations = 0
@@ -1059,7 +1074,7 @@ class GdlAccessibilityService : AccessibilityService() {
             gimbalTestCountdownStartedMs = 0L
         }
         if (isProductionGimbalPreset(settings) && !productionGimbalRecoveryActive) {
-            reacquireNoPlusStartedMs = 0L
+            recoveryNotBeforeMs = SystemClock.elapsedRealtime() + settings.noGreenPlusGimbalTimeoutMs
         }
     }
 

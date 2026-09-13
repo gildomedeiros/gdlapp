@@ -70,7 +70,7 @@ data class ReacquireSettings(
 )
 
 object GdlTestSettings {
-    const val APP_VERSION = "0.15.12.2"
+    const val APP_VERSION = "0.15.12.3"
     const val PREFS_NAME = "gdl_reacquire_settings"
     const val KEY_ENABLED = "reacquire_enabled"
     const val KEY_NOT_BEFORE_MS = "reacquire_not_before_ms"

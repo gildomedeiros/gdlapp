@@ -13,7 +13,7 @@
             android:id="@+id/versionTitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="GDL Modular Tests v0.15.12.2"
+            android:text="GDL Modular Tests v0.15.12.3"
             android:textSize="22sp"
             android:textStyle="bold" />
 

@@ -1,6 +1,22 @@
-# GDL Modular Re-acquire v0.15.12.2
+# GDL Modular Re-acquire v0.15.12.3
 
 Author: Gil
+
+## v0.15.12.3 last validated plus timer
+
+Production recovery now measures the configured timeout (default 15 seconds)
+from the most recent detection of a green plus with the required pink association,
+using the existing detector. Detections during tap cooldown also refresh that time.
+A successful validated-plus tap must still arm recovery first. A missing plus no
+longer starts a separate countdown from the first missing frame. Guard failures
+and dispatch rejection retain a timeout-length retry delay, separately from the
+last detection timestamp.
+
+No new CV/OCR logic or tracking-box detector is included. Already-active recovery,
+gesture coordinates and timings are unchanged. A DJI tracking box does not refresh
+the plus timer, so this change does not prevent the F121/F122 tracking-box case.
+
+VersionCode 42. Debug APK compilation passed; device behaviour remains untested.
 
 ## v0.15.12.2 mandatory DJI full-screen requirement
 

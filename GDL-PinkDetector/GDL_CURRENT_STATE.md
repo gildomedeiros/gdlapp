@@ -1,12 +1,30 @@
 # GDL current state
 
-Updated 2026-09-13 (Australia/Brisbane). Current source version: **0.15.12.2**, versionCode **41**. Version fields and release notes agree; APK compilation and device testing remain unverified. No commit, push, tag or GitHub Release created.
+Updated 2026-09-13 (Australia/Brisbane). Current source version: **0.15.12.3**, versionCode **42**. Debug APK compilation passed; this version has no device test. No commit, push, tag or GitHub Release created.
+
+## v0.15.12.3 approved timer-only change
+
+Based on checked revision `180a9a4e19aa82dafc77930464e074bfa084afe4`, preserving the prior result-review documents. The earlier unapproved selected-box/OCR implementation was reverted. User explicitly requires approval before any new CV logic; this version adds none. The approved scope is elapsed time since the latest existing green-plus/pink validation, with already-active recovery unchanged. It does not implement a selected-subject/Stop veto and therefore does not fix the F121/F122 tracking-box case.
+
+`evaluatePlusAndRecordDetection()` wraps the unchanged pipeline and records the current capture-processing elapsed timestamp only when the existing `isValidatedGreenPlusWithPink()` predicate passes. It also records detections during tap cooldown. All four service pipeline-evaluation paths use that wrapper. The recovery timeout now compares against that timestamp rather than creating a timer on the first absent-plus frame. The successful validated-tap arming requirement, preset/phase guards, bottom latch and active-recovery priority remain. Run reset clears the timestamp; ordinary selection reset preserves it. A separate `recoveryNotBeforeMs` retains a timeout-length retry delay after guard failure, coordinate-map failure or dispatch rejection without inventing a detection. A later valid detection replaces that delay with its own full timeout.
+
+Validation: `:app:assembleDebug --offline` succeeded using the existing Android Studio JBR and Gradle cache. APK output metadata confirms 0.15.12.3 / 42. Reviewed all detection call sites, timestamp writes, cooldown ordering, arming, run reset and active-recovery bypass; verified no detector/OCR source changes and no `DjiTrackingSelectionDetector.kt`. `git diff --check` passed. No device replay or automated behavioural test performed. Next step is device validation of the last-detection timeout and refresh during cooldown. Original project is the edited source; the previously mirrored worktree remains at its reverted snapshot unless separately synchronized.
 
 ## v0.15.12.2 full-screen requirement
 
 Worktree change based on `4025216b39daeb5535421a68a8582a2345409a92`: all preset defaults and loaded/saved settings now require DJI full-screen; the UI switch is checked and disabled. The service guard no longer honors a false flag for DJI-targeted runs, including Raw DJI diagnostics. Gallery/other test foreground targets remain exempt from this DJI-specific guard. No change to the existing navigation-bar detection algorithm, gesture coordinates, or timings. Version fields were advanced together to 0.15.12.2 / 41 for this requested source release. Applied to the original folder on 2026-09-13, preserving its existing changes. Original checkout was clean on main at 31ce12019c0a407de1886dc39b8872539e07eb48 before transfer. Copied files verified by SHA-256; no release commit or device test performed.
 
 Validation: inspected all preset defaults, persistence, UI construction and the central guard; `git diff --check` passed. Offline `:app:assembleDebug` could not resolve Android Gradle plugin 8.7.3 in the isolated cache, so compilation remains unverified.
+
+## 0.15.12.2 supplied device results (2026-09-13)
+
+Reviewed archive `20260913_105318_241_COMBINED_REAL.zip` against clean source revision `180a9a4e19aa82dafc77930464e074bfa084afe4`; detailed findings and provenance are in [RESULTS_0.15.12.2_20260913.md](RESULTS_0.15.12.2_20260913.md). This supersedes the earlier absence of supplied 0.15.12.2 device evidence, but does not establish APK hash/build provenance or a locally reproduced device test.
+
+Verified archive inventory: 538 logical captures, 821 JPEGs including settings. Settings report 0.15.12.2 and mandatory full-screen=true. Recorded 27 recovery requests, 26 Android completion records, four distinct bottom confirmations (F299/F384/F408/F438), six S08 running classifications and two ActiveTrack timeouts. Selected raw images support the four DJI bottom-limit episodes. F420 nevertheless says “Subject lost. Reselect subject” while GDL records running/success. F126 shows Land UI during the first recovery; F495–508 show Land UI again; F509/F522 request recovery while DJI says “Tap to cancel landing”; F535 requests recovery while DJI says “Takeoff permitted” and displays 0.0 m. Landing/input causation remains unresolved. F537–538 show Android bars during an existing gesture; no subsequent request tests guard rejection. OCR mismatch remains confirmed (e.g. F509 raw height 3.4 m vs filename 0.6 m).
+
+Validation: all filenames/dimensions counted, selected raw/annotated frames and complete specified transition sequences visually inspected, relevant recovery/gesture/full-screen/ActiveTrack code read, documentation diff checked. No app/version change or build. Next investigations: dispatched coordinate mapping/input provenance, recovery despite DJI target/Stop UI, and running classification despite subject loss. No landing lock or other behaviour change authorized by this result review.
+
+F121→F122 follow-up at the same checked revision: both RAW frames retain a green selected-target box/X and ActiveTrack/Stop controls, with no visible subject-lost warning or Land panel. F121 annotation says “no validated green +”; F122 requests recovery. Direct image comparison and rereading the no-plus timer confirm the trigger mismatch: lack of a fresh acquisition plus starts recovery despite DJI's selected-target/running UI. This is separate from later landing causation. Documentation only; diff check passed.
 
 ## Original checkout and sources
 
