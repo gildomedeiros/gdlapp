@@ -1,4 +1,8 @@
-# GDL Modular Re-acquire v0.15.12.9
+# GDL Modular Re-acquire v0.15.12.10
+
+## v0.15.12.10
+
+Repackaged restored .9 behaviour: rectangle acquisition, 1000 ms default cooldown, nonblocking saving and diagnostic logs. The earlier rejected .10 tap change is not included. Logs: Documents/GDL/<run>/diagnostic.log.
 
 ## v0.15.12.9
 

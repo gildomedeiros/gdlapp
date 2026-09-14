@@ -1,6 +1,10 @@
 # GDL current state
 
-Updated 2026-09-14 (Australia/Brisbane). Current source version: **0.15.12.9**, versionCode **48**. User-supplied results reviewed below; installed APK provenance is unverified. No commit, push, tag or GitHub Release created.
+Updated 2026-09-14 (Australia/Brisbane). Current source version: **0.15.12.10**, versionCode **49**. User-supplied results reviewed below; installed APK provenance is unverified. No commit, push, tag or GitHub Release created.
+
+## v0.15.12.10 repackaged from restored .9
+
+User requests .10 with logging, local project only, following rollback. This .10 retains restored .9 rectangle acquisition, 1000 ms Combined default, nonblocking evidence, capture timeout protection and persistent diagnostic logging. It does NOT restore the earlier rejected .10 centre-tap change. Only version fields and documentation changed from the restored .9. Historical .10 tap notes below are superseded. Offline assembleDebug passed; APK metadata confirms .10/49 and diff whitespace checked. No installation or synchronization.
 
 ## Requested rollback to v0.15.12.9
 
