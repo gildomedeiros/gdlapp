@@ -8,6 +8,38 @@ import kotlin.math.roundToInt
 
 /** Native-pixel solid selection rails and inward corners; dotted pin boxes fail. */
 object TrackingBoxDetector {
+    /** Confirm the green cancel circle and dark X before using its centre. */
+    fun cancelTarget(bitmap: Bitmap, box: Rect): Rect? {
+        val pixels = NativeFramePixels.read(bitmap)
+        val w = bitmap.width; val h = bitmap.height
+        fun green(x: Int, y: Int): Boolean {
+            if (x !in 0 until w || y !in 0 until h) return false
+            val c = pixels[y * w + x]
+            return Color.green(c) > 135 && Color.green(c) > Color.red(c) * 1.45 &&
+                Color.blue(c) > 45 && Color.blue(c) < Color.green(c) * .95
+        }
+        val radius = maxOf(8, (w * .012).toInt())
+        for (cy in box.top - radius..box.top + radius) {
+            for (cx in box.left - radius / 2..box.left + radius / 2) {
+                val ring = radius * 3 / 4
+                if (!green(cx-ring,cy) || !green(cx+ring,cy) ||
+                    !green(cx,cy-ring) || !green(cx,cy+ring)) continue
+                var dark = 0
+                for (d in -radius/3..radius/3) {
+                    for (sign in listOf(-1, 1)) {
+                        val x = cx+d; val y = cy+sign*d
+                        if (x in 0 until w && y in 0 until h) {
+                            val c = pixels[y*w+x]
+                            if (Color.green(c) < 150 && Color.red(c) < 120 && Color.blue(c) < 150) dark++
+                        }
+                    }
+                }
+                if (dark >= (2 * (2*(radius/3)+1)) * .75)
+                    return Rect(cx-2,cy-2,cx+3,cy+3)
+            }
+        }
+        return null
+    }
     data class Result(val rect: Rect, val pinkPixels: Int)
     private data class Rail(val x: Int, val top: Int, val bottom: Int)
 

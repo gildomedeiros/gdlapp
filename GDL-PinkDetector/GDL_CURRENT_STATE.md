@@ -1,6 +1,12 @@
 # GDL current state
 
-Updated 2026-09-14 (Australia/Brisbane). Current source version: **0.15.12.11**, versionCode **50**. User-supplied results reviewed below; installed APK provenance is unverified. No commit, push, tag or GitHub Release created.
+Updated 2026-09-14 (Australia/Brisbane). Current source version: **0.15.12.12**, versionCode **51**. User-supplied results reviewed below; installed APK provenance is unverified. No commit, push, tag or GitHub Release created.
+
+## v0.15.12.12 empty-box correction
+
+User-authorized local fix against HEAD 56807c03aa2e2e0b82bb745c20ddb57db13502ef. Removed prior-pink arming requirement: any reliable solid selection box with fewer qualifying pink pixels than the configured minimum starts the existing configurable 3000 ms absence timer. Missing/changed boxes still reset continuity; pink return cancels. Solid box evaluation no longer depends on collapsed red controls. In expanded layout, confirmed no-pink exit uses a freshly validated green cancel circle/dark X near the box's top-left corner; collapsed layout retains red-X targeting. Exit verification now also requires solid box disappearance, preventing an expanded menu from falsely satisfying exit verification. Pin delay remains 800 ms; acquisition, saved settings, native resolution and nonblocking saving retained.
+
+Validation: offline assembleDebug passed (.12/51). Host production detector replay on supplied 323010b1,0fa2dc1d,10b9bd05,c643f191 failure screenshots detected solid boxes, pink=0 and green cancel targets in all four. PersistenceGate supplied simulated 0/1000/2000/3000 ms timestamps expired only on fourth sample, without any pink history. Desktop Bitmap/HSV shims and simulated timing do not prove Android dispatch or DJI cancellation. Existing persistence tests cover pink/unknown cancellation through false observations and restart. No install, publication or synchronization. Screenshot-specific detector accuracy and on-device performance remain unverified.
 
 ## v0.15.12.11 local preset and Spotlight loss confirmation
 

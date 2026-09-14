@@ -86,7 +86,6 @@ class GdlAccessibilityService : AccessibilityService() {
     private val pinPersistenceGate = PersistenceGate()
     private val noPinkGate = PersistenceGate()
     private var trackedPinkBox: Rect? = null
-    private var pinkBoxArmed = false
     private var noPinkExit = false
     private var spotlightExitPending = false
     private var spotlightExitClearFrames = 0
@@ -628,7 +627,7 @@ class GdlAccessibilityService : AccessibilityService() {
         val pinWasPending = pinPersistenceGate.pending()
         val pinExpired = pinPersistenceGate.update(now, pinCondition, settings.pinPersistenceMs)
         if (pinWasPending && !pinCondition) diag("PIN_TIMER_CANCELLED")
-        val box = if (spotlightExitRect != null && !spotlightPinVisible)
+        val box = if (!spotlightPinVisible)
             TrackingBoxDetector.detect(bitmap) else null
         val previousBox = trackedPinkBox
         val sameBox = box != null && previousBox != null && run {
@@ -639,19 +638,17 @@ class GdlAccessibilityService : AccessibilityService() {
         }
         if (!sameBox) {
             if (noPinkGate.pending()) diag("NO_PINK_TIMER_CANCELLED box_unknown_or_changed")
-            pinkBoxArmed = false
             noPinkGate.reset()
         }
         trackedPinkBox = box?.rect
         val pinkPresent = box != null && box.pinkPixels >= settings.minimumPinkPixels
-        if (pinkPresent) pinkBoxArmed = true
-        val noPinkCondition = box != null && pinkBoxArmed && !pinkPresent
+        val noPinkCondition = box != null && !pinkPresent
         val noPinkWasPending = noPinkGate.pending()
         val noPinkExpired = noPinkGate.update(now, noPinkCondition, settings.noPinkInBoxMs)
         if (noPinkWasPending && pinkPresent) diag("NO_PINK_TIMER_CANCELLED pink_returned")
         s11SpotlightVisible = spotlightExitRect != null && !spotlightPinVisible && !noPinkCondition
         s11LastSpotlightCheckMs = now
-        diag("SPOTLIGHT_CHECK pin=$spotlightPinVisible control=${spotlightExitRect != null} box=${box?.rect} pink=${box?.pinkPixels} armed=$pinkBoxArmed pinPending=${pinPersistenceGate.pending()} noPinkPending=${noPinkGate.pending()} check_ms=${SystemClock.elapsedRealtime() - controlStarted}")
+        diag("SPOTLIGHT_CHECK pin=$spotlightPinVisible control=${spotlightExitRect != null} box=${box?.rect} pink=${box?.pinkPixels} pinPending=${pinPersistenceGate.pending()} noPinkPending=${noPinkGate.pending()} check_ms=${SystemClock.elapsedRealtime() - controlStarted}")
         if (pinExpired || noPinkExpired) {
             if (!spotlightExitPending) diag("SPOTLIGHT_EXIT_CONFIRMED reason=${if (pinExpired) "PIN" else "NO_PINK"}")
             spotlightExitPending = true
@@ -673,11 +670,12 @@ class GdlAccessibilityService : AccessibilityService() {
             s11RecoveryCountdown.update(now, productionGimbalRecoveryArmed,
                 decision.selected, s11SpotlightVisible, settings.noGreenPlusGimbalTimeoutMs)
             if (freshControlCheck) {
-                spotlightExitClearFrames = if (spotlightExitRect == null && !spotlightPinVisible)
+                spotlightExitClearFrames = if (spotlightExitRect == null && !spotlightPinVisible && box == null)
                     spotlightExitClearFrames + 1 else 0
             }
             if (spotlightExitClearFrames < 2) {
-                val rect = spotlightExitRect
+                val rect = spotlightExitRect ?: if (noPinkExit && box != null)
+                    TrackingBoxDetector.cancelTarget(bitmap, box.rect) else null
                 if (freshControlCheck && (pinExpired || noPinkExpired) && rect != null && now >= spotlightExitRetryAt) {
                     spotlightExitRetryAt = now + maxOf(1_000L, settings.retryCooldownMs)
                     diag("SPOTLIGHT_EXIT_REQUEST reason=${if (noPinkExit) "NO_PINK" else "PIN"} rect=$rect")
@@ -1701,7 +1699,6 @@ class GdlAccessibilityService : AccessibilityService() {
         pinPersistenceGate.reset()
         noPinkGate.reset()
         trackedPinkBox = null
-        pinkBoxArmed = false
         noPinkExit = false
         spotlightExitPending = false
         spotlightPinVisible = false

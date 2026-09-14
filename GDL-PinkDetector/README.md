@@ -1,4 +1,10 @@
-# GDL Modular Re-acquire v0.15.12.11
+# GDL Modular Re-acquire v0.15.12.12
+
+## v0.15.12.12
+
+Reliable green box with no qualifying pink now starts the configurable 3000 ms timeout immediately, without prior pink history. Monitoring continues with the expanded panel. Exit uses the red X when available or a visually confirmed green cancel X at the selection box; verification waits for the box, pin and collapsed control to disappear. Pink return cancels absence; missing/changed boxes reset the timer. The 800 ms pin setting and diagnostic logging remain.
+
+Local build and failure-screenshot host replay passed; DJI cancellation requires device validation.
 
 ## v0.15.12.11
 
