@@ -67,11 +67,13 @@ data class ReacquireSettings(
     val hardSaveEveryCapturedFrame: Boolean,
     val gimbalRecoveryEnabled: Boolean,
     val noGreenPlusGimbalTimeoutMs: Long,
-    val gimbalDragDurationMs: Long = 6_000L
+    val gimbalDragDurationMs: Long = 6_000L,
+    val pinPersistenceMs: Long = 800L,
+    val noPinkInBoxMs: Long = 3_000L
 )
 
 object GdlTestSettings {
-    const val APP_VERSION = "0.15.12.10"
+    const val APP_VERSION = "0.15.12.11"
     const val PREFS_NAME = "gdl_reacquire_settings"
     const val KEY_ENABLED = "reacquire_enabled"
     const val KEY_NOT_BEFORE_MS = "reacquire_not_before_ms"
@@ -193,6 +195,8 @@ object GdlTestSettings {
                 value.autoRearmSimulatedActiveTrack)
             .putBoolean(KEY_HARD_SAVE_EVERY_CAPTURED_FRAME,
                 value.hardSaveEveryCapturedFrame)
+            .putLong("pin_persistence_ms", value.pinPersistenceMs)
+            .putLong("no_pink_in_box_ms", value.noPinkInBoxMs)
             .putLong("gimbal_drag_duration_ms", value.gimbalDragDurationMs.coerceIn(1_000L, 30_000L))
             .putBoolean(KEY_GIMBAL_RECOVERY_ENABLED, value.gimbalRecoveryEnabled)
             .putLong(KEY_NO_GREEN_PLUS_GIMBAL_TIMEOUT,
@@ -202,13 +206,16 @@ object GdlTestSettings {
 
     fun load(context: Context): ReacquireSettings {
         val prefs = preferences(context)
-        // Migrate the removed single-plus test to the production preset rather
-        // than retaining a misleading combination of old saved values.
+        // Migrate only the selection; retain the user's saved timing/settings.
+        if (prefs.getString(KEY_PRESET, null) == "PRODUCTION") {
+            prefs.edit().putString(KEY_PRESET, ReacquirePreset.COMBINED_REAL.name).apply()
+        }
+        // Removed legacy single-plus configuration requires a complete preset.
         if (prefs.getString(KEY_PRESET, null) == "GREEN_PLUS" ||
             prefs.getString(KEY_CANDIDATE_RULE, null) == "SINGLE_PLUS") {
-            return defaults(ReacquirePreset.PRODUCTION).also { save(context, it) }
+            return defaults(ReacquirePreset.COMBINED_REAL).also { save(context, it) }
         }
-        val preset = enumValue(prefs.getString(KEY_PRESET, null), ReacquirePreset.PRODUCTION)
+        val preset = enumValue(prefs.getString(KEY_PRESET, null), ReacquirePreset.COMBINED_REAL)
         val base = defaults(preset)
         return ReacquireSettings(
             preset, enumValue(prefs.getString(KEY_FOREGROUND, null), base.foreground),
@@ -242,7 +249,9 @@ object GdlTestSettings {
             prefs.getBoolean(KEY_GIMBAL_RECOVERY_ENABLED, base.gimbalRecoveryEnabled),
             prefs.getLong(KEY_NO_GREEN_PLUS_GIMBAL_TIMEOUT,
                 base.noGreenPlusGimbalTimeoutMs).coerceIn(1_000L, 300_000L),
-            prefs.getLong("gimbal_drag_duration_ms", 6_000L).coerceIn(1_000L, 30_000L))
+            prefs.getLong("gimbal_drag_duration_ms", 6_000L).coerceIn(1_000L, 30_000L),
+            prefs.getLong("pin_persistence_ms", 800L).coerceIn(100L, 30_000L),
+            prefs.getLong("no_pink_in_box_ms", 3_000L).coerceIn(100L, 30_000L))
     }
 
     fun beginRun(context: Context) {

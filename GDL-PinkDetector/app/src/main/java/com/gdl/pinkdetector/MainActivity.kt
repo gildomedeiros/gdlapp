@@ -23,6 +23,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var testStatus: TextView
     private lateinit var flowExplanation: TextView
     private lateinit var toggleButton: Button
+    private val visiblePresets = ReacquirePreset.values().filter { it != ReacquirePreset.PRODUCTION }
+    private lateinit var pinPersistence: EditText
+    private lateinit var noPinkInBox: EditText
     private lateinit var presetSpinner: Spinner
     private lateinit var foregroundSpinner: Spinner
     private lateinit var candidateSpinner: Spinner
@@ -62,7 +65,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
         presetSpinner.onItemSelectedListener = SimpleItemSelectedListener { position ->
-            if (!loadingUi) showSettings(GdlTestSettings.applyPreset(this, ReacquirePreset.values()[position]))
+            if (!loadingUi) showSettings(GdlTestSettings.applyPreset(this, visiblePresets[position]))
         }
         configureExplanationUpdates()
         toggleButton.setOnClickListener {
@@ -84,6 +87,8 @@ class MainActivity : AppCompatActivity() {
         testStatus = findViewById(R.id.testStatusText)
         flowExplanation = findViewById(R.id.flowExplanationText)
         toggleButton = findViewById(R.id.toggleTestButton)
+        pinPersistence = findViewById(R.id.pinPersistenceEdit)
+        noPinkInBox = findViewById(R.id.noPinkInBoxEdit)
         presetSpinner = findViewById(R.id.presetSpinner)
         foregroundSpinner = findViewById(R.id.foregroundSpinner)
         candidateSpinner = findViewById(R.id.candidateSpinner)
@@ -114,7 +119,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureSpinners() {
-        setup(presetSpinner, ReacquirePreset.values().map { it.label })
+        setup(presetSpinner, visiblePresets.map { it.label })
         setup(foregroundSpinner, ForegroundTarget.values().map { it.label })
         setup(candidateSpinner, CandidateRule.values().map { it.label })
         setup(actionSpinner, ReacquireAction.values().map { it.label })
@@ -128,7 +133,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showSettings(value: ReacquireSettings) {
         loadingUi = true
-        presetSpinner.setSelection(value.preset.ordinal)
+        presetSpinner.setSelection(visiblePresets.indexOf(value.preset))
         foregroundSpinner.setSelection(value.foreground.ordinal)
         candidateSpinner.setSelection(value.candidateRule.ordinal)
         actionSpinner.setSelection(value.action.ordinal)
@@ -156,6 +161,8 @@ class MainActivity : AppCompatActivity() {
         activeTrackCycleTimeout.setText(value.activeTrackCycleTimeoutMs.toString())
         maxActiveTrackTaps.setText(value.maxActiveTrackTaps.toString())
         maxChevronTaps.setText(value.maxChevronTaps.toString())
+        pinPersistence.setText(value.pinPersistenceMs.toString())
+        noPinkInBox.setText(value.noPinkInBoxMs.toString())
         gimbalDragDuration.setText(value.gimbalDragDurationMs.toString())
         noGreenPlusGimbalTimeout.setText(value.noGreenPlusGimbalTimeoutMs.toString())
         if (value.preset == ReacquirePreset.COMBINED_REAL) activeTrackActionSpinner.setSelection(ActiveTrackAction.OFF.ordinal)
@@ -240,7 +247,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun settingsFromUi(): ReacquireSettings? = try {
         ReacquireSettings(
-            ReacquirePreset.values()[presetSpinner.selectedItemPosition],
+            visiblePresets[presetSpinner.selectedItemPosition],
             ForegroundTarget.values()[foregroundSpinner.selectedItemPosition],
             true, // DJI full-screen checking cannot be disabled.
             detectPlus.isChecked, detectPink.isChecked,
@@ -254,7 +261,7 @@ class MainActivity : AppCompatActivity() {
             minimumPink.text.toString().toInt().coerceIn(1, 10_000),
             pinkRadius.text.toString().toFloat().coerceIn(1f, 10f),
             saveGreenMask.isChecked,
-            if (ReacquirePreset.values()[presetSpinner.selectedItemPosition] == ReacquirePreset.COMBINED_REAL) ActiveTrackAction.OFF else ActiveTrackAction.values()[activeTrackActionSpinner.selectedItemPosition],
+            if (visiblePresets[presetSpinner.selectedItemPosition] == ReacquirePreset.COMBINED_REAL) ActiveTrackAction.OFF else ActiveTrackAction.values()[activeTrackActionSpinner.selectedItemPosition],
             expandCollapsedControls.isChecked,
             activeTrackRetryInterval.text.toString().toLong().coerceIn(250L, 5_000L),
             saveActiveTrackEvidence.isChecked,
@@ -265,7 +272,9 @@ class MainActivity : AppCompatActivity() {
             hardSaveEveryFrame.isChecked,
             gimbalRecoveryEnabled.isChecked,
             noGreenPlusGimbalTimeout.text.toString().toLong().coerceIn(1_000L, 300_000L),
-            gimbalDragDuration.text.toString().toLong().coerceIn(1_000L, 30_000L))
+            gimbalDragDuration.text.toString().toLong().coerceIn(1_000L, 30_000L),
+            pinPersistence.text.toString().toLong().coerceIn(100L, 30_000L),
+            noPinkInBox.text.toString().toLong().coerceIn(100L, 30_000L))
     } catch (_: RuntimeException) { null }
 
     private fun configureExplanationUpdates() {
@@ -305,7 +314,7 @@ class MainActivity : AppCompatActivity() {
         listOf(
             captureInterval, retryCooldown, tapDuration, minimumPink, pinkRadius,
             activeTrackRetryInterval, activeTrackCycleTimeout,
-            maxActiveTrackTaps, maxChevronTaps, noGreenPlusGimbalTimeout, gimbalDragDuration
+            maxActiveTrackTaps, maxChevronTaps, noGreenPlusGimbalTimeout, gimbalDragDuration, pinPersistence, noPinkInBox
         )
             .forEach { it.addTextChangedListener(watcher) }
     }

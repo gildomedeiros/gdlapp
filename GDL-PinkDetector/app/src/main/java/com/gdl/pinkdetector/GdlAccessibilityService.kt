@@ -83,6 +83,11 @@ class GdlAccessibilityService : AccessibilityService() {
     private var s11LastSpotlightCheckMs = -1L
     private var s11SpotlightVisible = false
     private var spotlightPinVisible = false
+    private val pinPersistenceGate = PersistenceGate()
+    private val noPinkGate = PersistenceGate()
+    private var trackedPinkBox: Rect? = null
+    private var pinkBoxArmed = false
+    private var noPinkExit = false
     private var spotlightExitPending = false
     private var spotlightExitClearFrames = 0
     private var spotlightExitRetryAt = 0L
@@ -613,22 +618,56 @@ class GdlAccessibilityService : AccessibilityService() {
             return false
         }
         val decision = suppliedDecision ?: evaluatePlusAndRecordDetection(bitmap, settings, now)
-        val freshControlCheck = s11LastSpotlightCheckMs < 0L ||
-            now - s11LastSpotlightCheckMs >= 1_000L || decision.selected
-        if (freshControlCheck) {
-            val controlStarted = SystemClock.elapsedRealtime()
-            spotlightExitRect = ActiveTrackPanelDetector.spotlightControlRect(bitmap)
-            val pinStarted = SystemClock.elapsedRealtime()
-            val pixels = NativeFramePixels.read(bitmap)
-            spotlightPinVisible = SpotlightPinMatcher.matches(pixels, bitmap.width, bitmap.height)
-            diag("frame=$frameCount control_ms=${pinStarted - controlStarted} pin_ms=${SystemClock.elapsedRealtime() - pinStarted}")
-            s11SpotlightVisible = spotlightExitRect != null && !spotlightPinVisible
-            s11LastSpotlightCheckMs = now
+        // Fresh capture checks let 800 ms mean elapsed time, not cached detections.
+        val freshControlCheck = true
+        val controlStarted = SystemClock.elapsedRealtime()
+        spotlightExitRect = ActiveTrackPanelDetector.spotlightControlRect(bitmap)
+        val pixels = NativeFramePixels.read(bitmap)
+        spotlightPinVisible = SpotlightPinMatcher.matches(pixels, bitmap.width, bitmap.height)
+        val pinCondition = spotlightPinVisible && spotlightExitRect != null
+        val pinWasPending = pinPersistenceGate.pending()
+        val pinExpired = pinPersistenceGate.update(now, pinCondition, settings.pinPersistenceMs)
+        if (pinWasPending && !pinCondition) diag("PIN_TIMER_CANCELLED")
+        val box = if (spotlightExitRect != null && !spotlightPinVisible)
+            TrackingBoxDetector.detect(bitmap) else null
+        val previousBox = trackedPinkBox
+        val sameBox = box != null && previousBox != null && run {
+            val intersection = maxOf(0, minOf(box.rect.right, previousBox.right) - maxOf(box.rect.left, previousBox.left)) *
+                maxOf(0, minOf(box.rect.bottom, previousBox.bottom) - maxOf(box.rect.top, previousBox.top))
+            val union = box.rect.width() * box.rect.height() + previousBox.width() * previousBox.height() - intersection
+            union > 0 && intersection.toDouble() / union >= .3
         }
-        if (spotlightPinVisible && spotlightExitRect != null) spotlightExitPending = true
-        if (spotlightExitPending && freshControlCheck && s11SpotlightVisible) {
+        if (!sameBox) {
+            if (noPinkGate.pending()) diag("NO_PINK_TIMER_CANCELLED box_unknown_or_changed")
+            pinkBoxArmed = false
+            noPinkGate.reset()
+        }
+        trackedPinkBox = box?.rect
+        val pinkPresent = box != null && box.pinkPixels >= settings.minimumPinkPixels
+        if (pinkPresent) pinkBoxArmed = true
+        val noPinkCondition = box != null && pinkBoxArmed && !pinkPresent
+        val noPinkWasPending = noPinkGate.pending()
+        val noPinkExpired = noPinkGate.update(now, noPinkCondition, settings.noPinkInBoxMs)
+        if (noPinkWasPending && pinkPresent) diag("NO_PINK_TIMER_CANCELLED pink_returned")
+        s11SpotlightVisible = spotlightExitRect != null && !spotlightPinVisible && !noPinkCondition
+        s11LastSpotlightCheckMs = now
+        diag("SPOTLIGHT_CHECK pin=$spotlightPinVisible control=${spotlightExitRect != null} box=${box?.rect} pink=${box?.pinkPixels} armed=$pinkBoxArmed pinPending=${pinPersistenceGate.pending()} noPinkPending=${noPinkGate.pending()} check_ms=${SystemClock.elapsedRealtime() - controlStarted}")
+        if (pinExpired || noPinkExpired) {
+            if (!spotlightExitPending) diag("SPOTLIGHT_EXIT_CONFIRMED reason=${if (pinExpired) "PIN" else "NO_PINK"}")
+            spotlightExitPending = true
+            noPinkExit = noPinkExpired && !pinExpired
+        }
+        if (spotlightExitPending && (if (noPinkExit) pinkPresent else s11SpotlightVisible)) {
+            diag("SPOTLIGHT_EXIT_CANCELLED tracking_returned")
             spotlightExitPending = false
+            noPinkExit = false
             spotlightExitClearFrames = 0
+        }
+        if (!spotlightExitPending && (pinPersistenceGate.pending() || noPinkGate.pending())) {
+            s11RecoveryCountdown.reset()
+            saveHardRaw(bitmap, settings, "S04_SPOTLIGHT_LOSS_DELAY")
+            postMessage("SPOTLIGHT • confirming ${if (pinCondition) "pin persistence" else "pink absence"}", Color.YELLOW)
+            return false
         }
         if (spotlightExitPending) {
             s11RecoveryCountdown.update(now, productionGimbalRecoveryArmed,
@@ -639,8 +678,9 @@ class GdlAccessibilityService : AccessibilityService() {
             }
             if (spotlightExitClearFrames < 2) {
                 val rect = spotlightExitRect
-                if (spotlightPinVisible && rect != null && now >= spotlightExitRetryAt) {
+                if (freshControlCheck && (pinExpired || noPinkExpired) && rect != null && now >= spotlightExitRetryAt) {
                     spotlightExitRetryAt = now + maxOf(1_000L, settings.retryCooldownMs)
+                    diag("SPOTLIGHT_EXIT_REQUEST reason=${if (noPinkExit) "NO_PINK" else "PIN"} rect=$rect")
                     saveHardRaw(bitmap, settings, "S04_SPOTLIGHT_EXIT_REQUESTED")
                     mainHandler.post {
                         val current = GdlTestSettings.load(this)
@@ -1485,6 +1525,8 @@ class GdlAccessibilityService : AccessibilityService() {
             appendLine("gimbalGestureStartNormalized=${GimbalKnobDetector.GESTURE_START_X},${GimbalKnobDetector.GESTURE_START_Y}")
             appendLine("gimbalGestureEndYNormalized=${GimbalKnobDetector.DRAG_BOTTOM_Y}")
             appendLine("gimbalHoldMs=$GIMBAL_KNOB_HOLD_MS")
+            appendLine("pinPersistenceMs=${settings.pinPersistenceMs}")
+            appendLine("noPinkInBoxMs=${settings.noPinkInBoxMs}")
             appendLine("gimbalDownDragMs=${settings.gimbalDragDurationMs}")
             appendLine("gimbalAutomaticRetry=false")
             appendLine("gimbalNormalKnobDetection=false")
@@ -1656,6 +1698,11 @@ class GdlAccessibilityService : AccessibilityService() {
     private fun ensureRunSession(settings: ReacquireSettings) {
         val token = GdlTestSettings.runToken(this) ?: return
         if (token == activeRunToken) return
+        pinPersistenceGate.reset()
+        noPinkGate.reset()
+        trackedPinkBox = null
+        pinkBoxArmed = false
+        noPinkExit = false
         spotlightExitPending = false
         spotlightPinVisible = false
         spotlightExitClearFrames = 0

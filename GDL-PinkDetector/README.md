@@ -1,4 +1,10 @@
-# GDL Modular Re-acquire v0.15.12.10
+# GDL Modular Re-acquire v0.15.12.11
+
+## v0.15.12.11
+
+Combined is the default; PRODUCTION is removed from the selector and saved PRODUCTION selections migrate while retaining saved timings/settings. Spotlight exit now waits for configurable pin persistence (800 ms default) or no pink inside a previously pink-confirmed solid green tracking box (3000 ms default). Fresh frames confirm expiry; pink return cancels absence, and missing/ambiguous/changed boxes disarm the pink timer. Settings are in milliseconds. Actual timing depends on capture/processing cadence.
+
+Logs include observations, timer state, cancellation and exit reasons at `Documents/GDL/<run>/diagnostic.log`. Native-resolution CV, rectangle acquisition and nonblocking evidence remain. Build and host checks passed; new absence detection has not been validated on a device failure sequence.
 
 ## v0.15.12.10
 

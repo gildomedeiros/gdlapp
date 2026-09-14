@@ -127,6 +127,10 @@
 
         <TextView style="@style/GdlSettingLabel" android:text="Gimbal drag duration (milliseconds, 1000–30000; no retry)" />
         <EditText android:id="@+id/gimbalDragDurationEdit" style="@style/GdlNumberInput" />
+        <TextView style="@style/GdlSettingLabel" android:text="Spotlight pin persistence (milliseconds, 100–30000)" />
+        <EditText android:id="@+id/pinPersistenceEdit" style="@style/GdlNumberInput" />
+        <TextView style="@style/GdlSettingLabel" android:text="No pink inside tracking box timeout (milliseconds, 100–30000)" />
+        <EditText android:id="@+id/noPinkInBoxEdit" style="@style/GdlNumberInput" />
 
         <TextView
             android:layout_width="match_parent"
