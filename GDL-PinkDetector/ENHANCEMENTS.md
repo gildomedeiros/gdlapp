@@ -2,6 +2,8 @@
 
 Add ideas here; tick them off with the app version when completed.
 
+- [ ] **Keep Spotlight mode when ActiveTrack is unavailable because altitude or distance is insufficient.** Added 2026-09-13 at the user's request. Future enhancement only; altitude/distance requirements and how to determine availability remain to be verified before implementation.
+
 - [ ] **Handle DJI Fly closing or freezing.** Added 2026-09-13.
   - Current behaviour: when DJI Fly loses foreground, GDL pauses new captures and blocks new dispatches after detecting the change, displays “ARMED • waiting for DJI Fly”, and stays armed. It can resume when DJI returns; it does not restart DJI Fly.
   - Gaps to address: explicitly handle cancellation of an ongoing gesture; recheck foreground between the 2-second hold and 6-second drag; detect a frozen DJI window that still matches the foreground package.

@@ -37,7 +37,7 @@ enum class ReacquirePreset(val label: String) {
     PRODUCTION("DJI reacquire (real tap)"), RAW_DJI("Raw DJI diagnostic"),
     ACTIVE_TRACK_PANEL("ActiveTrack panel test"),
     ACTIVE_TRACK_REAL("DJI ActiveTrack (real tap)"),
-    COMBINED_REAL("DJI reacquire + ActiveTrack (real tap)"),
+    COMBINED_REAL("DJI reacquire + Spotlight (real tap)"),
     GIMBAL_TEST("Gimbal movement test")
 }
 
@@ -66,11 +66,12 @@ data class ReacquireSettings(
     val autoRearmSimulatedActiveTrack: Boolean,
     val hardSaveEveryCapturedFrame: Boolean,
     val gimbalRecoveryEnabled: Boolean,
-    val noGreenPlusGimbalTimeoutMs: Long
+    val noGreenPlusGimbalTimeoutMs: Long,
+    val gimbalDragDurationMs: Long = 6_000L
 )
 
 object GdlTestSettings {
-    const val APP_VERSION = "0.15.12.3"
+    const val APP_VERSION = "0.15.12.9"
     const val PREFS_NAME = "gdl_reacquire_settings"
     const val KEY_ENABLED = "reacquire_enabled"
     const val KEY_NOT_BEFORE_MS = "reacquire_not_before_ms"
@@ -150,8 +151,8 @@ object GdlTestSettings {
         ReacquirePreset.COMBINED_REAL -> ReacquireSettings(
             preset, ForegroundTarget.DJI_FLY, true, true, true,
             CandidateRule.STRONGEST_PINK_PLUS, ReacquireAction.REAL_TAP,
-            SavePolicy.DECISIONS, 400L, 800L, 120L, 8, 3f, false,
-            ActiveTrackAction.REAL_TAP, true, 1_000L, true, 8_000L, 2, 2, false, false,
+            SavePolicy.DECISIONS, 400L, 1000L, 120L, 8, 3f, false,
+            ActiveTrackAction.OFF, false, 1_000L, true, 8_000L, 2, 2, false, false,
             true, 15_000L)
         ReacquirePreset.GIMBAL_TEST -> ReacquireSettings(
             preset, ForegroundTarget.DJI_FLY, true, false, false,
@@ -192,6 +193,7 @@ object GdlTestSettings {
                 value.autoRearmSimulatedActiveTrack)
             .putBoolean(KEY_HARD_SAVE_EVERY_CAPTURED_FRAME,
                 value.hardSaveEveryCapturedFrame)
+            .putLong("gimbal_drag_duration_ms", value.gimbalDragDurationMs.coerceIn(1_000L, 30_000L))
             .putBoolean(KEY_GIMBAL_RECOVERY_ENABLED, value.gimbalRecoveryEnabled)
             .putLong(KEY_NO_GREEN_PLUS_GIMBAL_TIMEOUT,
                 value.noGreenPlusGimbalTimeoutMs)
@@ -222,7 +224,8 @@ object GdlTestSettings {
             prefs.getInt(KEY_MIN_PINK, base.minimumPinkPixels).coerceIn(1, 10_000),
             prefs.getFloat(KEY_PINK_RADIUS, base.pinkSearchRadiusMultiplier).coerceIn(1f, 10f),
             prefs.getBoolean(KEY_SAVE_GREEN_MASK, base.saveGreenMask),
-            enumValue(prefs.getString(KEY_ACTIVE_TRACK_ACTION, null), base.activeTrackAction),
+            if (preset == ReacquirePreset.COMBINED_REAL) ActiveTrackAction.OFF else
+                enumValue(prefs.getString(KEY_ACTIVE_TRACK_ACTION, null), base.activeTrackAction),
             prefs.getBoolean(KEY_EXPAND_COLLAPSED_CONTROLS, base.expandCollapsedControls),
             prefs.getLong(KEY_ACTIVE_TRACK_RETRY_INTERVAL, base.activeTrackRetryIntervalMs)
                 .coerceIn(250L, 5_000L),
@@ -238,7 +241,8 @@ object GdlTestSettings {
                 base.hardSaveEveryCapturedFrame),
             prefs.getBoolean(KEY_GIMBAL_RECOVERY_ENABLED, base.gimbalRecoveryEnabled),
             prefs.getLong(KEY_NO_GREEN_PLUS_GIMBAL_TIMEOUT,
-                base.noGreenPlusGimbalTimeoutMs).coerceIn(1_000L, 300_000L))
+                base.noGreenPlusGimbalTimeoutMs).coerceIn(1_000L, 300_000L),
+            prefs.getLong("gimbal_drag_duration_ms", 6_000L).coerceIn(1_000L, 30_000L))
     }
 
     fun beginRun(context: Context) {

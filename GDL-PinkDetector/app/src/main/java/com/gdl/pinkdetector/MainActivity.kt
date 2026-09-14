@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var activeTrackCycleTimeout: EditText
     private lateinit var maxActiveTrackTaps: EditText
     private lateinit var maxChevronTaps: EditText
+    private lateinit var gimbalDragDuration: EditText
     private lateinit var noGreenPlusGimbalTimeout: EditText
     private var loadingUi = false
 
@@ -108,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         activeTrackCycleTimeout = findViewById(R.id.activeTrackCycleTimeoutEdit)
         maxActiveTrackTaps = findViewById(R.id.maxActiveTrackTapsEdit)
         maxChevronTaps = findViewById(R.id.maxChevronTapsEdit)
+        gimbalDragDuration = findViewById(R.id.gimbalDragDurationEdit)
         noGreenPlusGimbalTimeout = findViewById(R.id.noGreenPlusGimbalTimeoutEdit)
     }
 
@@ -154,7 +156,10 @@ class MainActivity : AppCompatActivity() {
         activeTrackCycleTimeout.setText(value.activeTrackCycleTimeoutMs.toString())
         maxActiveTrackTaps.setText(value.maxActiveTrackTaps.toString())
         maxChevronTaps.setText(value.maxChevronTaps.toString())
+        gimbalDragDuration.setText(value.gimbalDragDurationMs.toString())
         noGreenPlusGimbalTimeout.setText(value.noGreenPlusGimbalTimeoutMs.toString())
+        if (value.preset == ReacquirePreset.COMBINED_REAL) activeTrackActionSpinner.setSelection(ActiveTrackAction.OFF.ordinal)
+        activeTrackActionSpinner.isEnabled = value.preset != ReacquirePreset.COMBINED_REAL
         loadingUi = false
         updateStatus()
         updateFlowExplanation(value)
@@ -249,7 +254,7 @@ class MainActivity : AppCompatActivity() {
             minimumPink.text.toString().toInt().coerceIn(1, 10_000),
             pinkRadius.text.toString().toFloat().coerceIn(1f, 10f),
             saveGreenMask.isChecked,
-            ActiveTrackAction.values()[activeTrackActionSpinner.selectedItemPosition],
+            if (ReacquirePreset.values()[presetSpinner.selectedItemPosition] == ReacquirePreset.COMBINED_REAL) ActiveTrackAction.OFF else ActiveTrackAction.values()[activeTrackActionSpinner.selectedItemPosition],
             expandCollapsedControls.isChecked,
             activeTrackRetryInterval.text.toString().toLong().coerceIn(250L, 5_000L),
             saveActiveTrackEvidence.isChecked,
@@ -259,7 +264,8 @@ class MainActivity : AppCompatActivity() {
             autoRearmSimulatedActiveTrack.isChecked,
             hardSaveEveryFrame.isChecked,
             gimbalRecoveryEnabled.isChecked,
-            noGreenPlusGimbalTimeout.text.toString().toLong().coerceIn(1_000L, 300_000L))
+            noGreenPlusGimbalTimeout.text.toString().toLong().coerceIn(1_000L, 300_000L),
+            gimbalDragDuration.text.toString().toLong().coerceIn(1_000L, 30_000L))
     } catch (_: RuntimeException) { null }
 
     private fun configureExplanationUpdates() {
@@ -299,7 +305,7 @@ class MainActivity : AppCompatActivity() {
         listOf(
             captureInterval, retryCooldown, tapDuration, minimumPink, pinkRadius,
             activeTrackRetryInterval, activeTrackCycleTimeout,
-            maxActiveTrackTaps, maxChevronTaps, noGreenPlusGimbalTimeout
+            maxActiveTrackTaps, maxChevronTaps, noGreenPlusGimbalTimeout, gimbalDragDuration
         )
             .forEach { it.addTextChangedListener(watcher) }
     }
@@ -317,13 +323,13 @@ class MainActivity : AppCompatActivity() {
 
                 2. Countdown — Once the guard first passes, GDL waits 10 seconds. Losing the guard resets this countdown. No manual trigger is required.
 
-                3. Down movement — GDL presses the fixed DJI gimbal lane at 79.1% across and 45% down for 2 seconds and, without releasing, drags to 79% down over 6 seconds. Only the red bottom-limit knob is detected; white/green knob states and the dashed line are not processed.
+                3. Down movement — GDL presses the fixed DJI gimbal lane at 79.1% across and 45% down for 2 seconds and, without releasing, drags to 79% down over ${value.gimbalDragDurationMs} ms. No gimbal-angle or red-knob detection is performed.
 
-                4. Repeat — After release, GDL waits 6 seconds so DJI's previous gimbal wheel disappears, rechecks the guard, then repeats if the red limit was not confirmed.
+                4. Finish - One attempt only. Restart the test to try again.
 
-                5. Lower limit — Red is checked before gesture and interval states. Two consecutive red detections in the fixed bottom-limit box produce S24_GIMBAL_BOTTOM_LIMIT_REACHED and permanently stop this test's gestures.
+                5. Angle - No red-knob or numerical angle measurement. Duration controls the gesture only.
 
-                6. Evidence — The test captures at 1 FPS. Every Start creates a new GIMBAL_TEST folder; hard-save remains supported. Stage filenames cover countdown, command, gesture, interval, red confirmation and completion.
+                6. Evidence — The test captures at 1 FPS. Stage filenames cover countdown, request, gesture and single-attempt finish.
 
                 Press Start and switch to full-screen DJI Fly during the normal three-second arm delay. The separate 10-second gimbal countdown starts only after the guard passes.
             """.trimIndent()
@@ -405,7 +411,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         val gimbalRecovery = if (value.gimbalRecoveryEnabled) {
-            "Recovery starts disarmed and arms only after the first successful real tap on a validated pink-associated green +. After it is armed, ${value.noGreenPlusGimbalTimeoutMs} ms without another validated pink-associated green + causes GDL to hold the fixed DJI gimbal lane at 79.1% across for 2 seconds, drag down for 6 seconds and wait 6 seconds for the wheel to disappear. Green + is intentionally ignored during recovery. Repeat until two red bottom-limit frames, then remain at the lower limit and resume maximum-speed green + and pink-association searching."
+            "Recovery arms after a successful validated plus/pink tap. In Spotlight mode the countdown resets while a validated plus or red X control with chevron is visible. After ${value.noGreenPlusGimbalTimeoutMs} ms of absence, hold for 2 seconds and drag for ${value.gimbalDragDurationMs} ms once. No red-knob detection or retry. Resume searching; a new successful validated tap re-arms recovery."
         } else "Production gimbal recovery is disabled."
         val evidence = (if (value.hardSaveEveryCapturedFrame) {
             "Hard-saving is ON: every successfully captured screenshot is saved as a stage-named RAW image for every preset. Detector evidence is also stage-named."
@@ -466,7 +472,7 @@ class MainActivity : AppCompatActivity() {
 
             8. Evidence — Every Start creates a new timestamped preset folder and writes its selected settings. $evidence${if (value.saveActiveTrackEvidence) " ActiveTrack evidence is enabled." else " ActiveTrack evidence is disabled."}
 
-            ${if (value.preset == ReacquirePreset.COMBINED_REAL) "Combined sequence: keep revalidating and retrying a visible + without an attempt limit; a + seen while awaiting ActiveTrack immediately returns to Re-acquire. After the + clears, run the bounded ActiveTrack selector and confirm Manual/Parallel/Stop. After a terminal result, the old + must disappear before a later validated + can start another cycle." else "The selected modules remain independent."}
+            ${if (value.preset == ReacquirePreset.COMBINED_REAL) "Spotlight sequence: select validated plus/pink, leave DJI in Spotlight, and monitor the red X control with chevron. No automatic ActiveTrack or chevron taps." else "The selected modules remain independent."}
 
             Press Start to validate and save exactly these displayed settings, then arm after the three-second safety delay.$warning
         """.trimIndent()

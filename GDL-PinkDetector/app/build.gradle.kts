@@ -11,8 +11,8 @@ android {
         applicationId = "com.gdl.pinkdetector"
         minSdk = 29
         targetSdk = 34
-        versionCode = 42
-        versionName = "0.15.12.3"
+        versionCode = 48
+        versionName = "0.15.12.9"
     }
 
     buildTypes {

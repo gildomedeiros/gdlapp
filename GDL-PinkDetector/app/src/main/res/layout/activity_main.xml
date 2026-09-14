@@ -13,7 +13,7 @@
             android:id="@+id/versionTitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="GDL Modular Tests v0.15.12.3"
+            android:text="GDL Modular Tests v0.15.12.9"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -125,11 +125,14 @@
             android:id="@+id/noGreenPlusGimbalTimeoutEdit"
             style="@style/GdlNumberInput" />
 
+        <TextView style="@style/GdlSettingLabel" android:text="Gimbal drag duration (milliseconds, 1000–30000; no retry)" />
+        <EditText android:id="@+id/gimbalDragDurationEdit" style="@style/GdlNumberInput" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
-            android:text="SELECT ACTIVETRACK"
+            android:text="ACTIVETRACK DIAGNOSTICS (not used in Spotlight mode)"
             android:textSize="19sp"
             android:textStyle="bold" />
 

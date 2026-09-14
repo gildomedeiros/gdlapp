@@ -48,21 +48,6 @@ object GimbalEvidenceAnnotator {
         }
         val background = Paint().apply { color = 0xBB000000.toInt() }
 
-        val left = source.width * (GimbalKnobDetector.FIXED_X -
-            GimbalKnobDetector.STRIP_HALF_WIDTH)
-        val right = source.width * (GimbalKnobDetector.FIXED_X +
-            GimbalKnobDetector.STRIP_HALF_WIDTH)
-        canvas.drawRect(
-            RectF(left, source.height * GimbalKnobDetector.RED_LIMIT_TOP,
-                right, source.height * GimbalKnobDetector.RED_LIMIT_BOTTOM), red)
-
-        decision.knobRect?.let { canvas.drawRect(it, knob) }
-        if (decision.knobX != null && decision.knobY != null) {
-            canvas.drawCircle(
-                decision.knobX, decision.knobY,
-                max(18f * scale, (decision.knobRect?.width() ?: 8f) * 1.5f), knob)
-        }
-
         if (commandStartX != null && commandStartY != null && commandEndY != null) {
             canvas.drawCircle(commandStartX, commandStartY, 15f * scale, command)
             canvas.drawLine(commandStartX, commandStartY, commandStartX, commandEndY, command)
@@ -83,7 +68,7 @@ object GimbalEvidenceAnnotator {
                 commandEndY!! / source.height * 100f,
                 holdMs,
                 dragMs)
-            else -> "NO DRAG"
+            else -> decision.status
         }
         val lines = listOf(
             stage,

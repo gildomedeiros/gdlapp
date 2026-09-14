@@ -37,7 +37,6 @@ class GdlAccessibilityService : AccessibilityService() {
         private const val SAMSUNG_GALLERY_PACKAGE = "com.sec.android.gallery3d"
         private const val OVERLAY_HIDE_DELAY_MS = 50L
         private const val GIMBAL_KNOB_HOLD_MS = 2_000L
-        private const val GIMBAL_DOWN_DRAG_MS = 6_000L
         private const val GIMBAL_BETWEEN_DRAGS_MS = 6_000L
         private const val GIMBAL_KNOB_CONFIRMATIONS_REQUIRED = 2
         private const val GIMBAL_TEST_COUNTDOWN_MS = 10_000L
@@ -47,8 +46,13 @@ class GdlAccessibilityService : AccessibilityService() {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
+    private val evidenceWorker = Executors.newSingleThreadExecutor()
+    private val evidenceSlots = EvidenceAdmission()
+    private val skippedEvidence = java.util.concurrent.atomic.AtomicInteger()
+    private val diagnostic by lazy { DiagnosticLog(applicationContext) }
     private val telemetryWorker = Executors.newSingleThreadExecutor()
-    private val screenshotInFlight = AtomicBoolean(false)
+    private val captureTicket = CaptureTicket()
+    private val rectangleInFlight = AtomicBoolean(false)
     private lateinit var windowManager: WindowManager
     private var overlayView: DetectionOverlayView? = null
     private var sessionFolder = "Pictures/GDL/PENDING"
@@ -72,8 +76,17 @@ class GdlAccessibilityService : AccessibilityService() {
     private var gimbalNextDragAllowedMs = 0L
     private var gimbalKnobConfirmations = 0
     private var gimbalBottomReached = false
+    private val gimbalAttempt = SingleGimbalAttempt()
     private var lastValidatedPlusDetectedMs = 0L
     private var recoveryNotBeforeMs = 0L
+    private val s11RecoveryCountdown = S11RecoveryCountdown()
+    private var s11LastSpotlightCheckMs = -1L
+    private var s11SpotlightVisible = false
+    private var spotlightPinVisible = false
+    private var spotlightExitPending = false
+    private var spotlightExitClearFrames = 0
+    private var spotlightExitRetryAt = 0L
+    private var spotlightExitRect: Rect? = null
     private var productionGimbalRecoveryArmed = false
     private var productionGimbalRecoveryActive = false
     private var productionGimbalBottomReached = false
@@ -120,6 +133,8 @@ class GdlAccessibilityService : AccessibilityService() {
         mainHandler.removeCallbacksAndMessages(null)
         worker.shutdownNow()
         telemetryWorker.shutdownNow()
+        evidenceWorker.shutdown()
+        diagnostic.close()
         DjiTelemetryReader.close()
         removeOverlay()
         super.onDestroy()
@@ -164,38 +179,75 @@ class GdlAccessibilityService : AccessibilityService() {
             overlayView?.showMessage(message, Color.YELLOW)
             return
         }
-        if (!screenshotInFlight.compareAndSet(false, true)) return
+        val ticket = captureTicket.begin()
+        if (ticket == 0L) return
+        diag("CAPTURE_REQUEST ticket=$ticket")
         overlayView?.visibility = View.INVISIBLE
-        mainHandler.postDelayed({ captureOnAndroid11Plus() }, OVERLAY_HIDE_DELAY_MS)
+        mainHandler.postDelayed({
+            if (captureTicket.expire(ticket)) {
+                diag("CAPTURE_TIMEOUT ticket=$ticket")
+                postMessage("CAPTURE TIMEOUT • retrying", Color.RED)
+            } else if (captureTicket.isProcessing(ticket)) {
+                diag("PROCESSING_SLOW ticket=$ticket")
+                postMessage("PROCESSING SLOW • capture still busy", Color.YELLOW)
+            }
+        }, 10_000L)
+        mainHandler.postDelayed({ captureOnAndroid11Plus(ticket) }, OVERLAY_HIDE_DELAY_MS)
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
-    private fun captureOnAndroid11Plus() {
-        takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
-            override fun onSuccess(screenshot: ScreenshotResult) {
-                val buffer = screenshot.hardwareBuffer
-                val hardware = Bitmap.wrapHardwareBuffer(buffer, screenshot.colorSpace)
-                val bitmap = hardware?.copy(Bitmap.Config.ARGB_8888, false)
-                buffer.close()
-                if (bitmap == null) {
-                    finishCapture("GDL: screenshot conversion failed", Color.RED)
-                    return
-                }
-                worker.execute {
-                    val retained = try { processScreenshot(bitmap) } catch (error: Throwable) {
-                        saveHardRaw(
-                            bitmap, GdlTestSettings.load(this@GdlAccessibilityService),
-                            "S90_PIPELINE_ERROR")
-                        postMessage("PIPELINE ERROR • ${error.javaClass.simpleName}", Color.RED)
-                        false
+    private fun captureOnAndroid11Plus(ticket: Long) {
+        val captureStarted = SystemClock.elapsedRealtime()
+        try {
+            takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
+                override fun onSuccess(screenshot: ScreenshotResult) {
+                    val buffer = screenshot.hardwareBuffer
+                    if (!captureTicket.accept(ticket)) {
+                        buffer.close(); diag("LATE_CAPTURE_DISCARDED ticket=$ticket"); return
                     }
-                    if (!retained) bitmap.recycle()
-                    screenshotInFlight.set(false)
+                    diag("CAPTURE_CALLBACK ticket=$ticket wait_ms=${SystemClock.elapsedRealtime() - captureStarted}")
+                    val bitmap = try {
+                        val hardware = Bitmap.wrapHardwareBuffer(buffer, screenshot.colorSpace)
+                        try { hardware?.copy(Bitmap.Config.ARGB_8888, false) }
+                        finally { hardware?.recycle() }
+                    } catch (e: Throwable) {
+                        diag("CAPTURE_CONVERSION_ERROR ${android.util.Log.getStackTraceString(e)}")
+                        null
+                    } finally { buffer.close() }
+                    if (bitmap == null) {
+                        finishCapture(ticket, "Screenshot conversion failed", Color.RED); return
+                    }
+                    try {
+                        worker.execute {
+                            val started = SystemClock.elapsedRealtime()
+                            var retained = false
+                            try {
+                                diag("PROCESSING_START ticket=$ticket")
+                                retained = processScreenshot(bitmap)
+                            } catch (e: Throwable) {
+                                diag("PIPELINE_ERROR ${android.util.Log.getStackTraceString(e)}")
+                                postMessage("PIPELINE ERROR • ${e.javaClass.simpleName}", Color.RED)
+                            } finally {
+                                if (!retained && !bitmap.isRecycled) bitmap.recycle()
+                                captureTicket.finish(ticket)
+                                mainHandler.post { overlayView?.visibility = View.VISIBLE }
+                                diag("PROCESSING_END ticket=$ticket processing_ms=${SystemClock.elapsedRealtime() - started}")
+                            }
+                        }
+                    } catch (e: java.util.concurrent.RejectedExecutionException) {
+                        bitmap.recycle(); finishCapture(ticket, "Capture worker unavailable", Color.RED)
+                    }
                 }
-            }
-
-            override fun onFailure(errorCode: Int) = finishCapture("SCREENSHOT FAILED • $errorCode", Color.RED)
-        })
+                override fun onFailure(errorCode: Int) {
+                    if (captureTicket.expire(ticket)) {
+                        diag("CAPTURE_FAILURE ticket=$ticket code=$errorCode")
+                        postMessage("SCREENSHOT FAILED • $errorCode", Color.RED)
+                    }
+                }
+            })
+        } catch (e: Throwable) {
+            finishCapture(ticket, "Screenshot request failed: ${e.javaClass.simpleName}", Color.RED)
+        }
     }
 
     /** True means the asynchronous real-tap callback owns the bitmap. */
@@ -218,7 +270,7 @@ class GdlAccessibilityService : AccessibilityService() {
             return processProductionGimbalRecovery(bitmap, settings, now)
         }
         val combined = settings.preset == ReacquirePreset.COMBINED_REAL
-        if (combined && combinedPhase != CombinedPhase.ACTIVE_TRACK) {
+        if (combined) {
             return processCombinedReacquire(bitmap, settings, now)
         }
         if (settings.activeTrackAction != ActiveTrackAction.OFF) {
@@ -391,8 +443,7 @@ class GdlAccessibilityService : AccessibilityService() {
                         djiFullscreenGuardFailure(current)
                     } else "GDL: Android 11+ required"
                     val stillAllowed = GdlTestSettings.isReady(this) &&
-                        current.activeTrackAction == ActiveTrackAction.REAL_TAP &&
-                        current.foreground == ForegroundTarget.DJI_FLY &&
+                                current.foreground == ForegroundTarget.DJI_FLY &&
                         current.requireDjiFullscreen &&
                         appStillMatches && fullscreenFailure == null
                     if (!stillAllowed) {
@@ -525,6 +576,7 @@ class GdlAccessibilityService : AccessibilityService() {
                                 "S03_PLUS_TAP_COMPLETED", frameFolder, frameNumber)
                             if (completed && isValidatedGreenPlusWithPink(decision, settings)) {
                                 productionGimbalRecoveryArmed = true
+                                gimbalAttempt.rearm()
                             }
                             bitmap.recycle()
                             postMessage(
@@ -547,9 +599,8 @@ class GdlAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * v0.15.5 coordinator. It reuses the unchanged ReacquirePipeline, retries
-     * a persistent + without a fixed attempt cap, and starts the independent
-     * ActiveTrack state machine only after a completed + tap.
+     * Spotlight acquisition: retry fresh validated candidates after cooldown.
+     * Android completion arms monitoring; only CV reports control visibility.
      */
     private fun processCombinedReacquire(
         bitmap: Bitmap,
@@ -557,7 +608,66 @@ class GdlAccessibilityService : AccessibilityService() {
         now: Long,
         suppliedDecision: ReacquireDecision? = null
     ): Boolean {
+        if (rectangleInFlight.get()) {
+            saveHardRaw(bitmap, settings, "S02_RECTANGLE_IN_FLIGHT")
+            return false
+        }
         val decision = suppliedDecision ?: evaluatePlusAndRecordDetection(bitmap, settings, now)
+        val freshControlCheck = s11LastSpotlightCheckMs < 0L ||
+            now - s11LastSpotlightCheckMs >= 1_000L || decision.selected
+        if (freshControlCheck) {
+            val controlStarted = SystemClock.elapsedRealtime()
+            spotlightExitRect = ActiveTrackPanelDetector.spotlightControlRect(bitmap)
+            val pinStarted = SystemClock.elapsedRealtime()
+            val pixels = NativeFramePixels.read(bitmap)
+            spotlightPinVisible = SpotlightPinMatcher.matches(pixels, bitmap.width, bitmap.height)
+            diag("frame=$frameCount control_ms=${pinStarted - controlStarted} pin_ms=${SystemClock.elapsedRealtime() - pinStarted}")
+            s11SpotlightVisible = spotlightExitRect != null && !spotlightPinVisible
+            s11LastSpotlightCheckMs = now
+        }
+        if (spotlightPinVisible && spotlightExitRect != null) spotlightExitPending = true
+        if (spotlightExitPending && freshControlCheck && s11SpotlightVisible) {
+            spotlightExitPending = false
+            spotlightExitClearFrames = 0
+        }
+        if (spotlightExitPending) {
+            s11RecoveryCountdown.update(now, productionGimbalRecoveryArmed,
+                decision.selected, s11SpotlightVisible, settings.noGreenPlusGimbalTimeoutMs)
+            if (freshControlCheck) {
+                spotlightExitClearFrames = if (spotlightExitRect == null && !spotlightPinVisible)
+                    spotlightExitClearFrames + 1 else 0
+            }
+            if (spotlightExitClearFrames < 2) {
+                val rect = spotlightExitRect
+                if (spotlightPinVisible && rect != null && now >= spotlightExitRetryAt) {
+                    spotlightExitRetryAt = now + maxOf(1_000L, settings.retryCooldownMs)
+                    saveHardRaw(bitmap, settings, "S04_SPOTLIGHT_EXIT_REQUESTED")
+                    mainHandler.post {
+                        val current = GdlTestSettings.load(this)
+                        val allowed = GdlTestSettings.isReady(this) &&
+                            current.preset == ReacquirePreset.COMBINED_REAL &&
+                            current.action == ReacquireAction.REAL_TAP &&
+                            foregroundMatches(ForegroundTarget.DJI_FLY) &&
+                            djiFullscreenGuardFailure(current) == null
+                        val point = overlayView?.mapSourcePointToView(
+                            rect.exactCenterX(), rect.exactCenterY(), bitmap.width, bitmap.height)
+                        if (allowed && point != null) {
+                            val accepted = dispatchTap(point.first, point.second, current.tapDurationMs) {
+                                bitmap.recycle()
+                                postMessage("EXIT TAP FINISHED • verifying fresh frames", Color.YELLOW)
+                            }
+                            if (!accepted) bitmap.recycle()
+                        } else bitmap.recycle()
+                    }
+                    return true
+                }
+                saveHardRaw(bitmap, settings, "S05_SPOTLIGHT_EXIT_VERIFYING")
+                postMessage("SPOTLIGHT EXIT • waiting for control and pin to clear", Color.YELLOW)
+                return false
+            }
+            spotlightExitPending = false
+            spotlightExitClearFrames = 0
+        }
         if (now < cooldownUntilMs) {
             saveHardRaw(bitmap, settings, "S03_PLUS_RETRY_COOLDOWN")
             postMessage("COMBINED • waiting for validated + • tap cooldown", Color.YELLOW)
@@ -579,40 +689,52 @@ class GdlAccessibilityService : AccessibilityService() {
             // not armed until a validated pink-associated + tap completes.
             // Once armed, a raw + without the required pink association must
             // not prevent the lost-subject recovery timer in S11.
-            if (processNoPlusGimbalTimeout(bitmap, settings, now)) return false
+            val s11 = combinedPhase == CombinedPhase.COMPLETE
+            val countdownExpired = !s11 || s11RecoveryCountdown.update(
+                now, productionGimbalRecoveryArmed, false, s11SpotlightVisible,
+                settings.noGreenPlusGimbalTimeoutMs)
+            if (countdownExpired && processNoPlusGimbalTimeout(bitmap, settings, now)) return false
             saveHardRaw(bitmap, settings, stage)
             if (settings.hardSaveEveryCapturedFrame ||
                 settings.savePolicy == SavePolicy.EVERY_FRAME) {
-                saveEvidence(bitmap, decision, settings.action, stage)
+                saveEvidence(bitmap, decision.copy(status = if (s11)
+                    "${decision.status} | Spotlight control ${if (s11SpotlightVisible) "VISIBLE" else "ABSENT"}"
+                    else decision.status), settings.action, stage)
             }
-            postMessage("$phase • ${decision.status}", Color.YELLOW)
+            postMessage(if (s11 && s11SpotlightVisible)
+                "SPOTLIGHT CONTROL VISIBLE • recovery countdown reset"
+                else "$phase • ${decision.status}", Color.YELLOW)
             return false
         }
 
         resetProductionGimbalRecovery(rearm = true)
 
-        if (combinedPhase == CombinedPhase.COMPLETE && !combinedSawNoPlusSinceComplete) {
-            val stage = "S10_EXISTING_PLUS_MUST_CLEAR"
-            saveHardRaw(bitmap, settings, stage)
-            if (settings.hardSaveEveryCapturedFrame ||
-                settings.savePolicy != SavePolicy.NONE) {
-                saveEvidence(bitmap, decision, settings.action, stage)
+        // Check this fresh frame before every candidate tap, including retries.
+        // A visible Spotlight control protects the selection from another tap.
+        if (s11SpotlightVisible) {
+            s11RecoveryCountdown.reset()
+            saveHardRaw(bitmap, settings, "S11_SPOTLIGHT_CONTROL_VISIBLE")
+            if (settings.hardSaveEveryCapturedFrame || settings.savePolicy != SavePolicy.NONE) {
+                saveEvidence(bitmap, decision.copy(status = "Spotlight control VISIBLE | no tap"),
+                    settings.action, "S11_SPOTLIGHT_CONTROL_VISIBLE")
             }
-            postMessage(
-                "${combinedTerminalLabel()} • existing + must clear before a new cycle",
-                Color.YELLOW)
+            postMessage("SPOTLIGHT CONTROL VISIBLE • no tap • recovery countdown reset", Color.YELLOW)
             return false
         }
 
-        val sourceX = decision.selectedX ?: return false
-        val sourceY = decision.selectedY ?: return false
+        val marker = decision.selectedRect ?: return false
+        val bounds = AcquisitionRectangle.bounds(marker.left, marker.top, marker.right,
+            marker.bottom, bitmap.width, bitmap.height) ?: return false
+        val rectangle = Rect(bounds[0].toInt(), bounds[1].toInt(), bounds[2].toInt(), bounds[3].toInt())
+        val sourceX = bounds[0]; val sourceY = bounds[1]
         val frameFolder = sessionFolder
         val frameNumber = frameCount
         // Combined + retries are intentionally unlimited. The configurable
         // retry cooldown controls their pace; the v0.15.5 combined preset
-        // defaults it to 800 ms.
+        // defaults it to 1000 ms.
         cooldownUntilMs = now + settings.retryCooldownMs
         saveHardRaw(bitmap, settings, "S02_PLUS_SELECTED")
+        rectangleInFlight.set(true)
         mainHandler.post {
             overlayView?.visibility = View.VISIBLE
             val current = GdlTestSettings.load(this)
@@ -624,13 +746,13 @@ class GdlAccessibilityService : AccessibilityService() {
             val stillAllowed = GdlTestSettings.isReady(this) &&
                 current.preset == ReacquirePreset.COMBINED_REAL &&
                 current.action == ReacquireAction.REAL_TAP &&
-                current.activeTrackAction == ActiveTrackAction.REAL_TAP &&
                 appStillMatches && fullscreenFailure == null
             if (!stillAllowed) {
                 cooldownUntilMs = 0L
                 bitmap.recycle()
                 overlayView?.showMessage(
-                    fullscreenFailure ?: "COMBINED + TAP CANCELLED", Color.RED)
+                    fullscreenFailure ?: "COMBINED + RECTANGLE CANCELLED", Color.RED)
+                rectangleInFlight.set(false)
                 return@post
             }
             val point = overlayView?.mapSourcePointToView(
@@ -639,47 +761,54 @@ class GdlAccessibilityService : AccessibilityService() {
                 cooldownUntilMs = 0L
                 bitmap.recycle()
                 overlayView?.showMessage("COMBINED COORDINATE MAP FAILED", Color.RED)
+                rectangleInFlight.set(false)
                 return@post
             }
-            val accepted = dispatchTap(
-                point.first, point.second, current.tapDurationMs) { completed ->
+            val end = overlayView?.mapSourcePointToView(bounds[2], bounds[3], bitmap.width, bitmap.height)
+            if (end == null) { bitmap.recycle(); rectangleInFlight.set(false); return@post }
+            cooldownUntilMs = SystemClock.elapsedRealtime() + current.retryCooldownMs
+            diag("frame=$frameNumber decision_to_dispatch_ms=${SystemClock.elapsedRealtime() - now} rectangle=${bounds.joinToString()}")
+            val accepted = dispatchDrag(
+                point.first, point.second, end.first, end.second, 300L) { completed ->
                 worker.execute {
                     if (completed) {
                         if (current.savePolicy != SavePolicy.NONE ||
                             current.hardSaveEveryCapturedFrame) {
                             saveEvidence(
-                                bitmap, decision, current.action,
-                                "S03_PLUS_TAP_COMPLETED", frameFolder, frameNumber)
+                                bitmap, decision.copy(selectedRect = rectangle,
+                                    status = "Rectangle gesture completed; awaiting Spotlight control"), current.action,
+                                "S03_PLUS_RECTANGLE_COMPLETED", frameFolder, frameNumber)
                         }
                         // Production recovery must never start before take-off/setup.
-                        // Arm it only after a real tap completed on a + that was
+                        // Arm it only after a real rectangle completed around a + that was
                         // selected by the configured green-plus + pink association.
                         if (isValidatedGreenPlusWithPink(decision, current)) {
                             productionGimbalRecoveryArmed = true
+                                gimbalAttempt.rearm()
                         }
                         resetActiveTrackCycle()
-                        activeTrackCycleResult = "WAITING_FOR_PLUS_CLEAR"
-                        combinedPhase = CombinedPhase.ACTIVE_TRACK
+                        activeTrackCycleResult = "AWAITING_SPOTLIGHT"
+                        combinedPhase = CombinedPhase.COMPLETE
                         combinedSawNoPlusSinceComplete = false
-                    } else {
-                        cooldownUntilMs = 0L
                     }
                     bitmap.recycle()
+                    rectangleInFlight.set(false)
                     postMessage(
-                        if (completed) "COMBINED + TAP ✓ • selecting ActiveTrack"
-                        else "COMBINED + TAP FAILED • waiting for validated +",
+                        if (completed) "COMBINED + RECTANGLE COMPLETED • awaiting Spotlight control"
+                        else "COMBINED + RECTANGLE FAILED • waiting for validated +",
                         if (completed) 0xFF00BFFF.toInt() else Color.RED)
                 }
             }
             if (accepted) {
                 overlayView?.showTarget(
-                    decision.selectedRect, bitmap.width, bitmap.height,
+                    rectangle, bitmap.width, bitmap.height,
                     point.first, point.second,
-                    "PRESSING VALIDATED + • next: ActiveTrack", true)
+                    "DRAWING 3× MARKER RECTANGLE • Spotlight only", true)
             } else {
                 cooldownUntilMs = 0L
                 bitmap.recycle()
-                overlayView?.showMessage("COMBINED + TAP REJECTED", Color.RED)
+                overlayView?.showMessage("COMBINED + RECTANGLE REJECTED", Color.RED)
+                rectangleInFlight.set(false)
             }
         }
         return true
@@ -691,27 +820,11 @@ class GdlAccessibilityService : AccessibilityService() {
         settings: ReacquireSettings,
         now: Long
     ): Boolean {
-        if (gimbalBottomReached) {
-            saveGimbalFrame(bitmap, settings, "S24_GIMBAL_BOTTOM_LIMIT_REACHED")
-            postMessage("GIMBAL BOTTOM LIMIT REACHED • no further movement", Color.YELLOW)
+        if (gimbalAttempt.isUsed && !gimbalGestureInFlight.get()) {
+            saveGimbalFrame(bitmap, settings, "S27_GIMBAL_SINGLE_ATTEMPT_FINISHED")
+            postMessage("GIMBAL TEST • attempt finished • restart test for another", Color.YELLOW)
             return false
         }
-        val decision = GimbalKnobDetector.evaluate(bitmap)
-        if (decision.redLowerLimit) {
-            gimbalKnobConfirmations++
-            val confirmed = gimbalKnobConfirmations >= GIMBAL_KNOB_CONFIRMATIONS_REQUIRED
-            if (confirmed) gimbalBottomReached = true
-            val stage = if (confirmed) "S24_GIMBAL_BOTTOM_LIMIT_REACHED"
-                else "S23_GIMBAL_BOTTOM_LIMIT_CONFIRMING"
-            saveGimbalFrame(bitmap, settings, stage, decision)
-            postMessage(
-                if (confirmed) "GIMBAL BOTTOM LIMIT REACHED • no further movement"
-                else "GIMBAL RED LIMIT • confirming 1/2",
-                Color.YELLOW)
-            return false
-        }
-        gimbalKnobConfirmations = 0
-
         if (gimbalTestCountdownStartedMs == 0L) gimbalTestCountdownStartedMs = now
         val countdownRemaining = GIMBAL_TEST_COUNTDOWN_MS - (now - gimbalTestCountdownStartedMs)
         if (countdownRemaining > 0L) {
@@ -737,14 +850,14 @@ class GdlAccessibilityService : AccessibilityService() {
         val startX = bitmap.width * GimbalKnobDetector.GESTURE_START_X
         val startY = bitmap.height * GimbalKnobDetector.GESTURE_START_Y
         val endY = bitmap.height * GimbalKnobDetector.DRAG_BOTTOM_Y
-        val commandDecision = decision.copy(status = "AUTOMATIC HOLD + DOWN DRAG")
+        val commandDecision = GimbalKnobDetector.Decision(false, status = "TIMED HOLD + DOWN DRAG")
 
         saveGimbalFrame(
             bitmap, settings, "S22_GIMBAL_HOLD_THEN_DRAG_DOWN", commandDecision,
             startX, startY, endY)
         dispatchGimbalDrag(
             startX, startY, startX, endY,
-            bitmap.width, bitmap.height, GIMBAL_DOWN_DRAG_MS, "DOWN 6s",
+            bitmap.width, bitmap.height, settings.gimbalDragDurationMs, "DOWN ${settings.gimbalDragDurationMs}ms",
             productionRecovery = false)
         return false
     }
@@ -761,7 +874,7 @@ class GdlAccessibilityService : AccessibilityService() {
         now: Long
     ): Boolean {
         if (!isProductionGimbalPreset(settings) || !productionGimbalRecoveryArmed ||
-            productionGimbalBottomReached) return false
+            productionGimbalBottomReached || gimbalAttempt.isUsed) return false
         if (lastValidatedPlusDetectedMs == 0L || now < recoveryNotBeforeMs) return false
         if (now - lastValidatedPlusDetectedMs < settings.noGreenPlusGimbalTimeoutMs) return false
         productionGimbalRecoveryActive = true
@@ -785,38 +898,14 @@ class GdlAccessibilityService : AccessibilityService() {
                     "GIMBAL DRAG REJECTED"
                 outcomeStage.contains("FAILED") ->
                     "GIMBAL DRAG FAILED"
-                else -> "GIMBAL DRAG COMPLETE • rest 6s"
+                else -> "GIMBAL DRAG COMPLETE • no retry"
             }
-            val outcomeDecision = GimbalKnobDetector.evaluate(bitmap).copy(status = message)
+            val outcomeDecision = GimbalKnobDetector.Decision(false, status = message)
             saveGimbalFrame(bitmap, settings, outcomeStage, outcomeDecision)
             postMessage(message,
                 if (outcomeStage.contains("COMPLETED")) 0xFF00BFFF.toInt() else Color.RED)
             return false
         }
-
-        val decision = GimbalKnobDetector.evaluate(bitmap)
-        if (decision.redLowerLimit) {
-            productionGimbalRedConfirmations++
-            val confirmed = productionGimbalRedConfirmations >=
-                GIMBAL_KNOB_CONFIRMATIONS_REQUIRED
-            if (confirmed) {
-                productionGimbalBottomReached = true
-                // A dispatched Accessibility gesture cannot be shortened safely.
-                // Keep ignoring green + until its callback reports completion.
-                if (!gimbalGestureInFlight.get()) productionGimbalRecoveryActive = false
-            }
-            val stage = if (confirmed) "S15_REACQUIRE_GIMBAL_BOTTOM_LIMIT_REACHED"
-                else "S14_REACQUIRE_GIMBAL_BOTTOM_LIMIT_CONFIRMING"
-            saveGimbalFrame(
-                bitmap, settings, stage, decision,
-                confirmationCount = productionGimbalRedConfirmations)
-            postMessage(
-                if (confirmed) "GIMBAL AT -90° • searching for validated green +"
-                else "GIMBAL RED LIMIT • confirming 1/2",
-                Color.YELLOW)
-            return false
-        }
-        productionGimbalRedConfirmations = 0
 
         if (gimbalGestureInFlight.get()) {
             saveGimbalFrame(bitmap, settings, "S13_REACQUIRE_GIMBAL_GESTURE_IN_PROGRESS")
@@ -832,13 +921,13 @@ class GdlAccessibilityService : AccessibilityService() {
         val startX = bitmap.width * GimbalKnobDetector.GESTURE_START_X
         val startY = bitmap.height * GimbalKnobDetector.GESTURE_START_Y
         val endY = bitmap.height * GimbalKnobDetector.DRAG_BOTTOM_Y
-        val commandDecision = decision.copy(status = "PRODUCTION GIMBAL RECOVERY")
+        val commandDecision = GimbalKnobDetector.Decision(false, status = "TIMED GIMBAL RECOVERY")
         saveGimbalFrame(
             bitmap, settings, "S12_REACQUIRE_GIMBAL_GESTURE_REQUESTED",
             commandDecision, startX, startY, endY)
         dispatchGimbalDrag(
             startX, startY, startX, endY, bitmap.width, bitmap.height,
-            GIMBAL_DOWN_DRAG_MS, "RECOVERY DOWN 6s",
+            settings.gimbalDragDurationMs, "RECOVERY DOWN ${settings.gimbalDragDurationMs}ms",
             productionRecovery = true)
         return false
     }
@@ -858,7 +947,10 @@ class GdlAccessibilityService : AccessibilityService() {
         label: String,
         productionRecovery: Boolean
     ) {
+        if (gimbalAttempt.isUsed) return
         if (!gimbalGestureInFlight.compareAndSet(false, true)) return
+        gimbalAttempt.begin()
+        if (productionRecovery) productionGimbalRecoveryArmed = false
         // Reserve the continuous hold, drag and mandatory six-second rest.
         gimbalNextDragAllowedMs = SystemClock.elapsedRealtime() +
             GIMBAL_KNOB_HOLD_MS + durationMs + GIMBAL_BETWEEN_DRAGS_MS
@@ -904,7 +996,7 @@ class GdlAccessibilityService : AccessibilityService() {
                         "S17_REACQUIRE_GIMBAL_GESTURE_FAILED"
                     }
                 }
-                if (productionGimbalBottomReached) {
+                if (productionRecovery) {
                     productionGimbalRecoveryActive = false
                     gimbalNextDragAllowedMs = 0L
                 } else {
@@ -914,8 +1006,8 @@ class GdlAccessibilityService : AccessibilityService() {
                 postMessage(
                     if (productionGimbalBottomReached) {
                         "GIMBAL AT -90° • searching for validated green +"
-                    } else if (completed) "GIMBAL $label COMPLETE • rest 6s"
-                    else "GIMBAL $label FAILED • rest 6s",
+                    } else if (completed) "GIMBAL $label COMPLETE • no retry"
+                    else "GIMBAL $label FAILED • no retry",
                     if (completed) 0xFF00BFFF.toInt() else Color.RED)
             }
             if (!accepted) {
@@ -930,7 +1022,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 } else {
                     gimbalNextDragAllowedMs = SystemClock.elapsedRealtime() +
                         GIMBAL_BETWEEN_DRAGS_MS
-                    overlayView?.showMessage("GIMBAL $label REJECTED • rest 6s", Color.RED)
+                    overlayView?.showMessage("GIMBAL $label REJECTED • no retry", Color.RED)
                 }
             } else {
                 overlayView?.showMessage(
@@ -977,7 +1069,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 bitmap, decision!!, stage,
                 confirmationCount.coerceAtMost(GIMBAL_KNOB_CONFIRMATIONS_REQUIRED),
                 GIMBAL_KNOB_CONFIRMATIONS_REQUIRED,
-                GIMBAL_KNOB_HOLD_MS, GIMBAL_DOWN_DRAG_MS,
+                GIMBAL_KNOB_HOLD_MS, settings.gimbalDragDurationMs,
                 commandStartX, commandStartY, commandEndY)
             try {
                 if (saveBitmap(annotated, "F${sequence}_${stage}_ANNOTATED.jpg",
@@ -1031,10 +1123,14 @@ class GdlAccessibilityService : AccessibilityService() {
         gimbalNextDragAllowedMs = 0L
         resetGimbalKnobConfirmation()
         gimbalBottomReached = false
+        gimbalAttempt.rearm()
         gimbalGestureInFlight.set(false)
         productionGimbalRecoveryArmed = false
         lastValidatedPlusDetectedMs = 0L
         recoveryNotBeforeMs = 0L
+        s11RecoveryCountdown.reset()
+        s11LastSpotlightCheckMs = -1L
+        s11SpotlightVisible = false
         productionGimbalPendingOutcomeStage = null
         resetProductionGimbalRecovery(rearm = false)
     }
@@ -1045,10 +1141,13 @@ class GdlAccessibilityService : AccessibilityService() {
         settings: ReacquireSettings,
         now: Long
     ): ReacquireDecision {
-        val decision = ReacquirePipeline.evaluate(bitmap, settings)
+        val perfStart = SystemClock.elapsedRealtime()
+        val decision = ReacquirePipeline.evaluate(bitmap, settings) { diag(it) }
+        diag("frame=$frameCount acquisition_ms=${SystemClock.elapsedRealtime() - perfStart}")
         if (isProductionGimbalPreset(settings) && isValidatedGreenPlusWithPink(decision, settings)) {
             lastValidatedPlusDetectedMs = now
             recoveryNotBeforeMs = 0L
+            s11RecoveryCountdown.reset()
         }
         return decision
     }
@@ -1074,6 +1173,9 @@ class GdlAccessibilityService : AccessibilityService() {
             gimbalTestCountdownStartedMs = 0L
         }
         if (isProductionGimbalPreset(settings) && !productionGimbalRecoveryActive) {
+            s11RecoveryCountdown.reset()
+            s11LastSpotlightCheckMs = -1L
+            s11SpotlightVisible = false
             recoveryNotBeforeMs = SystemClock.elapsedRealtime() + settings.noGreenPlusGimbalTimeoutMs
         }
     }
@@ -1138,12 +1240,13 @@ class GdlAccessibilityService : AccessibilityService() {
     }
 
     private fun dispatchTap(x: Float, y: Float, durationMs: Long, result: (Boolean) -> Unit): Boolean {
+        diag("TAP_REQUEST x=$x y=$y duration_ms=$durationMs")
         val path = Path().apply { moveTo(x, y) }
         val gesture = GestureDescription.Builder().addStroke(
             GestureDescription.StrokeDescription(path, 0L, durationMs)).build()
         return dispatchGesture(gesture, object : GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) = result(true)
-            override fun onCancelled(gestureDescription: GestureDescription?) = result(false)
+            override fun onCompleted(gestureDescription: GestureDescription?) { diag("TAP_ANDROID_COMPLETED"); result(true) }
+            override fun onCancelled(gestureDescription: GestureDescription?) { diag("TAP_ANDROID_CANCELLED"); result(false) }
         }, null)
     }
 
@@ -1155,6 +1258,7 @@ class GdlAccessibilityService : AccessibilityService() {
         durationMs: Long,
         result: (Boolean) -> Unit
     ): Boolean {
+        diag("DRAG_REQUEST start=$startX,$startY end=$endX,$endY duration_ms=$durationMs")
         val path = Path().apply {
             moveTo(startX, startY)
             lineTo(endX, endY)
@@ -1162,8 +1266,8 @@ class GdlAccessibilityService : AccessibilityService() {
         val gesture = GestureDescription.Builder().addStroke(
             GestureDescription.StrokeDescription(path, 0L, durationMs)).build()
         return dispatchGesture(gesture, object : GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) = result(true)
-            override fun onCancelled(gestureDescription: GestureDescription?) = result(false)
+            override fun onCompleted(gestureDescription: GestureDescription?) { diag("DRAG_ANDROID_COMPLETED"); result(true) }
+            override fun onCancelled(gestureDescription: GestureDescription?) { diag("DRAG_ANDROID_CANCELLED"); result(false) }
         }, null)
     }
 
@@ -1272,7 +1376,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 "image/png", Bitmap.CompressFormat.PNG, 100) } finally { mask.recycle() }
         }
         if (rawSaved) savedCount++
-        postMessage("RAW frame $frameCount • saved $savedCount${if (withMask && !maskSaved) " • mask failed" else ""}",
+        postMessage("RAW frame $frameCount • queued $savedCount${if (withMask && !maskSaved) " • mask failed" else ""}",
             if (rawSaved && maskSaved) 0xFF00BFFF.toInt() else Color.RED)
     }
 
@@ -1323,6 +1427,7 @@ class GdlAccessibilityService : AccessibilityService() {
     }
 
     private fun combinedTerminalLabel(): String = when (activeTrackCycleResult) {
+        "SPOTLIGHT" -> "SPOTLIGHT MONITORING"
         "SUCCESS" -> "ACTIVETRACK SUCCESS"
         "TIMEOUT" -> "ACTIVETRACK TIMEOUT"
         "ACTIVETRACK_LIMIT" -> "ACTIVE TRACK SECTION TAP LIMIT"
@@ -1356,6 +1461,13 @@ class GdlAccessibilityService : AccessibilityService() {
             appendLine("activeTrackCaptureIntervalMs=$SLOW_STAGE_CAPTURE_INTERVAL_MS")
             appendLine("gimbalCaptureIntervalMs=$SLOW_STAGE_CAPTURE_INTERVAL_MS")
             appendLine("retryCooldownMs=${settings.retryCooldownMs}")
+            if (settings.preset == ReacquirePreset.COMBINED_REAL) {
+                appendLine("acquisitionGesture=CENTERED_RECTANGLE")
+                appendLine("acquisitionMarkerSizeMultiplier=3x3")
+                appendLine("acquisitionDragMs=300")
+            }
+            appendLine("cvResolution=NATIVE; diagnosticLog=Documents/GDL/${folder.substringAfterLast('/')}/diagnostic.log")
+            appendLine("evidenceSaving=ORDERED_ASYNC; maxRetainedCopies=3; fullQueue=SKIP_WITH_COUNTER")
             appendLine("tapDurationMs=${settings.tapDurationMs}")
             appendLine("minimumPinkPixels=${settings.minimumPinkPixels}")
             appendLine("pinkSearchRadiusMultiplier=${settings.pinkSearchRadiusMultiplier}")
@@ -1373,10 +1485,10 @@ class GdlAccessibilityService : AccessibilityService() {
             appendLine("gimbalGestureStartNormalized=${GimbalKnobDetector.GESTURE_START_X},${GimbalKnobDetector.GESTURE_START_Y}")
             appendLine("gimbalGestureEndYNormalized=${GimbalKnobDetector.DRAG_BOTTOM_Y}")
             appendLine("gimbalHoldMs=$GIMBAL_KNOB_HOLD_MS")
-            appendLine("gimbalDownDragMs=$GIMBAL_DOWN_DRAG_MS")
-            appendLine("gimbalBetweenDragsMs=$GIMBAL_BETWEEN_DRAGS_MS")
+            appendLine("gimbalDownDragMs=${settings.gimbalDragDurationMs}")
+            appendLine("gimbalAutomaticRetry=false")
             appendLine("gimbalNormalKnobDetection=false")
-            appendLine("gimbalRedLimitConfirmations=$GIMBAL_KNOB_CONFIRMATIONS_REQUIRED")
+            appendLine("gimbalRedLimitDetection=false")
             appendLine("telemetryCropNormalizedX=0.105..0.22")
             appendLine("telemetryBrightBackgroundFallback=true")
             appendLine("telemetryRejectSpeedValues=true")
@@ -1387,7 +1499,7 @@ class GdlAccessibilityService : AccessibilityService() {
                 appendLine("gimbalControlXNormalized=0.791")
                 appendLine("gimbalDashedLineDetection=false")
                 appendLine("gimbalGesture=CONTINUOUS_HOLD_THEN_DRAG")
-                appendLine("gimbalRedLimitAction=STOP_NO_MOVEMENT")
+                appendLine("gimbalCompletion=TIMED_SINGLE_ATTEMPT")
             }
         }
         if (!saveTextFile("F00000_S00_SELECTED_SETTINGS.txt", text, folder)) {
@@ -1449,6 +1561,37 @@ class GdlAccessibilityService : AccessibilityService() {
                            format: Bitmap.CompressFormat, quality: Int,
                            folder: String = sessionFolder): Boolean {
         val finalName = evidenceNameWithTelemetry(name)
+        // Never wait for storage from the detector or UI thread.
+        if (!evidenceSlots.tryAcquire()) {
+            val skipped = skippedEvidence.incrementAndGet()
+            diag("EVIDENCE_SKIPPED total=$skipped name=$finalName")
+            postMessage("Evidence queue full — image skipped ($skipped)", Color.YELLOW)
+            return false
+        }
+        diag("EVIDENCE_QUEUED name=$finalName")
+        val copy = try { bitmap.copy(Bitmap.Config.ARGB_8888, false) }
+            catch (e: Throwable) { evidenceSlots.release(); throw e }
+        try {
+            evidenceWorker.execute {
+                val start = SystemClock.elapsedRealtime()
+                try {
+                    if (!writeEvidenceBitmap(copy, finalName, mime, format, quality, folder))
+                        postMessage("EVIDENCE SAVE FAILED • $finalName", Color.RED)
+                } catch (_: Exception) {
+                    postMessage("EVIDENCE SAVE FAILED • $finalName", Color.RED)
+                } finally {
+                    copy.recycle(); evidenceSlots.release()
+                    diag("evidence=$finalName write_ms=${SystemClock.elapsedRealtime() - start}")
+                }
+            }
+        } catch (_: java.util.concurrent.RejectedExecutionException) {
+            copy.recycle(); evidenceSlots.release(); return false
+        }
+        return true // queued; write failures are reported asynchronously
+    }
+
+    private fun writeEvidenceBitmap(bitmap: Bitmap, finalName: String, mime: String,
+        format: Bitmap.CompressFormat, quality: Int, folder: String): Boolean {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, finalName)
             put(MediaStore.Images.Media.MIME_TYPE, mime)
@@ -1497,6 +1640,9 @@ class GdlAccessibilityService : AccessibilityService() {
     private fun packageNameOfGdl() = applicationContext.packageName
 
     private fun resetActiveTrackCycle() {
+        s11RecoveryCountdown.reset()
+        s11LastSpotlightCheckMs = -1L
+        s11SpotlightVisible = false
         activeTrackCooldownUntilMs = 0L
         activeTrackCycleStartedMs = 0L
         activeTrackTapCount = 0
@@ -1510,11 +1656,18 @@ class GdlAccessibilityService : AccessibilityService() {
     private fun ensureRunSession(settings: ReacquireSettings) {
         val token = GdlTestSettings.runToken(this) ?: return
         if (token == activeRunToken) return
+        spotlightExitPending = false
+        spotlightPinVisible = false
+        spotlightExitClearFrames = 0
+        spotlightExitRetryAt = 0L
+        spotlightExitRect = null
         activeRunToken = token
         val startedAt = GdlTestSettings.runStartedAtMs(this).takeIf { it > 0L }
             ?: System.currentTimeMillis()
         val session = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date(startedAt))
         sessionFolder = "Pictures/GDL/${session}_${settings.preset.name}"
+        skippedEvidence.set(0)
+        diag("RUN_START version=${GdlTestSettings.APP_VERSION} settings=$settings")
         frameCount = 0
         savedCount = 0
         hardSavedFrame = -1
@@ -1531,14 +1684,24 @@ class GdlAccessibilityService : AccessibilityService() {
         worker.execute { saveSettingsSnapshot(settings, startedAt, folder) }
     }
 
-    private fun finishCapture(message: String, color: Int) {
-        screenshotInFlight.set(false)
+    private fun finishCapture(ticket: Long, message: String, color: Int) {
+        if (!captureTicket.finish(ticket)) return
+        diag(message)
         overlayView?.visibility = View.VISIBLE
         overlayView?.showMessage(message, color)
     }
 
-    private fun postMessage(message: String, color: Int) = mainHandler.post {
-        overlayView?.visibility = View.VISIBLE; overlayView?.showMessage(message, color)
+    private fun diag(message: String) {
+        diagnostic.record(sessionFolder.substringAfterLast('/'), frameCount, message)
+    }
+
+    private fun postMessage(message: String, color: Int) {
+        diag("STATUS $message")
+        mainHandler.post {
+            overlayView?.visibility = View.VISIBLE
+            val skipped = skippedEvidence.get()
+            overlayView?.showMessage(if (skipped > 0) "$message • evidence skipped $skipped" else message, color)
+        }
     }
 
     private fun showOverlay() {

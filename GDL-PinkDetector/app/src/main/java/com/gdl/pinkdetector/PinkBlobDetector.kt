@@ -11,13 +11,9 @@ object PinkBlobDetector {
     data class Blob(val rect: Rect, val pinkPixelCount: Int, val strengthScore: Double)
 
     fun find(source: Bitmap): List<Blob> {
-        val targetWidth = 1280
-        val scale = if (source.width > targetWidth) targetWidth.toFloat() / source.width else 1f
-        val width = max(1, (source.width * scale).toInt())
-        val height = max(1, (source.height * scale).toInt())
-        val bitmap = if (width != source.width || height != source.height) {
-            Bitmap.createScaledBitmap(source, width, height, true)
-        } else source
+        val width = source.width
+        val height = source.height
+        val bitmap = source
 
         try {
             val pixels = IntArray(width * height)

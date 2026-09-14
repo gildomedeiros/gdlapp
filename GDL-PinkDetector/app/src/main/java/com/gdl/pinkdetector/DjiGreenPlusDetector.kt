@@ -36,15 +36,9 @@ object DjiGreenPlusDetector {
     )
 
     fun findGreenPluses(source: Bitmap): List<Detection> {
-        val targetWidth = 1280
-        val scale = if (source.width > targetWidth) targetWidth.toFloat() / source.width else 1f
-        val width = max(1, (source.width * scale).toInt())
-        val height = max(1, (source.height * scale).toInt())
-        val bitmap = if (width != source.width) {
-            Bitmap.createScaledBitmap(source, width, height, true)
-        } else {
-            source
-        }
+        val width = source.width
+        val height = source.height
+        val bitmap = source
 
         try {
             val green = createGreenBooleanMask(bitmap)
@@ -229,11 +223,16 @@ object DjiGreenPlusDetector {
     }
 
     private fun createGreenBooleanMask(source: Bitmap): BooleanArray {
-        val pixels = IntArray(source.width * source.height)
-        source.getPixels(pixels, 0, source.width, 0, 0, source.width, source.height)
+        val pixels = NativeFramePixels.read(source)
         val green = BooleanArray(pixels.size)
         val hsv = FloatArray(3)
         for (i in pixels.indices) {
+            // Necessary conditions only; surviving pixels use the original HSV predicate.
+            val p = pixels[i]
+            val r = (p ushr 16) and 255
+            val g = (p ushr 8) and 255
+            val b = p and 255
+            if (g <= r || maxOf(r, g, b) < 71) continue
             Color.colorToHSV(pixels[i], hsv)
             green[i] = hsv[0] in 100f..182f && hsv[1] >= 0.32f && hsv[2] >= 0.28f
         }

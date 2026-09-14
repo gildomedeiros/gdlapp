@@ -36,17 +36,12 @@ object ActiveTrackPanelDetector {
     }
 
     fun evaluate(source: Bitmap, expandCollapsedControls: Boolean): Decision {
-        val targetWidth = 640
-        val scale = if (source.width > targetWidth) targetWidth.toFloat() / source.width else 1f
-        val width = max(1, (source.width * scale).toInt())
-        val height = max(1, (source.height * scale).toInt())
-        val bitmap = if (width != source.width || height != source.height) {
-            Bitmap.createScaledBitmap(source, width, height, true)
-        } else source
+        val width = source.width
+        val height = source.height
+        val bitmap = source
 
         try {
-            val pixels = IntArray(width * height)
-            bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+            val pixels = NativeFramePixels.read(bitmap)
 
             val panel = normalizedRect(width, height, 0.385f, 0.745f, 0.650f, 0.890f)
             val leftSection = normalizedRect(width, height, 0.385f, 0.745f, 0.473f, 0.890f)
@@ -199,6 +194,46 @@ object ActiveTrackPanelDetector {
         }
     }
 
+    /** Spotlight monitoring only: red X control plus a visible upward chevron.
+     * Reuses the existing red-control extraction; never proposes or dispatches a tap.
+     */
+    fun isSpotlightControlVisible(source: Bitmap): Boolean = spotlightControlRect(source) != null
+
+    fun spotlightControlRect(source: Bitmap): Rect? {
+        val width = source.width
+        val height = source.height
+        val bitmap = source
+        try {
+            val pixels = NativeFramePixels.read(bitmap)
+            val control = findRedControl(pixels, width, height) ?: return null
+            if (control.glyph != RedGlyph.X) return null
+            val r = control.rect
+            val cx = r.exactCenterX().toInt()
+            val half = max(3, (r.width() * 0.075f).toInt())
+            val top = max(0, r.top - (r.height() * 0.50f).toInt())
+            val bottom = (r.top - r.height() * 0.05f).toInt()
+            fun bright(x: Int, y: Int): Boolean {
+                if (x !in 0 until width || y !in 0 until height) return false
+                val p = pixels[y * width + x]
+                val red = Color.red(p); val green = Color.green(p); val blue = Color.blue(p)
+                return minOf(red, green, blue) >= 120 && maxOf(red, green, blue) - minOf(red, green, blue) <= 55
+            }
+            // Look for both rising/falling arms, with small tolerance for antialiasing.
+            for (apexY in top until bottom - half) {
+                var leftHits = 0; var rightHits = 0
+                for (dx in 0..half) {
+                    if ((-2..2).any { bright(cx - dx, apexY + dx + it) }) leftHits++
+                    if ((-2..2).any { bright(cx + dx, apexY + dx + it) }) rightHits++
+                }
+                if (leftHits >= (half + 1) * 0.70f && rightHits >= (half + 1) * 0.70f &&
+                    !bright(cx, apexY + half)) return r
+            }
+            return null
+        } finally {
+            if (bitmap !== source) bitmap.recycle()
+        }
+    }
+
     private fun findRedControl(pixels: IntArray, width: Int, height: Int): RedControl? {
         val roi = normalizedRect(width, height, 0.430f, 0.680f, 0.600f, 0.960f)
         val accepted = BooleanArray(pixels.size)
@@ -232,8 +267,8 @@ object ActiveTrackPanelDetector {
                 count++
                 left = minOf(left, x); right = maxOf(right, x)
                 top = minOf(top, y); bottom = maxOf(bottom, y)
-                val neighbours = intArrayOf(index - 1, index + 1, index - width, index + width)
-                for (next in neighbours) {
+                for (direction in 0..3) {
+                    val next = when (direction) { 0 -> index - 1; 1 -> index + 1; 2 -> index - width; else -> index + width }
                     if (next !in pixels.indices || visited[next] || !accepted[next]) continue
                     val nx = next % width
                     val ny = next / width

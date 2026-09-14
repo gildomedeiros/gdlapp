@@ -1,6 +1,69 @@
-# GDL Modular Re-acquire v0.15.12.3
+# GDL Modular Re-acquire v0.15.12.9
+
+## v0.15.12.9
+
+Evidence queue admission no longer waits. When all three slots are occupied, the image is skipped, logged and counted in status messages while detection continues. Capture callbacks time out after 10 seconds; late callbacks cannot change a newer capture. Processing releases capture state and restores the overlay in finally, including error paths. A detector still executing after 10 seconds is reported as slow, not replaced with a concurrent detector/gesture run.
+
+Persistent diagnostics: `Documents/GDL/<run>/diagnostic.log`, plus backup under the app's external-files `diagnostics/<run>/diagnostic.log` (internal files fallback). This is a separate directory from Pictures evidence: include the matching log with the run ZIP. Logs record wall/elapsed timestamps, frame IDs, capture events, processing/stage timing, save queue skips/write timing, statuses and gesture requests/Android results. A separate 256-entry nonblocking queue bounds logging; overflow is counted in the next written entry. Storage hangs/process termination can still prevent final log entries from being persisted. Public log creation depends on Android MediaStore support; the app-local copy is written first. Logs append after service restart.
+
+No CV resizing, acquisition geometry or recovery-rule changes in this version. Host tests cover a deliberately blocked writer, queue drain, callback timeout/late arrival and processing isolation; device validation remains required.
+
+## v0.15.12.8
+
+Combined acquisition now draws a 300 ms top-left to bottom-right rectangle centred on the freshly validated green-plus marker. Width and height are each 3× the marker (9× area), symmetrically reduced at preview edges. Android completion means awaiting Spotlight control, not confirmed DJI selection. Combined default retry cooldown is 1000 ms; existing saved settings are preserved. Other diagnostic/standalone tap presets retain their gestures.
+
+Native resolution is preserved. Pink HSV work is limited to existing candidate association windows; native pixels are reused across plus/pink/control/pin evaluation. Plus HSV has a necessary RGB prefilter, with the existing final HSV predicate unchanged. Pin template offsets are computed once per evaluation, retaining its scan coverage and thresholds. Red-control search already uses its fixed ROI; removed per-pixel neighbour allocations. Evidence compression/writes use a serial background queue with at most three retained full-size bitmap copies; queue saturation blocks rather than drops evidence. Counts represent queued images; asynchronous write failures are reported. Wait for saving to finish before copying results.
+
+`GDL_PERF` logcat records capture/queue, plus, pink, acquisition, control, pin, processing, processing-start-to-dispatch and evidence-write milliseconds. These are diagnostic timings, not achieved-FPS guarantees. Device comparison against .7 is still required; no device performance improvement or DJI rectangle acceptance has been verified.
+
+## v0.15.12.7
+
+Native-resolution CV; green X/dotted-box/pin matching; guarded red-X exit with fresh-frame verification before recovery. Existing single configurable gimbal attempt retained. Build passed; limited screenshot checks passed, device validation remains required. See GDL_CURRENT_STATE.md for scope and limitations.
+
+## v0.15.12.6 acquisition retry correction
+
+Persistent validated plus candidates can be tapped again after the existing cooldown using the current screenshot coordinates. Each candidate frame checks the existing Spotlight red-X/chevron detector before tapping; visible control suppresses the tap. Android completion reports awaiting Spotlight control, not confirmed selection. Existing CV thresholds, recovery arming/countdown and single configurable gimbal attempt remain unchanged. Real-device validation remains required.
 
 Author: Gil
+
+## v0.15.12.5 Spotlight and one timed gimbal attempt
+
+The combined real-tap preset now selects a validated green plus with pink and
+leaves DJI in its default Spotlight mode. It no longer activates ActiveTrack or
+taps the chevron. Existing standalone ActiveTrack diagnostic presets remain.
+
+In S11, the large red X control with a visible upward chevron is checked about
+once per second. It resets the countdown, as does a validated plus/pink detection.
+Once recovery is armed by a successful validated tap, 15 seconds of absence
+(configurable timeout) permits one gimbal attempt, subject to the existing guards.
+
+Gimbal drag duration is configurable from 1000 to 30000 milliseconds, default
+6000. The hold remains 2000 ms; coordinates remain X=79.1%, Y=45% to 79%.
+There is no red-knob/angle detection and no automatic retry, including failed or
+rejected attempts. Searching resumes afterward. Another successful validated tap
+re-arms recovery; the isolated test requires restarting for another attempt.
+Completion indicates an Android gesture outcome, not a calibrated angle.
+
+VersionCode 44. Timing/single-attempt tests pass. New Spotlight chevron recognition
+requires device validation; no RTH/landing recognition has been added.
+
+## v0.15.12.4 S11 ActiveTrack monitoring
+
+Combined mode now reuses the existing ActiveTrack panel detector while waiting
+in S11 with no validated plus. Checks are limited to once per 1000 ms, on the
+next available capture; actual cadence depends on capture/processing time.
+The existing default 400 ms plus-search interval is unchanged.
+
+After a successful validated green-plus/pink tap has armed recovery, its S11
+countdown starts on the first observation of neither a validated plus nor an
+ActiveTrack-running classification. Either positive detection clears the
+countdown. Recovery can begin only after a full configured timeout (default
+15 seconds) of absence, with existing guards still satisfied.
+
+No new CV/OCR or detector thresholds. Already-active recovery, gestures and
+standalone production behaviour are unchanged. The existing detector can still
+classify a lingering Stop panel as running during a subject-lost warning;
+this delays recovery until that classification clears. VersionCode 43.
 
 ## v0.15.12.3 last validated plus timer
 

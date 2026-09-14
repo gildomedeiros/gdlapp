@@ -24,17 +24,8 @@ object DjiTelemetryReader {
 
     /** Caller transfers ownership of [crop]; it is always recycled here. */
     fun recognize(crop: Bitmap, result: (Values) -> Unit) {
-        // Scaling and OCR run on GDL's telemetry executor, not the high-rate
-        // detector executor. Only the small native-resolution crop is made in
-        // the capture path.
-        val input = try {
-            Bitmap.createScaledBitmap(crop, crop.width * 3, crop.height * 3, true)
-        } catch (_: Throwable) {
-            crop.recycle()
-            result(Values.UNKNOWN)
-            return
-        }
-        if (input !== crop) crop.recycle()
+        // Preserve native crop pixels for OCR.
+        val input = crop
         recognizer.process(InputImage.fromBitmap(input, 0))
             .addOnSuccessListener { text ->
                 val first = parse(text)

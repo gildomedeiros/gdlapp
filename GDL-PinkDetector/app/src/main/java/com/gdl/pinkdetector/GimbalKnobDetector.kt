@@ -34,15 +34,9 @@ object GimbalKnobDetector {
     )
 
     fun evaluate(source: Bitmap): Decision {
-        val targetWidth = 720
-        val resizeScale = if (source.width > targetWidth) {
-            targetWidth.toFloat() / source.width
-        } else 1f
-        val width = max(1, (source.width * resizeScale).toInt())
-        val height = max(1, (source.height * resizeScale).toInt())
-        val bitmap = if (width != source.width || height != source.height) {
-            Bitmap.createScaledBitmap(source, width, height, true)
-        } else source
+        val width = source.width
+        val height = source.height
+        val bitmap = source
 
         try {
             val pixels = IntArray(width * height)

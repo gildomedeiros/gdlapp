@@ -16,9 +16,12 @@ data class ReacquireDecision(
 
 /** Composes independently testable stages without changing the validated detectors. */
 object ReacquirePipeline {
-    fun evaluate(bitmap: Bitmap, settings: ReacquireSettings): ReacquireDecision {
+    fun evaluate(bitmap: Bitmap, settings: ReacquireSettings,
+        trace: (String) -> Unit = { android.util.Log.i("GDL_PERF", it) }): ReacquireDecision {
+        val started = android.os.SystemClock.elapsedRealtime()
         val pluses = if (settings.detectGreenPlus) DjiGreenPlusDetector.findGreenPluses(bitmap)
         else emptyList()
+        trace("plus_ms=${android.os.SystemClock.elapsedRealtime() - started}")
         val blobs = if (settings.detectPink && settings.candidateRule == CandidateRule.STRONGEST_PINK_BLOB) {
             PinkBlobDetector.find(bitmap).filter {
                 it.pinkPixelCount >= settings.minimumPinkPixels
@@ -36,10 +39,12 @@ object ReacquirePipeline {
                     else "pink blobs: ${blobs.size} • SELECTED ${winner.pinkPixelCount}px")
             }
             CandidateRule.STRONGEST_PINK_PLUS -> {
+                val pinkStarted = android.os.SystemClock.elapsedRealtime()
                 val associations = if (settings.detectPink) {
                     PinkAssociationDetector.rankByStrongestPink(
                         bitmap, pluses, settings.pinkSearchRadiusMultiplier)
                 } else emptyList()
+                trace("pink_ms=${android.os.SystemClock.elapsedRealtime() - pinkStarted} candidates=${pluses.size}")
                 val winner = associations.firstOrNull {
                     it.pinkPixelCount >= settings.minimumPinkPixels
                 }
