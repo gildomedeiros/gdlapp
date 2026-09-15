@@ -33,13 +33,16 @@ public final class AircraftAimingTelemetry {
     private final Slot<Integer> leftV = slot("stickLeftVertical", RemoteControllerKey.KeyStickLeftVertical);
     private final Slot<Integer> rightH = slot("stickRightHorizontal", RemoteControllerKey.KeyStickRightHorizontal);
     private final Slot<Integer> rightV = slot("stickRightVertical", RemoteControllerKey.KeyStickRightVertical);
-    private final Runnable unsafe;
-    private boolean running;
-    private volatile boolean neutralBlocked;
-    private long generation, lastPoll;
+    // CAM3 v2.3: Report named pause versus permanent-stop events to the controller.
+    private final BiConsumer<String, Boolean> unsafe;
+    // CAM3 v2.3: Listener threads see lifecycle and independent connection/mode vetoes.
+    private volatile boolean running;
+    private volatile boolean connectionBlocked, modeBlocked;
+    private volatile long generation;
+    private long lastPoll;
     // CAM3 v2.1: Report read failures/recovery immediately, even between summary snapshots.
     private final BiConsumer<String, String> diagnostic;
-    public AircraftAimingTelemetry(Runnable unsafe, BiConsumer<String, String> diagnostic) {
+    public AircraftAimingTelemetry(BiConsumer<String, Boolean> unsafe, BiConsumer<String, String> diagnostic) {
         this.unsafe = unsafe; this.diagnostic = diagnostic;
     }
     private void readOutcome(Slot<?> slot, String error) {
@@ -55,16 +58,27 @@ public final class AircraftAimingTelemetry {
     public synchronized void start() {
         if (running) return;
         running = true; generation++; lastPoll = 0;
+        // CAM3 v2.3: Fresh slot reads still gate neutral; discard previous listener lifecycle vetoes.
+        connectionBlocked = false; modeBlocked = false;
+        // CAM3 v2.3: Ignore detached callbacks; log exact key and values after latching the action.
+        final long listeningGeneration = generation;
         KeyManager.getInstance().listen(connected.key, this, (old, value) -> {
-            if (!Boolean.TRUE.equals(value)) { neutralBlocked = true; unsafe.run(); }
+            if (!running || generation != listeningGeneration) return;
+            connectionBlocked = !Boolean.TRUE.equals(value);
+            if (connectionBlocked) unsafe.accept("connection", false);
+            diagnostic.accept("listener_connected", "old=" + old + " new=" + value);
         });
         KeyManager.getInstance().listen(mode.key, this, (old, value) -> {
-            neutralBlocked = !allowedMode(value);
-            if (neutralBlocked) unsafe.run();
+            if (!running || generation != listeningGeneration) return;
+            modeBlocked = !allowedMode(value);
+            if (modeBlocked) unsafe.accept(value == null ? "telemetry" : modeReason(value), value != null);
+            diagnostic.accept("listener_flightMode", "old=" + old + " new=" + value);
         });
         for (Slot<Integer> stick : java.util.Arrays.asList(leftH, leftV, rightH, rightV)) {
             KeyManager.getInstance().listen(stick.key, this, (old, value) -> {
-                if (value == null || Math.abs((long) value) > 30) unsafe.run();
+                if (!running || generation != listeningGeneration) return;
+                if (value == null || Math.abs((long) value) > 30) unsafe.accept(value == null ? "telemetry" : "pilot_stick", false);
+                diagnostic.accept("listener_" + stick.name, "old=" + old + " new=" + value);
             });
         }
     }
@@ -80,7 +94,13 @@ public final class AircraftAimingTelemetry {
         for (Slot<?> slot : slots) read(slot, now, generation);
     }
     private <T> void read(Slot<T> slot, long requested, long token) {
-        if (slot.pending) return;
+        // CAM3 v2.3: Abandon an unanswered read after 2 s; old replies cannot replace newer data.
+        if (slot.pending && requested - slot.requested < 2000) return;
+        if (slot.pending) { slot.retrying = true; diagnostic.accept("retry_timeout_" + slot.name, "request=" + slot.requestId); }
+        if (!slot.error.equals("none") && !slot.error.equals("not_read")) slot.retrying = true;
+        long requestId = ++slot.requestId;
+        slot.requested = requested;
+        if (slot.retrying) diagnostic.accept("retry_request_" + slot.name, "request=" + requestId);
         slot.pending = true;
         try {
             KeyManager.getInstance().getValue(slot.key, new CommonCallbacks.CompletionCallbackWithParam<T>() {
@@ -89,11 +109,19 @@ public final class AircraftAimingTelemetry {
                 @Override public void onFailure(IDJIError error) { accept(null, error == null ? "unknown" : error.errorCode()); }
                 private void accept(T value, String error) {
                     synchronized (AircraftAimingTelemetry.this) {
-                        if (!running || generation != token) return;
+                        // CAM3 v2.3: Make superseded retries observable without accepting their data.
+                        if (!running || generation != token || slot.requestId != requestId) {
+                            diagnostic.accept("read_ignored_" + slot.name, "request=" + requestId + " superseded_or_detached");
+                            return;
+                        }
                         slot.pending = false;
                         slot.value = value; slot.time = requested;
                         // CAM3 v2.1: Each field exposes its last read outcome to the diagnostic snapshot.
                         readOutcome(slot, error);
+                        if (slot.retrying) {
+                            diagnostic.accept("retry_result_" + slot.name, "request=" + requestId + " error=" + error);
+                            if ("none".equals(error)) slot.retrying = false;
+                        }
                     }
                 }
             });
@@ -105,6 +133,11 @@ public final class AircraftAimingTelemetry {
     private static boolean allowedMode(FlightMode value) {
         // CAM3 v2.2: One policy for snapshot, urgent listener and neutral; do not accept arbitrary modes.
         return AimingFlightModes.allows(value == null ? null : value.name());
+    }
+    // CAM3 v2.3: Preserve the aircraft operation as a permanent-stop reason.
+    private static String modeReason(FlightMode value) {
+        String name = value.name();
+        return name.contains("LANDING") ? "landing" : name.contains("GO_HOME") ? "returning_home" : "flight_mode_rejected";
     }
     // CAM3 v2.2: All independently available aircraft blockers, not only the first failed gate.
     public synchronized String blockers(long now) {
@@ -139,8 +172,12 @@ public final class AircraftAimingTelemetry {
             if (slot.value == null) problem = "telemetry";
         }
         // An urgent RTH/landing event suppresses neutral even if older hardware reads still say Normal.
-        boolean neutral = !neutralBlocked && Boolean.TRUE.equals(connected.value) && Boolean.TRUE.equals(flying.value)
+        // CAM3 v2.3: One healthy listener must not clear another listener's urgent veto.
+        boolean neutral = !connectionBlocked && !modeBlocked && Boolean.TRUE.equals(connected.value) && Boolean.TRUE.equals(flying.value)
                 && allowedMode(mode.value);
+        // CAM3 v2.3: Known landing/RTH/ground state takes priority even if another field is missing.
+        if (mode.value != null && !allowedMode(mode.value)) problem = modeReason(mode.value);
+        else if (Boolean.FALSE.equals(flying.value)) problem = "not_airborne";
         if (problem == null) {
             if (!connected.value) problem = "connection";
             // CAM3 v2.1: Split the former combined message; accepted flight modes are unchanged.
@@ -149,7 +186,7 @@ public final class AircraftAimingTelemetry {
             else if (gps.value != GPSSignalLevel.LEVEL_4 && gps.value != GPSSignalLevel.LEVEL_5) problem = "aircraft_gps";
             else if (compassError.value) problem = "heading";
             else if (Math.abs((long) leftH.value) > 30 || Math.abs((long) leftV.value) > 30
-                    || Math.abs((long) rightH.value) > 30 || Math.abs((long) rightV.value) > 30) problem = "takeover";
+                    || Math.abs((long) rightH.value) > 30 || Math.abs((long) rightV.value) > 30) problem = "pilot_stick";
             else {
                 Velocity3D v = velocity.value;
                 if (v.getX() == null || v.getY() == null || v.getZ() == null
@@ -189,6 +226,9 @@ public final class AircraftAimingTelemetry {
         T value;
         long time;
         boolean pending;
+        // CAM3 v2.3: Per-key bounded retry identity, separate from accepted data freshness.
+        long requestId, requested;
+        boolean retrying;
         // CAM3 v2.1: Store the caller-supplied diagnostic label.
         Slot(String name, DJIKey<T> key) { this.name = name; this.key = key; }
     }

@@ -2,6 +2,8 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 
 /** CAM3 v2.0: Pure yaw calculations. Limits are initial engineering values, not flight-tested bounds. */
 public final class YawAimingMath {
+    // CAM3 v2.3: User-selected minimum shared by eligibility, UI and logs.
+    public static final double MIN_AIMING_DISTANCE_METERS = 5.0;
     public static final double MAX_RATE = 8.0; // degrees/second
     public static final double MAX_ACCELERATION = 4.0; // degrees/second squared
     private YawAimingMath() { }
@@ -30,12 +32,9 @@ public final class YawAimingMath {
     }
 
     public static boolean isBearingUsable(double separation, double phoneAccuracy) {
-        // Aircraft uncertainty is not exposed as metres here; 5 m is a conservative allowance,
-        // not a measured error guarantee. Also require strong aircraft GPS in the input gate.
+        // CAM3 v2.3: Replace the manual 10 m test with the agreed 5 m minimum; retain accuracy checks.
         return Double.isFinite(separation) && Double.isFinite(phoneAccuracy) && phoneAccuracy > 0
-               // && phoneAccuracy <= 10 && separation >= Math.max(20, 4 * (phoneAccuracy + 5));
-                // CAM3 v2.2 local test: Lower minimum distance to 10 m; close-range aiming may wander.
-                && phoneAccuracy <= 10 && separation >= 10;
+                && phoneAccuracy <= 10 && separation >= MIN_AIMING_DISTANCE_METERS;
     }
 
     public static double calculateYawRate(double error, double previous, double seconds) {

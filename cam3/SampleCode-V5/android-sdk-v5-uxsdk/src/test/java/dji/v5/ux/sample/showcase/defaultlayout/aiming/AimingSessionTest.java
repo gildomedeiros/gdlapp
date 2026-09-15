@@ -71,7 +71,11 @@ public final class AimingSessionTest {
         near(0, YawAimingMath.calculateYawRate(1, 8, .1), "tolerance stops");
         near(0, YawAimingMath.calculateYawRate(-10, 8, .1), "direction reversal brakes");
         check(!YawAimingMath.isBearingUsable(0, 3), "directly below rejected");
-        check(!YawAimingMath.isBearingUsable(20, 10), "uncertain bearing rejected");
+        // CAM3 v2.3: Replace the former uncertainty-scaled minimum with explicit 5 m boundaries.
+        check(YawAimingMath.isBearingUsable(20, 10), "valid accuracy at 20 m accepted");
+        check(!YawAimingMath.isBearingUsable(4.99, 3), "below 5 m rejected");
+        check(YawAimingMath.isBearingUsable(5, 3), "exactly 5 m accepted");
+        check(!YawAimingMath.isBearingUsable(50, 10.01), "poor accuracy still rejected");
         check(!YawAimingMath.isBearingUsable(100, Double.NaN), "NaN rejected");
         check(YawAimingMath.isBearingUsable(100, 3), "separated target accepted");
         Fake f = new Fake();
@@ -117,9 +121,10 @@ public final class AimingSessionTest {
         check(f.sent.size() == count && f.disables == 1, "RTH mode suppresses neutral while surrendering owned control");
 
         f = new Fake(); f.aiming(); f.input = f.data(f.time, f.time - 3001, null, true); f.core.tick();
-        check(f.core.state() == AimingSession.State.STOPPING, "stale phone cancels");
+        // CAM3 v2.3: Stale data pauses; the original session remains available for recovery.
+        check(f.core.state() == AimingSession.State.PAUSED, "stale phone pauses");
         f = new Fake(); f.aiming(); f.input = f.data(f.time - 1501, f.time, null, true); count = f.sent.size(); f.core.tick();
-        check(f.core.state() == AimingSession.State.STOPPING && f.sent.size() == count, "stale aircraft sends no neutral");
+        check(f.core.state() == AimingSession.State.PAUSED && f.sent.size() == count, "stale aircraft pauses without stale neutral");
         f = new Fake(); f.input = f.data(f.time, f.time + 1, null, true);
         check(!f.core.canStart(), "future fix rejected");
 
@@ -215,6 +220,66 @@ public final class AimingSessionTest {
         f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, true, true); f.core.tick();
         check(f.sent.stream().allMatch(rate -> rate == 0) && f.core.state() != AimingSession.State.AIMING,
                 "Stop before advanced confirmation prevents activation");
-        System.out.println("PASS: " + checks + " assertions (yaw math, input gates, ownership, callback races, failures)");
+        // CAM3 v2.3: Exercise pause/recovery with real tick intervals and independently timed callbacks.
+        f = new Fake();
+        check("telemetry".equals(f.data(f.time - 1501, f.time, "pilot_stick", false).validate(f.time)),
+                "stale readings cannot hide behind a recoverable stick condition");
+        check("landing".equals(f.data(f.time - 1501, f.time, "landing", false).validate(f.time)),
+                "known landing still outranks stale readings");
+        f = new Fake(); f.aiming(); count = f.sent.size();
+        f.core.pauseImmediately("pilot_stick");
+        check(!f.core.maySendYaw(), "urgent stick event immediately vetoes yaw");
+        f.core.tick();
+        check(f.core.state() == AimingSession.State.PAUSED && f.disables == 0, "stick pause retains session");
+        check(f.sent.size() == count + 1 && f.sent.get(count) == 0, "pause submits one neutral");
+        f.advance(100);
+        for (int i = 0; i < 19; i++) f.advance(100);
+        check(f.core.state() == AimingSession.State.PAUSED && f.sent.size() == count + 1, "no yaw before two healthy seconds");
+        f.core.pauseImmediately("pilot_stick"); f.advance(100); f.advance(100);
+        for (int i = 0; i < 19; i++) f.advance(100);
+        check(f.core.state() == AimingSession.State.PAUSED, "another stick event resets timer");
+        f.advance(100);
+        check(f.core.state() == AimingSession.State.AIMING && f.enables == 1, "auto resume never re-enables control");
+        check(Math.abs(f.sent.get(f.sent.size() - 1)) <= .0041, "resume starts yaw acceleration from zero");
+        check(f.diagnosticEvents.stream().anyMatch(e -> e.startsWith("recovery_reset"))
+                && f.diagnosticEvents.stream().anyMatch(e -> e.startsWith("resumed")), "reset and resume logged");
+
+        for (String cause : new String[]{"distance", "gps", "gps_quality", "stale_gps", "heading", "aircraft_gps", "hover"}) {
+            f = new Fake(); f.aiming(); f.input = f.data(f.time, f.time, cause, true); f.core.tick();
+            check(f.core.state() == AimingSession.State.PAUSED, cause + " pauses");
+            for (int i = 0; i < 21; i++) f.advance(100);
+            check(f.core.state() == AimingSession.State.AIMING && f.disables == 0, cause + " recovers");
+        }
+        f = new Fake(); f.aiming(); f.input = f.data(f.time - 1501, f.time, null, false); f.core.tick();
+        count = f.sent.size(); f.advance(100);
+        for (int i = 0; i < 25; i++) f.advance(100);
+        check(f.core.state() == AimingSession.State.PAUSED && f.sent.size() == count && f.advances == 2,
+                "telemetry recovery waits for fresh control observation without repeated requests");
+        f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, true, true);
+        for (int i = 0; i < 21; i++) f.advance(100);
+        check(f.core.state() == AimingSession.State.AIMING && f.enables == 1, "fresh telemetry and control recover existing session");
+
+        for (String cause : new String[]{"user_stop", "landing", "returning_home"}) {
+            f = new Fake(); f.aiming(); f.core.pauseImmediately("distance"); f.core.tick();
+            f.core.stopAiming(cause); count = f.sent.size();
+            for (int i = 0; i < 30; i++) f.advance(100);
+            check(f.core.state() != AimingSession.State.AIMING && f.sent.size() == count, cause + " cancels recovery");
+        }
+        f = new Fake(); f.aiming(); f.input = f.data(f.time, f.time, "distance", true); f.core.tick();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, false, false); f.core.tick();
+        check(f.core.state() != AimingSession.State.PAUSED, "control loss outranks continuing distance failure");
+        f = new Fake(); f.aiming(); f.core.pauseImmediately("distance"); f.core.tick(); f.advance(501);
+        check("loop_stall".equals(f.core.reason()), "stalled recovery cancels instead of counting unseen time");
+
+        f = new Fake(); f.core.startAiming(); f.core.pauseImmediately("pilot_stick"); f.core.tick();
+        f.enable.complete(true); f.advance(100); f.advance(100);
+        check(f.core.state() == AimingSession.State.PAUSED && f.disables == 0 && f.sent.isEmpty(), "paused acquisition awaits advanced callback");
+        f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, true, true);
+        for (int i = 0; i < 21; i++) f.advance(100);
+        check(f.core.state() == AimingSession.State.AIMING && f.enables == 1, "paused acquisition can complete normally");
+        f = new Fake(); f.core.startAiming(); f.core.pauseImmediately("distance"); f.core.tick();
+        for (int i = 0; i < 51; i++) { f.time += 100; f.input = f.data(f.time, f.time, "distance", true); f.core.tick(); }
+        check("start_timeout".equals(f.core.reason()) && !f.core.canStart(), "invalid inputs cannot hide enable timeout");
+        System.out.println("PASS: " + checks + " assertions (yaw math, input gates, ownership, callback races, failures, recovery)");
     }
 }

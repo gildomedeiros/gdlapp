@@ -1216,7 +1216,8 @@
     <string name="uxsdk_aiming_reason_gps">Waiting for phone GPS / precise location permission</string>
     <string name="uxsdk_aiming_reason_stale_gps">Phone GPS is too old</string>
     <string name="uxsdk_aiming_reason_gps_quality">Phone GPS uncertain or target too close</string>
-    <string name="uxsdk_aiming_reason_telemetry">Aircraft telemetry unavailable or too old</string>
+    <!-- CAM3 v2.3: Explain that monitoring continues during a recoverable telemetry pause. -->
+    <string name="uxsdk_aiming_reason_telemetry">Aircraft telemetry unavailable or too old; retrying reads</string>
     <string name="uxsdk_aiming_reason_heading">Heading unavailable or compass error</string>
     <string name="uxsdk_aiming_reason_connection">Aircraft disconnected</string>
     <string name="uxsdk_aiming_reason_flight_state">Requires airborne Normal mode; RTH/landing take priority</string>
@@ -1231,6 +1232,13 @@
     <string name="uxsdk_aiming_reason_landing">Aircraft landing; aiming stopped</string>
     <string name="uxsdk_aiming_reason_advanced_timeout">No advanced-mode confirmation; attempt stopped</string>
     <string name="uxsdk_aiming_details">Details</string>
+    <!-- CAM3 v2.3: Recoverable pauses, retries and stable-input timer are visible on the flight screen. -->
+    <string name="uxsdk_aiming_paused">Aiming paused</string>
+    <string name="uxsdk_aiming_reason_pilot_stick">Pilot using sticks; resume after 2 seconds neutral</string>
+    <string name="uxsdk_aiming_reason_recovering">Valid conditions; preparing to resume</string>
+    <string name="uxsdk_aiming_recovery_countdown">Resuming in %1$.1f s if conditions stay valid</string>
+    <string name="uxsdk_aiming_distance_limit">Distance below %1$.0f m; waiting to recover</string>
+    <string name="uxsdk_aiming_reason_control_wait">Waiting for fresh control confirmation; no aiming commands</string>
     <string name="uxsdk_aiming_stop_idle">Aiming is stopped.</string>
     <string name="uxsdk_aiming_stop_pending">Aiming commands stopped; waiting for control release.</string>
     <string name="uxsdk_aiming_reason_start_timeout">Control request timed out</string>

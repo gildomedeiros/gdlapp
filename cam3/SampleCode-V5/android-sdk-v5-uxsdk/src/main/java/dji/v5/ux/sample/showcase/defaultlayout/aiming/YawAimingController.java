@@ -35,6 +35,10 @@ public final class YawAimingController implements AimingSession.Port {
     private VirtualStickStateListener registeredListener;
     private volatile double lastCommandRate;
     private long commandSession = -1;
+    // CAM3 v2.3: Distinguish last command from active sending; recovery time is a UI snapshot.
+    private long lastCommandAt;
+    private volatile long recoveryRemaining;
+    public long recoveryRemainingMs() { return recoveryRemaining; }
     private static YawAimingController instance;
     public static synchronized YawAimingController getInstance(Context context) {
         if (instance == null) instance = new YawAimingController(context.getApplicationContext());
@@ -73,9 +77,11 @@ public final class YawAimingController implements AimingSession.Port {
             String observed = "owner=" + mapped + " enabled=" + value.isVirtualStickEnable()
                     + " advanced=" + value.isVirtualStickAdvancedModeEnabled();
             // CAM3 v2.2: Latch transient contradictory callbacks, including UNKNOWN-to-RC during Start.
-            boolean running = session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING;
+            boolean running = session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING
+                    || session.state() == AimingSession.State.PAUSED; // CAM3 v2.3: takeover cancels paused recovery too.
             if ((running && (mapped == AimingSession.Owner.RC || mapped == AimingSession.Owner.OTHER))
-                    || (session.state() == AimingSession.State.AIMING && (!value.isVirtualStickEnable() || !value.isVirtualStickAdvancedModeEnabled()))
+                    // CAM3 v2.3: A transient disabled/advanced-off callback permanently cancels an activated pause.
+                    || (running && session.hasActivated() && (!value.isVirtualStickEnable() || !value.isVirtualStickAdvancedModeEnabled()))
                     || (old.owner == AimingSession.Owner.MSDK && (mapped != AimingSession.Owner.MSDK
                     || !value.isVirtualStickEnable() || (old.advanced && !value.isVirtualStickAdvancedModeEnabled())))) {
                 // CAM3 v2.2: A subsequent positive callback cannot erase a reported handover.
@@ -106,8 +112,9 @@ public final class YawAimingController implements AimingSession.Port {
                 line -> Log.i("CAM3_AIMING", line));
         phone = new PhoneTargetLocationSource(context);
         // CAM3 v2.1: Capture individual read failures/recovery, in addition to periodic field snapshots.
-        aircraft = new AircraftAimingTelemetry(this::interruptAiming,
-                (field, error) -> logChanged("read_" + field, error, "field=" + field + " error=" + error, 0));
+        // CAM3 v2.3: Named telemetry callbacks either latch a pause or permanently cancel recovery.
+        aircraft = new AircraftAimingTelemetry(this::telemetryEvent,
+                (field, detail) -> diagnostic("telemetry_" + field, detail));
         session = new AimingSession(this);
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
@@ -175,12 +182,20 @@ public final class YawAimingController implements AimingSession.Port {
         // CAM3 v2.2: Telemetry/pilot stop retains its generic reason; SDK reasons can be specific.
         interruptAiming("takeover");
     }
+    // CAM3 v2.3: Latch before logging; a short stick movement must reset the neutral timer.
+    private void telemetryEvent(String reason, boolean permanent) {
+        if (permanent) interruptAiming(reason);
+        else if (session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING
+                || session.state() == AimingSession.State.PAUSED) session.pauseImmediately(reason);
+        diagnostic("input_event", "reason=" + reason + " action=" + (permanent ? "stop" : "pause"));
+    }
     private void interruptAiming(String reason) {
         intent.incrementAndGet();
         session.cancelImmediately();
         executor.execute(() -> {
             // Expected ownership changes during our own release must preserve the original stop reason.
-            if (session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING)
+            if (session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING
+                    || session.state() == AimingSession.State.PAUSED) // CAM3 v2.3: never revive a cancelled pause.
                 session.stopAiming(reason);
         });
     }
@@ -204,6 +219,8 @@ public final class YawAimingController implements AimingSession.Port {
                 lastRender = now();
                 Observer target = observer;
                 AimingSession.State state = session.state();
+                // CAM3 v2.3: Main-thread rendering uses a worker-produced recovery snapshot.
+                recoveryRemaining = session.recoveryRemainingMs();
                 // CAM3 v2.2: Listener availability is also required for user-visible readiness.
                 boolean ready = listening && session.canStart();
                 String reason = session.reason();
@@ -281,19 +298,24 @@ public final class YawAimingController implements AimingSession.Port {
             String gate = "session=" + session.sessionId() + " state=" + state + " stopReason=" + session.reason()
                     + " inputProblem=" + reason + " canStart=" + session.canStart()
                     + " owner=" + authority().owner + " stateSequence=" + authority.sequence
-                    + " listenerGeneration=" + listenerGeneration.get() + " submittedYawRate=" + lastCommandRate;
+                    // CAM3 v2.3: This value is historical, not evidence of ongoing commands.
+                    + " listenerGeneration=" + listenerGeneration.get() + " lastSubmittedYawRate=" + lastCommandRate
+                    + " sending=" + session.maySendYaw();
             double separation = fix == null ? Double.NaN : YawAimingMath.distance(in.lat, in.lon, fix.lat, fix.lon);
             String quality = " phoneAccuracyM=" + (fix == null ? "unavailable" : fix.accuracy)
                     + " separationM=" + (Double.isFinite(separation) ? String.valueOf(Math.round(separation)) : "unavailable");
             String signature = gate + telemetry.signature + quality;
             String detail = gate + " " + telemetry.detail + quality
-                    + " phoneAgeMs=" + (fix == null ? -1 : at - fix.time);
+                    + " phoneAgeMs=" + (fix == null ? -1 : at - fix.time)
+                    + " lastCommandAgeMs=" + (lastCommandAt == 0 ? -1 : at - lastCommandAt)
+                    + " recoveryRemainingMs=" + session.recoveryRemainingMs(); // CAM3 v2.3: trace recovery progress.
             logChanged("readiness", signature, detail, 5000);
             // CAM3 v2.2: Independently assess phone quality even when aircraft mode is rejected.
             readinessDetails = aircraft.blockers(at) + "\n" + phoneDetails(in, at)
                     + "\nControl: " + authority.owner + " (state callbacks: " + stateSequence.get() + ")"
                     + "\n" + (listening ? "Monitoring control changes" : "Control listener unavailable")
-                    + "\nSession: " + state + " — " + session.reason();
+                    + "\nSession: " + state + " — " + session.reason()
+                    + (state == AimingSession.State.PAUSED ? "\nRecovery remaining: " + session.recoveryRemainingMs() + " ms" : "");
             logChanged("blockers", readinessDetails, readinessDetails, 5000);
         } catch (RuntimeException ignored) { /* Logging cannot cancel or keep aiming alive. */ }
     }
@@ -303,7 +325,8 @@ public final class YawAimingController implements AimingSession.Port {
         if (f == null) return "Phone GPS unavailable";
         String age = now < f.time || now - f.time > 3000 ? "STALE" : "fresh";
         double distance = YawAimingMath.distance(in.lat, in.lon, f.lat, f.lon);
-        double required = Math.max(20, 4 * (f.accuracy + 5));
+        // CAM3 v2.3: UI/logs use precisely the same minimum as the control gate.
+        double required = YawAimingMath.MIN_AIMING_DISTANCE_METERS;
         return String.format(java.util.Locale.US, "Phone GPS: %s; accuracy %.1f m (maximum 10 m)%nDistance: %s; required %.1f m",
                 age, f.accuracy, Double.isFinite(distance) ? String.format(java.util.Locale.US, "%.1f m", distance) : "unavailable", required);
     }
@@ -315,11 +338,14 @@ public final class YawAimingController implements AimingSession.Port {
         AimingSession.Authority a = authority();
         // CAM3 v2.2: Normal zero-yaw ticks use the same grant rule; cleanup zero needs observed MSDK.
         boolean active = foreground && !yielding && session.maySendYaw() && session.commandEligible();
-        boolean neutral = rate == 0 && !yielding && a.owner == AimingSession.Owner.MSDK && a.enabled && a.advanced;
+        // CAM3 v2.3: A paused live session can submit one zero using its confirmed enable/advanced state.
+        boolean neutral = rate == 0 && !yielding && (session.maySendPauseNeutral()
+                || (a.owner == AimingSession.Owner.MSDK && a.enabled && a.advanced));
         if (!active && !neutral) return;
         sdk.sendVirtualStickAdvancedParam(buildYawOnlyCommand(rate));
         // CAM3 v2.2: First submission is an event; subsequent rates use the bounded summary cadence.
         lastCommandRate = rate;
+        lastCommandAt = now(); // CAM3 v2.3: Timestamp actual API submission, never fabricate a zero.
         if (active && commandSession != session.sessionId()) {
             commandSession = session.sessionId();
             diagnostic("first_command", "session=" + commandSession + " submittedYawRate=" + rate);

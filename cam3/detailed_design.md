@@ -1,5 +1,7 @@
 # cam3 detailed design index
 
+Track outstanding work separately in [pending enhancements](ENHANCEMENTS.md). Version designs describe the scope and implementation of each release.
+
 Maintain one separate design file per release in the detailed_design directory, named detailed_design_vX.0.md (use the exact version when additional version components are needed). Preserve prior version designs. Each file must include detailed source-file and method changes, the file-labelled call hierarchy, safety/failure handling, validation, and explicit planned/implemented status. Comment every change to existing code with its CAM3 version, what changed and why.
 
 - [v2.0 detailed design](detailed_design/detailed_design_v2.0.md) — implemented locally and build-verified GPS yaw aiming; no CV, no commanded translation, manual gimbal tilt. Device validation pending. Includes the implemented call hierarchy, original proposal and v1.0 observations.
@@ -10,4 +12,4 @@ The original design content is preserved in the v2.0 file alongside the implemen
 
 - [v2.2 detailed design](detailed_design/detailed_design_v2.2.md) — implemented locally: APAS hover eligibility, enable/advanced confirmation, ownership callback logs, late-grant cleanup, readiness Details and STOP acknowledgement. Device validation pending; see implementation record and build results.
 
-- [v2.3 detailed design](detailed_design/detailed_design_v2.3.md) — planned: carry forward the user's manual v2.2 10 m test minimum and share it between eligibility, Details and logs. Records the manual source change; no v2.3 implementation yet.
+- [v2.3 detailed design](detailed_design/detailed_design_v2.3.md) — implemented locally: recoverable pauses, 2-second recovery, pilot-stick pause, bounded telemetry read retries, shared 5 m minimum, recovery UI and diagnostics. Device validation pending.

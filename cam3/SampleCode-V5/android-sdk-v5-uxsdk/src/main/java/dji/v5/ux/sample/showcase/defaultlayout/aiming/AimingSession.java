@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Callbacks must be dispatched onto that executor. Never infer physical stopping from SDK success.
  */
 public final class AimingSession {
-    public enum State { OFF, STARTING, AIMING, STOPPING, STOPPED, RELEASE_UNCONFIRMED }
+    // CAM3 v2.3: Recoverable input failures pause the current explicit session.
+    public enum State { OFF, STARTING, AIMING, PAUSED, STOPPING, STOPPED, RELEASE_UNCONFIRMED }
     public enum Owner { RC, MSDK, OTHER, UNKNOWN }
     public interface Completion { void complete(boolean success); }
     public interface Port {
@@ -55,12 +56,19 @@ public final class AimingSession {
             this.aircraftTime = aircraftTime; this.problem = problem; this.safeToNeutral = safeToNeutral;
         }
         public String validate(long now) {
-            if (problem != null) return problem;
+            // CAM3 v2.3: Stale telemetry requires control revalidation even when a recoverable field also fails.
+            if (problem != null && !recoverable(problem)) return problem;
             if (aircraftTime <= 0 || now < aircraftTime || now - aircraftTime > 1500) return "telemetry";
+            if (problem != null) return problem;
             if (!YawAimingMath.coordinateValid(lat, lon) || !Double.isFinite(heading)
                     || heading < -180 || heading > 360) return "heading";
             if (target == null) return "gps";
             if (target.time <= 0 || now < target.time || now - target.time > 3000) return "stale_gps";
+            // CAM3 v2.3: Distinguish usable GPS at too short a distance from invalid GPS quality.
+            if (YawAimingMath.coordinateValid(target.lat, target.lon) && Double.isFinite(target.accuracy)
+                    && target.accuracy > 0 && target.accuracy <= 10
+                    && YawAimingMath.distance(lat, lon, target.lat, target.lon) < YawAimingMath.MIN_AIMING_DISTANCE_METERS)
+                return "distance";
             if (!YawAimingMath.coordinateValid(target.lat, target.lon)
                     || !YawAimingMath.isBearingUsable(YawAimingMath.distance(lat, lon, target.lat, target.lon),
                     target.accuracy)) return "gps_quality";
@@ -69,6 +77,35 @@ public final class AimingSession {
     }
     private final Port port;
     private final AtomicBoolean cancelled = new AtomicBoolean(true);
+    // CAM3 v2.3: Urgent pause suppresses yaw without cancelling automatic recovery.
+    private final AtomicBoolean pauseRequested = new AtomicBoolean();
+    private volatile String pauseCause = "telemetry";
+    private long recoverySince = -1;
+    private boolean neutralSent, refreshControl;
+    // CAM3 v2.3: Callback threads must latch loss during a previously activated pause, including UNKNOWN owner.
+    private volatile boolean activated;
+    public boolean hasActivated() { return activated; }
+    private Authority recoveryAuthority;
+    public void pauseImmediately(String cause) { pauseCause = cause; pauseRequested.set(true); }
+    public long recoveryRemainingMs() { return recoverySince < 0 ? 2000 : Math.max(0, 2000 - (port.now() - recoverySince)); }
+    public boolean maySendPauseNeutral() { return !cancelled.get() && state == State.PAUSED && commandEligible(); }
+    private static boolean recoverable(String p) {
+        return "telemetry".equals(p) || "connection".equals(p) || "gps".equals(p)
+                || "stale_gps".equals(p) || "gps_quality".equals(p) || "distance".equals(p)
+                || "heading".equals(p) || "aircraft_gps".equals(p) || "pilot_stick".equals(p) || "hover".equals(p);
+    }
+    private void pauseAiming(String cause) {
+        if (state != State.PAUSED) { neutralSent = false; recoverySince = -1; recoveryAuthority = null; lastTick = port.now(); }
+        if (recoverySince >= 0) diagnostic("recovery_reset", "cause=" + cause);
+        recoverySince = -1;
+        if ("telemetry".equals(cause) || "connection".equals(cause)) { refreshControl = true; recoveryAuthority = null; }
+        if (!cause.equals(reason) || state != State.PAUSED) diagnostic("pause", "cause=" + cause);
+        reason = cause; rate = 0; setState(State.PAUSED);
+        Inputs in = port.inputs();
+        if (!neutralSent && commandEligible() && in.safeToNeutral && port.now() - in.aircraftTime <= 1500) {
+            diagnostic("pause_neutral", "request yaw=0"); port.sendYaw(0); neutralSent = true;
+        }
+    }
     // CAM3 v2.2: Callback thread may inspect phase solely to latch cancellation.
     private volatile State state = State.OFF;
     private String reason = "ready";
@@ -100,7 +137,8 @@ public final class AimingSession {
         if (previous != next) diagnostic("state", previous + " -> " + next + " reason=" + reason);
     }
     public void cancelImmediately() { cancelled.set(true); }
-    public boolean maySendYaw() { return !cancelled.get() && state == State.AIMING; }
+    // CAM3 v2.3: A callback's pause request vetoes an already-calculated yaw command.
+    public boolean maySendYaw() { return !cancelled.get() && !pauseRequested.get() && state == State.AIMING; }
     public boolean canStart() {
         Authority a = port.authority();
         return !enablePending && !claimed && !releasePending && state != State.STARTING
@@ -111,6 +149,8 @@ public final class AimingSession {
     public void startAiming() {
         if (!canStart()) return;
         cancelled.set(false);
+        // CAM3 v2.3: A new explicit session owns its recovery state.
+        pauseRequested.set(false); refreshControl = false; recoveryAuthority = null; recoverySince = -1; activated = false;
         // CAM3 v2.1: Allocate the diagnostic session before logging its first transition.
         long token = ++session;
         reason = "acquiring"; setState(State.STARTING);
@@ -129,7 +169,7 @@ public final class AimingSession {
                 enablePending = false;
                 enableSucceeded = success;
                 if (!success) stopAiming("enable_failed");
-                else if (cancelled.get() || state != State.STARTING) {
+                else if (cancelled.get() || (state != State.STARTING && state != State.PAUSED)) {
                     // CAM3 v2.2: A late enable can follow an earlier disable; release this new grant once.
                     if (!releasePending) releaseAttempted = false;
                     else lateGrantDuringRelease = true;
@@ -152,17 +192,67 @@ public final class AimingSession {
             if (state == State.STOPPING || state == State.RELEASE_UNCONFIRMED) {
                 settleRelease(); return;
             }
-            if (state != State.STARTING && state != State.AIMING) return;
+            // CAM3 v2.3: Paused sessions keep monitoring, but never run the yaw loop.
+            if (state != State.STARTING && state != State.AIMING && state != State.PAUSED) return;
             if (cancelled.get()) { stopAiming("cancelled"); return; }
+            if (port.controlLost()) { stopAiming("takeover"); return; }
+            // CAM3 v2.3: A stalled recovery loop cannot count as continuous healthy observation.
+            if (state == State.PAUSED) {
+                if (port.now() < lastTick || port.now() - lastTick > 500) { stopAiming("loop_stall"); return; }
+                lastTick = port.now();
+            }
             Inputs in = port.inputs();
             String problem = in.validate(port.now());
-            if (problem != null) { stopAiming(problem); return; }
+            if (problem != null && !recoverable(problem)) { stopAiming(problem); return; }
             Authority a = port.authority();
             // CAM3 v2.2: New contradictory state vetoes acquisition; old RC state is not a takeover.
             if (a.owner == Owner.MSDK) observedMsdk = true;
             if (a != beforeEnable && (a.owner == Owner.RC || a.owner == Owner.OTHER
                     || (observedMsdk && a.owner == Owner.UNKNOWN))) {
                 stopAiming("takeover"); return;
+            }
+            // CAM3 v2.3: Control loss outranks bad inputs; pausing cannot extend acquisition forever.
+            if (activated && (!a.enabled || !a.advanced)) { stopAiming("takeover"); return; }
+            if (!activated && port.now() - started > 5000) {
+                stopAiming(enableSucceeded ? "advanced_timeout" : "start_timeout"); return;
+            }
+            // CAM3 v2.3: An urgent transient event resets recovery even if polling already looks good.
+            if (pauseRequested.getAndSet(false)) { pauseAiming(pauseCause); return; }
+            if (problem != null) { pauseAiming(problem); return; }
+            if (state == State.PAUSED) {
+                if (enablePending) {
+                    if (port.now() - started > 5000) stopAiming("start_timeout");
+                    return;
+                }
+                if (!enableSucceeded) { stopAiming("enable_failed"); return; }
+                if (!advancedRequested) {
+                    advancedRequested = true; beforeAdvanced = a; port.advanced(); return;
+                }
+                // CAM3 v2.3: A pause during acquisition still waits for its first advanced confirmation.
+                if (!commandEligible()) { reason = "control_wait"; return; }
+                if (refreshControl) {
+                    if (recoveryAuthority == null) {
+                        recoveryAuthority = a;
+                        diagnostic("recovery_control_request", "refresh advanced state; no enable/reacquire");
+                        port.advanced(); reason = "control_wait"; return;
+                    }
+                    if (a == recoveryAuthority) { reason = "control_wait"; return; }
+                    refreshControl = false;
+                    diagnostic("recovery_control_confirmed", "sequence=" + a.sequence);
+                }
+                if (!commandEligible()) { reason = "control_wait"; return; }
+                // CAM3 v2.3: If stale telemetry prevented neutral earlier, send it after confirmation.
+                if (!neutralSent && in.safeToNeutral) {
+                    diagnostic("pause_neutral", "recovered connection; request yaw=0");
+                    port.sendYaw(0); neutralSent = true;
+                }
+                if (recoverySince < 0) { recoverySince = port.now(); diagnostic("recovery_timer", "valid for 2000ms required"); }
+                reason = "recovering";
+                if (port.now() - recoverySince < 2000) return;
+                if (cancelled.get() || pauseRequested.get()) return;
+                rate = 0; lastTick = port.now(); reason = "aiming";
+                activated = true; setState(State.AIMING); diagnostic("resumed", "stable inputs; yaw restarts from zero");
+                recoverySince = -1;
             }
             if (state == State.STARTING) {
                 // CAM3 v2.2: Name the missing confirmation and request advanced after enable success.
@@ -178,7 +268,8 @@ public final class AimingSession {
                 }
                 if (!commandEligible()) return;
                 // CAM3 v2.1: Observe the existing confirmed-start transition, without changing its gate.
-                reason = "aiming"; setState(State.AIMING); lastTick = port.now();
+                // CAM3 v2.3: Remember activation so later loss of enabled/advanced cancels paused recovery.
+                activated = true; reason = "aiming"; setState(State.AIMING); lastTick = port.now();
             }
             // CAM3 v2.2: The same eligibility rule applies at activation and every send.
             if (!commandEligible()) { stopAiming("takeover"); return; }
@@ -190,8 +281,13 @@ public final class AimingSession {
             rate = YawAimingMath.calculateYawRate(error, rate, Math.max(0.001, elapsed / 1000.0));
             // Fresh read immediately before sending; a pause must not revive a previously calculated command.
             Authority latest = port.authority();
+            // CAM3 v2.3: Last-moment recoverable failures pause instead of cancelling the session.
+            String finalProblem = port.inputs().validate(port.now());
+            if (!cancelled.get() && (pauseRequested.get() || (finalProblem != null && recoverable(finalProblem)))) {
+                pauseAiming(pauseRequested.get() ? pauseCause : finalProblem); return;
+            }
             if (cancelled.get() || !commandEligible()
-                    || port.now() - now > 200 || port.inputs().validate(port.now()) != null) {
+                    || port.now() - now > 200 || finalProblem != null) {
                 stopAiming("inputs_changed"); return;
             }
             port.sendYaw(rate);
@@ -202,6 +298,9 @@ public final class AimingSession {
         }
     }
     public void stopAiming(String why) {
+        // CAM3 v2.3: Explicit/aircraft stops permanently cancel any pending resume timer.
+        if (state == State.PAUSED) diagnostic("recovery_cancelled", "reason=" + why);
+        recoverySince = -1; pauseRequested.set(false);
         cancelled.set(true); rate = 0; reason = why;
         // CAM3 v2.1: Log stop reasons even if the state itself has not changed.
         diagnostic("stop", "reason=" + why);

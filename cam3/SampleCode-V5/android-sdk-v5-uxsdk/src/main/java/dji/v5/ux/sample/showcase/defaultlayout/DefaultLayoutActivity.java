@@ -252,7 +252,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         findViewById(R.id.uxsdk_aiming_export).setOnClickListener(v -> {
             v.setEnabled(false);
             // CAM3 v2.2: Identify the implemented release in exported filenames.
-            try { aimingLogExport.launch("cam3-v2.2-aiming-" + System.currentTimeMillis() + ".txt"); }
+            // CAM3 v2.3: Export identifies the pause/recovery release.
+            try { aimingLogExport.launch("cam3-v2.3-aiming-" + System.currentTimeMillis() + ".txt"); }
             catch (RuntimeException ex) {
                 v.setEnabled(true);
                 Toast.makeText(this, R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
@@ -375,6 +376,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         switch (state) {
             case STARTING: stateLabel = R.string.uxsdk_aiming_starting; break;
             case AIMING: stateLabel = R.string.uxsdk_aiming_active; break;
+            // CAM3 v2.3: Distinguish a recoverable pause from a permanent stop.
+            case PAUSED: stateLabel = R.string.uxsdk_aiming_paused; break;
             case STOPPING: stateLabel = R.string.uxsdk_aiming_stopping; break;
             case RELEASE_UNCONFIRMED: stateLabel = R.string.uxsdk_aiming_unconfirmed; break;
             case STOPPED: stateLabel = R.string.uxsdk_aiming_stopped; break;
@@ -382,6 +385,11 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         }
         int reasonId = getResources().getIdentifier("uxsdk_aiming_reason_" + reason, "string", getPackageName());
         String explanation = getString(reasonId == 0 ? R.string.uxsdk_aiming_reason_sdk_error : reasonId);
+        // CAM3 v2.3: Show actual recovery countdown and the shared distance threshold.
+        if ("recovering".equals(reason)) explanation = getString(R.string.uxsdk_aiming_recovery_countdown,
+                yawAimingController.recoveryRemainingMs() / 1000.0);
+        if ("distance".equals(reason)) explanation = getString(R.string.uxsdk_aiming_distance_limit,
+                dji.v5.ux.sample.showcase.defaultlayout.aiming.YawAimingMath.MIN_AIMING_DISTANCE_METERS);
         ((TextView) findViewById(R.id.uxsdk_aiming_status)).setText(getString(stateLabel) + " — " + explanation);
         ((TextView) findViewById(R.id.uxsdk_aiming_quality)).setText(fix == null
                 ? getString(R.string.uxsdk_aiming_no_fix)
