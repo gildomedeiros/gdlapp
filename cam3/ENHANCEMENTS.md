@@ -81,6 +81,21 @@ Retain the last accepted position without refreshing its original timestamp. Def
 
 Acceptance: test isolated spikes, repeated rejected fixes, ordinary surfer movement, uncertainty changes, invalid time intervals, stale-data stopping and recovery to consistent valid fixes. Include clear rejection/recovery diagnostics. This is a plausibility filter, not proof that accepted coordinates are correct; consistent position errors can still pass.
 
+## E07 — Predict surfer movement during a nearby pass
+
+Status: PENDING design. Target version: not yet assigned. No application behavior changed.
+
+Estimate movement from the last few good phone GPS readings.
+
+1. When too close, briefly aim toward the predicted position ahead of the surfer, rather than the noisy nearby GPS point.
+2. Return to normal GPS aiming once separation improves.
+
+Purpose: reduce lost tracking during a nearby sideways pass. The user accepts missing a surfer passing directly underneath the drone, especially because cam3 does not automatically tilt the gimbal; following that case is not required.
+
+The implementing version must define what qualifies as good readings, prediction duration/confidence, entry and exit distances, and fallback to PAUSED when prediction is unreliable. Preserve yaw limits and permanent-stop/control-loss protections. Log prediction entry, fallback and return to normal GPS aiming, and display the current stage. This proposal does not change v2.3's 5 m gate or 2-second recovery timer now.
+
+Acceptance: test nearby passes, noisy fixes, changes in direction/speed, prediction expiry and transition back to GPS aiming. Confirm STOP, RTH, landing and control loss cancel prediction. Record the detailed design in the implementing version's own file before implementation.
+
 ## Completion tracking
 
-E02–E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05 and E06 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.
+E02–E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05, E06 and E07 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.
