@@ -18,6 +18,8 @@ public final class AimingSession {
         void advanced();
         void disable(Completion callback);
         void sendYaw(double rate);
+        // CAM3 v2.1: Optional diagnostics port has no authority over flight state or command delivery.
+        default void diagnostic(String event, String detail) { }
     }
     public static final class Authority {
         public final Owner owner;
@@ -68,6 +70,17 @@ public final class AimingSession {
     public AimingSession(Port port) { this.port = port; }
     public State state() { return state; }
     public String reason() { return reason; }
+    // CAM3 v2.1: Expose session identity for correlating callbacks and readiness snapshots.
+    public long sessionId() { return session; }
+    private void diagnostic(String event, String detail) {
+        try { port.diagnostic(event, "session=" + session + " " + detail); }
+        catch (RuntimeException ignored) { /* Diagnostics must never alter a flight-control decision. */ }
+    }
+    private void setState(State next) {
+        State previous = state;
+        state = next;
+        if (previous != next) diagnostic("state", previous + " -> " + next + " reason=" + reason);
+    }
     public void cancelImmediately() { cancelled.set(true); }
     public boolean maySendYaw() { return !cancelled.get() && state == State.AIMING; }
     public boolean canStart() {
@@ -79,24 +92,30 @@ public final class AimingSession {
     public void startAiming() {
         if (!canStart()) return;
         cancelled.set(false);
-        state = State.STARTING; reason = "acquiring";
+        // CAM3 v2.1: Allocate the diagnostic session before logging its first transition.
+        long token = ++session;
+        reason = "acquiring"; setState(State.STARTING);
         started = port.now(); lastTick = 0; rate = 0;
         advancedRequested = false; enableSucceeded = false; releaseAttempted = false;
         enablePending = true; claimed = true;
         beforeEnable = port.authority();
-        long token = ++session;
         try {
             port.enable(success -> {
+                // CAM3 v2.1: Distinguish callback completion, cancellation and stale-session arrival.
+                diagnostic("enable_result", "token=" + token + " success=" + success + " cancelled=" + cancelled.get());
                 if (token != session) return;
                 enablePending = false;
                 enableSucceeded = success;
                 if (!success) stopAiming("enable_failed");
                 else if (cancelled.get() || state != State.STARTING) {
                     // A late grant after timeout still needs a release attempt, never a new aiming loop.
-                    state = State.STOPPING; releaseStarted = port.now(); stopAiming(reason);
+                    // CAM3 v2.1: Log the existing late-grant cleanup transition.
+                    setState(State.STOPPING); releaseStarted = port.now(); stopAiming(reason);
                 }
             });
         } catch (RuntimeException ex) {
+            // CAM3 v2.1: Record exception type without logging potentially sensitive exception payloads.
+            diagnostic("enable_exception", ex.getClass().getSimpleName());
             // A throwing enable call may still have reached DJI. Preserve unresolved ownership.
             stopAiming("sdk_error");
         }
@@ -122,7 +141,8 @@ public final class AimingSession {
                     return;
                 }
                 if (!a.advanced) return;
-                state = State.AIMING; reason = "aiming"; lastTick = port.now();
+                // CAM3 v2.1: Observe the existing confirmed-start transition, without changing its gate.
+                reason = "aiming"; setState(State.AIMING); lastTick = port.now();
             }
             if (a.owner != Owner.MSDK || !a.enabled || !a.advanced) { stopAiming("takeover"); return; }
             long now = port.now();
@@ -139,13 +159,19 @@ public final class AimingSession {
             }
             port.sendYaw(rate);
             lastTick = now;
-        } catch (RuntimeException ex) { stopAiming("sdk_error"); }
+        // CAM3 v2.1: Record loop exceptions before the same fail-safe stop path.
+        } catch (RuntimeException ex) {
+            diagnostic("loop_exception", ex.getClass().getSimpleName()); stopAiming("sdk_error");
+        }
     }
     public void stopAiming(String why) {
         cancelled.set(true); rate = 0; reason = why;
-        if (!claimed && !enablePending) { state = State.STOPPED; return; }
+        // CAM3 v2.1: Log stop reasons even if the state itself has not changed.
+        diagnostic("stop", "reason=" + why);
+        if (!claimed && !enablePending) { setState(State.STOPPED); return; }
         if (state != State.STOPPING && state != State.RELEASE_UNCONFIRMED) {
-            state = State.STOPPING; releaseStarted = port.now();
+            // CAM3 v2.1: Log the existing release-wait transition.
+            setState(State.STOPPING); releaseStarted = port.now();
         }
         settleRelease();
     }
@@ -153,11 +179,13 @@ public final class AimingSession {
         Authority a = port.authority();
         // A pending enable blocks a new session, but observed MSDK ownership can already be released.
         if (!enablePending && !releasePending && !a.enabled && a.owner == Owner.RC && a != beforeEnable) {
-            claimed = false; state = State.STOPPED; return;
+            // CAM3 v2.1: Log observed release independently of API callbacks.
+            claimed = false; setState(State.STOPPED); return;
         }
         // Other authority owners are not ours to disable or send a neutral command to.
         if (!enablePending && !releasePending && a.owner == Owner.OTHER) {
-            claimed = false; state = State.STOPPED; return;
+            // CAM3 v2.1: Log yielding to a different authority owner.
+            claimed = false; setState(State.STOPPED); return;
         }
         if (!releasePending && claimed && a.owner == Owner.MSDK && !releaseAttempted) {
             // A grant may arrive after both the enable callback and the stop timeout.
@@ -173,16 +201,24 @@ public final class AimingSession {
                 // Recheck after neutral: RTH/takeover may have happened during the call.
                 if (port.authority().owner != Owner.MSDK) { releasePending = false; return; }
                 port.disable(success -> {
+                    // CAM3 v2.1: Correlate release callbacks and identify late results.
+                    diagnostic("disable_result", "releaseToken=" + token + " success=" + success);
                     if (token != releaseSequence) return;
                     releasePending = false;
-                    if (!success) state = State.RELEASE_UNCONFIRMED;
+                    // CAM3 v2.1: Log existing failure/confirmation transitions without relaxing them.
+                    if (!success) setState(State.RELEASE_UNCONFIRMED);
                     // Successful API completion still requires an observed RC/disabled state.
                     else if (!enablePending && port.authority().owner == Owner.RC && !port.authority().enabled) {
-                        claimed = false; state = State.STOPPED;
-                    } else state = State.RELEASE_UNCONFIRMED;
+                        claimed = false; setState(State.STOPPED);
+                    } else setState(State.RELEASE_UNCONFIRMED);
                 });
-            } catch (RuntimeException ex) { releasePending = false; state = State.RELEASE_UNCONFIRMED; }
+            // CAM3 v2.1: Record release exception type and retain the existing unresolved state.
+            } catch (RuntimeException ex) {
+                diagnostic("release_exception", ex.getClass().getSimpleName());
+                releasePending = false; setState(State.RELEASE_UNCONFIRMED);
+            }
         }
-        if (port.now() - releaseStarted > 5000) state = State.RELEASE_UNCONFIRMED;
+        // CAM3 v2.1: Record the existing timeout transition once, not on every tick.
+        if (port.now() - releaseStarted > 5000) setState(State.RELEASE_UNCONFIRMED);
     }
 }

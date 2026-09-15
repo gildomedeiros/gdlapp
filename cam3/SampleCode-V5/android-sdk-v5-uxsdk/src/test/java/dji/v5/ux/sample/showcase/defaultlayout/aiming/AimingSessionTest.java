@@ -19,6 +19,13 @@ public final class AimingSessionTest {
         AimingSession.Completion enable, disable;
         int enables, disables, advances;
         boolean throwSend, throwDisable;
+        // CAM3 v2.1: Verify diagnostic-port failure cannot change flight-control outcomes.
+        boolean throwDiagnostics;
+        final List<String> diagnosticEvents = new ArrayList<>();
+        public void diagnostic(String event, String detail) {
+            if (throwDiagnostics) throw new IllegalStateException("logger unavailable");
+            diagnosticEvents.add(event + " " + detail);
+        }
         Runnable onRead;
         final List<Double> sent = new ArrayList<>();
         final AimingSession core = new AimingSession(this);
@@ -143,6 +150,17 @@ public final class AimingSessionTest {
                 "missing enable callback still visibly prevents overlapping starts");
         f.enable.complete(true); f.core.tick();
         check(f.core.state() == AimingSession.State.STOPPED && f.sent.isEmpty(), "late enable settles without restarting");
+        // CAM3 v2.1: Test the new observability while retaining every v2.0 control regression.
+        f = new Fake(); f.aiming(); f.core.stopAiming("user_stop");
+        check(f.diagnosticEvents.stream().anyMatch(e -> e.contains("STARTING -> AIMING") && e.contains("session=1")),
+                "state transition includes session identity");
+        check(f.diagnosticEvents.stream().anyMatch(e -> e.contains("reason=user_stop")), "original stop reason logged");
+        f = new Fake(); f.throwDiagnostics = true; f.aiming(); f.core.stopAiming("user_stop");
+        check(f.disables == 1 && f.core.state() == AimingSession.State.STOPPING, "throwing logger cannot prevent release");
+        f = new Fake(); f.input = f.data(f.time, f.time, "not_airborne", false);
+        check("not_airborne".equals(f.input.validate(f.time)) && !f.core.canStart(), "not airborne reason preserved");
+        f.input = f.data(f.time, f.time, "flight_mode_rejected", false);
+        check("flight_mode_rejected".equals(f.input.validate(f.time)) && !f.core.canStart(), "rejected mode distinct and still blocks");
         System.out.println("PASS: " + checks + " assertions (yaw math, input gates, ownership, callback races, failures)");
     }
 }

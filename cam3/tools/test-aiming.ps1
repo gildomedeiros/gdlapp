@@ -30,3 +30,10 @@ foreach ($mode in @('RollPitchControlMode.VELOCITY', 'VerticalControlMode.VELOCI
     if (!$bytecode.Contains($mode)) { throw "Command mode missing: $mode" }
 }
 Write-Output 'PASS: compiled command factory has explicit zero translation and required velocity modes (static verification)'
+
+# CAM3 v2.1: Exercise real bounded log files, queue backpressure and export without Android/aircraft.
+$diagnosticTest = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java/$package/AimingDiagnosticLoggerTest.java"
+& "$JavaHome/bin/javac.exe" -cp $output -d $output "$source/AimingDiagnosticLogger.java" $diagnosticTest
+if ($LASTEXITCODE -ne 0) { throw 'Diagnostic tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingDiagnosticLoggerTest' $output
+if ($LASTEXITCODE -ne 0) { throw 'Diagnostic tests failed' }

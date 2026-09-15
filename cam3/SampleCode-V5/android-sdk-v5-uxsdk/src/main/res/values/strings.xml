@@ -1229,4 +1229,10 @@
     <string name="uxsdk_aiming_reason_loop_stall">Control loop delayed; aiming cancelled</string>
     <string name="uxsdk_aiming_reason_inputs_changed">Inputs or control changed before send</string>
     <string name="uxsdk_aiming_reason_sdk_error">SDK error; check aircraft and controller</string>
+    <!-- CAM3 v2.1: Distinct readiness failures and user-controlled diagnostic-log export. -->
+    <string name="uxsdk_aiming_reason_not_airborne">DJI reports aircraft not airborne</string>
+    <string name="uxsdk_aiming_reason_flight_mode_rejected">DJI flight mode rejected; export log for exact value</string>
+    <string name="uxsdk_aiming_export">Export aiming log</string>
+    <string name="uxsdk_aiming_export_done">Aiming log exported</string>
+    <string name="uxsdk_aiming_export_failed">Could not export aiming log; try again</string>
 </resources>

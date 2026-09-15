@@ -348,6 +348,14 @@
                 android:textSize="12sp"
                 android:text="@string/uxsdk_aiming_no_fix" />
         </LinearLayout>
+        <!-- CAM3 v2.1: Explicit local-log export; keeps Start and Stop in their existing positions. -->
+        <Button
+            android:id="@+id/uxsdk_aiming_export"
+            android:layout_width="96dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:textSize="12sp"
+            android:text="@string/uxsdk_aiming_export" />
     </LinearLayout>
     </LinearLayout>
 

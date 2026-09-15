@@ -31,6 +31,10 @@ import android.widget.TextView;
 
 // CAM3 v2.0: Aiming owns its lifecycle; inset handling protects all flight/camera controls.
 import android.view.ViewGroup;
+// CAM3 v2.1: Export through Android's save picker without storage permissions or a flight-control action.
+import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.graphics.Insets;
@@ -104,6 +108,17 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private YawAimingController yawAimingController;
     // CAM3 v2.0: Stable observer identity prevents an old screen detaching a newer screen's controls.
     private final YawAimingController.Observer aimingObserver = this::renderAimingState;
+    // CAM3 v2.1: The picker grants access only to the document selected by the user.
+    private final ActivityResultLauncher<String> aimingLogExport = registerForActivityResult(
+            new ActivityResultContracts.CreateDocument("text/plain"), uri -> {
+                if (uri == null) { findViewById(R.id.uxsdk_aiming_export).setEnabled(true); return; }
+                yawAimingController.exportLog(uri, success -> runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    findViewById(R.id.uxsdk_aiming_export).setEnabled(true);
+                    Toast.makeText(this, success ? R.string.uxsdk_aiming_export_done
+                            : R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
+                }));
+            });
 
     protected FPVWidget primaryFpvWidget;
     protected FPVInteractionWidget fpvInteractionWidget;
@@ -222,6 +237,15 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         // CAM3 v2.0: No automatic activation; Stop also cancels pending authority requests.
         findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> yawAimingController.startAiming());
         findViewById(R.id.uxsdk_aiming_stop).setOnClickListener(v -> yawAimingController.stopAiming("user_stop"));
+        // CAM3 v2.1: Export a bounded snapshot. The existing onPause fail-safe still applies to the picker.
+        findViewById(R.id.uxsdk_aiming_export).setOnClickListener(v -> {
+            v.setEnabled(false);
+            try { aimingLogExport.launch("cam3-v2.1-aiming-" + System.currentTimeMillis() + ".txt"); }
+            catch (RuntimeException ex) {
+                v.setEnabled(true);
+                Toast.makeText(this, R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
+            }
+        });
         secondaryFPVWidget.setOnClickListener(v -> swapVideoSource());
 
         if (settingWidget != null) {
