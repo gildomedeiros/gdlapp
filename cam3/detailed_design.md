@@ -9,3 +9,5 @@ The original design content is preserved in the v2.0 file alongside the implemen
 - [v2.1 detailed design](detailed_design/detailed_design_v2.1.md) — local aiming diagnostic logs, precise blocked-state reasons and user-controlled log export. Existing flight-control gates retained; device diagnosis pending.
 
 - [v2.2 detailed design](detailed_design/detailed_design_v2.2.md) — implemented locally: APAS hover eligibility, enable/advanced confirmation, ownership callback logs, late-grant cleanup, readiness Details and STOP acknowledgement. Device validation pending; see implementation record and build results.
+
+- [v2.3 detailed design](detailed_design/detailed_design_v2.3.md) — planned: carry forward the user's manual v2.2 10 m test minimum and share it between eligibility, Details and logs. Records the manual source change; no v2.3 implementation yet.

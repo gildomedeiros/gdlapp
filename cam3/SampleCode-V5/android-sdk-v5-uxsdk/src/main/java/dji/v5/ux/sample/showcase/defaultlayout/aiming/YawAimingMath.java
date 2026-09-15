@@ -33,7 +33,9 @@ public final class YawAimingMath {
         // Aircraft uncertainty is not exposed as metres here; 5 m is a conservative allowance,
         // not a measured error guarantee. Also require strong aircraft GPS in the input gate.
         return Double.isFinite(separation) && Double.isFinite(phoneAccuracy) && phoneAccuracy > 0
-                && phoneAccuracy <= 10 && separation >= Math.max(20, 4 * (phoneAccuracy + 5));
+               // && phoneAccuracy <= 10 && separation >= Math.max(20, 4 * (phoneAccuracy + 5));
+                // CAM3 v2.2 local test: Lower minimum distance to 10 m; close-range aiming may wander.
+                && phoneAccuracy <= 10 && separation >= 10;
     }
 
     public static double calculateYawRate(double error, double previous, double seconds) {
