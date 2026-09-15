@@ -29,9 +29,16 @@
     android:layout_height="match_parent"
     tools:context="dji.v5.ux.sample.showcase.defaultlayout.DefaultLayoutActivity">
 
+    <!-- CAM3 v2.0: A dedicated footer reserves space for Start/Stop without covering flight controls. -->
+    <LinearLayout
+        android:id="@+id/uxsdk_safe_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/fpv_holder"
@@ -293,6 +300,56 @@
             app:uxsdk_titleBarBackgroundColor="@color/uxsdk_black" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- CAM3 v2.0: Stop stays accessible during acquisition, invalid GPS and failed release. -->
+    <LinearLayout
+        android:id="@+id/uxsdk_aiming_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="64dp"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:gravity="center_vertical"
+        android:background="#EE101820"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/uxsdk_aiming_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:enabled="false"
+            android:text="@string/uxsdk_aiming_start" />
+        <Button
+            android:id="@+id/uxsdk_aiming_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/uxsdk_aiming_stop" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="8dp"
+            android:paddingEnd="4dp"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/uxsdk_aiming_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:accessibilityLiveRegion="polite"
+                android:text="@string/uxsdk_aiming_off" />
+            <TextView
+                android:id="@+id/uxsdk_aiming_quality"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#DDE4EE"
+                android:textSize="12sp"
+                android:text="@string/uxsdk_aiming_no_fix" />
+        </LinearLayout>
+    </LinearLayout>
+    </LinearLayout>
 
     <dji.v5.ux.core.widget.setting.SettingPanelWidget
         android:id="@+id/manual_right_nav_setting"

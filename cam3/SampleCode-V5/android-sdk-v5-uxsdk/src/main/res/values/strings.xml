@@ -1196,4 +1196,37 @@
     <string name="uxsdk_hdmi_system_setting_mode_camera">Vista de cámara limpia</string>
 
     <string name="uxsdk_assistant_video_empty_text">View after take off</string>
+    <!-- CAM3 v2.0: Explicit yaw controls, GPS quality and readable fail-safe states. -->
+    <string name="uxsdk_aiming_start">Start aiming</string>
+    <string name="uxsdk_aiming_stop">Stop aiming</string>
+    <string name="uxsdk_aiming_off">Off</string>
+    <string name="uxsdk_aiming_starting">Starting</string>
+    <string name="uxsdk_aiming_active">Aiming</string>
+    <string name="uxsdk_aiming_stopping">Stopping</string>
+    <string name="uxsdk_aiming_unconfirmed">Control release unconfirmed</string>
+    <string name="uxsdk_aiming_stopped">Aiming stopped</string>
+    <string name="uxsdk_aiming_no_fix">Waiting for phone GPS · Gimbal manual</string>
+    <string name="uxsdk_aiming_fix">Phone GPS ±%1$.1f m · %2$.1f s old · Gimbal manual</string>
+    <string name="uxsdk_aiming_reason_ready">Ready for explicit Start</string>
+    <string name="uxsdk_aiming_reason_acquiring">Requesting control</string>
+    <string name="uxsdk_aiming_reason_aiming">Yaw toward this phone</string>
+    <string name="uxsdk_aiming_reason_cancelled">Cancelled</string>
+    <string name="uxsdk_aiming_reason_user_stop">Stopped by you</string>
+    <string name="uxsdk_aiming_reason_screen_closed">Screen closed; press Start to resume</string>
+    <string name="uxsdk_aiming_reason_gps">Waiting for phone GPS / precise location permission</string>
+    <string name="uxsdk_aiming_reason_stale_gps">Phone GPS is too old</string>
+    <string name="uxsdk_aiming_reason_gps_quality">Phone GPS uncertain or target too close</string>
+    <string name="uxsdk_aiming_reason_telemetry">Aircraft telemetry unavailable or too old</string>
+    <string name="uxsdk_aiming_reason_heading">Heading unavailable or compass error</string>
+    <string name="uxsdk_aiming_reason_connection">Aircraft disconnected</string>
+    <string name="uxsdk_aiming_reason_flight_state">Requires airborne Normal mode; RTH/landing take priority</string>
+    <string name="uxsdk_aiming_reason_aircraft_gps">Aircraft GPS quality insufficient</string>
+    <string name="uxsdk_aiming_reason_hover">Manually establish a steady hover</string>
+    <string name="uxsdk_aiming_reason_takeover">Pilot / aircraft takeover</string>
+    <string name="uxsdk_aiming_reason_authority">Waiting for RC control and Virtual Stick off</string>
+    <string name="uxsdk_aiming_reason_start_timeout">Control request timed out</string>
+    <string name="uxsdk_aiming_reason_enable_failed">Control request failed</string>
+    <string name="uxsdk_aiming_reason_loop_stall">Control loop delayed; aiming cancelled</string>
+    <string name="uxsdk_aiming_reason_inputs_changed">Inputs or control changed before send</string>
+    <string name="uxsdk_aiming_reason_sdk_error">SDK error; check aircraft and controller</string>
 </resources>

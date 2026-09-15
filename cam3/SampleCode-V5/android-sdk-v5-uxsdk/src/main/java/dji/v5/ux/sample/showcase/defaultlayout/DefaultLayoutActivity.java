@@ -29,6 +29,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+// CAM3 v2.0: Aiming owns its lifecycle; inset handling protects all flight/camera controls.
+import android.view.ViewGroup;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
+import dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSession;
+import dji.v5.ux.sample.showcase.defaultlayout.aiming.YawAimingController;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +99,11 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     //region Fields
     private final String TAG = LogUtils.getTag(this);
+
+    // CAM3 v2.0: Process-scoped control survives late SDK callbacks without retaining this Activity.
+    private YawAimingController yawAimingController;
+    // CAM3 v2.0: Stable observer identity prevents an old screen detaching a newer screen's controls.
+    private final YawAimingController.Observer aimingObserver = this::renderAimingState;
 
     protected FPVWidget primaryFpvWidget;
     protected FPVInteractionWidget fpvInteractionWidget;
@@ -169,6 +182,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         gimbalFineTuneWidget = findViewById(R.id.setting_menu_gimbal_fine_tune);
         mapWidget = findViewById(R.id.widget_map);
 
+        // CAM3 v2.0: Create the yaw controller before wiring explicit Start/Stop actions.
+        yawAimingController = YawAimingController.getInstance(getApplicationContext());
+        applySystemBarInsets();
         initClickListener();
         MediaDataCenter.getInstance().getCameraStreamManager().addAvailableCameraUpdatedListener(availableCameraUpdatedListener);
         primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> cameraSourceProcessor.onNext(new CameraSource(devicePosition, lensType)));
@@ -203,6 +219,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     }
 
     private void initClickListener() {
+        // CAM3 v2.0: No automatic activation; Stop also cancels pending authority requests.
+        findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> yawAimingController.startAiming());
+        findViewById(R.id.uxsdk_aiming_stop).setOnClickListener(v -> yawAimingController.stopAiming("user_stop"));
         secondaryFPVWidget.setOnClickListener(v -> swapVideoSource());
 
         if (settingWidget != null) {
@@ -235,6 +254,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        // CAM3 v2.0: Idempotent detach; unresolved grants remain managed without holding this screen.
+        yawAimingController.pause(aimingObserver);
         super.onDestroy();
         mapWidget.onDestroy();
         MediaDataCenter.getInstance().getCameraStreamManager().removeAvailableCameraUpdatedListener(availableCameraUpdatedListener);
@@ -245,6 +266,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // CAM3 v2.0: Resume observation only; aiming always requires a new Start action.
+        yawAimingController.resume(aimingObserver);
         mapWidget.onResume();
         compositeDisposable = new CompositeDisposable();
         compositeDisposable.add(systemStatusListPanelWidget.closeButtonPressed()
@@ -278,6 +301,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        // CAM3 v2.0: Latch cancellation before normal screen cleanup can delay flight shutdown.
+        yawAimingController.pause(aimingObserver);
         if (compositeDisposable != null) {
             compositeDisposable.dispose();
             compositeDisposable = null;
@@ -287,6 +312,45 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         ViewUtil.setKeepScreen(this, false);
     }
     //endregion
+
+    // CAM3 v2.0: Reserve system-bar/cutout space, including hidden navigation bars in landscape.
+    private void applySystemBarInsets() {
+        View root = findViewById(R.id.root_view);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, windowInsets) -> {
+            Insets safe = windowInsets.getInsetsIgnoringVisibility(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            // CAM3 v2.0: DrawerLayout measures content by margins, so padding alone is insufficient.
+            for (int id : new int[] {R.id.uxsdk_safe_content, R.id.manual_right_nav_setting}) {
+                View content = findViewById(id);
+                ViewGroup.MarginLayoutParams bounds = (ViewGroup.MarginLayoutParams) content.getLayoutParams();
+                bounds.setMargins(safe.left, safe.top, safe.right, safe.bottom);
+                content.setLayoutParams(bounds);
+            }
+            return WindowInsetsCompat.CONSUMED;
+        });
+        ViewCompat.requestApplyInsets(root);
+    }
+
+    // CAM3 v2.0: Report requested control state honestly; release confirmation is not physical stopping.
+    private void renderAimingState(AimingSession.State state, String reason, boolean ready,
+                                   AimingSession.Fix fix, long now) {
+        findViewById(R.id.uxsdk_aiming_start).setEnabled(ready);
+        int stateLabel;
+        switch (state) {
+            case STARTING: stateLabel = R.string.uxsdk_aiming_starting; break;
+            case AIMING: stateLabel = R.string.uxsdk_aiming_active; break;
+            case STOPPING: stateLabel = R.string.uxsdk_aiming_stopping; break;
+            case RELEASE_UNCONFIRMED: stateLabel = R.string.uxsdk_aiming_unconfirmed; break;
+            case STOPPED: stateLabel = R.string.uxsdk_aiming_stopped; break;
+            default: stateLabel = R.string.uxsdk_aiming_off;
+        }
+        int reasonId = getResources().getIdentifier("uxsdk_aiming_reason_" + reason, "string", getPackageName());
+        String explanation = getString(reasonId == 0 ? R.string.uxsdk_aiming_reason_sdk_error : reasonId);
+        ((TextView) findViewById(R.id.uxsdk_aiming_status)).setText(getString(stateLabel) + " — " + explanation);
+        ((TextView) findViewById(R.id.uxsdk_aiming_quality)).setText(fix == null
+                ? getString(R.string.uxsdk_aiming_no_fix)
+                : getString(R.string.uxsdk_aiming_fix, fix.accuracy, Math.max(0, now - fix.time) / 1000.0));
+    }
 
     private void hideOtherPanels(@Nullable View widget) {
         View[] panels = {

@@ -17,8 +17,9 @@ android {
         applicationId "com.dji.sampleV5.aircraft"
         minSdkVersion Integer.parseInt(project.ANDROID_MIN_SDK_VERSION)
         targetSdkVersion Integer.parseInt(project.ANDROID_TARGET_SDK_VERSION)
-        versionCode 1
-        versionName "1.0"
+        // CAM3 v2.0: GPS yaw aiming and navigation-safe controls; preserve package/App Key pairing.
+        versionCode 2
+        versionName "2.0"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN
