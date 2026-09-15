@@ -18,8 +18,9 @@ android {
         minSdkVersion Integer.parseInt(project.ANDROID_MIN_SDK_VERSION)
         targetSdkVersion Integer.parseInt(project.ANDROID_TARGET_SDK_VERSION)
         // CAM3 v2.1: Add aiming diagnostics/export; preserve package/App Key pairing and control limits.
-        versionCode 3
-        versionName "2.1"
+        // CAM3 v2.2: APAS hover, observable control handover and STOP feedback; local release.
+        versionCode 4
+        versionName "2.2"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN

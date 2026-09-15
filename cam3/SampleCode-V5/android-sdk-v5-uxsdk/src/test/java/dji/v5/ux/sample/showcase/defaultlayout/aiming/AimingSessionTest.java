@@ -21,6 +21,9 @@ public final class AimingSessionTest {
         boolean throwSend, throwDisable;
         // CAM3 v2.1: Verify diagnostic-port failure cannot change flight-control outcomes.
         boolean throwDiagnostics;
+        // CAM3 v2.2: Simulate reason-first takeover independently of the last state snapshot.
+        boolean lost;
+        public boolean controlLost() { return lost; }
         final List<String> diagnosticEvents = new ArrayList<>();
         public void diagnostic(String event, String detail) {
             if (throwDiagnostics) throw new IllegalStateException("logger unavailable");
@@ -77,7 +80,8 @@ public final class AimingSessionTest {
         check(f.enables == 1, "double Start coalesced");
         f.core.tick(); check(f.sent.isEmpty(), "no send before grant");
         f.enable.complete(true); f.core.tick();
-        check(f.sent.isEmpty() && f.advances == 0, "callback alone cannot enable advanced or send");
+        // CAM3 v2.2: Enable success requests advanced; a subsequent state update is required to send.
+        check(f.sent.isEmpty() && f.advances == 1, "callback requests advanced but cannot send");
         f.core.stopAiming("user_stop");
         check(!f.core.canStart() && f.core.state() == AimingSession.State.STOPPING,
                 "old RC snapshot cannot confirm release of unobserved grant");
@@ -149,7 +153,10 @@ public final class AimingSessionTest {
         check(f.core.state() == AimingSession.State.RELEASE_UNCONFIRMED && !f.core.canStart(),
                 "missing enable callback still visibly prevents overlapping starts");
         f.enable.complete(true); f.core.tick();
-        check(f.core.state() == AimingSession.State.STOPPED && f.sent.isEmpty(), "late enable settles without restarting");
+        // CAM3 v2.2: Late enable after earlier release needs another bounded cleanup and new observation.
+        check(f.core.state() == AimingSession.State.STOPPING && f.sent.isEmpty() && f.disables == 2,
+                "late enable released again without restarting");
+        f.released(); check(f.core.state() == AimingSession.State.STOPPED, "fresh release settles late grant");
         // CAM3 v2.1: Test the new observability while retaining every v2.0 control regression.
         f = new Fake(); f.aiming(); f.core.stopAiming("user_stop");
         check(f.diagnosticEvents.stream().anyMatch(e -> e.contains("STARTING -> AIMING") && e.contains("session=1")),
@@ -161,6 +168,53 @@ public final class AimingSessionTest {
         check("not_airborne".equals(f.input.validate(f.time)) && !f.core.canStart(), "not airborne reason preserved");
         f.input = f.data(f.time, f.time, "flight_mode_rejected", false);
         check("flight_mode_rejected".equals(f.input.validate(f.time)) && !f.core.canStart(), "rejected mode distinct and still blocks");
+        // CAM3 v2.2: Unknown-start, stale-state, callback ordering and cleanup regressions.
+        for (String mode : new String[]{"APAS", "GPS_NORMAL", "VIRTUAL_STICK"})
+            check(AimingFlightModes.allows(mode), "eligible mode " + mode);
+        for (String mode : new String[]{null, "UNKNOWN", "AUTO_TAKE_OFF", "MOTOR_START", "GO_HOME", "AUTO_LANDING", "FORCE_LANDING", "GPS_SPORT", "AUTO_AVOIDANCE"})
+            check(!AimingFlightModes.allows(mode), "ineligible mode " + mode);
+        f = new Fake(); f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, false, false);
+        check(f.core.canStart(), "unknown initial owner can request");
+        f.core.startAiming(); f.enable.complete(true); f.core.tick();
+        check(f.advances == 1 && f.sent.isEmpty(), "unknown enable success requests advanced only");
+        f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, true, true); f.core.tick();
+        check(f.core.state() == AimingSession.State.AIMING, "fresh advanced confirmation permits unknown owner");
+        count = f.sent.size(); f.core.stopAiming("user_stop");
+        check(f.disables == 1 && f.sent.size() == count, "unknown cleanup disables without neutral");
+        f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, false, false);
+        f.disable.complete(true); check(f.core.canStart(), "fresh disabled observation settles unknown cleanup");
+
+        f = new Fake(); f.core.startAiming();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, true, true);
+        f.enable.complete(true); f.core.tick(); f.core.tick();
+        check(f.sent.isEmpty(), "advanced true predating request cannot activate");
+        f.advance(5001); check("advanced_timeout".equals(f.core.reason()), "advanced timeout identifies missing evidence");
+        f = new Fake(); f.core.startAiming();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.RC, false, false); f.core.tick();
+        check(f.core.state() != AimingSession.State.AIMING && f.sent.isEmpty(), "new RC state vetoes attempt");
+        f = new Fake(); f.aiming(); count = f.sent.size(); f.lost = true; f.core.cancelImmediately(); f.core.tick();
+        check(f.sent.size() == count && f.disables == 0, "reason-first takeover sends no competing cleanup");
+        f = new Fake(); f.owner = new AimingSession.Authority(AimingSession.Owner.OTHER, false, false);
+        check(!f.core.canStart(), "other owner cannot be acquired");
+        f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, true, false);
+        check(!f.core.canStart(), "unknown enabled session cannot be acquired");
+        f = new Fake(); f.core.startAiming();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, true, false);
+        f.core.stopAiming("user_stop"); f.enable.complete(true); f.disable.complete(true);
+        check(f.disables == 2 && f.sent.isEmpty(), "grant during pending release gets one later cleanup");
+        f.released(); check(f.core.canStart(), "second release settles grant race");
+        // CAM3 v2.2: Loss of advanced confirmation stops even without any positive owner report.
+        f = new Fake(); f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, false, false);
+        f.core.startAiming(); f.enable.complete(true); f.core.tick();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, true, true); f.core.tick();
+        count = f.sent.size();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, true, false); f.core.tick();
+        check(f.core.state() == AimingSession.State.STOPPING && f.sent.size() == count,
+                "advanced loss with unknown owner stops without neutral");
+        f = new Fake(); f.core.startAiming(); f.enable.complete(true); f.core.tick(); f.core.cancelImmediately();
+        f.owner = new AimingSession.Authority(AimingSession.Owner.MSDK, true, true); f.core.tick();
+        check(f.sent.stream().allMatch(rate -> rate == 0) && f.core.state() != AimingSession.State.AIMING,
+                "Stop before advanced confirmation prevents activation");
         System.out.println("PASS: " + checks + " assertions (yaw math, input gates, ownership, callback races, failures)");
     }
 }

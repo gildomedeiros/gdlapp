@@ -41,7 +41,8 @@ public final class AimingDiagnosticLoggerTest {
         check(text.contains("isFlying=false") && text.contains("flightMode=GPS_TRIPOD"), "raw diagnostic values retained");
         check(text.contains("session=2") && text.contains("TEST_ERROR"), "state and callback correlation retained");
         check(!text.contains("age=200"), "advancing ages alone do not repeat a message");
-        check(text.contains("monoMs=") && text.contains("cam3=2.1"), "timestamp and build identity");
+        // CAM3 v2.2: Export and process log identify the new release.
+        check(text.contains("monoMs=") && text.contains("cam3=2.2"), "timestamp and build identity");
         check(!text.contains("latitude") && !text.contains("longitude"), "coordinate-free diagnostic fixture");
         check(lines.stream().filter(line -> line.contains("readiness")).count() == 2, "Logcat sink receives changes only");
         log.changed("heartbeat", "same", "periodic summary", 1);

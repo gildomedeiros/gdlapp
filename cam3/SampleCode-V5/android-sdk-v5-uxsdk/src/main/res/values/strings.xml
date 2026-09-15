@@ -1223,7 +1223,16 @@
     <string name="uxsdk_aiming_reason_aircraft_gps">Aircraft GPS quality insufficient</string>
     <string name="uxsdk_aiming_reason_hover">Manually establish a steady hover</string>
     <string name="uxsdk_aiming_reason_takeover">Pilot / aircraft takeover</string>
-    <string name="uxsdk_aiming_reason_authority">Waiting for RC control and Virtual Stick off</string>
+    <!-- CAM3 v2.2: Unknown initial owner no longer blocks requesting control. -->
+    <string name="uxsdk_aiming_reason_authority">Control unavailable or previous release unresolved; see Details</string>
+    <string name="uxsdk_aiming_reason_advanced_wait">Waiting for advanced-mode confirmation</string>
+    <!-- CAM3 v2.2: These operations stop aiming; cam3 does not block the aircraft operation. -->
+    <string name="uxsdk_aiming_reason_returning_home">Aircraft returning home; aiming stopped</string>
+    <string name="uxsdk_aiming_reason_landing">Aircraft landing; aiming stopped</string>
+    <string name="uxsdk_aiming_reason_advanced_timeout">No advanced-mode confirmation; attempt stopped</string>
+    <string name="uxsdk_aiming_details">Details</string>
+    <string name="uxsdk_aiming_stop_idle">Aiming is stopped.</string>
+    <string name="uxsdk_aiming_stop_pending">Aiming commands stopped; waiting for control release.</string>
     <string name="uxsdk_aiming_reason_start_timeout">Control request timed out</string>
     <string name="uxsdk_aiming_reason_enable_failed">Control request failed</string>
     <string name="uxsdk_aiming_reason_loop_stall">Control loop delayed; aiming cancelled</string>

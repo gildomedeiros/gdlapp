@@ -103,7 +103,33 @@ public final class AircraftAimingTelemetry {
         }
     }
     private static boolean allowedMode(FlightMode value) {
-        return value == FlightMode.GPS_NORMAL || value == FlightMode.VIRTUAL_STICK;
+        // CAM3 v2.2: One policy for snapshot, urgent listener and neutral; do not accept arbitrary modes.
+        return AimingFlightModes.allows(value == null ? null : value.name());
+    }
+    // CAM3 v2.2: All independently available aircraft blockers, not only the first failed gate.
+    public synchronized String blockers(long now) {
+        List<String> issues = new ArrayList<>();
+        for (Slot<?> s : slots) {
+            if (s.value == null) issues.add(s.name + " unavailable (" + s.error + ")");
+            else if (s.time <= 0 || now < s.time || now - s.time > 1500) issues.add(s.name + " stale");
+        }
+        if (Boolean.FALSE.equals(connected.value)) issues.add("Aircraft disconnected");
+        if (Boolean.FALSE.equals(flying.value)) issues.add("Aircraft not airborne");
+        if (mode.value != null && !allowedMode(mode.value)) issues.add("Aiming not allowed in " + mode.value);
+        if (gps.value != null && gps.value != GPSSignalLevel.LEVEL_4 && gps.value != GPSSignalLevel.LEVEL_5)
+            issues.add("Aircraft GPS insufficient");
+        if (Boolean.TRUE.equals(compassError.value)) issues.add("Compass error");
+        for (Slot<Integer> s : java.util.Arrays.asList(leftH, leftV, rightH, rightV))
+            if (s.value != null && Math.abs((long) s.value) > 30) issues.add("Pilot stick active: " + s.name);
+        // CAM3 v2.2: Do not hide velocity/heading failures behind an earlier mode failure.
+        if (heading.value != null && (!Double.isFinite(heading.value) || heading.value < -180 || heading.value > 360))
+            issues.add("Heading invalid");
+        Velocity3D v = velocity.value;
+        if (v != null && (v.getX() == null || v.getY() == null || v.getZ() == null
+                || !Double.isFinite(v.getX()) || !Double.isFinite(v.getY()) || !Double.isFinite(v.getZ())
+                || Math.hypot(v.getX(), v.getY()) > 0.5 || Math.abs(v.getZ()) > 0.3))
+            issues.add("Establish steady hover / velocity invalid");
+        return "Flight mode: " + mode.value + "\n" + (issues.isEmpty() ? "Aircraft checks ready" : String.join("\n", issues));
     }
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) {
         long oldest = Long.MAX_VALUE;

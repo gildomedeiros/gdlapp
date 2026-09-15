@@ -34,7 +34,8 @@ public final class AimingDiagnosticLogger implements AutoCloseable {
                 new ArrayBlockingQueue<>(capacity), task -> {
                     Thread t = new Thread(task, "cam3-diagnostic-writer"); t.setDaemon(true); return t;
                 }, new ThreadPoolExecutor.AbortPolicy());
-        event("logger", "cam3=2.1 sdk=5.18.0 logFormat=1; coordinates omitted; SDK state is not physical stop proof");
+        // CAM3 v2.2: Identify the new handover behavior in each process log.
+        event("logger", "cam3=2.2 sdk=5.18.0 logFormat=1; coordinates omitted; SDK state is not physical stop proof");
     }
     public void event(String type, String detail) { record(type, null, detail, 0); }
     /** Signature excludes advancing ages; unchanged summaries may recur after repeatMs. */
@@ -93,7 +94,8 @@ public final class AimingDiagnosticLogger implements AutoCloseable {
                 if (!current.isFile() && !previous.isFile()) throw new IOException("No log available");
                 try (OutputStream out = destination.open()) {
                     if (out == null) throw new IOException("Destination unavailable");
-                    out.write(("cam3=2.1 sdk=5.18.0 logFormat=1 exportedAt=" + date.format(new Date())
+                    // CAM3 v2.2: Export metadata follows the local release version.
+                    out.write(("cam3=2.2 sdk=5.18.0 logFormat=1 exportedAt=" + date.format(new Date())
                             + "\nRetained diagnostic snapshot; coordinates omitted; SDK callbacks do not prove aircraft response.\n")
                             .getBytes(StandardCharsets.UTF_8));
                     copy(previous, out); copy(current, out); out.flush();

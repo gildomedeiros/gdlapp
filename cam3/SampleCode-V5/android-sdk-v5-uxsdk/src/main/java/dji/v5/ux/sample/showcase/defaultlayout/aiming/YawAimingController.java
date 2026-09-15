@@ -26,6 +26,15 @@ import dji.v5.manager.interfaces.IVirtualStickManager;
 public final class YawAimingController implements AimingSession.Port {
     public interface Observer { void onState(AimingSession.State state, String reason, boolean canStart,
                                              AimingSession.Fix fix, long now); }
+    // CAM3 v2.2: Details are a snapshot, so opening the UI never queries flight APIs.
+    private volatile String readinessDetails = "Waiting for telemetry";
+    public String readinessDetails() { return readinessDetails; }
+    private final AtomicLong stateSequence = new AtomicLong();
+    // CAM3 v2.2: Ignore delivery from detached registrations; no SDK session token is implied.
+    private final AtomicLong listenerGeneration = new AtomicLong();
+    private VirtualStickStateListener registeredListener;
+    private volatile double lastCommandRate;
+    private long commandSession = -1;
     private static YawAimingController instance;
     public static synchronized YawAimingController getInstance(Context context) {
         if (instance == null) instance = new YawAimingController(context.getApplicationContext());
@@ -55,27 +64,39 @@ public final class YawAimingController implements AimingSession.Port {
             FlightControlAuthority owner = value.getCurrentFlightControlAuthorityOwner();
             AimingSession.Owner mapped = owner == FlightControlAuthority.MSDK ? AimingSession.Owner.MSDK
                     : owner == FlightControlAuthority.RC ? AimingSession.Owner.RC
-                    : owner == FlightControlAuthority.UNKNOWN ? AimingSession.Owner.UNKNOWN : AimingSession.Owner.OTHER;
-            authority = new AimingSession.Authority(mapped, value.isVirtualStickEnable(), value.isVirtualStickAdvancedModeEnabled());
+                    // CAM3 v2.2: Missing owner is unavailable evidence, not a known competing owner.
+                    : owner == null || owner == FlightControlAuthority.UNKNOWN ? AimingSession.Owner.UNKNOWN : AimingSession.Owner.OTHER;
+            // CAM3 v2.2: Preserve each callback, including identical values, with arrival sequence/time.
+            long sequence = stateSequence.incrementAndGet();
+            authority = new AimingSession.Authority(mapped, value.isVirtualStickEnable(), value.isVirtualStickAdvancedModeEnabled(), sequence, now());
             // CAM3 v2.1: Observed ownership is logged separately from enable/disable callbacks.
             String observed = "owner=" + mapped + " enabled=" + value.isVirtualStickEnable()
                     + " advanced=" + value.isVirtualStickAdvancedModeEnabled();
-            if (old.owner == AimingSession.Owner.MSDK && (mapped != AimingSession.Owner.MSDK
-                    || !value.isVirtualStickEnable() || (old.advanced && !value.isVirtualStickAdvancedModeEnabled()))) {
+            // CAM3 v2.2: Latch transient contradictory callbacks, including UNKNOWN-to-RC during Start.
+            boolean running = session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING;
+            if ((running && (mapped == AimingSession.Owner.RC || mapped == AimingSession.Owner.OTHER))
+                    || (session.state() == AimingSession.State.AIMING && (!value.isVirtualStickEnable() || !value.isVirtualStickAdvancedModeEnabled()))
+                    || (old.owner == AimingSession.Owner.MSDK && (mapped != AimingSession.Owner.MSDK
+                    || !value.isVirtualStickEnable() || (old.advanced && !value.isVirtualStickAdvancedModeEnabled())))) {
+                // CAM3 v2.2: A subsequent positive callback cannot erase a reported handover.
+                if (running && mapped != AimingSession.Owner.MSDK) yielding = true;
                 interruptAiming();
             }
             // CAM3 v2.1: Latch any cancellation before queuing diagnostic output.
-            logChanged("authority_observed", observed, observed, 0);
+            diagnostic("authority_observed", "sequence=" + sequence + " " + observed);
         }
         @Override public void onChangeReasonUpdate(FlightControlAuthorityChangeReason reason) {
             // CAM3 v2.1: Record DJI's exact takeover reason instead of only the generic UI label.
             if (reason != FlightControlAuthorityChangeReason.MSDK_REQUEST) {
                 // Do not compete with RTH/pilot while a matching state update is still in transit.
                 yielding = true;
-                interruptAiming();
+                // CAM3 v2.2: Explain specific aircraft operations when DJI supplies the reason.
+                interruptAiming(reason.name().contains("GO_HOME") ? "returning_home"
+                        : reason.name().contains("LANDING") ? "landing" : "takeover");
             }
             // CAM3 v2.1: Logging follows the existing immediate takeover latch.
-            logChanged("authority_reason", String.valueOf(reason), String.valueOf(reason), 0);
+            // CAM3 v2.2: Log every reason callback, even repeated reasons.
+            diagnostic("authority_reason", String.valueOf(reason));
         }
     };
     private YawAimingController(Context context) {
@@ -96,7 +117,20 @@ public final class YawAimingController implements AimingSession.Port {
         observer = callback; foreground = true;
         executor.execute(() -> {
             try {
-                if (!listening) { listening = true; sdk.setVirtualStickStateListener(stateListener); }
+                // CAM3 v2.2: A failed registration must not claim monitoring is active.
+                if (!listening) {
+                    long generation = listenerGeneration.incrementAndGet();
+                    registeredListener = new VirtualStickStateListener() {
+                        @Override public void onVirtualStickStateUpdate(VirtualStickState value) {
+                            if (listenerGeneration.get() == generation) stateListener.onVirtualStickStateUpdate(value);
+                        }
+                        @Override public void onChangeReasonUpdate(FlightControlAuthorityChangeReason reason) {
+                            if (listenerGeneration.get() == generation) stateListener.onChangeReasonUpdate(reason);
+                        }
+                    };
+                    sdk.setVirtualStickStateListener(registeredListener); listening = true;
+                    diagnostic("listener", "registered generation=" + generation);
+                }
                 if (foreground) aircraft.start();
             } catch (RuntimeException ex) { session.stopAiming("sdk_error"); }
         });
@@ -115,7 +149,7 @@ public final class YawAimingController implements AimingSession.Port {
         diagnostic("user_start", "requested");
         long request = intent.incrementAndGet();
         executor.execute(() -> {
-            if (foreground && intent.get() == request) {
+            if (foreground && listening && intent.get() == request) {
                 yielding = false;
                 session.startAiming();
             }
@@ -128,13 +162,26 @@ public final class YawAimingController implements AimingSession.Port {
         diagnostic("stop_request", "reason=" + reason);
         executor.execute(() -> session.stopAiming(reason));
     }
+    // CAM3 v2.2: Acknowledge every STOP on the UI after processing the cancellation.
+    public void stopFromUser(java.util.function.Consumer<AimingSession.State> feedback) {
+        stopAiming("user_stop");
+        executor.execute(() -> {
+            AimingSession.State state = session.state();
+            diagnostic("stop_feedback", "state=" + state);
+            main.post(() -> feedback.accept(state));
+        });
+    }
     private void interruptAiming() {
+        // CAM3 v2.2: Telemetry/pilot stop retains its generic reason; SDK reasons can be specific.
+        interruptAiming("takeover");
+    }
+    private void interruptAiming(String reason) {
         intent.incrementAndGet();
         session.cancelImmediately();
         executor.execute(() -> {
             // Expected ownership changes during our own release must preserve the original stop reason.
             if (session.state() == AimingSession.State.STARTING || session.state() == AimingSession.State.AIMING)
-                session.stopAiming("takeover");
+                session.stopAiming(reason);
         });
     }
     private void tick() {
@@ -148,14 +195,17 @@ public final class YawAimingController implements AimingSession.Port {
             }
             if (!foreground && (session.state() == AimingSession.State.OFF || session.state() == AimingSession.State.STOPPED)
                     && listening) {
-                sdk.removeVirtualStickStateListener(stateListener); listening = false;
+                // CAM3 v2.2: Invalidate delivery before removing this registration.
+                listenerGeneration.incrementAndGet();
+                sdk.removeVirtualStickStateListener(registeredListener); listening = false;
                 authority = new AimingSession.Authority(AimingSession.Owner.UNKNOWN, false, false);
             }
             if (foreground && now() - lastRender >= 250) {
                 lastRender = now();
                 Observer target = observer;
                 AimingSession.State state = session.state();
-                boolean ready = session.canStart();
+                // CAM3 v2.2: Listener availability is also required for user-visible readiness.
+                boolean ready = listening && session.canStart();
                 String reason = session.reason();
                 if (state == AimingSession.State.OFF || state == AimingSession.State.STOPPED) {
                     String invalid = inputs().validate(now());
@@ -173,22 +223,31 @@ public final class YawAimingController implements AimingSession.Port {
     @Override public long now() { return SystemClock.elapsedRealtime(); }
     @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(phone.getLatestFix()); }
     @Override public AimingSession.Authority authority() {
-        AimingSession.Authority a = authority;
-        return yielding && a.owner == AimingSession.Owner.MSDK
-                ? new AimingSession.Authority(AimingSession.Owner.UNKNOWN, a.enabled, a.advanced) : a;
+        // CAM3 v2.2: Preserve raw observation identity; takeover is a separate cancellation latch.
+        return authority;
     }
+    // CAM3 v2.2: Keep reported owner separate from an urgent control-loss reason.
+    @Override public boolean controlLost() { return yielding; }
     // CAM3 v2.1: Include operation/session and SDK error code, while preserving callback dispatch order.
     private CommonCallbacks.CompletionCallback callback(String operation, AimingSession.Completion completion) {
         long token = session.sessionId();
         return new CommonCallbacks.CompletionCallback() {
             @Override public void onSuccess() {
                 diagnostic("sdk_callback", "operation=" + operation + " session=" + token + " success=true");
-                executor.execute(() -> completion.complete(true));
+                // CAM3 v2.2: Distinguish SDK arrival time from executor processing time.
+                executor.execute(() -> {
+                    diagnostic("sdk_callback_processed", "operation=" + operation + " session=" + token + " success=true");
+                    completion.complete(true);
+                });
             }
             @Override public void onFailure(IDJIError error) {
                 diagnostic("sdk_callback", "operation=" + operation + " session=" + token
                         + " success=false error=" + (error == null ? "unknown" : error.errorCode()));
-                executor.execute(() -> completion.complete(false));
+                // CAM3 v2.2: Failed requests also retain processing order for diagnosis.
+                executor.execute(() -> {
+                    diagnostic("sdk_callback_processed", "operation=" + operation + " session=" + token + " success=false");
+                    completion.complete(false);
+                });
             }
         };
     }
@@ -221,7 +280,8 @@ public final class YawAimingController implements AimingSession.Port {
             String reason = in.validate(at);
             String gate = "session=" + session.sessionId() + " state=" + state + " stopReason=" + session.reason()
                     + " inputProblem=" + reason + " canStart=" + session.canStart()
-                    + " owner=" + authority().owner;
+                    + " owner=" + authority().owner + " stateSequence=" + authority.sequence
+                    + " listenerGeneration=" + listenerGeneration.get() + " submittedYawRate=" + lastCommandRate;
             double separation = fix == null ? Double.NaN : YawAimingMath.distance(in.lat, in.lon, fix.lat, fix.lon);
             String quality = " phoneAccuracyM=" + (fix == null ? "unavailable" : fix.accuracy)
                     + " separationM=" + (Double.isFinite(separation) ? String.valueOf(Math.round(separation)) : "unavailable");
@@ -229,7 +289,23 @@ public final class YawAimingController implements AimingSession.Port {
             String detail = gate + " " + telemetry.detail + quality
                     + " phoneAgeMs=" + (fix == null ? -1 : at - fix.time);
             logChanged("readiness", signature, detail, 5000);
+            // CAM3 v2.2: Independently assess phone quality even when aircraft mode is rejected.
+            readinessDetails = aircraft.blockers(at) + "\n" + phoneDetails(in, at)
+                    + "\nControl: " + authority.owner + " (state callbacks: " + stateSequence.get() + ")"
+                    + "\n" + (listening ? "Monitoring control changes" : "Control listener unavailable")
+                    + "\nSession: " + state + " — " + session.reason();
+            logChanged("blockers", readinessDetails, readinessDetails, 5000);
         } catch (RuntimeException ignored) { /* Logging cannot cancel or keep aiming alive. */ }
+    }
+    // CAM3 v2.2: Report accuracy and separation separately, without exposing coordinates.
+    private static String phoneDetails(AimingSession.Inputs in, long now) {
+        AimingSession.Fix f = in.target;
+        if (f == null) return "Phone GPS unavailable";
+        String age = now < f.time || now - f.time > 3000 ? "STALE" : "fresh";
+        double distance = YawAimingMath.distance(in.lat, in.lon, f.lat, f.lon);
+        double required = Math.max(20, 4 * (f.accuracy + 5));
+        return String.format(java.util.Locale.US, "Phone GPS: %s; accuracy %.1f m (maximum 10 m)%nDistance: %s; required %.1f m",
+                age, f.accuracy, Double.isFinite(distance) ? String.format(java.util.Locale.US, "%.1f m", distance) : "unavailable", required);
     }
     public void exportLog(Uri destination, AimingDiagnosticLogger.Result result) {
         // CAM3 v2.1: ContentResolver access and copying run on the logger worker, never on the UI/control thread.
@@ -237,9 +313,17 @@ public final class YawAimingController implements AimingSession.Port {
     }
     @Override public void sendYaw(double rate) {
         AimingSession.Authority a = authority();
-        if (a.owner != AimingSession.Owner.MSDK || !a.enabled || !a.advanced) return;
-        if (rate != 0 && (!foreground || !session.maySendYaw())) return;
+        // CAM3 v2.2: Normal zero-yaw ticks use the same grant rule; cleanup zero needs observed MSDK.
+        boolean active = foreground && !yielding && session.maySendYaw() && session.commandEligible();
+        boolean neutral = rate == 0 && !yielding && a.owner == AimingSession.Owner.MSDK && a.enabled && a.advanced;
+        if (!active && !neutral) return;
         sdk.sendVirtualStickAdvancedParam(buildYawOnlyCommand(rate));
+        // CAM3 v2.2: First submission is an event; subsequent rates use the bounded summary cadence.
+        lastCommandRate = rate;
+        if (active && commandSession != session.sessionId()) {
+            commandSession = session.sessionId();
+            diagnostic("first_command", "session=" + commandSession + " submittedYawRate=" + rate);
+        }
     }
     public static VirtualStickFlightControlParam buildYawOnlyCommand(double rate) {
         return YawOnlyCommand.build(rate);

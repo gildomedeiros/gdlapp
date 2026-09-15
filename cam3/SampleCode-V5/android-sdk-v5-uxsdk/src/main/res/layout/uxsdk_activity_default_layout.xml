@@ -312,17 +312,20 @@
         android:gravity="center_vertical"
         android:background="#EE101820"
         android:orientation="horizontal">
+        <!-- CAM3 v2.2: Compact explicit button sizes reserve room for status and Details. -->
         <Button
             android:id="@+id/uxsdk_aiming_start"
-            android:layout_width="wrap_content"
+            android:layout_width="104dp"
             android:layout_height="wrap_content"
+            android:textSize="12sp"
             android:minHeight="48dp"
             android:enabled="false"
             android:text="@string/uxsdk_aiming_start" />
         <Button
             android:id="@+id/uxsdk_aiming_stop"
-            android:layout_width="wrap_content"
+            android:layout_width="104dp"
             android:layout_height="wrap_content"
+            android:textSize="12sp"
             android:minHeight="48dp"
             android:text="@string/uxsdk_aiming_stop" />
         <LinearLayout
@@ -349,6 +352,14 @@
                 android:text="@string/uxsdk_aiming_no_fix" />
         </LinearLayout>
         <!-- CAM3 v2.1: Explicit local-log export; keeps Start and Stop in their existing positions. -->
+        <!-- CAM3 v2.2: Readiness details open on demand, leaving Stop accessible. -->
+        <Button
+            android:id="@+id/uxsdk_aiming_details"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:textSize="12sp"
+            android:text="@string/uxsdk_aiming_details" />
         <Button
             android:id="@+id/uxsdk_aiming_export"
             android:layout_width="96dp"

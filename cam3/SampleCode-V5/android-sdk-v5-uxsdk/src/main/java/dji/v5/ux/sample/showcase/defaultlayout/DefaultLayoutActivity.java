@@ -236,11 +236,23 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private void initClickListener() {
         // CAM3 v2.0: No automatic activation; Stop also cancels pending authority requests.
         findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> yawAimingController.startAiming());
-        findViewById(R.id.uxsdk_aiming_stop).setOnClickListener(v -> yawAimingController.stopAiming("user_stop"));
+        // CAM3 v2.2: STOP is always accessible and every tap gets honest visible acknowledgement.
+        findViewById(R.id.uxsdk_aiming_stop).setOnClickListener(v -> yawAimingController.stopFromUser(state -> {
+            if (isFinishing() || isDestroyed()) return;
+            int message = state == AimingSession.State.STOPPED || state == AimingSession.State.OFF
+                    ? R.string.uxsdk_aiming_stop_idle : R.string.uxsdk_aiming_stop_pending;
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }));
+        // CAM3 v2.2: Compact details dialog avoids growing the persistent flight footer.
+        findViewById(R.id.uxsdk_aiming_details).setOnClickListener(v ->
+                new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
+                        .setMessage(yawAimingController.readinessDetails())
+                        .setPositiveButton(android.R.string.ok, null).show());
         // CAM3 v2.1: Export a bounded snapshot. The existing onPause fail-safe still applies to the picker.
         findViewById(R.id.uxsdk_aiming_export).setOnClickListener(v -> {
             v.setEnabled(false);
-            try { aimingLogExport.launch("cam3-v2.1-aiming-" + System.currentTimeMillis() + ".txt"); }
+            // CAM3 v2.2: Identify the implemented release in exported filenames.
+            try { aimingLogExport.launch("cam3-v2.2-aiming-" + System.currentTimeMillis() + ".txt"); }
             catch (RuntimeException ex) {
                 v.setEnabled(true);
                 Toast.makeText(this, R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();

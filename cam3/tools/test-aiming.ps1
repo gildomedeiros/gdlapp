@@ -7,7 +7,8 @@ $source = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/main/ja
 $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java/$package/AimingSessionTest.java"
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
-& "$JavaHome/bin/javac.exe" -d $output "$source/YawAimingMath.java" "$source/AimingSession.java" $test
+# CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
+& "$JavaHome/bin/javac.exe" -d $output "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }

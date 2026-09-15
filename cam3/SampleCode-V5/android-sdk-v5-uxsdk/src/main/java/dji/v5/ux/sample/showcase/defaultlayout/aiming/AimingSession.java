@@ -20,11 +20,19 @@ public final class AimingSession {
         void sendYaw(double rate);
         // CAM3 v2.1: Optional diagnostics port has no authority over flight state or command delivery.
         default void diagnostic(String event, String detail) { }
+        // CAM3 v2.2: A reason callback can announce takeover before the state callback arrives.
+        default boolean controlLost() { return false; }
     }
     public static final class Authority {
+        // CAM3 v2.2: Object identity marks a received observation; arrival metadata is diagnostic.
+        public final long sequence, receivedAt;
         public final Owner owner;
         public final boolean enabled, advanced;
         public Authority(Owner owner, boolean enabled, boolean advanced) {
+            this(owner, enabled, advanced, 0, 0);
+        }
+        public Authority(Owner owner, boolean enabled, boolean advanced, long sequence, long receivedAt) {
+            this.sequence = sequence; this.receivedAt = receivedAt;
             this.owner = owner; this.enabled = enabled; this.advanced = advanced;
         }
     }
@@ -61,12 +69,22 @@ public final class AimingSession {
     }
     private final Port port;
     private final AtomicBoolean cancelled = new AtomicBoolean(true);
-    private State state = State.OFF;
+    // CAM3 v2.2: Callback thread may inspect phase solely to latch cancellation.
+    private volatile State state = State.OFF;
     private String reason = "ready";
     private boolean enablePending, claimed, enableSucceeded, releasePending, advancedRequested, releaseAttempted;
     private long session, started, lastTick, releaseStarted, releaseSequence;
     private double rate;
     private Authority beforeEnable;
+    // CAM3 v2.2: Confirm advanced state after its request, independently of positive owner evidence.
+    private Authority beforeAdvanced, beforeRelease;
+    private boolean observedMsdk;
+    private boolean lateGrantDuringRelease;
+    public boolean commandEligible() {
+        Authority a = port.authority();
+        return !port.controlLost() && enableSucceeded && advancedRequested && a != beforeAdvanced && a.enabled && a.advanced
+                && (a.owner == Owner.MSDK || (a.owner == Owner.UNKNOWN && !observedMsdk));
+    }
     public AimingSession(Port port) { this.port = port; }
     public State state() { return state; }
     public String reason() { return reason; }
@@ -86,7 +104,8 @@ public final class AimingSession {
     public boolean canStart() {
         Authority a = port.authority();
         return !enablePending && !claimed && !releasePending && state != State.STARTING
-                && state != State.AIMING && a.owner == Owner.RC && !a.enabled
+                // CAM3 v2.2: An unavailable initial owner permits a request, never implicit acquisition.
+                && state != State.AIMING && (a.owner == Owner.RC || a.owner == Owner.UNKNOWN) && !a.enabled
                 && port.inputs().validate(port.now()) == null;
     }
     public void startAiming() {
@@ -99,6 +118,9 @@ public final class AimingSession {
         advancedRequested = false; enableSucceeded = false; releaseAttempted = false;
         enablePending = true; claimed = true;
         beforeEnable = port.authority();
+        // CAM3 v2.2: Reset observation evidence for this explicit attempt and log the assumption.
+        observedMsdk = false; beforeAdvanced = null; beforeRelease = beforeEnable;
+        diagnostic("initial_control", "owner=" + beforeEnable.owner + " sequence=" + beforeEnable.sequence);
         try {
             port.enable(success -> {
                 // CAM3 v2.1: Distinguish callback completion, cancellation and stale-session arrival.
@@ -108,6 +130,11 @@ public final class AimingSession {
                 enableSucceeded = success;
                 if (!success) stopAiming("enable_failed");
                 else if (cancelled.get() || state != State.STARTING) {
+                    // CAM3 v2.2: A late enable can follow an earlier disable; release this new grant once.
+                    if (!releasePending) releaseAttempted = false;
+                    else lateGrantDuringRelease = true;
+                    beforeEnable = port.authority();
+                    beforeRelease = port.authority();
                     // A late grant after timeout still needs a release attempt, never a new aiming loop.
                     // CAM3 v2.1: Log the existing late-grant cleanup transition.
                     setState(State.STOPPING); releaseStarted = port.now(); stopAiming(reason);
@@ -131,20 +158,30 @@ public final class AimingSession {
             String problem = in.validate(port.now());
             if (problem != null) { stopAiming(problem); return; }
             Authority a = port.authority();
+            // CAM3 v2.2: New contradictory state vetoes acquisition; old RC state is not a takeover.
+            if (a.owner == Owner.MSDK) observedMsdk = true;
+            if (a != beforeEnable && (a.owner == Owner.RC || a.owner == Owner.OTHER
+                    || (observedMsdk && a.owner == Owner.UNKNOWN))) {
+                stopAiming("takeover"); return;
+            }
             if (state == State.STARTING) {
-                if (port.now() - started > 5000) { stopAiming("start_timeout"); return; }
-                if (!enableSucceeded || a.owner != Owner.MSDK || !a.enabled) return;
+                // CAM3 v2.2: Name the missing confirmation and request advanced after enable success.
+                if (port.now() - started > 5000) { stopAiming(enableSucceeded ? "advanced_timeout" : "start_timeout"); return; }
+                if (!enableSucceeded) return;
                 if (!advancedRequested) {
                     advancedRequested = true;
+                    beforeAdvanced = a;
+                    reason = "advanced_wait";
                     if (cancelled.get()) { stopAiming("cancelled"); return; }
                     port.advanced();
                     return;
                 }
-                if (!a.advanced) return;
+                if (!commandEligible()) return;
                 // CAM3 v2.1: Observe the existing confirmed-start transition, without changing its gate.
                 reason = "aiming"; setState(State.AIMING); lastTick = port.now();
             }
-            if (a.owner != Owner.MSDK || !a.enabled || !a.advanced) { stopAiming("takeover"); return; }
+            // CAM3 v2.2: The same eligibility rule applies at activation and every send.
+            if (!commandEligible()) { stopAiming("takeover"); return; }
             long now = port.now();
             long elapsed = now - lastTick;
             if (elapsed < 0 || elapsed > 500) { stopAiming("loop_stall"); return; }
@@ -153,7 +190,7 @@ public final class AimingSession {
             rate = YawAimingMath.calculateYawRate(error, rate, Math.max(0.001, elapsed / 1000.0));
             // Fresh read immediately before sending; a pause must not revive a previously calculated command.
             Authority latest = port.authority();
-            if (cancelled.get() || latest.owner != Owner.MSDK || !latest.enabled || !latest.advanced
+            if (cancelled.get() || !commandEligible()
                     || port.now() - now > 200 || port.inputs().validate(port.now()) != null) {
                 stopAiming("inputs_changed"); return;
             }
@@ -178,37 +215,50 @@ public final class AimingSession {
     private void settleRelease() {
         Authority a = port.authority();
         // A pending enable blocks a new session, but observed MSDK ownership can already be released.
-        if (!enablePending && !releasePending && !a.enabled && a.owner == Owner.RC && a != beforeEnable) {
+        // CAM3 v2.2: Require a new disabled observation; UNKNOWN alone cannot prove release.
+        if (!enablePending && !releasePending && !a.enabled && a != beforeRelease) {
             // CAM3 v2.1: Log observed release independently of API callbacks.
             claimed = false; setState(State.STOPPED); return;
         }
         // Other authority owners are not ours to disable or send a neutral command to.
-        if (!enablePending && !releasePending && a.owner == Owner.OTHER) {
+        if (!enablePending && !releasePending && a.owner == Owner.OTHER && !a.enabled) {
             // CAM3 v2.1: Log yielding to a different authority owner.
             claimed = false; setState(State.STOPPED); return;
         }
-        if (!releasePending && claimed && a.owner == Owner.MSDK && !releaseAttempted) {
+        // CAM3 v2.2: Clean up our possible grant even without owner notification; yield to new RC/OTHER.
+        boolean handedOver = a != beforeEnable && (a.owner == Owner.RC || a.owner == Owner.OTHER);
+        if (!releasePending && claimed && !handedOver && !port.controlLost() && !releaseAttempted
+                && (enableSucceeded || !enablePending || a.owner == Owner.MSDK)) {
             // A grant may arrive after both the enable callback and the stop timeout.
             // Track attempts separately from the UI state so that late ownership is still released.
             releasePending = true; releaseAttempted = true;
             long token = ++releaseSequence;
+            beforeRelease = a;
             try {
                 Inputs in = port.inputs();
-                if (a.enabled && a.advanced && in.safeToNeutral
+                if (a.owner == Owner.MSDK && a.enabled && a.advanced && in.safeToNeutral
                         && port.now() - in.aircraftTime <= 1500) {
                     try { port.sendYaw(0); } catch (RuntimeException ignored) { /* Still attempt release. */ }
                 }
                 // Recheck after neutral: RTH/takeover may have happened during the call.
-                if (port.authority().owner != Owner.MSDK) { releasePending = false; return; }
+                Authority current = port.authority();
+                if (current != beforeEnable && (current.owner == Owner.RC || current.owner == Owner.OTHER)) {
+                    releasePending = false; return;
+                }
                 port.disable(success -> {
                     // CAM3 v2.1: Correlate release callbacks and identify late results.
                     diagnostic("disable_result", "releaseToken=" + token + " success=" + success);
                     if (token != releaseSequence) return;
                     releasePending = false;
+                    // CAM3 v2.2: Disable dispatched before a late grant cannot settle that grant.
+                    if (lateGrantDuringRelease) {
+                        lateGrantDuringRelease = false; releaseAttempted = false;
+                        beforeRelease = port.authority(); settleRelease(); return;
+                    }
                     // CAM3 v2.1: Log existing failure/confirmation transitions without relaxing them.
                     if (!success) setState(State.RELEASE_UNCONFIRMED);
                     // Successful API completion still requires an observed RC/disabled state.
-                    else if (!enablePending && port.authority().owner == Owner.RC && !port.authority().enabled) {
+                    else if (!enablePending && port.authority() != beforeRelease && !port.authority().enabled) {
                         claimed = false; setState(State.STOPPED);
                     } else setState(State.RELEASE_UNCONFIRMED);
                 });
