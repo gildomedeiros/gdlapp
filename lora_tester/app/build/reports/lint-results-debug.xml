@@ -33,7 +33,7 @@
         errorLine2="                                                                                                                            ~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml"
-            line="11"
+            line="15"
             column="125"/>
     </issue>
 
@@ -49,7 +49,23 @@
         errorLine2="        ~~~~~~~~~~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\CaptureService.java"
-            line="46"
+            line="91"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="WakelockTimeout"
+        severity="Warning"
+        message="Provide a timeout when requesting a wakelock with `PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user&apos;s battery."
+        category="Performance"
+        priority="9"
+        summary="Using wakeLock without timeout"
+        explanation="Wakelocks have two acquire methods: one with a timeout, and one without. You should generally always use the one with a timeout. A typical timeout is 10 minutes. If the task takes longer than it is critical that it happens (i.e. can&apos;t use `JobScheduler`) then maybe they should consider a foreground service instead (which is a stronger run guarantee and lets the user know something long/important is happening)."
+        errorLine1="        wake.acquire();"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\WifiCaptureService.java"
+            line="101"
             column="9"/>
     </issue>
 
@@ -67,7 +83,7 @@
         errorLine2="     ~~~~~~~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml"
-            line="11"
+            line="15"
             column="6"/>
     </issue>
 
@@ -81,11 +97,11 @@
         explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
         url="https://developer.android.com/guide/topics/resources/localization.html"
         urls="https://developer.android.com/guide/topics/resources/localization.html"
-        errorLine1="        start=new Button(this); start.setText(&quot;Start LoRa&quot;); actions.addView(start,new LinearLayout.LayoutParams(0,dp(54),1));"
-        errorLine2="                                              ~~~~~~~~~~~~">
+        errorLine1="        start=new Button(this); start.setText(&quot;Start LoRa USB&quot;); actions.addView(start,new LinearLayout.LayoutParams(0,dp(54),1));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
-            line="68"
+            line="153"
             column="47"/>
     </issue>
 
@@ -103,8 +119,62 @@
         errorLine2="                                                   ~~~~~~~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
-            line="69"
+            line="155"
             column="52"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        Button settings=new Button(this);settings.setText(&quot;Open Wi-Fi settings&quot;);body.addView(settings);"
+        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="165"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        wifiStart=new Button(this);wifiStart.setText(&quot;Start LoRa Wi-Fi&quot;);wifiActions.addView(wifiStart,new LinearLayout.LayoutParams(0,dp(64),1));"
+        errorLine2="                                                     ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="171"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        Button wifiStop=new Button(this);wifiStop.setText(&quot;Stop Wi-Fi&quot;);wifiActions.addView(wifiStop,new LinearLayout.LayoutParams(0,dp(64),1));body.addView(wifiActions);"
+        errorLine2="                                                          ~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="173"
+            column="59"/>
     </issue>
 
     <issue
@@ -121,7 +191,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
-            line="74"
+            line="189"
             column="56"/>
     </issue>
 
@@ -139,7 +209,7 @@
         errorLine2="                                                            ~~~~~~~~~~~~">
         <location
             file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
-            line="75"
+            line="191"
             column="61"/>
     </issue>
 

@@ -11,6 +11,18 @@
                     name="com.gdl.loratester.USB_PERMISSION (used to send a broadcast)"
                     boolean="true"/>
             </map>
+            <map id="actionsSent">
+                    <map id="android.settings.WIFI_SETTINGS (used to start an activity)">
+                        <location id="0"
+                            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/MainActivity.java"
+                            line="167"
+                            column="54"
+                            startOffset="6188"
+                            endLine="167"
+                            endColumn="112"
+                            endOffset="6246"/>
+                    </map>
+            </map>
     </map>
     <map id="UnsafeIntentLaunch">
             <map id="unprotected">

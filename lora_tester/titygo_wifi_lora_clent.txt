@@ -1,0 +1,707 @@
+#include <SPI.h>
+#include <LoRa.h>
+#include <Wire.h>
+#include "SSD1306Wire.h"
+#include <WiFi.h>
+#include <WiFiUdp.h>
+
+// =====================================================
+// LILYGO TTGO LoRa32 V1
+// =====================================================
+
+// LoRa SX1276
+#define LORA_SCK       5
+#define LORA_MISO      19
+#define LORA_MOSI      27
+#define LORA_SS        18
+#define LORA_RST       14
+#define LORA_DIO0      26
+
+// OLED
+#define OLED_SDA       4
+#define OLED_SCL       15
+#define OLED_RST       16
+
+// =====================================================
+// LORA SETTINGS - MUST MATCH CUBECELL SERVER
+// =====================================================
+
+#define RF_FREQUENCY       917000000
+#define LORA_BANDWIDTH     125000
+#define LORA_SF            7
+#define LORA_CODING_RATE   5
+#define LORA_PREAMBLE      8
+
+// =====================================================
+// WIFI ACCESS POINT
+// =====================================================
+
+const char *AP_SSID = "GDL_LORA";
+const char *AP_PASSWORD = "gdl12345";
+
+const uint16_t CONTROL_PORT = 5006;
+const uint16_t PHONE_PORT   = 5005;
+
+WiFiUDP udp;
+
+IPAddress phoneIP;
+bool phoneKnown = false;
+
+// =====================================================
+// OLED
+// =====================================================
+
+SSD1306Wire display(
+  0x3C,
+  OLED_SDA,
+  OLED_SCL
+);
+
+// =====================================================
+// PACKET STATE
+// =====================================================
+
+char rxpacket[160];
+
+long lastSequence = -1;
+unsigned long lostPackets = 0;
+
+
+// =====================================================
+// OLED HELPERS
+// =====================================================
+
+void showWaiting()
+{
+  display.clear();
+
+  display.drawString(0, 0, "GDL LILYGO");
+  display.drawString(0, 14, "AP: GDL_LORA");
+  display.drawString(0, 28, "192.168.4.1");
+
+  if (phoneKnown)
+  {
+    display.drawString(0, 44, "PHONE CONNECTED");
+  }
+  else
+  {
+    display.drawString(0, 44, "WAIT PHONE HELLO");
+  }
+
+  display.display();
+}
+
+void showGps(
+  long sequence,
+  const char *lat,
+  const char *lon,
+  int rssi,
+  float snr
+)
+{
+  display.clear();
+
+  display.drawString(
+    0,
+    0,
+    "RX #" + String(sequence)
+  );
+
+  display.drawString(
+    0,
+    13,
+    "LAT " + String(lat)
+  );
+
+  display.drawString(
+    0,
+    26,
+    "LON " + String(lon)
+  );
+
+  display.drawString(
+    0,
+    39,
+    "R " + String(rssi) +
+    " S " + String(snr, 1)
+  );
+
+  String bottom =
+    "Lost:" + String(lostPackets);
+
+  if (phoneKnown)
+  {
+    bottom += " WIFI";
+  }
+
+  display.drawString(
+    0,
+    52,
+    bottom
+  );
+
+  display.display();
+}
+
+
+// =====================================================
+// UDP
+// =====================================================
+
+void sendToPhone(
+  const String &message
+)
+{
+  if (!phoneKnown)
+  {
+    return;
+  }
+
+  udp.beginPacket(
+    phoneIP,
+    PHONE_PORT
+  );
+
+  udp.print(message);
+  udp.print("\n");
+
+  udp.endPacket();
+}
+
+void checkPhoneHello()
+{
+  int packetSize =
+    udp.parsePacket();
+
+  if (!packetSize)
+  {
+    return;
+  }
+
+  char buffer[80];
+
+  int len =
+    udp.read(
+      buffer,
+      sizeof(buffer) - 1
+    );
+
+  if (len < 0)
+  {
+    return;
+  }
+
+  buffer[len] = '\0';
+
+  phoneIP =
+    udp.remoteIP();
+
+  phoneKnown = true;
+
+  Serial.print("PHONE FOUND: ");
+  Serial.println(phoneIP);
+
+  Serial.print("PHONE MSG: ");
+  Serial.println(buffer);
+
+  udp.beginPacket(
+    phoneIP,
+    PHONE_PORT
+  );
+
+  udp.print(
+    "GDL_LILYGO_READY\n"
+  );
+
+  udp.endPacket();
+
+  showWaiting();
+}
+
+
+// =====================================================
+// PROCESS LORA PACKET
+// =====================================================
+
+void processLoRaPacket(
+  const char *packet,
+  int rssi,
+  float snr
+)
+{
+  char original[160];
+
+  strncpy(
+    original,
+    packet,
+    sizeof(original)
+  );
+
+  original[
+    sizeof(original) - 1
+  ] = '\0';
+
+
+  char working[160];
+
+  strncpy(
+    working,
+    packet,
+    sizeof(working)
+  );
+
+  working[
+    sizeof(working) - 1
+  ] = '\0';
+
+
+  char *saveptr;
+
+  char *type =
+    strtok_r(
+      working,
+      ",",
+      &saveptr
+    );
+
+  char *seqText =
+    strtok_r(
+      NULL,
+      ",",
+      &saveptr
+    );
+
+
+  if (
+    type == NULL ||
+    seqText == NULL
+  )
+  {
+    return;
+  }
+
+
+  long sequence =
+    atol(seqText);
+
+  long missedThisTime = 0;
+
+
+  if (
+    lastSequence >= 0 &&
+    sequence >
+    lastSequence + 1
+  )
+  {
+    missedThisTime =
+      sequence -
+      lastSequence -
+      1;
+
+    lostPackets +=
+      missedThisTime;
+  }
+
+  lastSequence =
+    sequence;
+
+
+  // ===================================================
+  // GPS PACKET
+  // ===================================================
+
+  if (
+    strcmp(type, "GPS") == 0
+  )
+  {
+    char *senderMillis =
+      strtok_r(
+        NULL,
+        ",",
+        &saveptr
+      );
+
+    char *lat =
+      strtok_r(
+        NULL,
+        ",",
+        &saveptr
+      );
+
+    char *lon =
+      strtok_r(
+        NULL,
+        ",",
+        &saveptr
+      );
+
+    char *sats =
+      strtok_r(
+        NULL,
+        ",",
+        &saveptr
+      );
+
+    char *hdop =
+      strtok_r(
+        NULL,
+        ",",
+        &saveptr
+      );
+
+
+    if (
+      senderMillis == NULL ||
+      lat == NULL ||
+      lon == NULL ||
+      sats == NULL ||
+      hdop == NULL
+    )
+    {
+      return;
+    }
+
+
+    String output =
+      "RX," +
+      String(original) +
+      "," +
+      String(rssi) +
+      "," +
+      String(snr, 1) +
+      "," +
+      String(missedThisTime);
+
+
+    Serial.println(output);
+
+    sendToPhone(output);
+
+    showGps(
+      sequence,
+      lat,
+      lon,
+      rssi,
+      snr
+    );
+  }
+
+
+  // ===================================================
+  // NOFIX PACKET
+  // ===================================================
+
+  else if (
+    strcmp(type, "NOFIX") == 0
+  )
+  {
+    String output =
+      "RAW," +
+      String(original) +
+      "," +
+      String(rssi) +
+      "," +
+      String(snr, 1) +
+      "," +
+      String(missedThisTime);
+
+
+    Serial.println(output);
+
+    sendToPhone(output);
+
+
+    display.clear();
+
+    display.drawString(
+      0,
+      0,
+      "NO GPS FIX"
+    );
+
+    display.drawString(
+      0,
+      16,
+      "RX #" +
+      String(sequence)
+    );
+
+    display.drawString(
+      0,
+      32,
+      "RSSI " +
+      String(rssi)
+    );
+
+    if (phoneKnown)
+    {
+      display.drawString(
+        0,
+        48,
+        "PHONE OK"
+      );
+    }
+    else
+    {
+      display.drawString(
+        0,
+        48,
+        "WAIT PHONE"
+      );
+    }
+
+    display.display();
+  }
+}
+
+
+// =====================================================
+// SETUP
+// =====================================================
+
+void setup()
+{
+  Serial.begin(115200);
+  delay(500);
+
+
+  // ===================================================
+  // OLED
+  // ===================================================
+
+  pinMode(
+    OLED_RST,
+    OUTPUT
+  );
+
+  digitalWrite(
+    OLED_RST,
+    LOW
+  );
+
+  delay(20);
+
+  digitalWrite(
+    OLED_RST,
+    HIGH
+  );
+
+  Wire.begin(
+    OLED_SDA,
+    OLED_SCL
+  );
+
+  display.init();
+
+
+  // ===================================================
+  // WIFI ACCESS POINT
+  // ===================================================
+
+  WiFi.mode(
+    WIFI_AP
+  );
+
+  delay(200);
+
+
+  // Explicit:
+  // channel 6
+  // SSID visible
+  // max 4 clients
+
+  bool apOK =
+    WiFi.softAP(
+      AP_SSID,
+      AP_PASSWORD,
+      6,
+      false,
+      4
+    );
+
+
+  Serial.print(
+    "WiFi AP: "
+  );
+
+  Serial.println(
+    apOK
+      ? "OK"
+      : "FAILED"
+  );
+
+
+  Serial.print(
+    "AP IP: "
+  );
+
+  Serial.println(
+    WiFi.softAPIP()
+  );
+
+
+  Serial.print(
+    "AP SSID: "
+  );
+
+  Serial.println(
+    AP_SSID
+  );
+
+
+  Serial.print(
+    "WiFi channel: "
+  );
+
+  Serial.println(
+    WiFi.channel()
+  );
+
+
+  udp.begin(
+    CONTROL_PORT
+  );
+
+
+  // ===================================================
+  // LORA
+  // ===================================================
+
+  SPI.begin(
+    LORA_SCK,
+    LORA_MISO,
+    LORA_MOSI,
+    LORA_SS
+  );
+
+  LoRa.setPins(
+    LORA_SS,
+    LORA_RST,
+    LORA_DIO0
+  );
+
+
+  if (
+    !LoRa.begin(
+      RF_FREQUENCY
+    )
+  )
+  {
+    Serial.println(
+      "LORA INIT FAILED"
+    );
+
+    display.clear();
+
+    display.drawString(
+      0,
+      0,
+      "LORA ERROR"
+    );
+
+    display.display();
+
+    while (true)
+    {
+      delay(1000);
+    }
+  }
+
+
+  LoRa.setSignalBandwidth(
+    LORA_BANDWIDTH
+  );
+
+  LoRa.setSpreadingFactor(
+    LORA_SF
+  );
+
+  LoRa.setCodingRate4(
+    LORA_CODING_RATE
+  );
+
+  LoRa.setPreambleLength(
+    LORA_PREAMBLE
+  );
+
+  LoRa.enableCrc();
+
+  LoRa.disableInvertIQ();
+
+  LoRa.setSyncWord(
+    0x12
+  );
+
+
+  Serial.println(
+    "GDL LILYGO READY"
+  );
+
+  Serial.println(
+    "LoRa 917 MHz"
+  );
+
+  Serial.println(
+    "WiFi SSID: GDL_LORA"
+  );
+
+  Serial.println(
+    "Control UDP: 5006"
+  );
+
+  Serial.println(
+    "Phone UDP: 5005"
+  );
+
+
+  showWaiting();
+}
+
+
+// =====================================================
+// LOOP
+// =====================================================
+
+void loop()
+{
+  checkPhoneHello();
+
+
+  int packetSize =
+    LoRa.parsePacket();
+
+  if (!packetSize)
+  {
+    return;
+  }
+
+
+  int index = 0;
+
+  while (
+    LoRa.available() &&
+    index <
+    sizeof(rxpacket) - 1
+  )
+  {
+    rxpacket[index++] =
+      (char)LoRa.read();
+  }
+
+  rxpacket[index] =
+    '\0';
+
+
+  int rssi =
+    LoRa.packetRssi();
+
+  float snr =
+    LoRa.packetSnr();
+
+
+  processLoRaPacket(
+    rxpacket,
+    rssi,
+    snr
+  );
+}

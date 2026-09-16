@@ -177,9 +177,9 @@ document.getElementById(id).style.display = 'none';
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
   <header class="mdl-layout__header">
     <div class="mdl-layout__header-row">
-      <span class="mdl-layout-title">Lint Report: 8 warnings</span>
+      <span class="mdl-layout-title">Lint Report: 12 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Wed Sep 16 11:02:04 AEST 2026 by AGP (8.7.0)</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Wed Sep 16 18:56:29 AEST 2026 by AGP (8.7.0)</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
@@ -188,9 +188,9 @@ document.getElementById(id).style.display = 'none';
       <a class="mdl-navigation__link" href="#overview"><i class="material-icons">dashboard</i>Overview</a>
       <a class="mdl-navigation__link" href="#OldTargetApi"><i class="material-icons warning-icon">warning</i>Target SDK attribute is not targeting latest version (1)</a>
       <a class="mdl-navigation__link" href="#DataExtractionRules"><i class="material-icons warning-icon">warning</i>Missing data extraction rules (1)</a>
-      <a class="mdl-navigation__link" href="#WakelockTimeout"><i class="material-icons warning-icon">warning</i>Using wakeLock without timeout (1)</a>
+      <a class="mdl-navigation__link" href="#WakelockTimeout"><i class="material-icons warning-icon">warning</i>Using wakeLock without timeout (2)</a>
       <a class="mdl-navigation__link" href="#MissingApplicationIcon"><i class="material-icons warning-icon">warning</i>Missing application icon (1)</a>
-      <a class="mdl-navigation__link" href="#SetTextI18n"><i class="material-icons warning-icon">warning</i>TextView Internationalization (4)</a>
+      <a class="mdl-navigation__link" href="#SetTextI18n"><i class="material-icons warning-icon">warning</i>TextView Internationalization (7)</a>
     </nav>
   </div>
   <main class="mdl-layout__content">
@@ -216,7 +216,7 @@ document.getElementById(id).style.display = 'none';
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Performance">Performance</a>
 </td></tr>
 <tr>
-<td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
+<td class="countColumn">2</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#WakelockTimeout">WakelockTimeout</a>: Using wakeLock without timeout</td></tr>
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Usability:Icons">Usability:Icons</a>
 </td></tr>
@@ -226,7 +226,7 @@ document.getElementById(id).style.display = 'none';
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Internationalization">Internationalization</a>
 </td></tr>
 <tr>
-<td class="countColumn">4</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
+<td class="countColumn">7</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#SetTextI18n">SetTextI18n</a>: TextView Internationalization</td></tr>
 <tr><td></td><td class="categoryColumn"><a href="#MissingIssues">Disabled Checks (39)</a>
 </td></tr>
@@ -300,14 +300,15 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/AndroidManifest.xml">../../src/main/AndroidManifest.xml</a>:11</span>: <span class="message">The attribute <code>android:allowBackup</code> is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute <code>android:dataExtractionRules</code> specifying an <code>@xml</code> resource which configures cloud backups and device transfers on Android 12 and higher.</span><br /><pre class="errorlines">
-<span class="lineno">  8 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"</span> />
-<span class="lineno">  9 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.POST_NOTIFICATIONS"</span> />
-<span class="lineno"> 10 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.WAKE_LOCK"</span> />
-<span class="caretline"><span class="lineno"> 11 </span>  <span class="tag">&lt;application</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">label</span>=<span class="value">"lora_tester"</span> <span class="prefix">android:</span><span class="attribute">theme</span>=<span class="value">"@android:style/Theme.Material.NoActionBar"</span> <span class="prefix">android:</span><span class="attribute">allowBackup</span>=<span class="value">"</span><span class="warning"><span class="value">false</span></span><span class="value">"</span> <span class="prefix">android:</span><span class="attribute">supportsRtl</span>=<span class="value">"true"</span>></span>
-<span class="lineno"> 12 </span>      <span class="tag">&lt;activity</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">".MainActivity"</span> <span class="prefix">android:</span><span class="attribute">exported</span>=<span class="value">"true"</span>>
-<span class="lineno"> 13 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.action.MAIN"</span> /><span class="tag">&lt;category</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.category.LAUNCHER"</span> /><span class="tag">&lt;/intent-filter></span>
-<span class="lineno"> 14 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.hardware.usb.action.USB_DEVICE_ATTACHED"</span> /><span class="tag">&lt;/intent-filter></span></pre>
+<span class="location"><a href="../../src/main/AndroidManifest.xml">../../src/main/AndroidManifest.xml</a>:15</span>: <span class="message">The attribute <code>android:allowBackup</code> is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute <code>android:dataExtractionRules</code> specifying an <code>@xml</code> resource which configures cloud backups and device transfers on Android 12 and higher.</span><br /><pre class="errorlines">
+<span class="lineno"> 12 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.ACCESS_NETWORK_STATE"</span> />
+<span class="lineno"> 13 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.ACCESS_WIFI_STATE"</span> />
+<span class="lineno"> 14 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.CHANGE_WIFI_STATE"</span> />
+<span class="caretline"><span class="lineno"> 15 </span>  <span class="tag">&lt;application</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">label</span>=<span class="value">"lora_tester"</span> <span class="prefix">android:</span><span class="attribute">theme</span>=<span class="value">"@android:style/Theme.Material.NoActionBar"</span> <span class="prefix">android:</span><span class="attribute">allowBackup</span>=<span class="value">"</span><span class="warning"><span class="value">false</span></span><span class="value">"</span> <span class="prefix">android:</span><span class="attribute">supportsRtl</span>=<span class="value">"true"</span>></span>
+<span class="lineno"> 16 </span>      <span class="tag">&lt;activity</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">".MainActivity"</span> <span class="prefix">android:</span><span class="attribute">exported</span>=<span class="value">"true"</span>>
+<span class="lineno"> 17 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.action.MAIN"</span> /><span class="tag">&lt;category</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.category.LAUNCHER"</span> /><span class="tag">&lt;/intent-filter></span>
+<span class="lineno"> 18 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.hardware.usb.action.USB_DEVICE_ATTACHED"</span> /><span class="tag">&lt;/intent-filter></span>
+</pre>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationDataExtractionRules" style="display: none;">
@@ -351,14 +352,22 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/java/com/gdl/loratester/CaptureService.java">../../src/main/java/com/gdl/loratester/CaptureService.java</a>:46</span>: <span class="message">Provide a timeout when requesting a wakelock with <code>PowerManager.Wakelock.acquire(long timeout)</code>. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery.</span><br /><pre class="errorlines">
-<span class="lineno">  43 </span>      file=<span class="string">""</span>; telemetry=<span class="string">"Waiting for GPS readings"</span>; counters=<span class="string">""</span>; recent=<span class="string">""</span>; lastReading=<span class="number">0</span>;
-<span class="lineno">  44 </span>      startForeground(<span class="number">1</span>,notification(<span class="string">"Logging automatically to Downloads/lora_tester"</span>));
-<span class="lineno">  45 </span>      wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,<span class="string">"lora_tester:capture"</span>);
-<span class="caretline"><span class="lineno">  46 </span>      <span class="warning">wake.acquire()</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  47 </span>      worker=<span class="keyword">new</span> Thread(<span class="keyword">this</span>::capture,<span class="string">"lora-usb-reader"</span>); worker.start();
-<span class="lineno">  48 </span>      <span class="keyword">return</span> START_NOT_STICKY;
-<span class="lineno">  49 </span>  }
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/CaptureService.java">../../src/main/java/com/gdl/loratester/CaptureService.java</a>:91</span>: <span class="message">Provide a timeout when requesting a wakelock with <code>PowerManager.Wakelock.acquire(long timeout)</code>. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery.</span><br /><pre class="errorlines">
+<span class="lineno">  88 </span>
+<span class="lineno">  89 </span>  wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,<span class="string">"lora_tester:capture"</span>);
+<span class="lineno">  90 </span>
+<span class="caretline"><span class="lineno">  91 </span>  <span class="warning">wake.acquire()</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  92 </span>
+<span class="lineno">  93 </span>  worker=<span class="keyword">new</span> Thread(<span class="keyword">this</span>::capture,<span class="string">"lora-usb-reader"</span>); worker.start();
+</pre>
+
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/WifiCaptureService.java">../../src/main/java/com/gdl/loratester/WifiCaptureService.java</a>:101</span>: <span class="message">Provide a timeout when requesting a wakelock with <code>PowerManager.Wakelock.acquire(long timeout)</code>. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery.</span><br /><pre class="errorlines">
+<span class="lineno">  98 </span>
+<span class="lineno">  99 </span>  wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,<span class="string">"lora_tester:capture"</span>);
+<span class="lineno"> 100 </span>
+<span class="caretline"><span class="lineno"> 101 </span>  <span class="warning">wake.acquire()</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 102 </span>
+<span class="lineno"> 103 </span>  worker=<span class="keyword">new</span> Thread(<span class="keyword">this</span>::capture,<span class="string">"lora-wifi-reader"</span>); worker.start();
 </pre>
 
 </div>
@@ -399,14 +408,15 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/AndroidManifest.xml">../../src/main/AndroidManifest.xml</a>:11</span>: <span class="message">Should explicitly set <code>android:icon</code>, there is no default</span><br /><pre class="errorlines">
-<span class="lineno">  8 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"</span> />
-<span class="lineno">  9 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.POST_NOTIFICATIONS"</span> />
-<span class="lineno"> 10 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.WAKE_LOCK"</span> />
-<span class="caretline"><span class="lineno"> 11 </span>  <span class="tag">&lt;</span><span class="warning"><span class="tag">application</span></span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">label</span>=<span class="value">"lora_tester"</span> <span class="prefix">android:</span><span class="attribute">theme</span>=<span class="value">"@android:style/Theme.Material.NoActionBar"</span> <span class="prefix">android:</span><span class="attribute">allowBackup</span>=<span class="value">"false"</span> <span class="prefix">android:</span><span class="attribute">supportsRtl</span>=<span class="value">"true"</span>></span>
-<span class="lineno"> 12 </span>      <span class="tag">&lt;activity</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">".MainActivity"</span> <span class="prefix">android:</span><span class="attribute">exported</span>=<span class="value">"true"</span>>
-<span class="lineno"> 13 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.action.MAIN"</span> /><span class="tag">&lt;category</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.category.LAUNCHER"</span> /><span class="tag">&lt;/intent-filter></span>
-<span class="lineno"> 14 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.hardware.usb.action.USB_DEVICE_ATTACHED"</span> /><span class="tag">&lt;/intent-filter></span></pre>
+<span class="location"><a href="../../src/main/AndroidManifest.xml">../../src/main/AndroidManifest.xml</a>:15</span>: <span class="message">Should explicitly set <code>android:icon</code>, there is no default</span><br /><pre class="errorlines">
+<span class="lineno"> 12 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.ACCESS_NETWORK_STATE"</span> />
+<span class="lineno"> 13 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.ACCESS_WIFI_STATE"</span> />
+<span class="lineno"> 14 </span>  <span class="tag">&lt;uses-permission</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.permission.CHANGE_WIFI_STATE"</span> />
+<span class="caretline"><span class="lineno"> 15 </span>  <span class="tag">&lt;</span><span class="warning"><span class="tag">application</span></span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">label</span>=<span class="value">"lora_tester"</span> <span class="prefix">android:</span><span class="attribute">theme</span>=<span class="value">"@android:style/Theme.Material.NoActionBar"</span> <span class="prefix">android:</span><span class="attribute">allowBackup</span>=<span class="value">"false"</span> <span class="prefix">android:</span><span class="attribute">supportsRtl</span>=<span class="value">"true"</span>></span>
+<span class="lineno"> 16 </span>      <span class="tag">&lt;activity</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">".MainActivity"</span> <span class="prefix">android:</span><span class="attribute">exported</span>=<span class="value">"true"</span>>
+<span class="lineno"> 17 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.action.MAIN"</span> /><span class="tag">&lt;category</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.intent.category.LAUNCHER"</span> /><span class="tag">&lt;/intent-filter></span>
+<span class="lineno"> 18 </span>          <span class="tag">&lt;intent-filter>&lt;action</span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">name</span>=<span class="value">"android.hardware.usb.action.USB_DEVICE_ATTACHED"</span> /><span class="tag">&lt;/intent-filter></span>
+</pre>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationMissingApplicationIcon" style="display: none;">
@@ -450,44 +460,67 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:68</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno">  65 </span>  TextView subtitle=text(<span class="string">"USB OTG  •  CP2102  •  115200 baud"</span>,<span class="number">13</span>); subtitle.setTextColor(<span class="number">0xff9bafc2</span>); body.addView(subtitle);
-<span class="lineno">  66 </span>  connection=card(body,<span class="string">"Ready"</span>,<span class="number">17</span>);
-<span class="lineno">  67 </span>  LinearLayout actions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
-<span class="caretline"><span class="lineno">  68 </span>  start=<span class="keyword">new</span> Button(<span class="keyword">this</span>); start.setText(<span class="warning"><span class="string">"Start LoRa"</span></span>); actions.addView(start,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));</span>
-<span class="lineno">  69 </span>  Button stop=<span class="keyword">new</span> Button(<span class="keyword">this</span>); stop.setText(<span class="string">"Stop LoRa"</span>); actions.addView(stop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>)); body.addView(actions);
-<span class="lineno">  70 </span>  start.setOnClickListener(v->{wanted=<span class="keyword">true</span>; localStatus=<span class="keyword">null</span>; connect();});
-<span class="lineno">  71 </span>  stop.setOnClickListener(v->{wanted=<span class="keyword">false</span>; localStatus=<span class="keyword">null</span>; <span class="keyword">if</span>(CaptureService.active) startService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>,CaptureService.<span class="keyword">class</span>).setAction(<span class="string">"STOP"</span>)); <span class="keyword">else</span> localStatus=<span class="string">"Stopped"</span>;});
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:153</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 150 </span>
+<span class="lineno"> 151 </span>  LinearLayout actions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
+<span class="lineno"> 152 </span>
+<span class="caretline"><span class="lineno"> 153 </span>  start=<span class="keyword">new</span> Button(<span class="keyword">this</span>); start.setText(<span class="warning"><span class="string">"Start LoRa USB"</span></span>); actions.addView(start,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));</span>
+<span class="lineno"> 154 </span>
+<span class="lineno"> 155 </span>  Button stop=<span class="keyword">new</span> Button(<span class="keyword">this</span>); stop.setText(<span class="string">"Stop LoRa"</span>); actions.addView(stop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>)); body.addView(actions);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:69</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno">  66 </span>  connection=card(body,<span class="string">"Ready"</span>,<span class="number">17</span>);
-<span class="lineno">  67 </span>  LinearLayout actions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
-<span class="lineno">  68 </span>  start=<span class="keyword">new</span> Button(<span class="keyword">this</span>); start.setText(<span class="string">"Start LoRa"</span>); actions.addView(start,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));
-<span class="caretline"><span class="lineno">  69 </span>  Button stop=<span class="keyword">new</span> Button(<span class="keyword">this</span>); stop.setText(<span class="warning"><span class="string">"Stop LoRa"</span></span>); actions.addView(stop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>)); body.addView(actions);</span>
-<span class="lineno">  70 </span>  start.setOnClickListener(v->{wanted=<span class="keyword">true</span>; localStatus=<span class="keyword">null</span>; connect();});
-<span class="lineno">  71 </span>  stop.setOnClickListener(v->{wanted=<span class="keyword">false</span>; localStatus=<span class="keyword">null</span>; <span class="keyword">if</span>(CaptureService.active) startService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>,CaptureService.<span class="keyword">class</span>).setAction(<span class="string">"STOP"</span>)); <span class="keyword">else</span> localStatus=<span class="string">"Stopped"</span>;});
-<span class="lineno">  72 </span>  label(body,<span class="string">"PHONE GPS — CAN RUN ALONGSIDE LORA"</span>);
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:155</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 152 </span>
+<span class="lineno"> 153 </span>  start=<span class="keyword">new</span> Button(<span class="keyword">this</span>); start.setText(<span class="string">"Start LoRa USB"</span>); actions.addView(start,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));
+<span class="lineno"> 154 </span>
+<span class="caretline"><span class="lineno"> 155 </span>  Button stop=<span class="keyword">new</span> Button(<span class="keyword">this</span>); stop.setText(<span class="warning"><span class="string">"Stop LoRa"</span></span>); actions.addView(stop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>)); body.addView(actions);</span>
+<span class="lineno"> 156 </span>
+<span class="lineno"> 157 </span>  start.setOnClickListener(v->{wanted=<span class="keyword">true</span>; localStatus=<span class="keyword">null</span>; connect();});
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:74</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno">  71 </span>  stop.setOnClickListener(v->{wanted=<span class="keyword">false</span>; localStatus=<span class="keyword">null</span>; <span class="keyword">if</span>(CaptureService.active) startService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>,CaptureService.<span class="keyword">class</span>).setAction(<span class="string">"STOP"</span>)); <span class="keyword">else</span> localStatus=<span class="string">"Stopped"</span>;});
-<span class="lineno">  72 </span>  label(body,<span class="string">"PHONE GPS — CAN RUN ALONGSIDE LORA"</span>);
-<span class="lineno">  73 </span>  LinearLayout phoneActions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
-<span class="caretline"><span class="lineno">  74 </span>  phoneStart=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStart.setText(<span class="warning"><span class="string">"Start phone"</span></span>);phoneActions.addView(phoneStart,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));</span>
-<span class="lineno">  75 </span>  Button phoneStop=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStop.setText(<span class="string">"Stop phone"</span>);phoneActions.addView(phoneStop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));body.addView(phoneActions);
-<span class="lineno">  76 </span>  phoneStart.setOnClickListener(v->{phoneWanted=<span class="keyword">true</span>;startPhone();});
-<span class="lineno">  77 </span>  phoneStop.setOnClickListener(v->{phoneWanted=<span class="keyword">false</span>;<span class="keyword">if</span>(PhoneCaptureService.active)startService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>,PhoneCaptureService.<span class="keyword">class</span>).setAction(<span class="string">"STOP"</span>));});
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:165</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 162 </span>
+<span class="lineno"> 163 </span>  TextView wifiHelp=text(<span class="string">"Connect phone Wi-Fi to GDL_LORA first (password: gdl12345). Keep the connection if Android says no internet. Stop the Python test while using this app: TTGO forwards to one client at a time."</span>,<span class="number">13</span>);body.addView(wifiHelp);
+<span class="lineno"> 164 </span>
+<span class="caretline"><span class="lineno"> 165 </span>  Button settings=<span class="keyword">new</span> Button(<span class="keyword">this</span>);settings.setText(<span class="warning"><span class="string">"Open Wi-Fi settings"</span></span>);body.addView(settings);</span>
+<span class="lineno"> 166 </span>
+<span class="lineno"> 167 </span>  settings.setOnClickListener(v->startActivity(<span class="keyword">new</span> Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)));
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:75</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno">  72 </span>  label(body,<span class="string">"PHONE GPS — CAN RUN ALONGSIDE LORA"</span>);
-<span class="lineno">  73 </span>  LinearLayout phoneActions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
-<span class="lineno">  74 </span>  phoneStart=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStart.setText(<span class="string">"Start phone"</span>);phoneActions.addView(phoneStart,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));
-<span class="caretline"><span class="lineno">  75 </span>  Button phoneStop=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStop.setText(<span class="warning"><span class="string">"Stop phone"</span></span>);phoneActions.addView(phoneStop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));body.addView(phoneActions);</span>
-<span class="lineno">  76 </span>  phoneStart.setOnClickListener(v->{phoneWanted=<span class="keyword">true</span>;startPhone();});
-<span class="lineno">  77 </span>  phoneStop.setOnClickListener(v->{phoneWanted=<span class="keyword">false</span>;<span class="keyword">if</span>(PhoneCaptureService.active)startService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>,PhoneCaptureService.<span class="keyword">class</span>).setAction(<span class="string">"STOP"</span>));});
-<span class="lineno">  78 </span>  phoneStatus=text(<span class="string">"Phone GPS ready"</span>,<span class="number">15</span>);body.addView(phoneStatus);
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:171</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 168 </span>
+<span class="lineno"> 169 </span>  LinearLayout wifiActions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
+<span class="lineno"> 170 </span>
+<span class="caretline"><span class="lineno"> 171 </span>  wifiStart=<span class="keyword">new</span> Button(<span class="keyword">this</span>);wifiStart.setText(<span class="warning"><span class="string">"Start LoRa Wi-Fi"</span></span>);wifiActions.addView(wifiStart,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">64</span>),<span class="number">1</span>));</span>
+<span class="lineno"> 172 </span>
+<span class="lineno"> 173 </span>  Button wifiStop=<span class="keyword">new</span> Button(<span class="keyword">this</span>);wifiStop.setText(<span class="string">"Stop Wi-Fi"</span>);wifiActions.addView(wifiStop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">64</span>),<span class="number">1</span>));body.addView(wifiActions);
+</pre>
+
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:173</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 170 </span>
+<span class="lineno"> 171 </span>  wifiStart=<span class="keyword">new</span> Button(<span class="keyword">this</span>);wifiStart.setText(<span class="string">"Start LoRa Wi-Fi"</span>);wifiActions.addView(wifiStart,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">64</span>),<span class="number">1</span>));
+<span class="lineno"> 172 </span>
+<span class="caretline"><span class="lineno"> 173 </span>  Button wifiStop=<span class="keyword">new</span> Button(<span class="keyword">this</span>);wifiStop.setText(<span class="warning"><span class="string">"Stop Wi-Fi"</span></span>);wifiActions.addView(wifiStop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">64</span>),<span class="number">1</span>));body.addView(wifiActions);</span>
+<span class="lineno"> 174 </span>
+<span class="lineno"> 175 </span>  wifiStart.setOnClickListener(v->startForegroundService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>,WifiCaptureService.<span class="keyword">class</span>)));
+</pre>
+
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:189</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 186 </span>
+<span class="lineno"> 187 </span>  LinearLayout phoneActions=<span class="keyword">new</span> LinearLayout(<span class="keyword">this</span>);
+<span class="lineno"> 188 </span>
+<span class="caretline"><span class="lineno"> 189 </span>  phoneStart=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStart.setText(<span class="warning"><span class="string">"Start phone"</span></span>);phoneActions.addView(phoneStart,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));</span>
+<span class="lineno"> 190 </span>
+<span class="lineno"> 191 </span>  Button phoneStop=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStop.setText(<span class="string">"Stop phone"</span>);phoneActions.addView(phoneStop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));body.addView(phoneActions);
+</pre>
+
+<span class="location"><a href="../../src/main/java/com/gdl/loratester/MainActivity.java">../../src/main/java/com/gdl/loratester/MainActivity.java</a>:191</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 188 </span>
+<span class="lineno"> 189 </span>  phoneStart=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStart.setText(<span class="string">"Start phone"</span>);phoneActions.addView(phoneStart,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));
+<span class="lineno"> 190 </span>
+<span class="caretline"><span class="lineno"> 191 </span>  Button phoneStop=<span class="keyword">new</span> Button(<span class="keyword">this</span>);phoneStop.setText(<span class="warning"><span class="string">"Stop phone"</span></span>);phoneActions.addView(phoneStop,<span class="keyword">new</span> LinearLayout.LayoutParams(<span class="number">0</span>,dp(<span class="number">54</span>),<span class="number">1</span>));body.addView(phoneActions);</span>
+<span class="lineno"> 192 </span>
+<span class="lineno"> 193 </span>  phoneStart.setOnClickListener(v->{phoneWanted=<span class="keyword">true</span>;startPhone();});
 </pre>
 
 </div>

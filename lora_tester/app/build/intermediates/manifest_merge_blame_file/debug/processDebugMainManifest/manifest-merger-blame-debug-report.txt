@@ -40,71 +40,91 @@
 22    <uses-permission android:name="android.permission.WAKE_LOCK" />
 22-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:10:5-68
 22-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:10:22-65
-23
-24    <application
-24-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:5-22:19
-25        android:allowBackup="false"
-25-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:104-131
-26        android:debuggable="true"
-27        android:extractNativeLibs="false"
-28        android:label="lora_tester"
-28-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:18-45
-29        android:supportsRtl="true"
-29-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:132-158
-30        android:testOnly="true"
-31        android:theme="@android:style/Theme.Material.NoActionBar" >
-31-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:46-103
-32        <activity
-32-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:9-16:20
-33            android:name="com.gdl.loratester.MainActivity"
-33-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:19-47
-34            android:exported="true" >
-34-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:48-71
-35            <intent-filter>
-35-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:13-156
-36                <action android:name="android.intent.action.MAIN" />
-36-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:28-80
-36-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:36-77
-37
-38                <category android:name="android.intent.category.LAUNCHER" />
-38-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:80-140
-38-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:90-137
-39            </intent-filter>
-40            <intent-filter>
-40-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:13-117
-41                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
-41-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:28-101
-41-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:36-98
-42            </intent-filter>
-43
-44            <meta-data
-44-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:13-127
-45                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-45-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:24-86
-46                android:resource="@xml/device_filter" />
-46-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:87-124
-47        </activity>
-48        <!--
-49             USB permission is the connectedDevice prerequisite. MainActivity checks
-50             UsbManager.hasPermission before starting this service. AGP 8.7's
-51             manifest-only lint check does not recognise that runtime alternative.
-52        -->
-53        <service
-53-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:9-167
-54            android:name="com.gdl.loratester.CaptureService"
-54-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:18-48
-55            android:exported="false"
-55-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:49-73
-56            android:foregroundServiceType="connectedDevice" />
-56-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:74-121
+23    <uses-permission android:name="android.permission.INTERNET" />
+23-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:5-67
+23-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:22-64
+24    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+24-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:5-79
+24-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:22-76
+25    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+25-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:5-76
+25-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:22-73
+26    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+26-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:5-76
+26-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:22-73
+27
+28    <application
+28-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:5-27:19
+29        android:allowBackup="false"
+29-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:104-131
+30        android:debuggable="true"
+31        android:extractNativeLibs="false"
+32        android:label="lora_tester"
+32-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:18-45
+33        android:supportsRtl="true"
+33-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:132-158
+34        android:testOnly="true"
+35        android:theme="@android:style/Theme.Material.NoActionBar" >
+35-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:46-103
+36        <activity
+36-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:16:9-20:20
+37            android:name="com.gdl.loratester.MainActivity"
+37-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:16:19-47
+38            android:exported="true" >
+38-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:16:48-71
+39            <intent-filter>
+39-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:13-156
+40                <action android:name="android.intent.action.MAIN" />
+40-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:28-80
+40-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:36-77
+41
+42                <category android:name="android.intent.category.LAUNCHER" />
+42-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:80-140
+42-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:90-137
+43            </intent-filter>
+44            <intent-filter>
+44-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:18:13-117
+45                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+45-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:18:28-101
+45-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:18:36-98
+46            </intent-filter>
+47
+48            <meta-data
+48-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:19:13-127
+49                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+49-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:19:24-86
+50                android:resource="@xml/device_filter" />
+50-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:19:87-124
+51        </activity>
+52        <!--
+53             USB permission is the connectedDevice prerequisite. MainActivity checks
+54             UsbManager.hasPermission before starting this service. AGP 8.7's
+55             manifest-only lint check does not recognise that runtime alternative.
+56        -->
 57        <service
-57-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:9-122
-58            android:name="com.gdl.loratester.PhoneCaptureService"
-58-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:18-53
+57-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:9-167
+58            android:name="com.gdl.loratester.CaptureService"
+58-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:18-48
 59            android:exported="false"
-59-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:54-78
-60            android:foregroundServiceType="location" />
-60-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:79-119
-61    </application>
-62
-63</manifest>
+59-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:49-73
+60            android:foregroundServiceType="connectedDevice" />
+60-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:74-121
+61        <service
+61-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:9-128
+62            android:name="com.gdl.loratester.WifiCaptureService"
+62-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:18-52
+63            android:exported="false"
+63-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:53-77
+64            android:foregroundServiceType="connectedDevice" />
+64-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:78-125
+65        <service
+65-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:9-122
+66            android:name="com.gdl.loratester.PhoneCaptureService"
+66-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:18-53
+67            android:exported="false"
+67-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:54-78
+68            android:foregroundServiceType="location" />
+68-->C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:79-119
+69    </application>
+70
+71</manifest>

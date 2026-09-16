@@ -20,7 +20,7 @@ C:\Users\gildo\gdlapp\lora_tester\app\build.gradle:8: Warning: Not targeting the
 
    https://developer.android.com/distribute/best-practices/develop/target-sdk.html
 
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
     <application android:label="lora_tester" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:supportsRtl="true">
                                                                                                                             ~~~~~
 
@@ -40,7 +40,10 @@ C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11: Warning: 
    https://developer.android.com/about/versions/12/backup-restore#xml-changes
    https://goo.gle/DataExtractionRules
 
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\CaptureService.java:46: Warning: Provide a timeout when requesting a wakelock with PowerManager.Wakelock.acquire(long timeout). This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery. [WakelockTimeout]
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\CaptureService.java:91: Warning: Provide a timeout when requesting a wakelock with PowerManager.Wakelock.acquire(long timeout). This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery. [WakelockTimeout]
+        wake.acquire();
+        ~~~~~~~~~~~~~~
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\WifiCaptureService.java:101: Warning: Provide a timeout when requesting a wakelock with PowerManager.Wakelock.acquire(long timeout). This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery. [WakelockTimeout]
         wake.acquire();
         ~~~~~~~~~~~~~~
 
@@ -52,7 +55,7 @@ C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\CaptureSe
    service instead (which is a stronger run guarantee and lets the user know
    something long/important is happening).
 
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]
     <application android:label="lora_tester" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:supportsRtl="true">
      ~~~~~~~~~~~
 
@@ -63,16 +66,25 @@ C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11: Warning: 
 
    https://developer.android.com/studio/publish/preparing#publishing-configure
 
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:68: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
-        start=new Button(this); start.setText("Start LoRa"); actions.addView(start,new LinearLayout.LayoutParams(0,dp(54),1));
-                                              ~~~~~~~~~~~~
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:69: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:153: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        start=new Button(this); start.setText("Start LoRa USB"); actions.addView(start,new LinearLayout.LayoutParams(0,dp(54),1));
+                                              ~~~~~~~~~~~~~~~~
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:155: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
         Button stop=new Button(this); stop.setText("Stop LoRa"); actions.addView(stop,new LinearLayout.LayoutParams(0,dp(54),1)); body.addView(actions);
                                                    ~~~~~~~~~~~
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:74: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:165: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        Button settings=new Button(this);settings.setText("Open Wi-Fi settings");body.addView(settings);
+                                                          ~~~~~~~~~~~~~~~~~~~~~
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:171: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        wifiStart=new Button(this);wifiStart.setText("Start LoRa Wi-Fi");wifiActions.addView(wifiStart,new LinearLayout.LayoutParams(0,dp(64),1));
+                                                     ~~~~~~~~~~~~~~~~~~
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:173: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        Button wifiStop=new Button(this);wifiStop.setText("Stop Wi-Fi");wifiActions.addView(wifiStop,new LinearLayout.LayoutParams(0,dp(64),1));body.addView(wifiActions);
+                                                          ~~~~~~~~~~~~
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:189: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
         phoneStart=new Button(this);phoneStart.setText("Start phone");phoneActions.addView(phoneStart,new LinearLayout.LayoutParams(0,dp(54),1));
                                                        ~~~~~~~~~~~~~
-C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:75: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java:191: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
         Button phoneStop=new Button(this);phoneStop.setText("Stop phone");phoneActions.addView(phoneStop,new LinearLayout.LayoutParams(0,dp(54),1));body.addView(phoneActions);
                                                             ~~~~~~~~~~~~
 
@@ -89,4 +101,4 @@ C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActiv
 
    https://developer.android.com/guide/topics/resources/localization.html
 
-0 errors, 8 warnings
+0 errors, 12 warnings

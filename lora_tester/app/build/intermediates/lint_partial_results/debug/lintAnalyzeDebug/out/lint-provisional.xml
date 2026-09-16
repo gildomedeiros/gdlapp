@@ -8,12 +8,12 @@
         <fix-data missing="android.permission.POST_NOTIFICATIONS"/>
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/CaptureService.java"
-            line="100"
+            line="199"
             column="24"
-            startOffset="5838"
-            endLine="100"
+            startOffset="5937"
+            endLine="199"
             endColumn="98"
-            endOffset="5912"/>
+            endOffset="6011"/>
     </incident>
 
     <incident
@@ -25,10 +25,25 @@
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/PhoneCaptureService.java"
             line="174"
             column="26"
-            startOffset="13410"
+            startOffset="13409"
             endLine="174"
             endColumn="106"
-            endOffset="13490"/>
+            endOffset="13489"/>
+    </incident>
+
+    <incident
+        id="NotificationPermission"
+        severity="error"
+        message="When targeting Android 13 or higher, posting a permission requires holding the `POST_NOTIFICATIONS` permission">
+        <fix-data missing="android.permission.POST_NOTIFICATIONS"/>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/WifiCaptureService.java"
+            line="241"
+            column="23"
+            startOffset="8299"
+            endLine="241"
+            endColumn="97"
+            endOffset="8373"/>
     </incident>
 
 </incidents>

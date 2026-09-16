@@ -1,7 +1,7 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:1:1-23:12
-INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:1:1-23:12
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:1:1-28:12
+INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:1:1-28:12
 	package
 		INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml
 	xmlns:tools
@@ -48,65 +48,89 @@ uses-permission#android.permission.WAKE_LOCK
 ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:10:5-68
 	android:name
 		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:10:22-65
+uses-permission#android.permission.INTERNET
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:5-67
+	android:name
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:5-79
+	android:name
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:22-76
+uses-permission#android.permission.ACCESS_WIFI_STATE
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:5-76
+	android:name
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:22-73
+uses-permission#android.permission.CHANGE_WIFI_STATE
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:5-76
+	android:name
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:22-73
 application
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:5-22:19
-INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:5-22:19
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:5-27:19
+INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:5-27:19
 	android:extractNativeLibs
 		INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml
 	android:supportsRtl
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:132-158
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:132-158
 	android:label
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:18-45
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:18-45
 	android:allowBackup
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:104-131
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:104-131
 	android:theme
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:11:46-103
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:46-103
 activity#com.gdl.loratester.MainActivity
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:9-16:20
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:16:9-20:20
 	android:exported
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:48-71
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:16:48-71
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:12:19-47
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:16:19-47
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:13-156
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:13-156
 action#android.intent.action.MAIN
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:28-80
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:28-80
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:36-77
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:36-77
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:80-140
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:80-140
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:13:90-137
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:17:90-137
 intent-filter#action:name:android.hardware.usb.action.USB_DEVICE_ATTACHED
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:13-117
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:18:13-117
 action#android.hardware.usb.action.USB_DEVICE_ATTACHED
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:28-101
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:18:28-101
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:14:36-98
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:18:36-98
 meta-data#android.hardware.usb.action.USB_DEVICE_ATTACHED
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:13-127
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:19:13-127
 	android:resource
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:87-124
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:19:87-124
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:15:24-86
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:19:24-86
 service#com.gdl.loratester.CaptureService
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:9-167
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:9-167
 	android:exported
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:49-73
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:49-73
 	tools:ignore
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:122-164
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:122-164
 	android:foregroundServiceType
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:74-121
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:74-121
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:20:18-48
-service#com.gdl.loratester.PhoneCaptureService
-ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:9-122
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:24:18-48
+service#com.gdl.loratester.WifiCaptureService
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:9-128
 	android:exported
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:54-78
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:53-77
 	android:foregroundServiceType
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:79-119
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:78-125
 	android:name
-		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:21:18-53
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:25:18-52
+service#com.gdl.loratester.PhoneCaptureService
+ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:9-122
+	android:exported
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:54-78
+	android:foregroundServiceType
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:79-119
+	android:name
+		ADDED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml:26:18-53
 uses-sdk
 INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml
