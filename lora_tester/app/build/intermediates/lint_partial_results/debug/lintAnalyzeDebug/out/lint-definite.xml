@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.7.0" type="incidents">
+
+    <incident
+        id="OldTargetApi"
+        severity="warning"
+        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details.">
+        <fix-replace
+            description="Update targetSdkVersion to 35"
+            oldString="34"
+            replacement="35"
+            priority="0"/>
+        <location
+            file="${:app*projectDir}/build.gradle"
+            line="8"
+            column="9"
+            startOffset="193"
+            endLine="8"
+            endColumn="21"
+            endOffset="205"/>
+    </incident>
+
+    <incident
+        id="WakelockTimeout"
+        severity="warning"
+        message="Provide a timeout when requesting a wakelock with `PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user&apos;s battery.">
+        <fix-replace
+            description="Set timeout to 10 minutes"
+            oldPattern="acquire\s*\(()\s*\)"
+            replacement="10*60*1000L /*10 minutes*/"
+            priority="0"/>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/CaptureService.java"
+            line="46"
+            column="9"
+            startOffset="2689"
+            endLine="46"
+            endColumn="23"
+            endOffset="2703"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/MainActivity.java"
+            line="68"
+            column="47"
+            startOffset="4352"
+            endLine="68"
+            endColumn="59"
+            endOffset="4364"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/MainActivity.java"
+            line="69"
+            column="52"
+            startOffset="4484"
+            endLine="69"
+            endColumn="63"
+            endOffset="4495"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/MainActivity.java"
+            line="74"
+            column="56"
+            startOffset="5035"
+            endLine="74"
+            endColumn="69"
+            endOffset="5048"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/gdl/loratester/MainActivity.java"
+            line="75"
+            column="61"
+            startOffset="5186"
+            endLine="75"
+            endColumn="73"
+            endOffset="5198"/>
+    </incident>
+
+</incidents>

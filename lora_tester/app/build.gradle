@@ -1,0 +1,14 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.gdl.loratester'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.gdl.loratester'
+        minSdk 29
+        targetSdk 34
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

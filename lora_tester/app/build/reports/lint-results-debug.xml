@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.7.0">
+
+    <issue
+        id="OldTargetApi"
+        severity="Warning"
+        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details."
+        category="Correctness"
+        priority="6"
+        summary="Target SDK attribute is not targeting latest version"
+        explanation="When your application runs on a version of Android that is more recent than your `targetSdkVersion` specifies that it has been tested with, various compatibility modes kick in. This ensures that your application continues to work, but it may look out of place. For example, if the `targetSdkVersion` is less than 14, your app may get an option button in the UI.&#xA;&#xA;To fix this issue, set the `targetSdkVersion` to the highest available value. Then test your app to make sure everything works correctly. You may want to consult the compatibility notes to see what changes apply to each version you are adding support for: https://developer.android.com/reference/android/os/Build.VERSION_CODES.html as well as follow this guide:&#xA;https://developer.android.com/distribute/best-practices/develop/target-sdk.html"
+        url="https://developer.android.com/distribute/best-practices/develop/target-sdk.html"
+        urls="https://developer.android.com/distribute/best-practices/develop/target-sdk.html,https://developer.android.com/reference/android/os/Build.VERSION_CODES.html"
+        errorLine1="        targetSdk 34"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\build.gradle"
+            line="8"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="DataExtractionRules"
+        severity="Warning"
+        message="The attribute `android:allowBackup` is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute `android:dataExtractionRules` specifying an `@xml` resource which configures cloud backups and device transfers on Android 12 and higher."
+        category="Security"
+        priority="3"
+        summary="Missing data extraction rules"
+        explanation="Before Android 12, the attributes `android:allowBackup` and `android:fullBackupContent` were used to configure all forms of backup, including cloud backups, device-to-device transfers and adb backup.&#xA;&#xA;In Android 12 and higher, these attributes have been deprecated and will only apply to cloud backups. You should instead use the attribute `android:dataExtractionRules`, specifying an `@xml` resource that configures which files to back up, for cloud backups and for device-to-device transfers, separately. If your `minSdkVersion` supports older versions, you&apos;ll still want to specify an `android:fullBackupContent` resource if the default behavior is not right for your app."
+        url="https://developer.android.com/about/versions/12/backup-restore#xml-changes"
+        urls="https://developer.android.com/about/versions/12/backup-restore#xml-changes,https://goo.gle/DataExtractionRules"
+        errorLine1="    &lt;application android:label=&quot;lora_tester&quot; android:theme=&quot;@android:style/Theme.Material.NoActionBar&quot; android:allowBackup=&quot;false&quot; android:supportsRtl=&quot;true&quot;>"
+        errorLine2="                                                                                                                            ~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml"
+            line="11"
+            column="125"/>
+    </issue>
+
+    <issue
+        id="WakelockTimeout"
+        severity="Warning"
+        message="Provide a timeout when requesting a wakelock with `PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user&apos;s battery."
+        category="Performance"
+        priority="9"
+        summary="Using wakeLock without timeout"
+        explanation="Wakelocks have two acquire methods: one with a timeout, and one without. You should generally always use the one with a timeout. A typical timeout is 10 minutes. If the task takes longer than it is critical that it happens (i.e. can&apos;t use `JobScheduler`) then maybe they should consider a foreground service instead (which is a stronger run guarantee and lets the user know something long/important is happening)."
+        errorLine1="        wake.acquire();"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\CaptureService.java"
+            line="46"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        severity="Warning"
+        message="Should explicitly set `android:icon`, there is no default"
+        category="Usability:Icons"
+        priority="5"
+        summary="Missing application icon"
+        explanation="You should set an icon for the application as whole because there is no default. This attribute must be set as a reference to a drawable resource containing the image (for example `@drawable/icon`)."
+        url="https://developer.android.com/studio/publish/preparing#publishing-configure"
+        urls="https://developer.android.com/studio/publish/preparing#publishing-configure"
+        errorLine1="    &lt;application android:label=&quot;lora_tester&quot; android:theme=&quot;@android:style/Theme.Material.NoActionBar&quot; android:allowBackup=&quot;false&quot; android:supportsRtl=&quot;true&quot;>"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\AndroidManifest.xml"
+            line="11"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        start=new Button(this); start.setText(&quot;Start LoRa&quot;); actions.addView(start,new LinearLayout.LayoutParams(0,dp(54),1));"
+        errorLine2="                                              ~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="68"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        Button stop=new Button(this); stop.setText(&quot;Stop LoRa&quot;); actions.addView(stop,new LinearLayout.LayoutParams(0,dp(54),1)); body.addView(actions);"
+        errorLine2="                                                   ~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="69"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        phoneStart=new Button(this);phoneStart.setText(&quot;Start phone&quot;);phoneActions.addView(phoneStart,new LinearLayout.LayoutParams(0,dp(54),1));"
+        errorLine2="                                                       ~~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="74"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        severity="Warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead."
+        category="Internationalization"
+        priority="6"
+        summary="TextView Internationalization"
+        explanation="When calling `TextView#setText`&#xA;* Never call `Number#toString()` to format numbers; it will not handle fraction separators and locale-specific digits properly. Consider using `String#format` with proper format specifications (`%d` or `%f`) instead.&#xA;* Do not pass a string literal (e.g. &quot;Hello&quot;) to display text. Hardcoded text can not be properly translated to other languages. Consider using Android resource strings instead.&#xA;* Do not build messages by concatenating text chunks. Such messages can not be properly translated."
+        url="https://developer.android.com/guide/topics/resources/localization.html"
+        urls="https://developer.android.com/guide/topics/resources/localization.html"
+        errorLine1="        Button phoneStop=new Button(this);phoneStop.setText(&quot;Stop phone&quot;);phoneActions.addView(phoneStop,new LinearLayout.LayoutParams(0,dp(54),1));body.addView(phoneActions);"
+        errorLine2="                                                            ~~~~~~~~~~~~">
+        <location
+            file="C:\Users\gildo\gdlapp\lora_tester\app\src\main\java\com\gdl\loratester\MainActivity.java"
+            line="75"
+            column="61"/>
+    </issue>
+
+</issues>

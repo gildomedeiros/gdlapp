@@ -1,0 +1,6 @@
+[
+    {
+        "merged": "com.gdl.loratester.app-debug-4:/xml_device_filter.xml.flat",
+        "source": "com.gdl.loratester.app-main-6:/xml/device_filter.xml"
+    }
+]

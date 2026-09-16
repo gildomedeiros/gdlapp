@@ -96,6 +96,21 @@ The implementing version must define what qualifies as good readings, prediction
 
 Acceptance: test nearby passes, noisy fixes, changes in direction/speed, prediction expiry and transition back to GPS aiming. Confirm STOP, RTH, landing and control loss cancel prediction. Record the detailed design in the implementing version's own file before implementation.
 
+## E08 — Surfer signal to leave space ahead in the camera frame
+
+Status: PENDING design. Target version: not yet assigned. No application behavior changed.
+
+Allow the surfer to send cam3 a framing intention, such as "riding right; leave room ahead", potentially through a T1000-E button and the shore receiver. Cam3 would use the surfer's position and movement direction to place them off-centre with more visible space ahead of their ride.
+
+- Define the direction reference explicitly. "My left" is ambiguous; right across the camera image differs from the surfer's own right or a compass direction.
+- Example: riding right across the image means placing the surfer toward the left of the frame. Moving the subject left in the image generally requires panning the camera right.
+- Investigate gimbal pan for composition. Horizontal dragging in the local FPV widget sends GimbalKey.KeyRotateBySpeed with yaw, and the user observed camera-only movement. Verify actual supported yaw range, feedback and sustained control on this aircraft/firmware before relying on it; the capability processor initially defaults to true.
+- Use actual camera orientation, gimbal offset, field of view and zoom to calculate framing, with margin for GPS uncertainty and message delay. Define how gimbal movement and aircraft yaw aiming cooperate without fighting each other.
+- Define message handling, acknowledgement, expiry, duplicates, ride-end/reset behaviour and fallback when inputs or gimbal control are unavailable. A framing signal must not start or reclaim flight control, bypass existing stop protections, or resume after STOP, RTH or landing.
+- Display the requested framing and active/fallback stage; log received signals, decisions, SDK results and recovery actions.
+
+Acceptance: test left/right rides, direction changes, stale/duplicate signals, pan limits, GPS uncertainty and manual intervention. Confirm permanent stops cancel automatic framing. Record the detailed design in the implementing version's own file before implementation.
+
 ## Completion tracking
 
-E02–E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05, E06 and E07 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.
+E02–E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05, E06, E07 and E08 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.

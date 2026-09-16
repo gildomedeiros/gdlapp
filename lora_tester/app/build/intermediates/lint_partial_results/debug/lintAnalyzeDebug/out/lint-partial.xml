@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.7.0" type="partial_results">
+    <map id="NotificationPermission">
+        <entry
+            name="source"
+            boolean="true"/>
+    </map>
+    <map id="UnsafeImplicitIntentLaunch">
+            <map id="actionsRegisteredNonExported">
+                <entry
+                    name="com.gdl.loratester.USB_PERMISSION (used to send a broadcast)"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnsafeIntentLaunch">
+            <map id="unprotected">
+                <entry
+                    name="com.gdl.loratester.MainActivity"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnusedResources">
+        <entry
+            name="model"
+            string="xml[device_filter(U)];;;;"/>
+    </map>
+
+</incidents>
