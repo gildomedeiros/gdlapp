@@ -106,22 +106,15 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     // CAM3 v2.0: Process-scoped control survives late SDK callbacks without retaining this Activity.
     private YawAimingController yawAimingController;
-    // CAM3 v2.4: Track export availability independently of the overflow menu view.
-    private boolean aimingExportPending;
+
     // CAM3 v2.0: Stable observer identity prevents an old screen detaching a newer screen's controls.
     private final YawAimingController.Observer aimingObserver = this::renderAimingState;
-    // CAM3 v2.1: The picker grants access only to the document selected by the user.
-    private final ActivityResultLauncher<String> aimingLogExport = registerForActivityResult(
-            new ActivityResultContracts.CreateDocument("text/plain"), uri -> {
-                if (uri == null) { aimingExportPending = false; return; }
-                yawAimingController.exportLog(uri, success -> runOnUiThread(() -> {
-                    if (isFinishing() || isDestroyed()) return;
-                    aimingExportPending = false;
-                    Toast.makeText(this, success ? R.string.uxsdk_aiming_export_done
-                            : R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
-                }));
+    // CAM3 v2.5: Only Android 7-9 need runtime permission for public Downloads.
+    private final ActivityResultLauncher<String> fullLogPermission = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(), granted -> {
+                Toast.makeText(this, granted ? "Storage allowed; enable Full Log from the menu"
+                        : "Full Log needs storage permission on this Android version", Toast.LENGTH_LONG).show();
             });
-
     protected FPVWidget primaryFpvWidget;
     protected FPVInteractionWidget fpvInteractionWidget;
     protected FPVWidget secondaryFPVWidget;
@@ -256,23 +249,28 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     ? R.string.uxsdk_aiming_stop_idle : R.string.uxsdk_aiming_stop_pending;
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         }));
-        // CAM3 v2.4: Move secondary actions into overflow, preserving direct Start/Stop access.
+        // CAM3 v2.5: Details and Full Log toggle remain in overflow; Start/Stop stay direct.
         findViewById(R.id.uxsdk_aiming_more).setOnClickListener(v -> {
             android.widget.PopupMenu menu = new android.widget.PopupMenu(this, v);
             menu.getMenu().add(0, 1, 0, R.string.uxsdk_aiming_details);
-            menu.getMenu().add(0, 2, 1, R.string.uxsdk_aiming_export).setEnabled(!aimingExportPending);
+            menu.getMenu().add(0, 2, 1, R.string.uxsdk_enable_full_log).setCheckable(true)
+                    .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
             menu.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == 1) {
                     new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
-                            .setMessage(yawAimingController.readinessDetails())
+                            .setMessage(yawAimingController.readinessDetails() + "\n\n" + yawAimingController.loggingStatus())
                             .setPositiveButton(android.R.string.ok, null).show();
-                } else if (item.getItemId() == 2 && !aimingExportPending) {
-                    aimingExportPending = true;
-                    // Existing screen-pause cancellation still applies to the document picker.
-                    try { aimingLogExport.launch("cam3-v2.4-aiming-" + System.currentTimeMillis() + ".txt"); }
-                    catch (RuntimeException ex) {
-                        aimingExportPending = false;
-                        Toast.makeText(this, R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
+                } else if (item.getItemId() == 2 && !yawAimingController.fullLogBusy()) {
+                    // CAM3 v2.5: Toggle creates/closes an accessible session; no export picker.
+                    boolean enable = !yawAimingController.fullLogEnabled();
+                    if (enable && android.os.Build.VERSION.SDK_INT < 29
+                            && checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        fullLogPermission.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                    } else {
+                        yawAimingController.setFullLogEnabled(enable);
+                        Toast.makeText(this, enable ? "Full Log: saving to Downloads/CAM3"
+                                : "Full Log closing; minimal logging continues", Toast.LENGTH_LONG).show();
                     }
                 }
                 return true;

@@ -83,6 +83,16 @@ public final class YawAimingController implements AimingSession.Port {
     private long lastRender;
     // CAM3 v2.1: Logging owns a separate bounded writer, never a flight-command sender.
     private final AimingDiagnosticLogger logger;
+    // CAM3 v2.5: Independent asynchronous full session logger; no control authority or SDK calls.
+    private final FullSessionLog fullLog;
+    public boolean fullLogEnabled() { return fullLog.enabled(); }
+    public boolean fullLogBusy() { return fullLog.busy(); }
+    public String loggingStatus() { return fullLog.status(); }
+    public void setFullLogEnabled(boolean enabled) {
+        if (enabled) fullLog.enable(); else fullLog.disable("user_off");
+        if (enabled) fullLog.record("capture_source", "source", usePhone ? "phone" : "lora_wifi");
+        diagnostic("logging_mode", enabled ? "Full requested" : "Minimal requested");
+    }
     private final Context appContext;
     private long lastDiagnostic;
     private final VirtualStickStateListener stateListener = new VirtualStickStateListener() {
@@ -133,8 +143,12 @@ public final class YawAimingController implements AimingSession.Port {
         appContext = context.getApplicationContext();
         logger = new AimingDiagnosticLogger(new File(context.getFilesDir(), "aiming-logs"),
                 line -> Log.i("CAM3_AIMING", line));
-        phone = new PhoneTargetLocationSource(context);
-        lora = new LoRaTargetLocationSource(context, this::diagnostic);
+        fullLog = new FullSessionLog(name -> FullLogStorage.open(appContext, name), error -> {
+            logger.event("full_log_error", error);
+            main.post(() -> android.widget.Toast.makeText(appContext, error, android.widget.Toast.LENGTH_LONG).show());
+        });
+        phone = new PhoneTargetLocationSource(context, fullLog, this::diagnostic);
+        lora = new LoRaTargetLocationSource(context, this::diagnostic, fullLog);
         // CAM3 v2.1: Capture individual read failures/recovery, in addition to periodic field snapshots.
         // CAM3 v2.3: Named telemetry callbacks either latch a pause or permanently cancel recovery.
         aircraft = new AircraftAimingTelemetry(this::telemetryEvent,
@@ -171,7 +185,8 @@ public final class YawAimingController implements AimingSession.Port {
         if (observer != callback) return;
         foreground = false; observer = null;
         stopAiming("screen_closed");
-        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); });
+        // CAM3 v2.5: End full capture after source shutdown on screen exit; normal aiming cancellation stays intact.
+        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); fullLog.disable("screen_closed"); });
     }
     public void startAiming() {
         // CAM3 v2.1: Record explicit user intent, including attempts rejected by the prerequisites.
@@ -302,10 +317,12 @@ public final class YawAimingController implements AimingSession.Port {
     }
     // CAM3 v2.1: Diagnostics failures are isolated from the existing control-loop exception/stop handler.
     @Override public void diagnostic(String event, String detail) {
-        try { logger.event(event, detail); } catch (RuntimeException ignored) { }
+        // CAM3 v2.5: Full sessions receive all diagnostics; minimal files omit routine traffic.
+        try { fullLog.record(event, "detail", detail); if (MinimalLogPolicy.keep(event, detail)) logger.event(event, detail); } catch (RuntimeException ignored) { }
     }
     private void logChanged(String event, String signature, String detail, long repeatMs) {
-        try { logger.changed(event, signature, detail, repeatMs); } catch (RuntimeException ignored) { }
+        // CAM3 v2.5: Full summaries retain their sampling cadence; no periodic summaries in minimal mode.
+        try { fullLog.record(event, "detail", detail); if (MinimalLogPolicy.keep(event, detail)) logger.changed(event, signature, detail, repeatMs); } catch (RuntimeException ignored) { }
     }
     private void recordDiagnostics() {
         try {
@@ -368,6 +385,8 @@ public final class YawAimingController implements AimingSession.Port {
                 || (a.owner == AimingSession.Owner.MSDK && a.enabled && a.advanced));
         if (!active && !neutral) return;
         sdk.sendVirtualStickAdvancedParam(buildYawOnlyCommand(rate));
+        // CAM3 v2.5: Log actual submissions after the unchanged flight-control call.
+        fullLog.record("yaw_command", "submittedYawRate", rate, "session", session.sessionId());
         // CAM3 v2.2: First submission is an event; subsequent rates use the bounded summary cadence.
         lastCommandRate = rate;
         lastCommandAt = now(); // CAM3 v2.3: Timestamp actual API submission, never fabricate a zero.

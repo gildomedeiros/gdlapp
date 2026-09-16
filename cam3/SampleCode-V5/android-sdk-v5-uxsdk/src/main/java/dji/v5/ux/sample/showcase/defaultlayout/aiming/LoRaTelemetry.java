@@ -10,9 +10,12 @@ public final class LoRaTelemetry {
         sequence = unsigned(f[2]); senderMs = unsigned(f[3]);
         lat = number(f[4]); lon = number(f[5]); satellites = Integer.parseInt(f[6]);
         hdop = number(f[7]); rssi = Integer.parseInt(f[8]); snr = number(f[9]); missed = unsigned(f[10]);
-        if (!YawAimingMath.coordinateValid(lat, lon) || satellites <= 0 || hdop < 0
-                || rssi < -32768 || rssi > 32767 || snr < -128 || snr > 127)
-            throw new IllegalArgumentException("Invalid LoRa fields");
+        // CAM3 v2.5: Fixed rejection reasons identify the field without exposing raw coordinates.
+        if (!YawAimingMath.coordinateValid(lat, lon)) throw new IllegalArgumentException("Invalid coordinates");
+        if (satellites <= 0) throw new IllegalArgumentException("No satellites");
+        if (hdop < 0) throw new IllegalArgumentException("Invalid HDOP");
+        if (rssi < -32768 || rssi > 32767) throw new IllegalArgumentException("RSSI out of range");
+        if (snr < -128 || snr > 127) throw new IllegalArgumentException("SNR out of range");
     }
     public static LoRaTelemetry parse(String line) {
         String[] fields = line.trim().split(",", -1);
@@ -36,6 +39,8 @@ public final class LoRaTelemetry {
         private int restartCount;
         private long candidateAt;
         public long gaps, repeats, older, restarts;
+        // CAM3 v2.5: Observe the accepted baseline for gap logs without changing acceptance rules.
+        public long lastSequence() { return previous == null ? -1 : previous.sequence; }
         public boolean accept(LoRaTelemetry next, long now) {
             if (previous == null) { previous = next; return true; }
             long seqDelta = (next.sequence - previous.sequence) & 0xffffffffL;

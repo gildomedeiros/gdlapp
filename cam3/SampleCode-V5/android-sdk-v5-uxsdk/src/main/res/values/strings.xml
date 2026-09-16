@@ -22,6 +22,8 @@
   -->
 
 <resources>
+    <!-- CAM3 v2.5: Automatic session recording replaces manual export in the menu. -->
+    <string name="uxsdk_enable_full_log">Enable Full Log</string>
     <!-- CAM3 v2.4: Accessible label for the compact footer overflow menu. -->
     <string name="uxsdk_aiming_more">Aiming options</string>
     <string name="uxsdk_app_name">DJIUXSDK Beta</string>

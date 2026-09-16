@@ -120,3 +120,7 @@ E02–E04 are implemented locally in v2.3; source/method details and desktop val
 LoRa Wi-Fi integration and the Phone GPS selector are implemented locally; see [v2.4 detailed design](detailed_design/detailed_design_v2.4.md) for files, methods, wire format, call hierarchy, accuracy bypass and failure behavior. APK build and aiming tests passed. Full Android lint failed; live phone/TTGO/DJI checks remain pending.
 
 E06 and E07 retain their original phone-oriented proposals above. Neither is implemented by v2.4; any future design must explicitly define applicability to the selected LoRa/phone source. Neither GPS-jump filtering nor predicted positions are silently introduced by source selection. E01 and E05 are unchanged.
+
+## v2.5 implementation follow-up
+
+Full/minimal logging is implemented locally; see [v2.5 detailed design](detailed_design/detailed_design_v2.5.md). Full mode creates accessible JSONL session files with target coordinates/raw input. OFF retains private minimal gaps, invalid-data reasons and control/connection events. This supersedes the earlier diagnostic-only privacy/export behavior, without implementing GPS filtering, prediction, framing or release recovery. Existing pending enhancement IDs remain pending. Desktop tests pass; Android storage and flight-device validation remain pending.

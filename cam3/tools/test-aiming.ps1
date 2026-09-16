@@ -40,3 +40,12 @@ $diagnosticTest = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src
 if ($LASTEXITCODE -ne 0) { throw 'Diagnostic tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingDiagnosticLoggerTest' $output
 if ($LASTEXITCODE -ne 0) { throw 'Diagnostic tests failed' }
+
+# CAM3 v2.5: Verify real session writes, boundaries, overflow/failure behavior and minimal policy.
+$fullTest = Join-Path (Split-Path $test) 'FullSessionLogTest.java'
+& "$JavaHome/bin/javac.exe" -cp $output -d $output "$source/FullSessionLog.java" "$source/MinimalLogPolicy.java" $fullTest
+if ($LASTEXITCODE -ne 0) { throw 'Full log tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.FullSessionLogTest' $output
+if ($LASTEXITCODE -ne 0) { throw 'Full log tests failed' }
+Get-Content (Join-Path $output 'full-log-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json | Out-Null }
+Write-Output 'PASS: session JSONL parsed with independent JSON parser'

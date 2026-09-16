@@ -15,6 +15,8 @@ import java.util.function.BiConsumer;
 public final class LoRaTargetLocationSource {
     private final Context context;
     private final BiConsumer<String, String> diagnostic;
+    // CAM3 v2.5: Full records bypass the coordinate-free minimal diagnostic path.
+    private final FullSessionLog fullLog;
     private volatile AimingSession.Fix latest;
     private volatile String status = "Connect phone Wi-Fi to GDL_LORA";
     private volatile String metrics = "No LoRa telemetry yet";
@@ -25,8 +27,8 @@ public final class LoRaTargetLocationSource {
         volatile DatagramSocket socket;
         final LoRaTelemetry.Tracker tracker = new LoRaTelemetry.Tracker();
     }
-    public LoRaTargetLocationSource(Context context, BiConsumer<String, String> diagnostic) {
-        this.context = context.getApplicationContext(); this.diagnostic = diagnostic;
+    public LoRaTargetLocationSource(Context context, BiConsumer<String, String> diagnostic, FullSessionLog fullLog) {
+        this.context = context.getApplicationContext(); this.diagnostic = diagnostic; this.fullLog = fullLog;
     }
     public synchronized void start() {
         if (current != null) return;
@@ -46,6 +48,8 @@ public final class LoRaTargetLocationSource {
     private synchronized boolean live(Run run) { return current == run && run.running; }
     private synchronized void connection(Run run, String value, boolean clear) {
         if (!live(run)) return;
+        // CAM3 v2.5: Log connection transitions once, rather than each no-network poll.
+        if (!status.equals(value)) diagnostic.accept("lora_connection", value);
         status = value; if (clear) latest = null;
     }
     private Network wifiNetwork() {
@@ -86,6 +90,10 @@ public final class LoRaTargetLocationSource {
                         try { socket.receive(packet); } catch (SocketTimeoutException timeout) { continue; }
                         long receivedAt = SystemClock.elapsedRealtime();
                         if (!receiver.equals(packet.getAddress()) || packet.getPort() != 5006) continue;
+                        // CAM3 v2.5: Preserve exact trusted-endpoint datagrams, including malformed UTF-8.
+                        if (fullLog.enabled()) fullLog.record("lora_datagram", "receivedAtMs", receivedAt,
+                                "byteCount", packet.getLength(), "rawBase64",
+                                android.util.Base64.encodeToString(buffer, 0, packet.getLength(), android.util.Base64.NO_WRAP));
                         String message = new String(buffer, 0, packet.getLength(), StandardCharsets.UTF_8);
                         for (String line : message.split("\n")) handle(run, line.trim(), receivedAt);
                     }
@@ -117,21 +125,31 @@ public final class LoRaTargetLocationSource {
         }
         try {
             LoRaTelemetry t = LoRaTelemetry.parse(line);
+            long prior = run.tracker.lastSequence(), gapsBefore = run.tracker.gaps, restartsBefore = run.tracker.restarts;
             boolean accepted = run.tracker.accept(t, receivedAt);
+            // CAM3 v2.5: Emit gaps in both modes; do not invent records for absent packets.
+            long missing = run.tracker.gaps - gapsBefore;
+            if (missing > 0) diagnostic.accept("lora_gap", "previous=" + prior + " received=" + t.sequence
+                    + " missing=" + missing + " firstMissing=" + ((prior + 1) & 0xffffffffL)
+                    + " lastMissing=" + ((t.sequence - 1) & 0xffffffffL));
+            if (run.tracker.restarts != restartsBefore) diagnostic.accept("lora_restart", "sequence=" + t.sequence);
+            fullLog.record("lora_packet", "receivedAtMs", receivedAt, "sequence", t.sequence,
+                    "senderMs", t.senderMs, "latitude", t.lat, "longitude", t.lon,
+                    "satellites", t.satellites, "hdop", t.hdop, "rssi", t.rssi, "snr", t.snr,
+                    "receiverMissed", t.missed, "accepted", accepted, "missingBefore", missing);
             metrics = String.format(Locale.US,
                     "RSSI %d dBm; SNR %.1f dB; satellites %d; HDOP %.2f%nSequence %d; gaps %d; repeats %d; older %d; restarts %d",
                     t.rssi, t.snr, t.satellites, t.hdop, t.sequence, run.tracker.gaps,
                     run.tracker.repeats, run.tracker.older, run.tracker.restarts);
-            diagnostic.accept("lora_packet", "accepted=" + accepted + " sequence=" + t.sequence
-                    + " senderMs=" + t.senderMs + " rssi=" + t.rssi + " snr=" + t.snr
-                    + " satellites=" + t.satellites + " hdop=" + t.hdop + " receiverMissed=" + t.missed);
             if (accepted) {
                 signal = String.format(Locale.US, "RSSI %d; SNR %.1f", t.rssi, t.snr);
                 latest = new AimingSession.Fix(t.lat, t.lon, Double.NaN, receivedAt);
                 status = "Receiving LoRa GPS";
             }
         } catch (IllegalArgumentException invalid) {
-            diagnostic.accept("lora_rejected", "Malformed or non-GPS packet; fix age unchanged");
+            // NumberFormatException messages can contain raw data; minimal logs use fixed reasons only.
+            diagnostic.accept("lora_rejected", invalid instanceof NumberFormatException
+                    ? "Invalid numeric field; fix age unchanged" : invalid.getMessage());
         }
     }
 }
