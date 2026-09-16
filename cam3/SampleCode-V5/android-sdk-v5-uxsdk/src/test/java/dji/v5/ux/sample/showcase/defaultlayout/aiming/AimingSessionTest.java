@@ -12,7 +12,7 @@ public final class AimingSessionTest {
     private static void near(double expected, double actual, String message) {
         check(Math.abs(expected - actual) < 0.00001, message + ": " + actual);
     }
-    private static final class Fake implements AimingSession.Port {
+    static final class Fake implements AimingSession.Port {
         long time = 10000;
         AimingSession.Authority owner = new AimingSession.Authority(AimingSession.Owner.RC, false, false);
         AimingSession.Inputs input;
@@ -75,8 +75,8 @@ public final class AimingSessionTest {
         check(YawAimingMath.isBearingUsable(20, 10), "valid accuracy at 20 m accepted");
         check(!YawAimingMath.isBearingUsable(4.99, 3), "below 5 m rejected");
         check(YawAimingMath.isBearingUsable(5, 3), "exactly 5 m accepted");
-        check(!YawAimingMath.isBearingUsable(50, 10.01), "poor accuracy still rejected");
-        check(!YawAimingMath.isBearingUsable(100, Double.NaN), "NaN rejected");
+        check(YawAimingMath.isBearingUsable(50, 10.01), "accuracy bypassed");
+        check(YawAimingMath.isBearingUsable(100, Double.NaN), "unavailable accuracy bypassed");
         check(YawAimingMath.isBearingUsable(100, 3), "separated target accepted");
         Fake f = new Fake();
         check(f.core.canStart(), "ready initially");

@@ -13,3 +13,7 @@ The original design content is preserved in the v2.0 file alongside the implemen
 - [v2.2 detailed design](detailed_design/detailed_design_v2.2.md) — implemented locally: APAS hover eligibility, enable/advanced confirmation, ownership callback logs, late-grant cleanup, readiness Details and STOP acknowledgement. Device validation pending; see implementation record and build results.
 
 - [v2.3 detailed design](detailed_design/detailed_design_v2.3.md) — implemented locally: recoverable pauses, 2-second recovery, pilot-stick pause, bounded telemetry read retries, shared 5 m minimum, recovery UI and diagnostics. Device validation pending.
+
+- [v2.4 detailed design](detailed_design/detailed_design_v2.4.md) — current implemented local release: LoRa Wi-Fi target GPS by default, Phone GPS selector, duplicate/restart handling and accuracy-gate bypass for both sources. Existing yaw and pause/recovery controls retained. APK and aiming tests passed; full Android lint failed and device validation is pending.
+
+For current behavior, use v2.4 together with the retained control policy in v2.3. The v2.3 phone-only source and 10 m accuracy requirement are historical and are superseded by v2.4.

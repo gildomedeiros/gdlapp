@@ -22,6 +22,8 @@
   -->
 
 <resources>
+    <!-- CAM3 v2.4: Accessible label for the compact footer overflow menu. -->
+    <string name="uxsdk_aiming_more">Aiming options</string>
     <string name="uxsdk_app_name">DJIUXSDK Beta</string>
     <string name="uxsdk_app_yes">Yes</string>
     <string name="uxsdk_app_no">No</string>
@@ -1197,6 +1199,7 @@
 
     <string name="uxsdk_assistant_video_empty_text">View after take off</string>
     <!-- CAM3 v2.0: Explicit yaw controls, GPS quality and readable fail-safe states. -->
+    <string name="uxsdk_aiming_source">GPS: LoRa</string>
     <string name="uxsdk_aiming_start">Start aiming</string>
     <string name="uxsdk_aiming_stop">Stop aiming</string>
     <string name="uxsdk_aiming_off">Off</string>
@@ -1205,17 +1208,17 @@
     <string name="uxsdk_aiming_stopping">Stopping</string>
     <string name="uxsdk_aiming_unconfirmed">Control release unconfirmed</string>
     <string name="uxsdk_aiming_stopped">Aiming stopped</string>
-    <string name="uxsdk_aiming_no_fix">Waiting for phone GPS · Gimbal manual</string>
+    <string name="uxsdk_aiming_no_fix">Waiting for target GPS · Gimbal manual</string>
     <string name="uxsdk_aiming_fix">Phone GPS ±%1$.1f m · %2$.1f s old · Gimbal manual</string>
     <string name="uxsdk_aiming_reason_ready">Ready for explicit Start</string>
     <string name="uxsdk_aiming_reason_acquiring">Requesting control</string>
-    <string name="uxsdk_aiming_reason_aiming">Yaw toward this phone</string>
+    <string name="uxsdk_aiming_reason_aiming">Yaw toward selected GPS target</string>
     <string name="uxsdk_aiming_reason_cancelled">Cancelled</string>
     <string name="uxsdk_aiming_reason_user_stop">Stopped by you</string>
     <string name="uxsdk_aiming_reason_screen_closed">Screen closed; press Start to resume</string>
-    <string name="uxsdk_aiming_reason_gps">Waiting for phone GPS / precise location permission</string>
-    <string name="uxsdk_aiming_reason_stale_gps">Phone GPS is too old</string>
-    <string name="uxsdk_aiming_reason_gps_quality">Phone GPS uncertain or target too close</string>
+    <string name="uxsdk_aiming_reason_gps">Waiting for selected GPS source; see Details</string>
+    <string name="uxsdk_aiming_reason_stale_gps">Target GPS is too old</string>
+    <string name="uxsdk_aiming_reason_gps_quality">Target coordinates invalid or target too close</string>
     <!-- CAM3 v2.3: Explain that monitoring continues during a recoverable telemetry pause. -->
     <string name="uxsdk_aiming_reason_telemetry">Aircraft telemetry unavailable or too old; retrying reads</string>
     <string name="uxsdk_aiming_reason_heading">Heading unavailable or compass error</string>

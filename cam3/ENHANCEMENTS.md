@@ -1,6 +1,6 @@
 # cam3 pending enhancements
 
-Updated: 2026-09-15. This file is the pending-work list; per-version detailed designs remain separate. Items below are not implemented unless explicitly marked complete.
+Updated: 2026-09-16. This file is the pending-work list; per-version detailed designs remain separate. Items below are not implemented unless explicitly marked complete.
 
 ## E01 — Recover after landing/RTH without restarting the app
 
@@ -36,7 +36,7 @@ Status: IMPLEMENTED locally in v2.3; device validation pending.
 
 The user manually changed v2.2 to 10 m, then explicitly requested 5 m for v2.3. That latest instruction is integrated: YawAimingMath.MIN_AIMING_DISTANCE_METERS drives eligibility, Details, distance messages and logs. The former reporting discrepancy is removed.
 
-Boundary/accuracy tests and release metadata are updated. Other quality limits remain. Below-distance conditions now pause and recover after 2 s valid inputs.
+Boundary/accuracy tests and release metadata were updated for v2.3. Below-distance conditions pause and recover after 2 s valid inputs. In v2.4, the same 5 m minimum remains, while the reported-accuracy gate is explicitly bypassed for both LoRa and phone target fixes; coordinate validity and freshness still apply.
 
 See [v2.3 detailed design](detailed_design/detailed_design_v2.3.md) for source changes, validation and remaining device checks.
 
@@ -114,3 +114,9 @@ Acceptance: test left/right rides, direction changes, stale/duplicate signals, p
 ## Completion tracking
 
 E02–E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05, E06, E07 and E08 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.
+
+## v2.4 implementation follow-up
+
+LoRa Wi-Fi integration and the Phone GPS selector are implemented locally; see [v2.4 detailed design](detailed_design/detailed_design_v2.4.md) for files, methods, wire format, call hierarchy, accuracy bypass and failure behavior. APK build and aiming tests passed. Full Android lint failed; live phone/TTGO/DJI checks remain pending.
+
+E06 and E07 retain their original phone-oriented proposals above. Neither is implemented by v2.4; any future design must explicitly define applicability to the selected LoRa/phone source. Neither GPS-jump filtering nor predicted positions are silently introduced by source selection. E01 and E05 are unchanged.

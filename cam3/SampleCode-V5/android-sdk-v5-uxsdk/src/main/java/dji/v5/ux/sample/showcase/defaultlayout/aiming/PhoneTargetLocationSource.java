@@ -41,9 +41,9 @@ public final class PhoneTargetLocationSource implements LocationListener {
         }
     }
     @Override public synchronized void onLocationChanged(Location location) {
-        if (!subscribed || !location.hasAccuracy() || location.isFromMockProvider()) return;
+        if (!subscribed || location.isFromMockProvider()) return;
         AimingSession.Fix fix = new AimingSession.Fix(location.getLatitude(), location.getLongitude(),
-                location.getAccuracy(), location.getElapsedRealtimeNanos() / 1000000);
+                (location.hasAccuracy() ? location.getAccuracy() : Double.NaN), location.getElapsedRealtimeNanos() / 1000000);
         if (latest == null || fix.time > latest.time) latest = fix;
     }
     @Override public void onProviderDisabled(String provider) { latest = null; }

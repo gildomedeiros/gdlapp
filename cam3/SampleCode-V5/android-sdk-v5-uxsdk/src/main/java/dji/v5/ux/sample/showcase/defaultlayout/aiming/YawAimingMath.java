@@ -32,9 +32,8 @@ public final class YawAimingMath {
     }
 
     public static boolean isBearingUsable(double separation, double phoneAccuracy) {
-        // CAM3 v2.3: Replace the manual 10 m test with the agreed 5 m minimum; retain accuracy checks.
-        return Double.isFinite(separation) && Double.isFinite(phoneAccuracy) && phoneAccuracy > 0
-                && phoneAccuracy <= 10 && separation >= MIN_AIMING_DISTANCE_METERS;
+        // CAM3 v2.4: Accuracy is informational for both target sources.
+        return Double.isFinite(separation) && separation >= MIN_AIMING_DISTANCE_METERS;
     }
 
     public static double calculateYawRate(double error, double previous, double seconds) {

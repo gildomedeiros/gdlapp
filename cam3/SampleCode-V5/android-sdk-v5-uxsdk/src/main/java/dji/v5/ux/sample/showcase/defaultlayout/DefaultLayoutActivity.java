@@ -106,15 +106,17 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     // CAM3 v2.0: Process-scoped control survives late SDK callbacks without retaining this Activity.
     private YawAimingController yawAimingController;
+    // CAM3 v2.4: Track export availability independently of the overflow menu view.
+    private boolean aimingExportPending;
     // CAM3 v2.0: Stable observer identity prevents an old screen detaching a newer screen's controls.
     private final YawAimingController.Observer aimingObserver = this::renderAimingState;
     // CAM3 v2.1: The picker grants access only to the document selected by the user.
     private final ActivityResultLauncher<String> aimingLogExport = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("text/plain"), uri -> {
-                if (uri == null) { findViewById(R.id.uxsdk_aiming_export).setEnabled(true); return; }
+                if (uri == null) { aimingExportPending = false; return; }
                 yawAimingController.exportLog(uri, success -> runOnUiThread(() -> {
                     if (isFinishing() || isDestroyed()) return;
-                    findViewById(R.id.uxsdk_aiming_export).setEnabled(true);
+                    aimingExportPending = false;
                     Toast.makeText(this, success ? R.string.uxsdk_aiming_export_done
                             : R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
                 }));
@@ -234,6 +236,17 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     }
 
     private void initClickListener() {
+        findViewById(R.id.uxsdk_aiming_source).setOnClickListener(v -> {
+            if (!yawAimingController.canSelectGpsSource()) return;
+            new android.app.AlertDialog.Builder(this).setTitle("Target GPS source")
+                    .setSingleChoiceItems(new String[]{"LoRa Wi-Fi (GDL_LORA)", "Phone GPS"},
+                            yawAimingController.usesPhoneGps() ? 1 : 0, (dialog, which) -> {
+                                yawAimingController.selectPhoneGps(which == 1); dialog.dismiss();
+                            })
+                    .setNeutralButton("Wi-Fi settings", (dialog, which) ->
+                            startActivity(new android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)))
+                    .setNegativeButton(android.R.string.cancel, null).show();
+        });
         // CAM3 v2.0: No automatic activation; Stop also cancels pending authority requests.
         findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> yawAimingController.startAiming());
         // CAM3 v2.2: STOP is always accessible and every tap gets honest visible acknowledgement.
@@ -243,21 +256,28 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     ? R.string.uxsdk_aiming_stop_idle : R.string.uxsdk_aiming_stop_pending;
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         }));
-        // CAM3 v2.2: Compact details dialog avoids growing the persistent flight footer.
-        findViewById(R.id.uxsdk_aiming_details).setOnClickListener(v ->
-                new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
-                        .setMessage(yawAimingController.readinessDetails())
-                        .setPositiveButton(android.R.string.ok, null).show());
-        // CAM3 v2.1: Export a bounded snapshot. The existing onPause fail-safe still applies to the picker.
-        findViewById(R.id.uxsdk_aiming_export).setOnClickListener(v -> {
-            v.setEnabled(false);
-            // CAM3 v2.2: Identify the implemented release in exported filenames.
-            // CAM3 v2.3: Export identifies the pause/recovery release.
-            try { aimingLogExport.launch("cam3-v2.3-aiming-" + System.currentTimeMillis() + ".txt"); }
-            catch (RuntimeException ex) {
-                v.setEnabled(true);
-                Toast.makeText(this, R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
-            }
+        // CAM3 v2.4: Move secondary actions into overflow, preserving direct Start/Stop access.
+        findViewById(R.id.uxsdk_aiming_more).setOnClickListener(v -> {
+            android.widget.PopupMenu menu = new android.widget.PopupMenu(this, v);
+            menu.getMenu().add(0, 1, 0, R.string.uxsdk_aiming_details);
+            menu.getMenu().add(0, 2, 1, R.string.uxsdk_aiming_export).setEnabled(!aimingExportPending);
+            menu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == 1) {
+                    new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
+                            .setMessage(yawAimingController.readinessDetails())
+                            .setPositiveButton(android.R.string.ok, null).show();
+                } else if (item.getItemId() == 2 && !aimingExportPending) {
+                    aimingExportPending = true;
+                    // Existing screen-pause cancellation still applies to the document picker.
+                    try { aimingLogExport.launch("cam3-v2.4-aiming-" + System.currentTimeMillis() + ".txt"); }
+                    catch (RuntimeException ex) {
+                        aimingExportPending = false;
+                        Toast.makeText(this, R.string.uxsdk_aiming_export_failed, Toast.LENGTH_LONG).show();
+                    }
+                }
+                return true;
+            });
+            menu.show();
         });
         secondaryFPVWidget.setOnClickListener(v -> swapVideoSource());
 
@@ -276,7 +296,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             simulatorIndicatorWidget.setOnClickListener(v -> ViewExtensions.toggleVisibility(simulatorControlWidget));
         }
         gimbalAdjustDone.setOnClickListener(view -> {
-            horizontalSituationIndicatorWidget.setVisibility(View.VISIBLE);
+            // CAM3 v2.4: Keep the compass overlay hidden after closing gimbal adjustment.
+            horizontalSituationIndicatorWidget.setVisibility(View.GONE);
             if (gimbalFineTuneWidget != null) {
                 gimbalFineTuneWidget.setVisibility(View.GONE);
             }
@@ -371,7 +392,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     // CAM3 v2.0: Report requested control state honestly; release confirmation is not physical stopping.
     private void renderAimingState(AimingSession.State state, String reason, boolean ready,
                                    AimingSession.Fix fix, long now) {
+        // CAM3 v2.4: Disabled icon remains visibly distinct without a large text button.
         findViewById(R.id.uxsdk_aiming_start).setEnabled(ready);
+        findViewById(R.id.uxsdk_aiming_start).setAlpha(ready ? 1f : 0.35f);
+        android.widget.Button source = findViewById(R.id.uxsdk_aiming_source);
+        source.setText(yawAimingController.usesPhoneGps() ? "GPS: Phone ▾" : "GPS: LoRa ▾");
+        source.setEnabled(yawAimingController.canSelectGpsSource());
         int stateLabel;
         switch (state) {
             case STARTING: stateLabel = R.string.uxsdk_aiming_starting; break;
@@ -385,15 +411,17 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         }
         int reasonId = getResources().getIdentifier("uxsdk_aiming_reason_" + reason, "string", getPackageName());
         String explanation = getString(reasonId == 0 ? R.string.uxsdk_aiming_reason_sdk_error : reasonId);
+        // CAM3 v2.4: Short footer wording; Details retains the complete blocker snapshot.
+        if ("telemetry".equals(reason)) explanation = "Aircraft telemetry unavailable";
+        if ("gps".equals(reason)) explanation = "Waiting for GPS";
         // CAM3 v2.3: Show actual recovery countdown and the shared distance threshold.
         if ("recovering".equals(reason)) explanation = getString(R.string.uxsdk_aiming_recovery_countdown,
                 yawAimingController.recoveryRemainingMs() / 1000.0);
         if ("distance".equals(reason)) explanation = getString(R.string.uxsdk_aiming_distance_limit,
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.YawAimingMath.MIN_AIMING_DISTANCE_METERS);
-        ((TextView) findViewById(R.id.uxsdk_aiming_status)).setText(getString(stateLabel) + " — " + explanation);
-        ((TextView) findViewById(R.id.uxsdk_aiming_quality)).setText(fix == null
-                ? getString(R.string.uxsdk_aiming_no_fix)
-                : getString(R.string.uxsdk_aiming_fix, fix.accuracy, Math.max(0, now - fix.time) / 1000.0));
+        // CAM3 v2.4: One-line footer prioritizes state/reason; Details retains untruncated telemetry.
+        ((TextView) findViewById(R.id.uxsdk_aiming_status)).setText(getString(stateLabel) + " — " + explanation
+                + " · " + yawAimingController.targetSummary(fix, now).replace("\n", " · "));
     }
 
     private void hideOtherPanels(@Nullable View widget) {

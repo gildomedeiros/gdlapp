@@ -8,10 +8,12 @@ $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 # CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
-& "$JavaHome/bin/javac.exe" -d $output "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" $test
+& "$JavaHome/bin/javac.exe" -d $output "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.LoRaTelemetryTest'
+if ($LASTEXITCODE -ne 0) { throw 'LoRa tests failed' }
 
 # Use the exact provided SDK jar already cached for the application build.
 $sdkJar = (Get-ChildItem "$env:USERPROFILE/.gradle/caches/modules-2/files-2.1/com.dji/dji-sdk-v5-aircraft-provided/5.18.0/*/*provided-5.18.0.jar" | Select-Object -First 1).FullName

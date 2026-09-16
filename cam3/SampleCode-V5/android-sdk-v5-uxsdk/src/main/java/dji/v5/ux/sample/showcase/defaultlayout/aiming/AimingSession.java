@@ -65,8 +65,7 @@ public final class AimingSession {
             if (target == null) return "gps";
             if (target.time <= 0 || now < target.time || now - target.time > 3000) return "stale_gps";
             // CAM3 v2.3: Distinguish usable GPS at too short a distance from invalid GPS quality.
-            if (YawAimingMath.coordinateValid(target.lat, target.lon) && Double.isFinite(target.accuracy)
-                    && target.accuracy > 0 && target.accuracy <= 10
+            if (YawAimingMath.coordinateValid(target.lat, target.lon)
                     && YawAimingMath.distance(lat, lon, target.lat, target.lon) < YawAimingMath.MIN_AIMING_DISTANCE_METERS)
                 return "distance";
             if (!YawAimingMath.coordinateValid(target.lat, target.lon)

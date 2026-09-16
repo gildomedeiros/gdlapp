@@ -50,6 +50,29 @@ public final class YawAimingController implements AimingSession.Port {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final AtomicLong intent = new AtomicLong();
     private final PhoneTargetLocationSource phone;
+    private final LoRaTargetLocationSource lora;
+    private volatile boolean usePhone;
+    public boolean usesPhoneGps() { return usePhone; }
+    public boolean canSelectGpsSource() {
+        AimingSession.State s = session.state();
+        return s == AimingSession.State.OFF || s == AimingSession.State.STOPPED;
+    }
+    public void selectPhoneGps(boolean selected) {
+        executor.execute(() -> {
+            if (!canSelectGpsSource() || selected == usePhone) return;
+            phone.stop(); lora.stop(); usePhone = selected;
+            diagnostic("target_source", selected ? "phone" : "lora_wifi");
+            if (foreground) startTargetSource();
+        });
+    }
+    private void startTargetSource() { if (usePhone) phone.start(); else lora.start(); }
+    private AimingSession.Fix getTargetFix() { return usePhone ? phone.getLatestFix() : lora.getLatestFix(); }
+    public String targetSummary(AimingSession.Fix fix, long at) {
+        String source = usePhone ? "Phone GPS" : "LoRa GPS";
+        return fix == null ? source + " unavailable - see Details"
+                : String.format(java.util.Locale.US, "%s - %.1f s old - Gimbal manual", source, Math.max(0, at - fix.time) / 1000.0)
+                + (usePhone ? "" : "\n" + lora.signalSummary());
+    }
     private final AircraftAimingTelemetry aircraft;
     private final AimingSession session;
     private final IVirtualStickManager sdk = VirtualStickManager.getInstance();
@@ -111,6 +134,7 @@ public final class YawAimingController implements AimingSession.Port {
         logger = new AimingDiagnosticLogger(new File(context.getFilesDir(), "aiming-logs"),
                 line -> Log.i("CAM3_AIMING", line));
         phone = new PhoneTargetLocationSource(context);
+        lora = new LoRaTargetLocationSource(context, this::diagnostic);
         // CAM3 v2.1: Capture individual read failures/recovery, in addition to periodic field snapshots.
         // CAM3 v2.3: Named telemetry callbacks either latch a pause or permanently cancel recovery.
         aircraft = new AircraftAimingTelemetry(this::telemetryEvent,
@@ -138,18 +162,16 @@ public final class YawAimingController implements AimingSession.Port {
                     sdk.setVirtualStickStateListener(registeredListener); listening = true;
                     diagnostic("listener", "registered generation=" + generation);
                 }
-                if (foreground) aircraft.start();
+                if (foreground) { aircraft.start(); startTargetSource(); }
             } catch (RuntimeException ex) { session.stopAiming("sdk_error"); }
         });
-        phone.start();
     }
     public void pause(Observer callback) {
         // An old Activity's onDestroy must not detach a newer foreground Activity.
         if (observer != callback) return;
         foreground = false; observer = null;
         stopAiming("screen_closed");
-        phone.stop();
-        executor.execute(aircraft::stop);
+        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); });
     }
     public void startAiming() {
         // CAM3 v2.1: Record explicit user intent, including attempts rejected by the prerequisites.
@@ -230,7 +252,7 @@ public final class YawAimingController implements AimingSession.Port {
                     else if (!ready) reason = "authority";
                 }
                 final String message = reason;
-                AimingSession.Fix fix = phone.getLatestFix();
+                AimingSession.Fix fix = getTargetFix();
                 main.post(() -> {
                     if (foreground && target != null && target == observer) target.onState(state, message, ready, fix, now());
                 });
@@ -238,7 +260,7 @@ public final class YawAimingController implements AimingSession.Port {
         } catch (RuntimeException ex) { session.stopAiming("sdk_error"); }
     }
     @Override public long now() { return SystemClock.elapsedRealtime(); }
-    @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(phone.getLatestFix()); }
+    @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(getTargetFix()); }
     @Override public AimingSession.Authority authority() {
         // CAM3 v2.2: Preserve raw observation identity; takeover is a separate cancellation latch.
         return authority;
@@ -291,7 +313,7 @@ public final class YawAimingController implements AimingSession.Port {
             if (!foreground && state != AimingSession.State.STOPPING
                     && state != AimingSession.State.RELEASE_UNCONFIRMED) return;
             long at = now();
-            AircraftAimingTelemetry.DiagnosticSnapshot telemetry = aircraft.diagnostics(at, phone.getLatestFix());
+            AircraftAimingTelemetry.DiagnosticSnapshot telemetry = aircraft.diagnostics(at, getTargetFix());
             AimingSession.Inputs in = telemetry.inputs;
             AimingSession.Fix fix = in.target;
             String reason = in.validate(at);
@@ -302,11 +324,11 @@ public final class YawAimingController implements AimingSession.Port {
                     + " listenerGeneration=" + listenerGeneration.get() + " lastSubmittedYawRate=" + lastCommandRate
                     + " sending=" + session.maySendYaw();
             double separation = fix == null ? Double.NaN : YawAimingMath.distance(in.lat, in.lon, fix.lat, fix.lon);
-            String quality = " phoneAccuracyM=" + (fix == null ? "unavailable" : fix.accuracy)
+            String quality = " source=" + (usePhone ? "phone" : "lora_wifi") + " accuracyGate=bypassed targetAccuracyM=" + (fix == null ? "unavailable" : fix.accuracy)
                     + " separationM=" + (Double.isFinite(separation) ? String.valueOf(Math.round(separation)) : "unavailable");
             String signature = gate + telemetry.signature + quality;
             String detail = gate + " " + telemetry.detail + quality
-                    + " phoneAgeMs=" + (fix == null ? -1 : at - fix.time)
+                    + " targetAgeMs=" + (fix == null ? -1 : at - fix.time)
                     + " lastCommandAgeMs=" + (lastCommandAt == 0 ? -1 : at - lastCommandAt)
                     + " recoveryRemainingMs=" + session.recoveryRemainingMs(); // CAM3 v2.3: trace recovery progress.
             logChanged("readiness", signature, detail, 5000);
@@ -320,15 +342,18 @@ public final class YawAimingController implements AimingSession.Port {
         } catch (RuntimeException ignored) { /* Logging cannot cancel or keep aiming alive. */ }
     }
     // CAM3 v2.2: Report accuracy and separation separately, without exposing coordinates.
-    private static String phoneDetails(AimingSession.Inputs in, long now) {
+    private String phoneDetails(AimingSession.Inputs in, long now) {
         AimingSession.Fix f = in.target;
-        if (f == null) return "Phone GPS unavailable";
+        if (f == null) return (usePhone ? "Phone GPS unavailable; check precise location permission" : "LoRa GPS unavailable\n" + lora.details());
         String age = now < f.time || now - f.time > 3000 ? "STALE" : "fresh";
         double distance = YawAimingMath.distance(in.lat, in.lon, f.lat, f.lon);
         // CAM3 v2.3: UI/logs use precisely the same minimum as the control gate.
         double required = YawAimingMath.MIN_AIMING_DISTANCE_METERS;
-        return String.format(java.util.Locale.US, "Phone GPS: %s; accuracy %.1f m (maximum 10 m)%nDistance: %s; required %.1f m",
-                age, f.accuracy, Double.isFinite(distance) ? String.format(java.util.Locale.US, "%.1f m", distance) : "unavailable", required);
+        return String.format(java.util.Locale.US, "%s: %s; accuracy gate bypassed%nReported accuracy: %s%nDistance: %s; required %.1f m",
+                usePhone ? "Phone GPS" : "LoRa GPS", age,
+                Double.isFinite(f.accuracy) ? String.format(java.util.Locale.US, "%.1f m (informational)", f.accuracy) : "unavailable",
+                Double.isFinite(distance) ? String.format(java.util.Locale.US, "%.1f m", distance) : "unavailable", required)
+                + (usePhone ? "" : "\n" + lora.details());
     }
     public void exportLog(Uri destination, AimingDiagnosticLogger.Result result) {
         // CAM3 v2.1: ContentResolver access and copying run on the logger worker, never on the UI/control thread.

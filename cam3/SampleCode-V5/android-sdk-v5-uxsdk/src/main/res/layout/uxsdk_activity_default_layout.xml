@@ -118,6 +118,7 @@
             android:id="@+id/widget_horizontal_situation_indicator"
             android:layout_width="350dp"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -270,10 +271,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- CAM3 v2.4: Hide the map preview to leave the camera view unobstructed. -->
         <dji.v5.ux.map.MapWidget
             android:id="@+id/widget_map"
             android:layout_width="@dimen/uxsdk_150_dp"
             android:layout_height="@dimen/uxsdk_100_dp"
+            android:visibility="gone"
             android:layout_marginEnd="12dp"
             android:layout_marginBottom="12dp"
 
@@ -301,72 +304,64 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- CAM3 v2.0: Stop stays accessible during acquisition, invalid GPS and failed release. -->
+    <!-- CAM3 v2.4: One fixed row leaves more video space while keeping Stop directly accessible. -->
     <LinearLayout
         android:id="@+id/uxsdk_aiming_panel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="64dp"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="4dp"
-        android:gravity="center_vertical"
+        android:layout_height="48dp"
         android:background="#EE101820"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
-        <!-- CAM3 v2.2: Compact explicit button sizes reserve room for status and Details. -->
-        <Button
+        <ImageButton
             android:id="@+id/uxsdk_aiming_start"
-            android:layout_width="104dp"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:minHeight="48dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:src="@drawable/cam3_aiming_play"
+            android:contentDescription="@string/uxsdk_aiming_start"
             android:enabled="false"
-            android:text="@string/uxsdk_aiming_start" />
-        <Button
+            android:alpha="0.35" />
+        <ImageButton
             android:id="@+id/uxsdk_aiming_stop"
-            android:layout_width="104dp"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:src="@drawable/cam3_aiming_stop"
+            android:contentDescription="@string/uxsdk_aiming_stop" />
+        <Button
+            android:id="@+id/uxsdk_aiming_source"
+            android:layout_width="112dp"
+            android:layout_height="48dp"
+            android:padding="0dp"
+            android:minWidth="0dp"
+            android:textAllCaps="false"
+            android:singleLine="true"
             android:textSize="12sp"
-            android:minHeight="48dp"
-            android:text="@string/uxsdk_aiming_stop" />
-        <LinearLayout
+            android:text="@string/uxsdk_aiming_source" />
+        <TextView
+            android:id="@+id/uxsdk_aiming_status"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:paddingStart="8dp"
             android:paddingEnd="4dp"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/uxsdk_aiming_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:accessibilityLiveRegion="polite"
-                android:text="@string/uxsdk_aiming_off" />
-            <TextView
-                android:id="@+id/uxsdk_aiming_quality"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#DDE4EE"
-                android:textSize="12sp"
-                android:text="@string/uxsdk_aiming_no_fix" />
-        </LinearLayout>
-        <!-- CAM3 v2.1: Explicit local-log export; keeps Start and Stop in their existing positions. -->
-        <!-- CAM3 v2.2: Readiness details open on demand, leaving Stop accessible. -->
-        <Button
-            android:id="@+id/uxsdk_aiming_details"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textColor="#FFFFFF"
             android:textSize="12sp"
-            android:text="@string/uxsdk_aiming_details" />
-        <Button
-            android:id="@+id/uxsdk_aiming_export"
-            android:layout_width="96dp"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:textSize="12sp"
-            android:text="@string/uxsdk_aiming_export" />
+            android:accessibilityLiveRegion="polite"
+            android:text="@string/uxsdk_aiming_off" />
+        <ImageButton
+            android:id="@+id/uxsdk_aiming_more"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:src="@drawable/cam3_aiming_more"
+            android:contentDescription="@string/uxsdk_aiming_more" />
     </LinearLayout>
     </LinearLayout>
 

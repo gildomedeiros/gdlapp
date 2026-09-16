@@ -20,8 +20,8 @@ android {
         // CAM3 v2.1: Add aiming diagnostics/export; preserve package/App Key pairing and control limits.
         // CAM3 v2.2: APAS hover, observable control handover and STOP feedback; local release.
         // CAM3 v2.3: Paused recovery, two-second neutral timer and shared 5 m minimum.
-        versionCode 5
-        versionName "2.3"
+        versionCode 6
+        versionName "2.4"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN
