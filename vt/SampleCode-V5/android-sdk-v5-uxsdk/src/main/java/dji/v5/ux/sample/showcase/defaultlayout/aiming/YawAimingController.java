@@ -53,9 +53,32 @@ public final class YawAimingController implements AimingSession.Port {
     private final LoRaTargetLocationSource lora;
     private volatile boolean usePhone;
     // CAM3 v2.7: Toggle changes only with aiming OFF/STOPPED; no process persistence.
-    private volatile boolean nearbyEnabled;
+    private volatile boolean nearbyEnabled=true;
     private volatile String nearbyStatus="Nearby tracking OFF";
     private long submittedCycle=-1;
+    private long lastTranslationAt=-1;
+    private double lastSubmittedForward;
+    private volatile ComeToMeSettings movementConfig=ComeToMeSettings.defaults();
+    private volatile String movementScreen="Come to me: waiting for Start",movementDetails="",aimingScreen="";
+    private volatile boolean fullLogWanted=true;
+    public String movementScreen() { return movementScreen; }
+    public String movementDetails() { return movementDetails; }
+    public String aimingScreen() { return aimingScreen; }
+    public ComeToMeSettings movementSettings() { return movementConfig; }
+    public void setMovementSettings(ComeToMeSettings config) {
+        executor.execute(() -> {
+            if(!canSelectGpsSource()) return;
+            movementConfig=config;
+            appContext.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit()
+                    .putBoolean("comeToMe",config.enabled).putFloat("filming",(float)config.filmingDistance)
+                    .putFloat("width",(float)config.lineupWidth).putFloat("rideStart",(float)config.rideStartKmh)
+                    .putFloat("rideEnd",(float)config.rideEndKmh).putLong("endMs",config.rideEndMs)
+                    .putLong("inactivityMs",config.inactivityMs).apply();
+            diagnostic("movement_settings","enabled="+config.enabled+" filming="+config.filmingDistance
+                    +" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
+                    +" endMs="+config.rideEndMs+" inactivityMs="+config.inactivityMs);
+        });
+    }
     @Override public boolean nearbyTrackingEnabled() { return nearbyEnabled; }
     public String nearbyTrackingStatus() { return nearbyStatus; }
     public void setNearbyTrackingEnabled(boolean enabled) {
@@ -103,6 +126,7 @@ public final class YawAimingController implements AimingSession.Port {
     public boolean fullLogBusy() { return fullLog.busy(); }
     public String loggingStatus() { return fullLog.status(); }
     public void setFullLogEnabled(boolean enabled) {
+        fullLogWanted=enabled;
         if (enabled) fullLog.enable(); else fullLog.disable("user_off");
         if (enabled) fullLog.record("capture_source", "source", usePhone ? "phone" : "lora_wifi");
         diagnostic("logging_mode", enabled ? "Full requested" : "Minimal requested");
@@ -168,6 +192,12 @@ public final class YawAimingController implements AimingSession.Port {
         aircraft = new AircraftAimingTelemetry(this::telemetryEvent,
                 (field, detail) -> diagnostic("telemetry_" + field, detail));
         session = new AimingSession(this);
+        android.content.SharedPreferences prefs=context.getSharedPreferences("vt28",Context.MODE_PRIVATE);
+        try {
+            movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),Math.max(10,prefs.getFloat("filming",70)),
+                    prefs.getFloat("width",20),prefs.getFloat("rideStart",18),prefs.getFloat("rideEnd",8),
+                    prefs.getLong("endMs",30000),prefs.getLong("inactivityMs",900000));
+        } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
     public void resume(Observer callback) {
@@ -190,7 +220,13 @@ public final class YawAimingController implements AimingSession.Port {
                     sdk.setVirtualStickStateListener(registeredListener); listening = true;
                     diagnostic("listener", "registered generation=" + generation);
                 }
-                if (foreground) { aircraft.start(); startTargetSource(); }
+                if (foreground) {
+                    boolean storageReady=android.os.Build.VERSION.SDK_INT>=29
+                            || appContext.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            ==android.content.pm.PackageManager.PERMISSION_GRANTED;
+                    if(fullLogWanted && storageReady && !fullLog.enabled() && !fullLog.busy()) setFullLogEnabled(true);
+                    aircraft.start(); startTargetSource();
+                }
             } catch (RuntimeException ex) { session.stopAiming("sdk_error"); }
         });
     }
@@ -277,6 +313,16 @@ public final class YawAimingController implements AimingSession.Port {
                 AimingSession.State state = session.state();
                 // CAM3 v2.3: Main-thread rendering uses a worker-produced recovery snapshot.
                 recoveryRemaining = session.recoveryRemainingMs();
+                movementDetails=session.movement.details();
+                movementScreen=session.movement.summary();
+                if(state==AimingSession.State.OFF || state==AimingSession.State.STOPPED)
+                    movementScreen=movementConfig.enabled ? "Come to me: ON — waiting for Start" : "Come to me: OFF";
+                if(state==AimingSession.State.PAUSED) movementScreen="Come to me: PAUSED — "+session.reason();
+                aimingScreen=state==AimingSession.State.AIMING
+                        ? (session.movement.returning() ? "Aiming: holding return heading"
+                        : session.movement.approaching() ? "Aiming: holding approach heading"
+                        : Math.abs(session.cycleAngle)<=YawAimingMath.ALIGNMENT_DEGREES ? "Aiming: aligned with surfer"
+                        : "Aiming: rotating "+(session.cycleAngle<0 ? "left" : "right")+" toward surfer") : "";
                 // CAM3 v2.2: Listener availability is also required for user-visible readiness.
                 boolean ready = listening && session.canStart();
                 String reason = session.reason();
@@ -294,7 +340,8 @@ public final class YawAimingController implements AimingSession.Port {
         } catch (RuntimeException ex) { session.stopAiming("sdk_error"); }
     }
     @Override public long now() { return SystemClock.elapsedRealtime(); }
-    @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(getTargetFix()); }
+    @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(getTargetFix(),session!=null && session.state()==AimingSession.State.AIMING
+            && lastTranslationAt>=0 && now()-lastTranslationAt<2000); }
     @Override public AimingSession.Authority authority() {
         // CAM3 v2.2: Preserve raw observation identity; takeover is a separate cancellation latch.
         return authority;
@@ -400,25 +447,32 @@ public final class YawAimingController implements AimingSession.Port {
                     +"; votes R/L="+t.rightVotes()+"/"+t.leftVotes()+"; lock="+DominantDirectionTracker.name(lock.direction())
                     +"; age="+(lock.age(at)<0 ? "-" : lock.age(at)/1000+"s");
             AimingCycleLog.record(fullLog,session,observed,at,nearbyEnabled,usePhone,submittedCycle,lastCommandRate);
+            MovementCycleLog.record(fullLog,session,at,submittedCycle,lastSubmittedForward);
         } catch(RuntimeException ignored) { /* Logging cannot change a steering decision. */ }
     }
     public void exportLog(Uri destination, AimingDiagnosticLogger.Result result) {
         // CAM3 v2.1: ContentResolver access and copying run on the logger worker, never on the UI/control thread.
         logger.export(() -> appContext.getContentResolver().openOutputStream(destination, "wt"), result);
     }
-    @Override public void sendYaw(double rate) {
+    @Override public void sendYaw(double rate) { sendMotion(rate,0); }
+    @Override public void sendMotion(double rate,double forward) {
         AimingSession.Authority a = authority();
         // CAM3 v2.2: Normal zero-yaw ticks use the same grant rule; cleanup zero needs observed MSDK.
         boolean active = foreground && !yielding && session.maySendYaw() && session.commandEligible();
         // CAM3 v2.3: A paused live session can submit one zero using its confirmed enable/advanced state.
-        boolean neutral = rate == 0 && !yielding && (session.maySendPauseNeutral()
+        boolean neutral = rate == 0 && forward == 0 && !yielding && (session.maySendPauseNeutral()
                 || (a.owner == AimingSession.Owner.MSDK && a.enabled && a.advanced));
         if (!active && !neutral) return;
         // CAM3 v2.7: Retain ownership gates; permit only the opt-in bounded speed increase.
-        sdk.sendVirtualStickAdvancedParam(YawOnlyCommand.build(rate,nearbyEnabled));
+        if(forward!=0 && (!active || !session.movement.permits(inputs(),now(),forward))) forward=0;
+        // Callback cancellation can arrive during the final position read.
+        if((rate!=0 || forward!=0) && (!foreground || yielding || !session.maySendYaw() || !session.commandEligible())) return;
+        sdk.sendVirtualStickAdvancedParam(AimingMotionCommand.build(rate,forward,nearbyEnabled));
+        lastSubmittedForward=forward;
+        if(forward!=0) lastTranslationAt=now();
         submittedCycle=session.cycleId;
         // CAM3 v2.5: Log actual submissions after the unchanged flight-control call.
-        fullLog.record("yaw_command", "submittedYawRate", rate, "session", session.sessionId(), "cycleId", session.cycleId); // CAM3 v2.7: Join submissions to decisions.
+        fullLog.record("yaw_command", "submittedForwardMps", forward, "submittedYawRate", rate, "session", session.sessionId(), "cycleId", session.cycleId); // CAM3 v2.7: Join submissions to decisions.
         // CAM3 v2.2: First submission is an event; subsequent rates use the bounded summary cadence.
         lastCommandRate = rate;
         lastCommandAt = now(); // CAM3 v2.3: Timestamp actual API submission, never fabricate a zero.

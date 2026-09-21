@@ -37,21 +37,21 @@ public final class GoalkeeperTest {
         AimingSession.Fix fixed=at(359,20,22000,0).target;
         votes.observe(new AimingSession.Inputs(fixed,.00001,0,0,22000,null,true),22000);
         check(votes.lastVote.equals("neutral"),"aircraft translation alone not a surfer vote");
-        votes.observe(at(30,20,100,0),100); check(votes.rightVotes()==0 && votes.leftVotes()==0,"time rewind clears history");
-        votes.observe(at(30,20,5000,0),5000); check(votes.lastVote.equals("baseline"),"gap does not bridge motion");
+        votes.observe(at(30,19,100,0),100); check(votes.rightVotes()==0 && votes.leftVotes()==0,"time rewind clears history");
+        votes.observe(at(30,19,5000,0),5000); check(votes.lastVote.equals("baseline"),"gap does not bridge motion");
 
         NearbyDirectionLock lock=new NearbyDirectionLock();
-        check(lock.update(true,true,60,-1,1000)==null && lock.direction()==0,"60m not near");
-        check(lock.update(true,true,59.99,-1,1500).startsWith("captured"),"entry captures left");
+        check(lock.update(true,true,20,-1,1000)==null && lock.direction()==0,"20m not near");
+        check(lock.update(true,true,19.99,-1,1500).startsWith("captured"),"entry captures left");
         for(int i=0;i<10;i++) { lock.update(true,true,4,1,2000+i*100); check(lock.direction()==-1,"opposing votes cannot change lock"); }
-        check(lock.update(true,true,20,1,301499)==null,"not refreshed early");
-        check(lock.update(true,true,20,1,301500).startsWith("refreshed") && lock.direction()==1,"five minutes recaptures right");
+        check(lock.update(true,true,19,1,301499)==null,"not refreshed early");
+        check(lock.update(true,true,19,1,301500).startsWith("refreshed") && lock.direction()==1,"five minutes recaptures right");
         check(lock.age(301500)==0,"refresh restarts timer");
         lock.update(true,false,Double.NaN,-1,602000); check(lock.direction()==1,"stale pause retains commitment, no refresh from bad data");
-        lock.update(true,true,20,-1,602001); check(lock.direction()==-1,"refresh on recovered valid aiming");
-        check(lock.update(true,false,60,1,602002).contains("outside_60m"),"range exit releases even paused");
-        lock.update(true,false,20,1,602003); check(lock.direction()==0,"pause cannot capture");
-        lock.update(true,true,20,-1,602004); lock.update(false,true,20,1,602005); check(lock.direction()==0,"toggle off clears");
+        lock.update(true,true,19,-1,602001); check(lock.direction()==-1,"refresh on recovered valid aiming");
+        check(lock.update(true,false,20,1,602002).contains("outside_20m"),"range exit releases even paused");
+        lock.update(true,false,19,1,602003); check(lock.direction()==0,"pause cannot capture");
+        lock.update(true,true,19,-1,602004); lock.update(false,true,19,1,602005); check(lock.direction()==0,"toggle off clears");
         near(1,NearbyDirectionLock.multiplier(60),"far multiplier"); near(1.25,NearbyDirectionLock.multiplier(45),"mid multiplier");
         near(1.5,NearbyDirectionLock.multiplier(4),"below5 gets capped gain");
 
@@ -71,10 +71,10 @@ public final class GoalkeeperTest {
         AimingSessionTest.Fake f=new AimingSessionTest.Fake(); f.nearby=true;
         for(int i=0;i<5;i++) f.core.observeDirection(at(80-i*5,70,f.time-2000+i*500,0),f.time-2000+i*500);
         f.aiming(); // initial setup is far; then enter with a fresh left vote history
-        f.input=at(30,20,f.time,0); f.core.observeDirection(f.input,f.time); f.core.tick();
+        f.input=at(30,19,f.time,0); f.core.observeDirection(f.input,f.time); f.core.tick();
         check(f.core.nearbyLock.direction()==-1,"session captures anticlockwise");
         for(int i=0;i<30;i++) {
-            f.time+=100; f.input=at(30,20,f.time,0); f.core.observeDirection(f.input,f.time); f.core.tick();
+            f.time+=100; f.input=at(30,19,f.time,0); f.core.observeDirection(f.input,f.time); f.core.tick();
         }
         check(f.sent.get(f.sent.size()-1)<-8,"long route continues left above old cap");
         check(f.core.cycleAngle==-330,"logged angle is directed route");
@@ -82,19 +82,19 @@ public final class GoalkeeperTest {
         check(f.core.state()==AimingSession.State.AIMING,"4m does not pause");
         f.time+=100; f.input=at(30,0,f.time,0); f.core.tick();
         check(f.core.state()==AimingSession.State.AIMING && f.sent.get(f.sent.size()-1)==0,"coincident zero without pause");
-        f.time+=100; AimingSession.Inputs old=at(30,20,f.time-3001,0);
+        f.time+=100; AimingSession.Inputs old=at(30,19,f.time-3001,0);
         f.input=new AimingSession.Inputs(old.target,0,0,0,f.time,null,true); f.core.tick();
         check(f.core.state()==AimingSession.State.PAUSED,"stale target still pauses");
         check(f.core.nearbyLock.direction()==-1,"pause retains lock");
         f.core.stopAiming("user_stop"); check(f.core.nearbyLock.direction()==0 && !f.core.maySendYaw(),"stop clears and suppresses");
-        f=new AimingSessionTest.Fake(); f.nearby=true; f.aiming(); f.input=at(30,20,f.time,0); f.core.tick();
+        f=new AimingSessionTest.Fake(); f.nearby=true; f.aiming(); f.input=at(30,19,f.time,0); f.core.tick();
         f.lost=true; f.core.tick(); check(f.core.nearbyLock.direction()==0 && !f.core.maySendYaw(),"takeover clears lock");
         f=new AimingSessionTest.Fake(); f.aiming(); f.input=at(30,4,f.time,0); f.core.tick();
         check(f.core.state()==AimingSession.State.AIMING && f.core.nearbyLock.direction()==0,"toggleOFF removes distance pause but no lock");
-        lock=new NearbyDirectionLock(); lock.update(true,true,20,1,1000);
-        check(lock.update(true,false,20,-1,301000).startsWith("refreshed") && lock.direction()==-1,
+        lock=new NearbyDirectionLock(); lock.update(true,true,19,1,1000);
+        check(lock.update(true,false,19,-1,301000).startsWith("refreshed") && lock.direction()==-1,
                 "fresh paused geometry refreshes held lock at hard expiry");
-        f=new AimingSessionTest.Fake(); f.nearby=true; f.aiming(); f.input=at(30,20,f.time,0); f.core.tick();
+        f=new AimingSessionTest.Fake(); f.nearby=true; f.aiming(); f.input=at(30,19,f.time,0); f.core.tick();
         final AimingSessionTest.Fake cancelled=f; final int[] reads={0};
         int before=f.sent.size(); f.onRead=() -> { if(++reads[0]==2) cancelled.core.cancelImmediately(); };
         f.time+=100; f.core.tick();

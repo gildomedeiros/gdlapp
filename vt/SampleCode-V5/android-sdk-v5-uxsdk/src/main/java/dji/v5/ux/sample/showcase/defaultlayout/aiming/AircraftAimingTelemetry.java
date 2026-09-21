@@ -164,7 +164,10 @@ public final class AircraftAimingTelemetry {
             issues.add("Establish steady hover / velocity invalid");
         return "Flight mode: " + mode.value + "\n" + (issues.isEmpty() ? "Aircraft checks ready" : String.join("\n", issues));
     }
-    public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) {
+    public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) { return getSnapshot(target,false); }
+    // Only recent authorized translation permits a small velocity allowance. Start/recovery
+    // retain the original hover gate; vertical speed and pilot stick checks never change.
+    public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating) {
         long oldest = Long.MAX_VALUE;
         String problem = null;
         for (Slot<?> slot : slots) {
@@ -191,14 +194,17 @@ public final class AircraftAimingTelemetry {
                 Velocity3D v = velocity.value;
                 if (v.getX() == null || v.getY() == null || v.getZ() == null
                         || !Double.isFinite(v.getX()) || !Double.isFinite(v.getY()) || !Double.isFinite(v.getZ())
-                        || Math.hypot(v.getX(), v.getY()) > 0.5 || Math.abs(v.getZ()) > 0.3) problem = "hover";
+                        || Math.hypot(v.getX(), v.getY()) > (translating ? ComeToMeSettings.MAX_SPEED + 0.3 : 0.5) || Math.abs(v.getZ()) > 0.3) problem = "hover";
             }
         }
         LocationCoordinate2D p = position.value;
         return new AimingSession.Inputs(target,
                 p == null || p.getLatitude() == null ? Double.NaN : p.getLatitude(),
                 p == null || p.getLongitude() == null ? Double.NaN : p.getLongitude(),
-                heading.value == null ? Double.NaN : heading.value, oldest, problem, neutral);
+                heading.value == null ? Double.NaN : heading.value, oldest, problem, neutral,
+                velocity.value==null || velocity.value.getX()==null || velocity.value.getY()==null
+                        ? Double.NaN : Math.hypot(velocity.value.getX(),velocity.value.getY()),
+                velocity.value==null || velocity.value.getZ()==null ? Double.NaN : velocity.value.getZ());
     }
     // CAM3 v2.1: Immutable diagnostic copy; ages are excluded from the duplicate-suppression signature.
     public synchronized DiagnosticSnapshot diagnostics(long now, AimingSession.Fix target) {

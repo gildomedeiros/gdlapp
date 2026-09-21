@@ -22,6 +22,10 @@ public final class AimingSessionTest {
         // CAM3 v2.1: Verify diagnostic-port failure cannot change flight-control outcomes.
         boolean throwDiagnostics;
         // CAM3 v2.2: Simulate reason-first takeover independently of the last state snapshot.
+        ComeToMeSettings movement=new ComeToMeSettings(false,70,20,18,8,30000,900000);
+        final List<Double> forwards=new ArrayList<>();
+        public ComeToMeSettings movementSettings() { return movement; }
+        public void sendMotion(double yaw,double forward) { forwards.add(forward); sendYaw(yaw); }
         boolean nearby; // CAM3 v2.7: Existing tests retain default OFF.
         public boolean nearbyTrackingEnabled() { return nearby; }
         boolean lost;

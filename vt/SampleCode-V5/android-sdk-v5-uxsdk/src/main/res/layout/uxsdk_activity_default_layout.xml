@@ -308,7 +308,7 @@
     <LinearLayout
         android:id="@+id/uxsdk_aiming_panel"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="64dp"
         android:background="#EE101820"
         android:gravity="center_vertical"
         android:orientation="horizontal">
@@ -340,20 +340,34 @@
             android:singleLine="true"
             android:textSize="12sp"
             android:text="@string/uxsdk_aiming_source" />
-        <TextView
-            android:id="@+id/uxsdk_aiming_status"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:paddingStart="8dp"
-            android:paddingEnd="4dp"
+            android:orientation="vertical"
             android:gravity="center_vertical"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:accessibilityLiveRegion="polite"
-            android:text="@string/uxsdk_aiming_off" />
+            android:paddingStart="8dp"
+            android:paddingEnd="4dp">
+            <TextView
+                android:id="@+id/uxsdk_aiming_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:text="@string/uxsdk_aiming_off" />
+            <TextView
+                android:id="@+id/uxsdk_movement_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="#8DE0C4"
+                android:textSize="12sp"
+                android:accessibilityLiveRegion="polite"
+                android:text="Come to me: waiting for Start" />
+        </LinearLayout>
         <ImageButton
             android:id="@+id/uxsdk_aiming_more"
             android:layout_width="48dp"

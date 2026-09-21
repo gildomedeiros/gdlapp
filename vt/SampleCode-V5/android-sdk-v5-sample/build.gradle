@@ -22,8 +22,8 @@ android {
         // CAM3 v2.3: Paused recovery, two-second neutral timer and shared 5 m minimum.
         // CAM3 v2.5: Automatic full-session logging and minimal diagnostic policy.
         // CAM3 v2.7: Nearby direction commitment, no distance pause, per-cycle full log.
-        versionCode 9
-        versionName "2.7"
+        versionCode 13
+        versionName "2.9"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN

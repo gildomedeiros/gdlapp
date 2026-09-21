@@ -144,7 +144,7 @@ public final class LoRaTargetLocationSource {
             if (accepted) {
                 signal = String.format(Locale.US, "RSSI %d; SNR %.1f", t.rssi, t.snr);
                 // CAM3 v2.7: Preserve packet identity in the immutable fix for decision log joins.
-                latest = new AimingSession.Fix(t.lat, t.lon, Double.NaN, receivedAt, t.sequence);
+                latest = new AimingSession.Fix(t.lat, t.lon, Double.NaN, receivedAt, t.sequence, t.senderMs);
                 status = "Receiving LoRa GPS";
             }
         } catch (IllegalArgumentException invalid) {

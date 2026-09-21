@@ -14,6 +14,11 @@ public final class AimingSession {
     public interface Port {
         // CAM3 v2.7: Opt-in keeps the original steering path by default.
         default boolean nearbyTrackingEnabled() { return false; }
+        default ComeToMeSettings movementSettings() { return new ComeToMeSettings(false,70,20,18,8,30000,900000); }
+        default void sendMotion(double yaw, double forward) {
+            if (forward != 0) throw new IllegalStateException("Translation port not implemented");
+            sendYaw(yaw);
+        }
         long now();
         Inputs inputs();
         Authority authority();
@@ -42,12 +47,15 @@ public final class AimingSession {
     public static final class Fix {
         public final double lat, lon, accuracy;
         // CAM3 v2.7: Sequence travels atomically with its fix for per-cycle log correlation.
-        public final long time, sequence;
+        public final long time, sequence, sampleTime;
         public Fix(double lat, double lon, double accuracy, long time) {
             this(lat, lon, accuracy, time, -1);
         }
         public Fix(double lat, double lon, double accuracy, long time, long sequence) {
-            this.lat=lat; this.lon=lon; this.accuracy=accuracy; this.time=time; this.sequence=sequence;
+            this(lat,lon,accuracy,time,sequence,time);
+        }
+        public Fix(double lat,double lon,double accuracy,long time,long sequence,long sampleTime) {
+            this.lat=lat; this.lon=lon; this.accuracy=accuracy; this.time=time; this.sequence=sequence; this.sampleTime=sampleTime;
         }
     }
     public static final class Inputs {
@@ -56,8 +64,16 @@ public final class AimingSession {
         public final long aircraftTime;
         public final String problem;
         public final boolean safeToNeutral;
+        public final double horizontalSpeed, verticalSpeed;
+        public boolean steadyHover() { return Double.isFinite(horizontalSpeed) && horizontalSpeed<=0.5
+                && Double.isFinite(verticalSpeed) && Math.abs(verticalSpeed)<=0.3; }
         public Inputs(Fix target, double lat, double lon, double heading, long aircraftTime,
                       String problem, boolean safeToNeutral) {
+            this(target,lat,lon,heading,aircraftTime,problem,safeToNeutral,0,0);
+        }
+        public Inputs(Fix target,double lat,double lon,double heading,long aircraftTime,
+                      String problem,boolean safeToNeutral,double horizontalSpeed,double verticalSpeed) {
+            this.horizontalSpeed=horizontalSpeed; this.verticalSpeed=verticalSpeed;
             this.target = target; this.lat = lat; this.lon = lon; this.heading = heading;
             this.aircraftTime = aircraftTime; this.problem = problem; this.safeToNeutral = safeToNeutral;
         }
@@ -78,6 +94,8 @@ public final class AimingSession {
         }
     }
     // CAM3 v2.7: Executor-owned independent vote and lock helpers. Monitoring never acquires control.
+    public final ComeToMeController movement=new ComeToMeController();
+    public double cycleRequestedForward;
     public final DominantDirectionTracker directionTracker=new DominantDirectionTracker();
     public final NearbyDirectionLock nearbyLock=new NearbyDirectionLock();
     public long cycleId, cycleAt;
@@ -125,6 +143,7 @@ public final class AimingSession {
                 || "heading".equals(p) || "aircraft_gps".equals(p) || "pilot_stick".equals(p) || "hover".equals(p);
     }
     private void pauseAiming(String cause) {
+        movement.pause("pilot_stick".equals(cause),port.now());
         if (state != State.PAUSED) { neutralSent = false; recoverySince = -1; recoveryAuthority = null; lastTick = port.now(); }
         if (recoverySince >= 0) diagnostic("recovery_reset", "cause=" + cause);
         recoverySince = -1;
@@ -180,6 +199,7 @@ public final class AimingSession {
         if (!canStart()) return;
         // CAM3 v2.7: Start a new commitment while retaining recent foreground GPS votes.
         resetNearby("new_session", false);
+        movement.start(port.movementSettings(),port.now());
         cancelled.set(false);
         // CAM3 v2.3: A new explicit session owns its recovery state.
         pauseRequested.set(false); refreshControl = false; recoveryAuthority = null; recoverySince = -1; activated = false;
@@ -222,7 +242,7 @@ public final class AimingSession {
     public void tick() {
         // CAM3 v2.7: A fresh decision record each cycle, including cycles that issue no command.
         cycleId++; cycleAt=port.now(); cycleInputs=null; cycleAngle=Double.NaN;
-        cycleMultiplier=1; cycleRequestedYaw=Double.NaN; cycleDecision="no_command";
+        cycleMultiplier=1; cycleRequestedYaw=Double.NaN; cycleRequestedForward=0; cycleDecision="no_command";
         try {
             if (state == State.STOPPING || state == State.RELEASE_UNCONFIRMED) {
                 settleRelease(); return;
@@ -319,21 +339,39 @@ public final class AimingSession {
                     directionTracker.calculateDominantDirection(),now);
             if(lockEvent!=null) diagnostic("nearby_lock",lockEvent);
             cycleMultiplier=nearby && nearbyLock.direction()!=0 ? NearbyDirectionLock.multiplier(distance) : 1;
-            if(distance==0) {
-                rate=0; cycleDecision="coincident_zero"; // undefined bearing, not a distance pause
+            // VT 2.9: Resolve movement state before selecting the sole yaw owner for this tick.
+            String oldMovement=movement.phase.name()+":"+movement.reason;
+            long oldGeneration=movement.centralGeneration;
+            movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0));
+            if(movement.returning() || movement.approaching()) {
+                double desiredHeading=movement.returning() ? movement.returnHeading : movement.approachHeading;
+                cycleAngle=YawAimingMath.shortestHeadingError(desiredHeading,in.heading);
+                rate=YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0));
+                cycleDecision=movement.returning() ? "return_alignment" : "approach_heading";
+                cycleMultiplier=1;
             } else {
-                double bearing=YawAimingMath.bearingToTarget(in.lat,in.lon,in.target.lat,in.target.lon);
-                cycleAngle=YawAimingMath.directedError(bearing,in.heading,nearby ? nearbyLock.direction() : 0);
-                rate=nearby ? YawAimingMath.calculateNearbyYawRate(cycleAngle,rate,
-                        Math.max(0.001,elapsed/1000.0),cycleMultiplier)
-                        : YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0));
-                cycleDecision=Math.abs(cycleAngle)<=3 ? "aligned_zero" : nearbyLock.direction()!=0 ? "locked_route" : "shortest_route";
+                if(distance==0) {
+                    rate=0; cycleDecision="coincident_zero"; // undefined bearing, not a distance pause
+                } else {
+                    double bearing=YawAimingMath.bearingToTarget(in.lat,in.lon,in.target.lat,in.target.lon);
+                    cycleAngle=YawAimingMath.directedError(bearing,in.heading,nearby ? nearbyLock.direction() : 0);
+                    rate=nearby ? YawAimingMath.calculateNearbyYawRate(cycleAngle,rate,
+                            Math.max(0.001,elapsed/1000.0),cycleMultiplier)
+                            : YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0));
+                    cycleDecision=Math.abs(cycleAngle)<=3 ? "aligned_zero" : nearbyLock.direction()!=0 ? "locked_route" : "shortest_route";
+                }
             }
+            if(!oldMovement.equals(movement.phase.name()+":"+movement.reason)
+                    || oldGeneration!=movement.centralGeneration || !movement.event.equals("none"))
+                diagnostic("movement_transition",oldMovement+" -> "+movement.phase+":"+movement.reason
+                        +" event="+movement.event+" centralGeneration="+movement.centralGeneration);
+            cycleRequestedForward=movement.forward;
             cycleRequestedYaw=rate;
             // Fresh read immediately before sending; a pause must not revive a previously calculated command.
             Authority latest = port.authority();
             // CAM3 v2.3: Last-moment recoverable failures pause instead of cancelling the session.
-            String finalProblem = port.inputs().validate(port.now());
+            Inputs finalInputs=port.inputs();
+            String finalProblem = finalInputs.validate(port.now());
             if (!cancelled.get() && (pauseRequested.get() || (finalProblem != null && recoverable(finalProblem)))) {
                 pauseAiming(pauseRequested.get() ? pauseCause : finalProblem); return;
             }
@@ -341,7 +379,10 @@ public final class AimingSession {
                     || port.now() - now > 200 || finalProblem != null) {
                 stopAiming("inputs_changed"); return;
             }
-            port.sendYaw(rate);
+            if(!movement.permits(finalInputs,port.now(),cycleRequestedForward)) {
+                cycleRequestedForward=0; movement.forward=0;
+            }
+            port.sendMotion(rate,cycleRequestedForward);
             lastTick = now;
         // CAM3 v2.1: Record loop exceptions before the same fail-safe stop path.
         } catch (RuntimeException ex) {
@@ -353,6 +394,7 @@ public final class AimingSession {
         if (state == State.PAUSED) diagnostic("recovery_cancelled", "reason=" + why);
         recoverySince = -1; pauseRequested.set(false);
         cancelled.set(true); rate = 0; reason = why;
+        movement.cancel();
         resetNearby("stop_"+why, false); // CAM3 v2.7: Never carry a commitment into a new session.
         // CAM3 v2.1: Log stop reasons even if the state itself has not changed.
         diagnostic("stop", "reason=" + why);
