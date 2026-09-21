@@ -166,7 +166,7 @@ public final class AircraftAimingTelemetry {
     }
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) { return getSnapshot(target,false); }
     // Only recent authorized translation permits a small velocity allowance. Start/recovery
-    // retain the original hover gate; vertical speed and pilot stick checks never change.
+    // retain the original hover gate; vertical speed and pilot stick checks never change..
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating) {
         long oldest = Long.MAX_VALUE;
         String problem = null;
