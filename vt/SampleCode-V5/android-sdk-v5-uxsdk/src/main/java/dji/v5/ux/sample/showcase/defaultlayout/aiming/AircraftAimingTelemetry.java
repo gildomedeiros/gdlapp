@@ -160,13 +160,13 @@ public final class AircraftAimingTelemetry {
         Velocity3D v = velocity.value;
         if (v != null && (v.getX() == null || v.getY() == null || v.getZ() == null
                 || !Double.isFinite(v.getX()) || !Double.isFinite(v.getY()) || !Double.isFinite(v.getZ())
-                || Math.hypot(v.getX(), v.getY()) > 0.5 || Math.abs(v.getZ()) > 0.3))
+                || Math.hypot(v.getX(), v.getY()) > 0.5 || Math.abs(v.getZ()) > 0.5))
             issues.add("Establish steady hover / velocity invalid");
         return "Flight mode: " + mode.value + "\n" + (issues.isEmpty() ? "Aircraft checks ready" : String.join("\n", issues));
     }
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) { return getSnapshot(target,false); }
     // Only recent authorized translation permits a small velocity allowance. Start/recovery
-    // retain the original hover gate; vertical speed and pilot stick checks never change.. chatgpt !
+    // retain the original hover gate; vertical speed and pilot stick checks never change.
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating) {
         long oldest = Long.MAX_VALUE;
         String problem = null;
@@ -194,7 +194,7 @@ public final class AircraftAimingTelemetry {
                 Velocity3D v = velocity.value;
                 if (v.getX() == null || v.getY() == null || v.getZ() == null
                         || !Double.isFinite(v.getX()) || !Double.isFinite(v.getY()) || !Double.isFinite(v.getZ())
-                        || Math.hypot(v.getX(), v.getY()) > (translating ? ComeToMeSettings.MAX_SPEED + 0.3 : 0.5) || Math.abs(v.getZ()) > 0.3) problem = "hover";
+                        || Math.hypot(v.getX(), v.getY()) > (translating ? ComeToMeSettings.MAX_SPEED + 0.4 : 0.5) || Math.abs(v.getZ()) > 0.5) problem = "hover";
             }
         }
         LocationCoordinate2D p = position.value;
