@@ -5,10 +5,8 @@ import dji.sdk.keyvalue.value.flightcontroller.*;
 /** CAM3 v2.0: The only aiming command factory; deliberately exposes no translation inputs. */
 public final class YawOnlyCommand {
     private YawOnlyCommand() { }
-    public static VirtualStickFlightControlParam build(double rate) { return build(rate,false); }
-    // CAM3 v2.7: Default callers retain 8 degrees/s; enabled nearby sessions may use 12.
-    public static VirtualStickFlightControlParam build(double rate, boolean nearby) {
-        if (!Double.isFinite(rate) || Math.abs(rate) > (nearby ? YawAimingMath.NEARBY_MAX_RATE : YawAimingMath.MAX_RATE)) throw new IllegalArgumentException("Yaw limit");
+    public static VirtualStickFlightControlParam build(double rate) {
+        if (!Double.isFinite(rate) || Math.abs(rate)>YawAimingMath.MAX_RATE) throw new IllegalArgumentException("Yaw limit");
         VirtualStickFlightControlParam command = new VirtualStickFlightControlParam();
         command.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
         command.setRollPitchControlMode(RollPitchControlMode.VELOCITY);

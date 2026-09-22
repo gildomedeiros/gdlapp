@@ -4,7 +4,6 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 public final class YawAimingMath {
     // CAM3 v2.7: User removed the 5 m pause for both sources and both toggle states.
     public static final double MIN_AIMING_DISTANCE_METERS = 0.0;
-    public static final double NEARBY_MAX_RATE = 12.0;
     public static final double ALIGNMENT_DEGREES = 3.0;
     public static final double MAX_RATE = 8.0; // degrees/second
     public static final double MAX_ACCELERATION = 4.0; // degrees/second squared
@@ -48,22 +47,4 @@ public final class YawAimingMath {
         return previous + Math.max(-step, Math.min(step, desired - previous));
     }
 
-    // CAM3 v2.7: Check short alignment first; a sub-deadband overshoot must not cause a full turn.
-    public static double directedError(double bearing, double heading, int direction) {
-        double shortest=shortestHeadingError(bearing,heading);
-        if(Math.abs(shortest)<=ALIGNMENT_DEGREES || direction==0) return shortest;
-        if(direction>0) return shortest<0 ? shortest+360 : shortest;
-        return shortest>0 ? shortest-360 : shortest;
-    }
-    // CAM3 v2.7: Keep the v2.5 proportional formula, with bounded distance gain and smooth exit.
-    public static double calculateNearbyYawRate(double error,double previous,double seconds,double multiplier) {
-        if(!Double.isFinite(error)||!Double.isFinite(previous)||!Double.isFinite(seconds)
-                ||seconds<=0||seconds>0.5||!Double.isFinite(multiplier)||multiplier<1||multiplier>1.5)
-            throw new IllegalArgumentException("Invalid nearby yaw input");
-        if(Math.abs(error)<=ALIGNMENT_DEGREES || error*previous<0) return 0;
-        double desired=Math.copySign(Math.min(MAX_RATE,(Math.abs(error)-ALIGNMENT_DEGREES)*0.5)*multiplier,error);
-        double step=MAX_ACCELERATION*multiplier*seconds;
-        return Math.max(-NEARBY_MAX_RATE,Math.min(NEARBY_MAX_RATE,
-                previous+Math.max(-step,Math.min(step,desired-previous))));
-    }
 }

@@ -9,10 +9,10 @@ import dji.sdk.keyvalue.value.flightcontroller.VirtualStickFlightControlParam;
  */
 public final class AimingMotionCommand {
     private AimingMotionCommand() { }
-    public static VirtualStickFlightControlParam build(double yaw,double forward,boolean nearby) {
+    public static VirtualStickFlightControlParam build(double yaw,double forward) {
         if(!Double.isFinite(forward) || Math.abs(forward)>ComeToMeSettings.MAX_SPEED)
             throw new IllegalArgumentException("Forward velocity limit");
-        VirtualStickFlightControlParam command=YawOnlyCommand.build(yaw,nearby);
+        VirtualStickFlightControlParam command=YawOnlyCommand.build(yaw);
         command.setRoll(forward);
         // YawOnlyCommand explicitly retains pitch (lateral) and vertical velocity at zero.
         return command;

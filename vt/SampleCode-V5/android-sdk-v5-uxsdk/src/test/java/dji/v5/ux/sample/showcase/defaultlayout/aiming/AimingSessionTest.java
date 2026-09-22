@@ -26,8 +26,6 @@ public final class AimingSessionTest {
         final List<Double> forwards=new ArrayList<>();
         public ComeToMeSettings movementSettings() { return movement; }
         public void sendMotion(double yaw,double forward) { forwards.add(forward); sendYaw(yaw); }
-        boolean nearby; // CAM3 v2.7: Existing tests retain default OFF.
-        public boolean nearbyTrackingEnabled() { return nearby; }
         boolean lost;
         public boolean controlLost() { return lost; }
         final List<String> diagnosticEvents = new ArrayList<>();

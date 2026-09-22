@@ -8,7 +8,7 @@ $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 # CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
-& "$JavaHome/bin/javac.exe" -d $output "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/DominantDirectionTracker.java" "$source/NearbyDirectionLock.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
+& "$JavaHome/bin/javac.exe" -d $output "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }
@@ -50,12 +50,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Full log tests failed' }
 Get-Content (Join-Path $output 'full-log-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json | Out-Null }
 Write-Output 'PASS: session JSONL parsed with independent JSON parser'
 
-# CAM3 v2.7: Real helper/state-machine scenarios for the direction commitment.
-& "$JavaHome/bin/javac.exe" -cp $output -d $output (Join-Path (Split-Path $test) 'GoalkeeperTest.java')
-if ($LASTEXITCODE -ne 0) { throw 'Goalkeeper test compile failed' }
-& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.GoalkeeperTest'
-if ($LASTEXITCODE -ne 0) { throw 'Goalkeeper tests failed' }
-
 # CAM3 v2.7: Validate the production per-cycle adapter with actual JSONL serialization.
 & "$JavaHome/bin/javac.exe" -cp $output -d $output "$source/AimingCycleLog.java" (Join-Path (Split-Path $test) 'AimingCycleLogTest.java')
 if ($LASTEXITCODE -ne 0) { throw 'Cycle log test compile failed' }
@@ -82,11 +76,19 @@ $motionBytecode=(& "$JavaHome/bin/javap.exe" -c -classpath $output 'dji.v5.ux.sa
 if($LASTEXITCODE -ne 0 -or !$motionBytecode.Contains('YawOnlyCommand.build') -or !$motionBytecode.Contains('setRoll') -or $motionBytecode.Contains('setPitch') -or $motionBytecode.Contains('setVerticalThrottle')){throw 'Combined command factory axis invariant failed'}
 Write-Output 'PASS: independent movement JSON validation and combined command factory bytecode'
 
-# VT 2.9: Validate navigation evidence; the fixture starts with one 11 m/100 ms jump.
-if($movementRows[0].yawPurpose -ne 'approach' -or $movementRows[0].plannedTravelM -lt 29.9 -or $movementRows[0].plannedTravelM -gt 30.1 -or $null -eq $movementRows[0].approachTargetLatitude -or $movementRows[0].noRideTimerActive -or $movementRows[0].rejectedSpeedJumps -ne 1){throw 'VT 2.9 navigation evidence validation failed'}
+# VT 2.9/3.0: Validate navigation independently of the ride-speed sampling policy.
+if($movementRows[0].yawPurpose -ne 'approach' -or $movementRows[0].plannedTravelM -lt 29.9 -or $movementRows[0].plannedTravelM -gt 30.1 -or $null -eq $movementRows[0].approachTargetLatitude -or $movementRows[0].noRideTimerActive){throw 'VT 2.9 navigation evidence validation failed'}
 Write-Output 'PASS: VT 2.9 approach snapshot, planned travel, yaw ownership and timer evidence'
 
 # Fixed return: independently verify real planner snapshots and completion miss distance.
 $returnRows=@(Get-Content (Join-Path $output 'return-cycle-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object event -eq 'movement_cycle')
 if($returnRows.Count -ne 2 -or $returnRows[0].yawPurpose -ne 'return' -or [Math]::Abs($returnRows[0].returnPlannedTravelM-27) -gt 0.01 -or $returnRows[1].reason -ne 'return_travel_completed' -or $returnRows[1].backwardProgressM -lt 27.9 -or $returnRows[1].returnCompletionCentralDistanceM -lt 10 -or $returnRows[1].yawPurpose -ne 'surfer'){throw 'Fixed return log validation failed'}
 Write-Output 'PASS: fixed return origin, planned travel, progress and completion miss distance'
+
+# VT 3.0: Independent evidence for fast/confirmed rides and all-aiming reverse blocking.
+& "$JavaHome/bin/javac.exe" -cp $output -d $output (Join-Path (Split-Path $test) 'Vt30Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.0 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt30Test'
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.0 tests failed' }
+if($movementRows[0].fastWindowMs -ne 1000 -or $movementRows[0].confirmationWindowMs -ne 5000 -or $cycles[0].reverseBlockMs -ne 2000){throw 'VT 3.0 log evidence missing'}
+Write-Output 'PASS: VT 3.0 detection windows and reverse block are present in serialized logs'

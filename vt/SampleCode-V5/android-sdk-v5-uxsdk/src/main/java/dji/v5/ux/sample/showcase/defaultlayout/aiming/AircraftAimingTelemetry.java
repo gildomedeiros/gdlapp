@@ -166,7 +166,7 @@ public final class AircraftAimingTelemetry {
     }
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) { return getSnapshot(target,false); }
     // Only recent authorized translation permits a small velocity allowance. Start/recovery
-    // retain the original hover gate; vertical speed and pilot stick checks never change.
+    // use 0.5 m/s horizontal at rest, 1.4 during commanded translation, and 0.5 vertical.
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating) {
         long oldest = Long.MAX_VALUE;
         String problem = null;
@@ -204,7 +204,8 @@ public final class AircraftAimingTelemetry {
                 heading.value == null ? Double.NaN : heading.value, oldest, problem, neutral,
                 velocity.value==null || velocity.value.getX()==null || velocity.value.getY()==null
                         ? Double.NaN : Math.hypot(velocity.value.getX(),velocity.value.getY()),
-                velocity.value==null || velocity.value.getZ()==null ? Double.NaN : velocity.value.getZ());
+                velocity.value==null || velocity.value.getZ()==null ? Double.NaN : velocity.value.getZ(),
+                translating ? ComeToMeSettings.MAX_SPEED+0.4 : 0.5);
     }
     // CAM3 v2.1: Immutable diagnostic copy; ages are excluded from the duplicate-suppression signature.
     public synchronized DiagnosticSnapshot diagnostics(long now, AimingSession.Fix target) {

@@ -12,8 +12,6 @@ public final class AimingSession {
     public enum Owner { RC, MSDK, OTHER, UNKNOWN }
     public interface Completion { void complete(boolean success); }
     public interface Port {
-        // CAM3 v2.7: Opt-in keeps the original steering path by default.
-        default boolean nearbyTrackingEnabled() { return false; }
         default ComeToMeSettings movementSettings() { return new ComeToMeSettings(false,70,20,18,8,30000,900000); }
         default void sendMotion(double yaw, double forward) {
             if (forward != 0) throw new IllegalStateException("Translation port not implemented");
@@ -64,15 +62,20 @@ public final class AimingSession {
         public final long aircraftTime;
         public final String problem;
         public final boolean safeToNeutral;
-        public final double horizontalSpeed, verticalSpeed;
+        public final double horizontalSpeed, verticalSpeed, horizontalSpeedLimit;
         public boolean steadyHover() { return Double.isFinite(horizontalSpeed) && horizontalSpeed<=0.5
-                && Double.isFinite(verticalSpeed) && Math.abs(verticalSpeed)<=0.3; }
+                && Double.isFinite(verticalSpeed) && Math.abs(verticalSpeed)<=0.5; }
         public Inputs(Fix target, double lat, double lon, double heading, long aircraftTime,
                       String problem, boolean safeToNeutral) {
             this(target,lat,lon,heading,aircraftTime,problem,safeToNeutral,0,0);
         }
         public Inputs(Fix target,double lat,double lon,double heading,long aircraftTime,
                       String problem,boolean safeToNeutral,double horizontalSpeed,double verticalSpeed) {
+            this(target,lat,lon,heading,aircraftTime,problem,safeToNeutral,horizontalSpeed,verticalSpeed,0.5);
+        }
+        public Inputs(Fix target,double lat,double lon,double heading,long aircraftTime,
+                      String problem,boolean safeToNeutral,double horizontalSpeed,double verticalSpeed,double horizontalLimit) {
+            this.horizontalSpeedLimit=horizontalLimit;
             this.horizontalSpeed=horizontalSpeed; this.verticalSpeed=verticalSpeed;
             this.target = target; this.lat = lat; this.lon = lon; this.heading = heading;
             this.aircraftTime = aircraftTime; this.problem = problem; this.safeToNeutral = safeToNeutral;
@@ -93,36 +96,14 @@ public final class AimingSession {
             return null;
         }
     }
-    // CAM3 v2.7: Executor-owned independent vote and lock helpers. Monitoring never acquires control.
+    // VT 3.0: Executor-owned movement and surfer yaw state; neither helper calls DJI.
     public final ComeToMeController movement=new ComeToMeController();
     public double cycleRequestedForward;
-    public final DominantDirectionTracker directionTracker=new DominantDirectionTracker();
-    public final NearbyDirectionLock nearbyLock=new NearbyDirectionLock();
+    public final SurferYawController surferYaw=new SurferYawController();
     public long cycleId, cycleAt;
-    public Inputs cycleInputs;
+    public Inputs cycleInputs, cycleFinalInputs;
     public double cycleAngle=Double.NaN, cycleMultiplier=1, cycleRequestedYaw=Double.NaN;
     public String cycleDecision="idle";
-    public void resetNearby(String reason, boolean clearVotes) {
-        String event=nearbyLock.clear(reason);
-        if(clearVotes) directionTracker.reset();
-        if(event!=null) diagnostic("nearby_lock",event);
-    }
-    public void observeDirection(Inputs in,long now) {
-        directionTracker.observe(in,now);
-        // Release at range exit even while paused, but never use stale coordinates to release/capture.
-        if(positionFresh(in,now)) {
-            String event=nearbyLock.update(port.nearbyTrackingEnabled(),false,
-                    YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon),
-                    directionTracker.calculateDominantDirection(),now);
-            if(event!=null) diagnostic("nearby_lock",event);
-        }
-    }
-    private static boolean positionFresh(Inputs in,long now) {
-        return in.target!=null && in.target.time>0 && now>=in.target.time && now-in.target.time<=3000
-                && in.aircraftTime>0 && now>=in.aircraftTime && now-in.aircraftTime<=1500
-                && YawAimingMath.coordinateValid(in.lat,in.lon)
-                && YawAimingMath.coordinateValid(in.target.lat,in.target.lon);
-    }
     private final Port port;
     private final AtomicBoolean cancelled = new AtomicBoolean(true);
     // CAM3 v2.3: Urgent pause suppresses yaw without cancelling automatic recovery.
@@ -144,6 +125,7 @@ public final class AimingSession {
     }
     private void pauseAiming(String cause) {
         movement.pause("pilot_stick".equals(cause),port.now());
+        surferYaw.reset(); // Recovery starts from zero, not a stale blocked command.
         if (state != State.PAUSED) { neutralSent = false; recoverySince = -1; recoveryAuthority = null; lastTick = port.now(); }
         if (recoverySince >= 0) diagnostic("recovery_reset", "cause=" + cause);
         recoverySince = -1;
@@ -197,8 +179,8 @@ public final class AimingSession {
     }
     public void startAiming() {
         if (!canStart()) return;
-        // CAM3 v2.7: Start a new commitment while retaining recent foreground GPS votes.
-        resetNearby("new_session", false);
+        // VT 3.0: A new session starts with no reverse-direction commitment.
+        surferYaw.reset();
         movement.start(port.movementSettings(),port.now());
         cancelled.set(false);
         // CAM3 v2.3: A new explicit session owns its recovery state.
@@ -241,7 +223,7 @@ public final class AimingSession {
     }
     public void tick() {
         // CAM3 v2.7: A fresh decision record each cycle, including cycles that issue no command.
-        cycleId++; cycleAt=port.now(); cycleInputs=null; cycleAngle=Double.NaN;
+        cycleId++; cycleAt=port.now(); cycleInputs=null; cycleFinalInputs=null; cycleAngle=Double.NaN;
         cycleMultiplier=1; cycleRequestedYaw=Double.NaN; cycleRequestedForward=0; cycleDecision="no_command";
         try {
             if (state == State.STOPPING || state == State.RELEASE_UNCONFIRMED) {
@@ -332,18 +314,15 @@ public final class AimingSession {
             long now = port.now();
             long elapsed = now - lastTick;
             if (elapsed < 0 || elapsed > 500) { stopAiming("loop_stall"); return; }
-            // CAM3 v2.7: Raw coordinates, no v2.6 smoothing; lock chooses the directed route.
             double distance=YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon);
-            boolean nearby=port.nearbyTrackingEnabled();
-            String lockEvent=nearbyLock.update(nearby,true,distance,
-                    directionTracker.calculateDominantDirection(),now);
-            if(lockEvent!=null) diagnostic("nearby_lock",lockEvent);
-            cycleMultiplier=nearby && nearbyLock.direction()!=0 ? NearbyDirectionLock.multiplier(distance) : 1;
             // VT 2.9: Resolve movement state before selecting the sole yaw owner for this tick.
             String oldMovement=movement.phase.name()+":"+movement.reason;
             long oldGeneration=movement.centralGeneration;
             movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0));
+            if(movement.event.equals("ride_ended") || movement.event.equals("fast_ride_ended")) surferYaw.reset();
             if(movement.returning() || movement.approaching()) {
+                // Navigation may correct its saved heading in either direction without cooldown.
+                surferYaw.reset();
                 double desiredHeading=movement.returning() ? movement.returnHeading : movement.approachHeading;
                 cycleAngle=YawAimingMath.shortestHeadingError(desiredHeading,in.heading);
                 rate=YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0));
@@ -351,14 +330,16 @@ public final class AimingSession {
                 cycleMultiplier=1;
             } else {
                 if(distance==0) {
-                    rate=0; cycleDecision="coincident_zero"; // undefined bearing, not a distance pause
+                    rate=0; surferYaw.reset(); cycleDecision="coincident_zero"; // undefined bearing, not a distance pause
                 } else {
                     double bearing=YawAimingMath.bearingToTarget(in.lat,in.lon,in.target.lat,in.target.lon);
-                    cycleAngle=YawAimingMath.directedError(bearing,in.heading,nearby ? nearbyLock.direction() : 0);
-                    rate=nearby ? YawAimingMath.calculateNearbyYawRate(cycleAngle,rate,
-                            Math.max(0.001,elapsed/1000.0),cycleMultiplier)
-                            : YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0));
-                    cycleDecision=Math.abs(cycleAngle)<=3 ? "aligned_zero" : nearbyLock.direction()!=0 ? "locked_route" : "shortest_route";
+                    // A single yaw owner: shortest route, then block opposite corrections.
+                    // Never wrap a blocked correction into an almost-full-circle turn.
+                    cycleAngle=YawAimingMath.shortestHeadingError(bearing,in.heading);
+                    rate=surferYaw.calculate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0),movement.riding,now);
+                    cycleDecision=surferYaw.blocked ? "reverse_blocked"
+                            : surferYaw.requestedDirection==0 ? "aligned_zero"
+                            : movement.riding ? "riding_correction" : "surfer_correction";
                 }
             }
             if(!oldMovement.equals(movement.phase.name()+":"+movement.reason)
@@ -371,6 +352,7 @@ public final class AimingSession {
             Authority latest = port.authority();
             // CAM3 v2.3: Last-moment recoverable failures pause instead of cancelling the session.
             Inputs finalInputs=port.inputs();
+            cycleFinalInputs=finalInputs; // Preserve the final veto snapshot, not just the earlier calculation inputs.
             String finalProblem = finalInputs.validate(port.now());
             if (!cancelled.get() && (pauseRequested.get() || (finalProblem != null && recoverable(finalProblem)))) {
                 pauseAiming(pauseRequested.get() ? pauseCause : finalProblem); return;
@@ -395,7 +377,7 @@ public final class AimingSession {
         recoverySince = -1; pauseRequested.set(false);
         cancelled.set(true); rate = 0; reason = why;
         movement.cancel();
-        resetNearby("stop_"+why, false); // CAM3 v2.7: Never carry a commitment into a new session.
+        surferYaw.reset(); // No direction commitment survives Stop.
         // CAM3 v2.1: Log stop reasons even if the state itself has not changed.
         diagnostic("stop", "reason=" + why);
         if (!claimed && !enablePending) { setState(State.STOPPED); return; }

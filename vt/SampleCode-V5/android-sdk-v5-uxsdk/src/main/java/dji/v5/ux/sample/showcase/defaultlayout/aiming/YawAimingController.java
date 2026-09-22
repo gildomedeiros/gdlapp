@@ -52,9 +52,6 @@ public final class YawAimingController implements AimingSession.Port {
     private final PhoneTargetLocationSource phone;
     private final LoRaTargetLocationSource lora;
     private volatile boolean usePhone;
-    // CAM3 v2.7: Toggle changes only with aiming OFF/STOPPED; no process persistence.
-    private volatile boolean nearbyEnabled=true;
-    private volatile String nearbyStatus="Nearby tracking OFF";
     private long submittedCycle=-1;
     private long lastTranslationAt=-1;
     private double lastSubmittedForward;
@@ -79,15 +76,6 @@ public final class YawAimingController implements AimingSession.Port {
                     +" endMs="+config.rideEndMs+" inactivityMs="+config.inactivityMs);
         });
     }
-    @Override public boolean nearbyTrackingEnabled() { return nearbyEnabled; }
-    public String nearbyTrackingStatus() { return nearbyStatus; }
-    public void setNearbyTrackingEnabled(boolean enabled) {
-        executor.execute(() -> {
-            if(!canSelectGpsSource()) return;
-            nearbyEnabled=enabled; session.resetNearby("mode_change",false);
-            diagnostic("nearby_mode","enabled="+enabled);
-        });
-    }
     public boolean usesPhoneGps() { return usePhone; }
     public boolean canSelectGpsSource() {
         AimingSession.State s = session.state();
@@ -97,7 +85,7 @@ public final class YawAimingController implements AimingSession.Port {
         executor.execute(() -> {
             if (!canSelectGpsSource() || selected == usePhone) return;
             phone.stop(); lora.stop(); usePhone = selected;
-            session.resetNearby("source_change",true); // CAM3 v2.7: No cross-source votes.
+            session.surferYaw.reset(); // VT 3.0: No cross-source direction commitment.
             diagnostic("target_source", selected ? "phone" : "lora_wifi");
             if (foreground) startTargetSource();
         });
@@ -236,7 +224,7 @@ public final class YawAimingController implements AimingSession.Port {
         foreground = false; observer = null;
         stopAiming("screen_closed");
         // CAM3 v2.5: End full capture after source shutdown on screen exit; normal aiming cancellation stays intact.
-        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); session.resetNearby("screen_closed",true); fullLog.disable("screen_closed"); });
+        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); session.surferYaw.reset(); fullLog.disable("screen_closed"); });
     }
     public void startAiming() {
         // CAM3 v2.1: Record explicit user intent, including attempts rejected by the prerequisites.
@@ -291,7 +279,6 @@ public final class YawAimingController implements AimingSession.Port {
             AimingSession.Inputs observed=null;
             if (foreground) {
                 aircraft.poll(); observed=inputs();
-                session.observeDirection(observed,now()); // CAM3 v2.7: Votes expire every tick, new fixes alone add votes.
             }
             session.tick();
             if(foreground && observed!=null) recordAimingCycle(observed); // CAM3 v2.7: Every foreground cycle, not only changed summaries.
@@ -321,8 +308,10 @@ public final class YawAimingController implements AimingSession.Port {
                 aimingScreen=state==AimingSession.State.AIMING
                         ? (session.movement.returning() ? "Aiming: holding return heading"
                         : session.movement.approaching() ? "Aiming: holding approach heading"
-                        : Math.abs(session.cycleAngle)<=YawAimingMath.ALIGNMENT_DEGREES ? "Aiming: aligned with surfer"
-                        : "Aiming: rotating "+(session.cycleAngle<0 ? "left" : "right")+" toward surfer") : "";
+                        : session.surferYaw.blocked ? "Aiming: reverse blocked - "+session.surferYaw.remainingMs+" ms"
+                        : session.surferYaw.requestedDirection==0 ? "Aiming: aligned with surfer"
+                        : "Aiming: "+(session.movement.riding ? "riding - " : "")+"rotating "
+                            +SurferYawController.directionName(session.surferYaw.requestedDirection)+" toward surfer") : "";
                 // CAM3 v2.2: Listener availability is also required for user-visible readiness.
                 boolean ready = listening && session.canStart();
                 String reason = session.reason();
@@ -441,12 +430,7 @@ public final class YawAimingController implements AimingSession.Port {
     private void recordAimingCycle(AimingSession.Inputs observed) {
         try {
             long at=now();
-            DominantDirectionTracker t=session.directionTracker;
-            NearbyDirectionLock lock=session.nearbyLock;
-            nearbyStatus=(nearbyEnabled ? "Nearby ON" : "Nearby OFF")+"; dominant="+DominantDirectionTracker.name(t.calculateDominantDirection())
-                    +"; votes R/L="+t.rightVotes()+"/"+t.leftVotes()+"; lock="+DominantDirectionTracker.name(lock.direction())
-                    +"; age="+(lock.age(at)<0 ? "-" : lock.age(at)/1000+"s");
-            AimingCycleLog.record(fullLog,session,observed,at,nearbyEnabled,usePhone,submittedCycle,lastCommandRate);
+            AimingCycleLog.record(fullLog,session,observed,at,usePhone,submittedCycle,lastCommandRate);
             MovementCycleLog.record(fullLog,session,at,submittedCycle,lastSubmittedForward);
         } catch(RuntimeException ignored) { /* Logging cannot change a steering decision. */ }
     }
@@ -467,7 +451,7 @@ public final class YawAimingController implements AimingSession.Port {
         if(forward!=0 && (!active || !session.movement.permits(inputs(),now(),forward))) forward=0;
         // Callback cancellation can arrive during the final position read.
         if((rate!=0 || forward!=0) && (!foreground || yielding || !session.maySendYaw() || !session.commandEligible())) return;
-        sdk.sendVirtualStickAdvancedParam(AimingMotionCommand.build(rate,forward,nearbyEnabled));
+        sdk.sendVirtualStickAdvancedParam(AimingMotionCommand.build(rate,forward));
         lastSubmittedForward=forward;
         if(forward!=0) lastTranslationAt=now();
         submittedCycle=session.cycleId;

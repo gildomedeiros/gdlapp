@@ -1258,5 +1258,4 @@
     <string name="uxsdk_aiming_export_done">Aiming log exported</string>
     <string name="uxsdk_aiming_export_failed">Could not export aiming log; try again</string>
     <!-- CAM3 v2.7: Optional goalkeeper direction commitment. -->
-    <string name="uxsdk_nearby_tracking">Nearby tracking</string>
 </resources>

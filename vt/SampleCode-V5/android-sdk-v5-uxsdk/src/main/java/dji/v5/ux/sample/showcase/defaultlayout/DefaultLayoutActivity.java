@@ -260,16 +260,13 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             menu.getMenu().add(0, 1, 0, R.string.uxsdk_aiming_details);
             menu.getMenu().add(0, 2, 1, R.string.uxsdk_enable_full_log).setCheckable(true)
                     .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
-            // CAM3 v2.7: Nearby direction lock is opt-in and changes only outside an aiming session.
-            menu.getMenu().add(0,3,2,R.string.uxsdk_nearby_tracking).setCheckable(true)
-                    .setChecked(yawAimingController.nearbyTrackingEnabled()).setEnabled(yawAimingController.canSelectGpsSource());
             menu.getMenu().add(0,4,3,"Come to me").setCheckable(true)
                     .setChecked(yawAimingController.movementSettings().enabled).setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,5,4,"VT 2.9 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,5,4,"VT 3.0 settings").setEnabled(yawAimingController.canSelectGpsSource());
             menu.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == 1) {
                     new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
-                            .setMessage(yawAimingController.readinessDetails() + "\n\n" + yawAimingController.loggingStatus() + "\n" + yawAimingController.nearbyTrackingStatus() + "\n\n" + yawAimingController.movementDetails())
+                            .setMessage(yawAimingController.readinessDetails() + "\n\n" + yawAimingController.loggingStatus() + "\n\n" + yawAimingController.movementDetails())
                             .setPositiveButton(android.R.string.ok, null).show();
                 } else if (item.getItemId() == 2 && !yawAimingController.fullLogBusy()) {
                     // CAM3 v2.5: Toggle creates/closes an accessible session; no export picker.
@@ -284,7 +281,6 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                                 : "Full Log closing; minimal logging continues", Toast.LENGTH_LONG).show();
                     }
                 }
-                if(item.getItemId()==3) yawAimingController.setNearbyTrackingEnabled(!yawAimingController.nearbyTrackingEnabled());
                 if(item.getItemId()==4) {
                     dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
                     yawAimingController.setMovementSettings(new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(
@@ -427,7 +423,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 2.9 · Come to me")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.0 · Come to me")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
