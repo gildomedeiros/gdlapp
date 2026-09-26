@@ -1,6 +1,8 @@
 package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 
 import android.os.SystemClock;
+import dji.sdk.keyvalue.value.common.Attitude;
+import dji.sdk.keyvalue.value.common.ComponentIndexType;
 import java.util.ArrayList;
 import java.util.List;
 // CAM3 v2.1: Best-effort read-outcome notifications; implementation never performs file I/O here.
@@ -33,6 +35,15 @@ public final class AircraftAimingTelemetry {
     private final Slot<Integer> leftV = slot("stickLeftVertical", RemoteControllerKey.KeyStickLeftVertical);
     private final Slot<Integer> rightH = slot("stickRightHorizontal", RemoteControllerKey.KeyStickRightHorizontal);
     private final Slot<Integer> rightV = slot("stickRightVertical", RemoteControllerKey.KeyStickRightVertical);
+    // VT 3.1: Optional diagnostic keys MUST NOT enter slots: that list gates flight.
+    // Read at the existing 500 ms cadence, with the same lifecycle/retry protection.
+    private final Slot<Attitude> aircraftAttitude = new Slot<>("aircraftAttitude",
+            KeyTools.createKey(FlightControllerKey.KeyAircraftAttitude));
+    private final Slot<Attitude> gimbalAttitude = new Slot<>("gimbalAttitude",
+            KeyTools.createKey(GimbalKey.KeyGimbalAttitude, ComponentIndexType.LEFT_OR_MAIN));
+    private final Slot<Double> gimbalRelativeYaw = new Slot<>("gimbalRelativeYaw",
+            KeyTools.createKey(GimbalKey.KeyYawRelativeToAircraftHeading, ComponentIndexType.LEFT_OR_MAIN));
+    private final List<Slot<?>> angleSlots = java.util.Arrays.asList(aircraftAttitude, gimbalAttitude, gimbalRelativeYaw);
     // CAM3 v2.3: Report named pause versus permanent-stop events to the controller.
     private final BiConsumer<String, Boolean> unsafe;
     // CAM3 v2.3: Listener threads see lifecycle and independent connection/mode vetoes.
@@ -85,6 +96,7 @@ public final class AircraftAimingTelemetry {
     public synchronized void stop() {
         running = false; generation++;
         for (Slot<?> slot : slots) { slot.value = null; slot.time = 0; slot.pending = false; }
+        for (Slot<?> slot : angleSlots) { slot.value = null; slot.time = 0; slot.pending = false; slot.error = "not_read"; }
         KeyManager.getInstance().cancelListen(this);
     }
     public synchronized void poll() {
@@ -92,6 +104,7 @@ public final class AircraftAimingTelemetry {
         if (!running || now - lastPoll < 500) return;
         lastPoll = now;
         for (Slot<?> slot : slots) read(slot, now, generation);
+        for (Slot<?> slot : angleSlots) read(slot, now, generation);
     }
     private <T> void read(Slot<T> slot, long requested, long token) {
         // CAM3 v2.3: Abandon an unanswered read after 2 s; old replies cannot replace newer data.
@@ -129,6 +142,43 @@ public final class AircraftAimingTelemetry {
         } catch (RuntimeException ex) {
             slot.pending = false; slot.value = null; slot.time = 0; readOutcome(slot, ex.getClass().getSimpleName());
         }
+    }
+    /** VT 3.1: Raw SDK attitude is diagnostic evidence, never an aiming input.
+     * Do not silently interpret gimbal attitude yaw as camera compass heading.
+     * The separate relative-yaw key explicitly measures gimbal offset from aircraft.
+     * Sample time is request-start elapsedRealtime, not a sensor acquisition timestamp.
+     */
+    public synchronized void recordAngles(FullSessionLog log, long session, long cycle, long now) {
+        if (!log.enabled()) return;
+        List<Object> fields = new ArrayList<>();
+        java.util.Collections.addAll(fields, "session", session, "cycleId", cycle,
+                "snapshotAtMs", now, "angleUnits", "degrees", "gimbalIndex", "LEFT_OR_MAIN",
+                "attitudeReference", "raw_DJI_Attitude", "gimbalRelativeYawReference", "aircraft_heading",
+                "sampleTimeBasis", "request_start_elapsedRealtime");
+        for (Slot<?> slot : angleSlots) {
+            long age = slot.time <= 0 || now < slot.time ? -1 : now - slot.time;
+            boolean valid = slot.value instanceof Attitude
+                    ? validAngle(((Attitude) slot.value).getPitch()) && validAngle(((Attitude) slot.value).getRoll())
+                        && validAngle(((Attitude) slot.value).getYaw())
+                    : slot.value instanceof Double && validAngle((Double) slot.value);
+            java.util.Collections.addAll(fields, slot.name + "Available", valid,
+                    slot.name + "Fresh", valid && age >= 0 && age <= 1500,
+                    slot.name + "SampleAtMs", slot.time <= 0 ? null : slot.time,
+                    slot.name + "AgeMs", age < 0 ? null : age,
+                    slot.name + "Error", slot.value != null && !valid ? "invalid_value" : slot.error);
+        }
+        addAttitude(fields, "aircraft", aircraftAttitude.value);
+        addAttitude(fields, "gimbal", gimbalAttitude.value);
+        java.util.Collections.addAll(fields, "gimbalYawRelativeToAircraftDeg", finiteAngle(gimbalRelativeYaw.value));
+        log.record("orientation_cycle", fields.toArray());
+    }
+    private static boolean validAngle(Double value) { return value != null && Double.isFinite(value); }
+    private static Double finiteAngle(Double value) { return validAngle(value) ? value : null; }
+    private static void addAttitude(List<Object> fields, String prefix, Attitude value) {
+        java.util.Collections.addAll(fields,
+                prefix + "PitchDeg", value == null ? null : finiteAngle(value.getPitch()),
+                prefix + "RollDeg", value == null ? null : finiteAngle(value.getRoll()),
+                prefix + "YawDeg", value == null ? null : finiteAngle(value.getYaw()));
     }
     private static boolean allowedMode(FlightMode value) {
         // CAM3 v2.2: One policy for snapshot, urgent listener and neutral; do not accept arbitrary modes.

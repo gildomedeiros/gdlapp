@@ -68,11 +68,11 @@ public final class YawAimingController implements AimingSession.Port {
             movementConfig=config;
             appContext.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit()
                     .putBoolean("comeToMe",config.enabled).putFloat("filming",(float)config.filmingDistance)
-                    .putFloat("width",(float)config.lineupWidth).putFloat("rideStart",(float)config.rideStartKmh)
+                    .putFloat("reapproachMargin",(float)config.reapproachMargin).putFloat("width",(float)config.lineupWidth).putFloat("rideStart",(float)config.rideStartKmh)
                     .putFloat("rideEnd",(float)config.rideEndKmh).putLong("endMs",config.rideEndMs)
                     .putLong("inactivityMs",config.inactivityMs).apply();
             diagnostic("movement_settings","enabled="+config.enabled+" filming="+config.filmingDistance
-                    +" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
+                    +" reapproachMargin="+config.reapproachMargin+" qualifyMs="+ComeToMeSettings.QUALIFY_MS+" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
                     +" endMs="+config.rideEndMs+" inactivityMs="+config.inactivityMs);
         });
     }
@@ -183,8 +183,8 @@ public final class YawAimingController implements AimingSession.Port {
         android.content.SharedPreferences prefs=context.getSharedPreferences("vt28",Context.MODE_PRIVATE);
         try {
             movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),Math.max(10,prefs.getFloat("filming",70)),
-                    prefs.getFloat("width",20),prefs.getFloat("rideStart",18),prefs.getFloat("rideEnd",8),
-                    prefs.getLong("endMs",30000),prefs.getLong("inactivityMs",900000));
+                    prefs.getFloat("width",50),prefs.getFloat("rideStart",18),prefs.getFloat("rideEnd",8),
+                    prefs.getLong("endMs",30000),prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",15));
         } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
@@ -312,6 +312,8 @@ public final class YawAimingController implements AimingSession.Port {
                         : session.surferYaw.requestedDirection==0 ? "Aiming: aligned with surfer"
                         : "Aiming: "+(session.movement.riding ? "riding - " : "")+"rotating "
                             +SurferYawController.directionName(session.surferYaw.requestedDirection)+" toward surfer") : "";
+                // VT 3.1: Retained yaw is independent of the paused movement status.
+                if(session.cycleRetainedTarget) aimingScreen+=" - last known GPS target";
                 // CAM3 v2.2: Listener availability is also required for user-visible readiness.
                 boolean ready = listening && session.canStart();
                 String reason = session.reason();
@@ -432,6 +434,7 @@ public final class YawAimingController implements AimingSession.Port {
             long at=now();
             AimingCycleLog.record(fullLog,session,observed,at,usePhone,submittedCycle,lastCommandRate);
             MovementCycleLog.record(fullLog,session,at,submittedCycle,lastSubmittedForward);
+            aircraft.recordAngles(fullLog,session.sessionId(),session.cycleId,at);
         } catch(RuntimeException ignored) { /* Logging cannot change a steering decision. */ }
     }
     public void exportLog(Uri destination, AimingDiagnosticLogger.Result result) {

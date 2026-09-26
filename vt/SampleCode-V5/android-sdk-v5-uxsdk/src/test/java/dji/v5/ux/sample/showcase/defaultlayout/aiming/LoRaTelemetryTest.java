@@ -34,9 +34,8 @@ public final class LoRaTelemetryTest {
         long last=f.time;
         f.time+=3001;f.input=f.data(f.time,last,null,true);f.core.tick();
         check(f.core.state()==AimingSession.State.PAUSED,"LoRa outage pauses existing aiming");
-        f.advance(100);check(f.core.state()==AimingSession.State.PAUSED,"Fresh fix does not bypass recovery");
-        for(int i=0;i<19;i++)f.advance(100);check(f.core.state()==AimingSession.State.PAUSED,"Two second recovery retained");
-        f.advance(100);check(f.core.state()==AimingSession.State.AIMING,"Fresh stable input resumes");
+        // VT 3.1: GPS-only pause resumes on the first valid fix, without another dwell.
+        f.advance(100);check(f.core.state()==AimingSession.State.AIMING,"Fresh GPS resumes immediately");
         System.out.println("PASS: TTGO parsing, repeats, gaps, restarts, wrap, accuracy bypass, freshness and pause/recovery");
     }
 }

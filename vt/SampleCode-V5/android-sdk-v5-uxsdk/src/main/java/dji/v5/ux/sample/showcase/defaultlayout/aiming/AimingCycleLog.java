@@ -13,7 +13,7 @@ public final class AimingCycleLog {
         AimingSession.Inputs finalIn=session.cycleFinalInputs;
             fullLog.record("aiming_cycle","cycleId",session.cycleId,"session",session.sessionId(),
                     "cycleAtMs",session.cycleAt,"state",session.state().name(),"reason",session.reason(),
-                    "inputProblem",in.validate(at),"source",usePhone ? "phone" : "lora_wifi",
+                    "retainedTargetAiming",session.cycleRetainedTarget,"inputProblem",in.validate(at),"source",usePhone ? "phone" : "lora_wifi",
                     "targetLatitude",f==null ? null : f.lat,"targetLongitude",f==null ? null : f.lon,
                     "targetFixMs",f==null ? null : f.time,"targetSequence",f==null || f.sequence<0 ? null : f.sequence,
                     "targetAgeMs",f==null ? null : at-f.time,"aircraftLatitude",in.lat,"aircraftLongitude",in.lon,

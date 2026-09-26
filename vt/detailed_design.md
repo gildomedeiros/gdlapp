@@ -21,3 +21,5 @@ For GPS/aiming behavior, use v2.4 together with the retained control policy in v
 - [v2.5 detailed design](detailed_design/detailed_design_v2.5.md) â€” current local release: Enable Full Log replaces Export; automatic Downloads/CAM3 JSONL sessions include coordinates/raw packets, while private minimal logs retain gaps, invalid data and control events. Existing aiming and compact layout retained. See its validation record and pending device checks.
 
 - [v2.7 detailed design](detailed_design/detailed_design_v2.7.md) — worktree release based directly on v2.5: independent direction votes, nearby commitment with five-minute refresh, bounded speed gain, removal of the 5 m pause and per-cycle full logs. No v2.6 smoothing. Local v2.5 unchanged; device validation pending.
+
+- [VT 3.1 detailed design](detailed_design/detailed_design_v3.1.md) - retained-target yaw, 20 s qualification, 50 m default band, frozen GPS/ride credit and configurable re-approach margin.

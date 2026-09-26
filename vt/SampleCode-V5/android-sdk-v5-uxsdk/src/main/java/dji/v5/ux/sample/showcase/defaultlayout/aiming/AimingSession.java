@@ -80,7 +80,10 @@ public final class AimingSession {
             this.target = target; this.lat = lat; this.lon = lon; this.heading = heading;
             this.aircraftTime = aircraftTime; this.problem = problem; this.safeToNeutral = safeToNeutral;
         }
-        public String validate(long now) {
+        public String validate(long now) { return validate(now,false); }
+        /** VT 3.1: Only age may be relaxed for an already acquired surfer-yaw target.
+         * Invalid coordinates, future timestamps and aircraft problems remain vetoes. */
+        public String validate(long now, boolean retainedTarget) {
             // CAM3 v2.3: Stale telemetry requires control revalidation even when a recoverable field also fails.
             if (problem != null && !recoverable(problem)) return problem;
             if (aircraftTime <= 0 || now < aircraftTime || now - aircraftTime > 1500) return "telemetry";
@@ -88,7 +91,7 @@ public final class AimingSession {
             if (!YawAimingMath.coordinateValid(lat, lon) || !Double.isFinite(heading)
                     || heading < -180 || heading > 360) return "heading";
             if (target == null) return "gps";
-            if (target.time <= 0 || now < target.time || now - target.time > 3000) return "stale_gps";
+            if (target.time <= 0 || now < target.time || (now - target.time > 3000 && !retainedTarget)) return "stale_gps";
             // CAM3 v2.7: No minimum-distance pause; coincident coordinates produce zero yaw below.
             if (!YawAimingMath.coordinateValid(target.lat, target.lon)
                     || !YawAimingMath.isBearingUsable(YawAimingMath.distance(lat, lon, target.lat, target.lon),
@@ -111,12 +114,21 @@ public final class AimingSession {
     private volatile String pauseCause = "telemetry";
     private long recoverySince = -1;
     private boolean neutralSent, refreshControl;
+    private boolean gpsOnlyRecovery;
+    private Fix lastFreshAimingTarget;
+    public boolean cycleRetainedTarget;
+    /** VT 3.1: Active aiming and saved navigation can use a known old surfer fix; aircraft checks remain strict. */
+    private String controlProblem(Inputs in,long now) {
+        boolean retained=state==State.AIMING && activated
+                && lastFreshAimingTarget!=null && in.target==lastFreshAimingTarget;
+        return in.validate(now,retained);
+    }
     // CAM3 v2.3: Callback threads must latch loss during a previously activated pause, including UNKNOWN owner.
     private volatile boolean activated;
     public boolean hasActivated() { return activated; }
     private Authority recoveryAuthority;
     public void pauseImmediately(String cause) { pauseCause = cause; pauseRequested.set(true); }
-    public long recoveryRemainingMs() { return recoverySince < 0 ? 2000 : Math.max(0, 2000 - (port.now() - recoverySince)); }
+    public long recoveryRemainingMs() { return gpsOnlyRecovery ? 0 : recoverySince < 0 ? 2000 : Math.max(0, 2000 - (port.now() - recoverySince)); }
     public boolean maySendPauseNeutral() { return !cancelled.get() && state == State.PAUSED && commandEligible(); }
     private static boolean recoverable(String p) {
         return "telemetry".equals(p) || "connection".equals(p) || "gps".equals(p)
@@ -124,7 +136,11 @@ public final class AimingSession {
                 || "heading".equals(p) || "aircraft_gps".equals(p) || "pilot_stick".equals(p) || "hover".equals(p);
     }
     private void pauseAiming(String cause) {
-        movement.pause("pilot_stick".equals(cause),port.now());
+        // VT 3.1: Mixed pauses retain the conservative recovery rule; GPS cannot erase another cause.
+        boolean gps="stale_gps".equals(cause);
+        gpsOnlyRecovery=state==State.PAUSED ? gpsOnlyRecovery && gps : gps;
+        if(gps) movement.pauseForGps(port.now());
+        else movement.pause("pilot_stick".equals(cause),port.now());
         surferYaw.reset(); // Recovery starts from zero, not a stale blocked command.
         if (state != State.PAUSED) { neutralSent = false; recoverySince = -1; recoveryAuthority = null; lastTick = port.now(); }
         if (recoverySince >= 0) diagnostic("recovery_reset", "cause=" + cause);
@@ -181,6 +197,7 @@ public final class AimingSession {
         if (!canStart()) return;
         // VT 3.0: A new session starts with no reverse-direction commitment.
         surferYaw.reset();
+        lastFreshAimingTarget=null; gpsOnlyRecovery=false;
         movement.start(port.movementSettings(),port.now());
         cancelled.set(false);
         // CAM3 v2.3: A new explicit session owns its recovery state.
@@ -223,7 +240,7 @@ public final class AimingSession {
     }
     public void tick() {
         // CAM3 v2.7: A fresh decision record each cycle, including cycles that issue no command.
-        cycleId++; cycleAt=port.now(); cycleInputs=null; cycleFinalInputs=null; cycleAngle=Double.NaN;
+        cycleRetainedTarget=false; cycleId++; cycleAt=port.now(); cycleInputs=null; cycleFinalInputs=null; cycleAngle=Double.NaN;
         cycleMultiplier=1; cycleRequestedYaw=Double.NaN; cycleRequestedForward=0; cycleDecision="no_command";
         try {
             if (state == State.STOPPING || state == State.RELEASE_UNCONFIRMED) {
@@ -240,7 +257,7 @@ public final class AimingSession {
             }
             Inputs in = port.inputs();
             cycleInputs=in; // CAM3 v2.7: Log the exact snapshot used by this decision.
-            String problem = in.validate(port.now());
+            String problem = controlProblem(in,port.now());
             if (problem != null && !recoverable(problem)) { stopAiming(problem); return; }
             Authority a = port.authority();
             // CAM3 v2.2: New contradictory state vetoes acquisition; old RC state is not a takeover.
@@ -284,12 +301,13 @@ public final class AimingSession {
                     diagnostic("pause_neutral", "recovered connection; request yaw=0");
                     port.sendYaw(0); neutralSent = true;
                 }
-                if (recoverySince < 0) { recoverySince = port.now(); diagnostic("recovery_timer", "valid for 2000ms required"); }
+                long recoveryMs=gpsOnlyRecovery ? 0 : 2000;
+                if (recoverySince < 0) { recoverySince = port.now(); diagnostic("recovery_timer", "valid for "+recoveryMs+"ms required"); }
                 reason = "recovering";
-                if (port.now() - recoverySince < 2000) return;
+                if (port.now() - recoverySince < recoveryMs) return;
                 if (cancelled.get() || pauseRequested.get()) return;
                 rate = 0; lastTick = port.now(); reason = "aiming";
-                activated = true; setState(State.AIMING); diagnostic("resumed", "stable inputs; yaw restarts from zero");
+                activated = true; setState(State.AIMING); diagnostic("resumed", gpsOnlyRecovery ? "fresh GPS; no additional dwell" : "stable inputs; yaw restarts from zero");
                 recoverySince = -1;
             }
             if (state == State.STARTING) {
@@ -318,7 +336,19 @@ public final class AimingSession {
             // VT 2.9: Resolve movement state before selecting the sole yaw owner for this tick.
             String oldMovement=movement.phase.name()+":"+movement.reason;
             long oldGeneration=movement.centralGeneration;
-            movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0));
+            // VT 3.1: No stale fixes enter qualification or ride detection. Retained yaw
+            // uses the same coordinate with live aircraft heading, never extrapolation.
+            if(in.validate(now)==null) {
+                lastFreshAimingTarget=in.target;
+                movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0));
+            } else {
+                cycleRetainedTarget=true;
+                // A saved plan needs live aircraft telemetry, not new surfer packets.
+                // Never feed an old fix to ride detection or start a new approach from it.
+                if(movement.approaching() || movement.returning())
+                    movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0),false);
+                else movement.pauseForGps(now);
+            }
             if(movement.event.equals("ride_ended") || movement.event.equals("fast_ride_ended")) surferYaw.reset();
             if(movement.returning() || movement.approaching()) {
                 // Navigation may correct its saved heading in either direction without cooldown.
@@ -353,7 +383,7 @@ public final class AimingSession {
             // CAM3 v2.3: Last-moment recoverable failures pause instead of cancelling the session.
             Inputs finalInputs=port.inputs();
             cycleFinalInputs=finalInputs; // Preserve the final veto snapshot, not just the earlier calculation inputs.
-            String finalProblem = finalInputs.validate(port.now());
+            String finalProblem = controlProblem(finalInputs,port.now());
             if (!cancelled.get() && (pauseRequested.get() || (finalProblem != null && recoverable(finalProblem)))) {
                 pauseAiming(pauseRequested.get() ? pauseCause : finalProblem); return;
             }
@@ -376,6 +406,7 @@ public final class AimingSession {
         if (state == State.PAUSED) diagnostic("recovery_cancelled", "reason=" + why);
         recoverySince = -1; pauseRequested.set(false);
         cancelled.set(true); rate = 0; reason = why;
+        lastFreshAimingTarget=null;
         movement.cancel();
         surferYaw.reset(); // No direction commitment survives Stop.
         // CAM3 v2.1: Log stop reasons even if the state itself has not changed.

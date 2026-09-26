@@ -92,3 +92,11 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 3.0 tests did not compile' }
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.0 tests failed' }
 if($movementRows[0].fastWindowMs -ne 1000 -or $movementRows[0].confirmationWindowMs -ne 5000 -or $cycles[0].reverseBlockMs -ne 2000){throw 'VT 3.0 log evidence missing'}
 Write-Output 'PASS: VT 3.0 detection windows and reverse block are present in serialized logs'
+
+# VT 3.1: Exercise retained yaw, preserved qualification and re-approach hysteresis.
+& "$JavaHome/bin/javac.exe" -cp $output -d $output (Join-Path (Split-Path $test) 'Vt31Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.1 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt31Test'
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.1 tests failed' }
+if($movementRows[0].qualificationRequiredMs -ne 20000 -or $movementRows[0].reapproachMarginM -ne 15 -or !$movementRows[1].gpsMovementPaused){throw 'VT 3.1 log evidence missing'}
+Write-Output 'PASS: VT 3.1 settings and GPS pause evidence independently parsed'

@@ -54,7 +54,7 @@ public final class ComeToMeTest {
         c=start();
         AimingSession.Inputs same=in(1000,0,0,100,0,0);
         c.update_state_machine(same,62000,.1);
-        check(c.forward==0 && c.qualifiedMs==0,"reused fix cannot complete qualification");
+        check(c.forward==0 && c.qualifiedMs==ComeToMeSettings.QUALIFY_MS && !c.approaching(),"timer completes but old fix cannot start approach");
 
         c=start(); qualify(c);
         c.pause(true,62000);
@@ -105,6 +105,8 @@ public final class ComeToMeTest {
         c.update_state_machine(in(1000,0,0,400,0,0),1000,.1);
         for(long t=1500;t<=61000;t+=500) c.update_state_machine(in(t,0,0,400,0,0),t,.1);
         c.update_state_machine(in(61500,200.1,0,400,0,0),61500,.1);
+        check(c.forward>0,"approach continues beyond old 200 m cap");
+        c.update_state_machine(in(61600,250.1,0,400,0,0),61600,.1);
         check(c.forward==0 && c.reason.equals("excursion_limit"),"excursion cap prevents further approach");
 
         c=new ComeToMeController();

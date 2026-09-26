@@ -197,3 +197,29 @@ installed or flight-tested.
 ## VT 2.9
 
 See [VT 2.9 changes](Docs/VT_2.9.md). Before release, review RTH control-release confirmation (`RELEASE_UNCONFIRMED`); deferred technical debt, not changed by this implementation.
+
+## VT 3.1 - implemented in existing worktree; device validation pending
+
+See [VT 3.1 summary and validation](Docs/VT_3.1.md). Retained-target aiming addresses
+finishing corrections during surfer packet gaps; it does not filter GPS positions or
+solve the observed camera/heading mismatch. Qualification is 20 s, default band 50 m,
+GPS and ride credit freezes, GPS-only recovery has no extra dwell, and the configurable
+re-approach margin defaults to 15 m. Existing saved lineup settings are preserved.
+Manual/other recovery, movement GPS requirements and RTH release debt remain unchanged.
+
+
+### VT 3.1 orientation logging addition
+
+Full Log now includes `orientation_cycle`, joined by session/cycleId to aiming and movement.
+It records raw SDK aircraft and main-gimbal pitch/roll/yaw (degrees), plus the explicit
+gimbal yaw relative to aircraft heading. Raw gimbal yaw is not relabelled as camera
+compass heading. Each source has availability, freshness, read error, request-start
+elapsedRealtime timestamp and age; missing/non-finite angles are null, never zero.
+Optional reads use the existing 500 ms polling cadence; snapshots are written each
+control cycle. Repeated snapshots are not new sensor samples. Unsupported keys do not
+gate aiming, movement, startup or recovery. No control behavior changed.
+
+
+VT 3.1: Approach excursion limit increased from 200 m to 250 m from the saved central point.
+
+VT 3.1 GPS completion update: qualification timer continues through packet gaps; new approach waits for fresh in-band GPS. Saved approach/return rotation and translation continue with fresh aircraft telemetry. Logs and regression scenarios cover both paths.

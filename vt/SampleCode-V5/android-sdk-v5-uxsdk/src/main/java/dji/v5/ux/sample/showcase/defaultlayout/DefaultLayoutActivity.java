@@ -262,7 +262,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
             menu.getMenu().add(0,4,3,"Come to me").setCheckable(true)
                     .setChecked(yawAimingController.movementSettings().enabled).setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,5,4,"VT 3.0 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,5,4,"VT 3.1 settings").setEnabled(yawAimingController.canSelectGpsSource());
             menu.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == 1) {
                     new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
@@ -284,7 +284,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 if(item.getItemId()==4) {
                     dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
                     yawAimingController.setMovementSettings(new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(
-                            !c.enabled,c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideEndKmh,c.rideEndMs,c.inactivityMs));
+                            !c.enabled,c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideEndKmh,c.rideEndMs,c.inactivityMs,c.reapproachMargin));
                 }
                 if(item.getItemId()==5) showMovementSettings();
                 return true;
@@ -409,8 +409,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
         String[] labels={"Filming distance (10–200 m)","Lineup total width (20–200 m)",
                 "Ride start speed (km/h)","Ride end speed (km/h)","Ride end confirmation (seconds)",
-                "No-ride return timeout (minutes)"};
-        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideEndKmh,c.rideEndMs/1000.0,c.inactivityMs/60000.0};
+                "No-ride return timeout (minutes)","Re-approach margin (0-200 m)"};
+        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideEndKmh,c.rideEndMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin};
         android.widget.LinearLayout form=new android.widget.LinearLayout(this);
         form.setOrientation(android.widget.LinearLayout.VERTICAL);
         int pad=(int)(16*getResources().getDisplayMetrics().density); form.setPadding(pad,pad,pad,pad);
@@ -423,7 +423,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.0 · Come to me")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.1 · Come to me")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -435,7 +435,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 }
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings next=
                     new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(c.enabled,n[0],n[1],n[2],n[3],
-                            (long)(n[4]*1000),(long)(n[5]*60000));
+                            (long)(n[4]*1000),(long)(n[5]*60000),n[6]);
                 if(!yawAimingController.canSelectGpsSource()) throw new IllegalArgumentException("Stop aiming before changing settings");
                 yawAimingController.setMovementSettings(next); dialog.dismiss();
             } catch(IllegalArgumentException bad) { Toast.makeText(this,bad.getMessage(),Toast.LENGTH_LONG).show(); }

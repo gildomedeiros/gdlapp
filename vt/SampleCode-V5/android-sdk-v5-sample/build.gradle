@@ -23,8 +23,9 @@ android {
         // CAM3 v2.5: Automatic full-session logging and minimal diagnostic policy.
         // CAM3 v2.7: Nearby direction commitment, no distance pause, per-cycle full log.
         // VT 3.0: Fast/confirmed rides, timed surfer-yaw reverse block; retire Nearby.
-        versionCode 14
-        versionName "3.0"
+        // VT 3.1: Retained-target yaw, preserved qualification and re-approach margin.
+        versionCode 15
+        versionName "3.1"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN
