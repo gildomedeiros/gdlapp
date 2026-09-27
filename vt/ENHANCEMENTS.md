@@ -2,7 +2,7 @@
 
 Updated: 2026-09-16. This file is the pending-work list; per-version detailed designs remain separate. Items below are not implemented unless explicitly marked complete.
 
-## E01 — Recover after landing/RTH without restarting the app
+## E01 â€” Recover after landing/RTH without restarting the app
 
 Status: PENDING. Priority: fail-safe recovery. Target version: not yet assigned.
 
@@ -30,7 +30,7 @@ Required enhancement:
 
 Acceptance: reproduce landing/RTH with missing state callbacks, recover without process restart when verified recovery conditions hold, and test late grants, failures and pilot takeover without any unintended yaw command.
 
-## E02 — Shared distance rule and consistent reporting
+## E02 â€” Shared distance rule and consistent reporting
 
 Status: IMPLEMENTED locally in v2.3; device validation pending.
 
@@ -40,7 +40,7 @@ Boundary/accuracy tests and release metadata were updated for v2.3. Below-distan
 
 See [v2.3 detailed design](detailed_design/detailed_design_v2.3.md) for source changes, validation and remaining device checks.
 
-## E03 — Identify exactly which callback stopped aiming
+## E03 â€” Identify exactly which callback stopped aiming
 
 Status: IMPLEMENTED locally in v2.3; device validation pending.
 
@@ -48,7 +48,7 @@ Named telemetry events distinguish flight mode, connection and pilot sticks. Lis
 
 Acceptance: a log can identify whether flight-mode AUTO_LANDING, pilot sticks, connection loss or an authority callback initiated a stop, without inferring it from later snapshots.
 
-## E04 — Clarify last submitted command in logs
+## E04 â€” Clarify last submitted command in logs
 
 Status: IMPLEMENTED locally in v2.3; device validation pending.
 
@@ -56,7 +56,7 @@ Readiness logs now use lastSubmittedYawRate, lastCommandAgeMs and sending. Actua
 
 Acceptance: a stopped-state summary cannot be mistaken for evidence of continuing yaw commands.
 
-## E05 — Clarify why the ownership field does not change
+## E05 â€” Clarify why the ownership field does not change
 
 Status: PENDING investigation. Target version: not yet assigned.
 
@@ -71,7 +71,7 @@ Investigation:
 
 Acceptance: explain the observed unchanged field with supporting evidence, or clearly record the remaining limitation and its effect on cam3's control checks.
 
-## E06 — Reject implausible phone GPS jumps
+## E06 â€” Reject implausible phone GPS jumps
 
 Status: PENDING. Target version: not yet assigned.
 
@@ -81,7 +81,7 @@ Retain the last accepted position without refreshing its original timestamp. Def
 
 Acceptance: test isolated spikes, repeated rejected fixes, ordinary surfer movement, uncertainty changes, invalid time intervals, stale-data stopping and recovery to consistent valid fixes. Include clear rejection/recovery diagnostics. This is a plausibility filter, not proof that accepted coordinates are correct; consistent position errors can still pass.
 
-## E07 — Predict surfer movement during a nearby pass
+## E07 â€” Predict surfer movement during a nearby pass
 
 Status: PENDING design. Target version: not yet assigned. No application behavior changed.
 
@@ -96,7 +96,7 @@ The implementing version must define what qualifies as good readings, prediction
 
 Acceptance: test nearby passes, noisy fixes, changes in direction/speed, prediction expiry and transition back to GPS aiming. Confirm STOP, RTH, landing and control loss cancel prediction. Record the detailed design in the implementing version's own file before implementation.
 
-## E08 — Surfer signal to leave space ahead in the camera frame
+## E08 â€” Surfer signal to leave space ahead in the camera frame
 
 Status: PENDING design. Target version: not yet assigned. No application behavior changed.
 
@@ -113,7 +113,7 @@ Acceptance: test left/right rides, direction changes, stale/duplicate signals, p
 
 ## Completion tracking
 
-E02–E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05, E06, E07 and E08 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.
+E02â€“E04 are implemented locally in v2.3; source/method details and desktop validation are recorded in its design file. E01, E05, E06, E07 and E08 remain pending. All IDs and original problem history are retained. Actual hardware behavior still needs device checks.
 
 ## v2.4 implementation follow-up
 
@@ -129,7 +129,7 @@ Full/minimal logging is implemented locally; see [v2.5 detailed design](detailed
 
 E07 is PARTIALLY ADDRESSED through the user-approved goalkeeper direction commitment, implemented directly from v2.5. This is neither forward prediction nor v2.6 coordinate smoothing. Both LoRa and phone sources use the same voting/lock rules. The 5 m gate is removed by explicit request. E06 raw outlier rejection, E01 control-release recovery and E08 framing remain pending. See [v2.7 detailed design](detailed_design/detailed_design_v2.7.md) for source methods, lifecycle, logging schema, tests and hardware limitations. Original local v2.5 remains unchanged.
 
-## E09 — Increase acceptable target-coordinate age during poor LoRa reception
+## E09 â€” Increase acceptable target-coordinate age during poor LoRa reception
 
 Status: PENDING design. Target version: not yet assigned. Requested 2026-09-18. No application behavior changed.
 
@@ -139,7 +139,7 @@ Define how poor reception is detected (recent RSSI/SNR, loss and reception gaps)
 
 Keep aircraft-telemetry freshness and STOP/RTH/landing/control-loss protections separate and unchanged. Define behavior after the extended limit expires and during recovery. Validate brief gaps, prolonged loss, changing signal quality and return to fresh readings before implementation is considered complete.
 
-## E10 — Rename CAM3 references to VT (Virtual Tripod)
+## E10 â€” Rename CAM3 references to VT (Virtual Tripod)
 
 Status: PENDING. Target version: not yet assigned. Requested 2026-09-18. No application behavior changed.
 
@@ -147,7 +147,7 @@ Rename current product references from cam3/CAM3 to VT / Virtual Tripod. Review 
 
 Treat application/package identity, DJI App Key registration, signing and existing log locations as compatibility decisions during implementation, rather than blindly replacing strings. Preserve existing saved logs and document how old/new names are handled. This item records the rename request only; no references are renamed yet.
 
-## E11 — Offset camera aim to place the surfer to one side of the frame
+## E11 â€” Offset camera aim to place the surfer to one side of the frame
 
 Status: PENDING design. Target version: not yet assigned. Requested 2026-09-18. No application behavior changed. Related: E08 (surfer-requested framing).
 
@@ -159,7 +159,7 @@ Determine whether to apply the offset through the existing drone-yaw aim or supp
 
 Acceptance: demonstrate correct left/right frame placement for clockwise and anticlockwise movement, wraparound bearings, zero-gap centred behavior, and bounded transitions. Retain existing STOP, stale-input and control-loss handling. This item does not require the surfer button/protocol proposed in E08, and adds no autonomous following scope.
 
-### E11 initial trigger idea — established movement before nearby entry
+### E11 initial trigger idea â€” established movement before nearby entry
 
 Initial proposal from the 2026-09-18 log/frame review; pending design, not an implementation decision.
 
@@ -170,7 +170,7 @@ Initial proposal from the 2026-09-18 log/frame review; pending design, not an im
 - Frame 4 is timestamped 07:01:36.755. The nearest cycle at 07:01:36.762 records 19.21 m separation and the GPS target 9.29 degrees left of drone heading; the frame shows the person near the far-left edge. Near frames 1-3, the corresponding sampled heading errors are approximately 4.89, 5.44 and 7.93 degrees left. This shows existing off-centre tracking, not a calibrated relationship between yaw error and image position.
 - The run does not log actual gimbal orientation or camera field of view. Establish the relationship among camera heading, gimbal pose, zoom and desired image position before selecting the angular gap. Validate that the offset does not push an already-left subject farther out of frame. Logs alone cannot determine an exact left-third offset or prove subject visibility.
 
-## E12 — Log actual gimbal pitch
+## E12 â€” Log actual gimbal pitch
 
 Status: PENDING. Target version: not yet assigned. Requested 2026-09-18. No application behavior changed. Related: E11 (framing offset).
 
@@ -178,7 +178,7 @@ Add the actual reported gimbal pitch (camera vertical angle) to Full Log so vide
 
 Log reported orientation rather than assuming a commanded angle was reached. Keep SDK observation and asynchronous logging separate from steering; this enhancement does not add automatic gimbal control. Verify the supported pitch telemetry source and sign convention, then validate manual tilt changes, stale/missing readings and timestamp correlation with video frames.
 
-## E13 — Enable Full Log and Nearby by default
+## E13 â€” Enable Full Log and Nearby by default
 
 Status: PENDING. Target version: not yet assigned. Requested 2026-09-18. No application behavior changed.
 
@@ -223,3 +223,7 @@ gate aiming, movement, startup or recovery. No control behavior changed.
 VT 3.1: Approach excursion limit increased from 200 m to 250 m from the saved central point.
 
 VT 3.1 GPS completion update: qualification timer continues through packet gaps; new approach waits for fresh in-band GPS. Saved approach/return rotation and translation continue with fresh aircraft telemetry. Logs and regression scenarios cover both paths.
+
+## VT 3.2 implemented
+
+Zero-second qualification, no return/band recreation on ride end, one-metre approach/return completion tolerance, 249 m outward excursion stop and diagnostic residuals. Updated within 3.2: both directions cruise at 2 m/s with 0.25 m/s2 acceleration, slowdown from 10 m and preserved arrival speeds. See [release notes](Docs/VT_3.2.md) and [design](detailed_design/detailed_design_v3.2.md). Device validation pending; existing unrelated backlog retained.

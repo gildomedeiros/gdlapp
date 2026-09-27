@@ -1,0 +1,485 @@
+[
+  {
+    "time": "17:10:16.987",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1500,
+    "speedKmh": 5.335419899137246,
+    "ageMs": 53
+  },
+  {
+    "time": "17:10:19.966",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 504,
+    "speedKmh": 7.0548015838091285,
+    "ageMs": 31
+  },
+  {
+    "time": "17:10:22.020",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 5.335419679695895,
+    "ageMs": 85
+  },
+  {
+    "time": "17:10:26.028",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2001,
+    "speedKmh": 5.335419461321491,
+    "ageMs": 94
+  },
+  {
+    "time": "17:10:43.470",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2501,
+    "speedKmh": null,
+    "ageMs": 36
+  },
+  {
+    "time": "17:11:10.453",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1001,
+    "speedKmh": 5.335417714324116,
+    "ageMs": 15
+  },
+  {
+    "time": "17:11:17.011",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 5000,
+    "speedKmh": 8.111367629115671,
+    "ageMs": 74
+  },
+  {
+    "time": "17:11:26.038",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2996,
+    "speedKmh": 5.335417927137877,
+    "ageMs": 101
+  },
+  {
+    "time": "17:11:38.448",
+    "reason": "insufficient_evidence",
+    "erasedMs": 1999,
+    "speedKmh": null,
+    "ageMs": 8
+  },
+  {
+    "time": "17:11:48.511",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2500,
+    "speedKmh": null,
+    "ageMs": 71
+  },
+  {
+    "time": "17:11:52.006",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1500,
+    "speedKmh": 5.407579951575461,
+    "ageMs": 67
+  },
+  {
+    "time": "17:11:57.955",
+    "reason": "stale_gps",
+    "erasedMs": 980,
+    "speedKmh": null,
+    "ageMs": 3016
+  },
+  {
+    "time": "17:12:07.486",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2476,
+    "speedKmh": null,
+    "ageMs": 24
+  },
+  {
+    "time": "17:12:13.032",
+    "reason": "insufficient_evidence",
+    "erasedMs": 500,
+    "speedKmh": null,
+    "ageMs": 91
+  },
+  {
+    "time": "17:12:25.556",
+    "reason": "stale_gps",
+    "erasedMs": 520,
+    "speedKmh": null,
+    "ageMs": 3094
+  },
+  {
+    "time": "17:12:38.974",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1998,
+    "speedKmh": 5.335416840823999,
+    "ageMs": 33
+  },
+  {
+    "time": "17:12:45.033",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 3500,
+    "speedKmh": 5.335416404073584,
+    "ageMs": 92
+  },
+  {
+    "time": "17:12:49.947",
+    "reason": "stale_gps",
+    "erasedMs": 1003,
+    "speedKmh": null,
+    "ageMs": 3003
+  },
+  {
+    "time": "17:12:53.948",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 479,
+    "speedKmh": 8.11136303261229,
+    "ageMs": 6
+  },
+  {
+    "time": "17:13:00.002",
+    "reason": "insufficient_evidence",
+    "erasedMs": 522,
+    "speedKmh": null,
+    "ageMs": 60
+  },
+  {
+    "time": "17:13:09.964",
+    "reason": "insufficient_evidence",
+    "erasedMs": 4523,
+    "speedKmh": null,
+    "ageMs": 21
+  },
+  {
+    "time": "17:13:18.992",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 4500,
+    "speedKmh": 5.3373564787367584,
+    "ageMs": 49
+  },
+  {
+    "time": "17:13:24.014",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 524,
+    "speedKmh": 5.4075807176572726,
+    "ageMs": 69
+  },
+  {
+    "time": "17:13:48.021",
+    "reason": "stale_gps",
+    "erasedMs": 3999,
+    "speedKmh": null,
+    "ageMs": 3076
+  },
+  {
+    "time": "17:13:55.510",
+    "reason": "stale_gps",
+    "erasedMs": 2521,
+    "speedKmh": null,
+    "ageMs": 3043
+  },
+  {
+    "time": "17:14:27.480",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2500,
+    "speedKmh": 7.054791674629164,
+    "ageMs": 11
+  },
+  {
+    "time": "17:14:33.523",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1022,
+    "speedKmh": 5.335416185698287,
+    "ageMs": 72
+  },
+  {
+    "time": "17:14:38.954",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 4504,
+    "speedKmh": 5.335415750014521,
+    "ageMs": 5
+  },
+  {
+    "time": "17:14:43.983",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 3500,
+    "speedKmh": 5.3354150938209095,
+    "ageMs": 35
+  },
+  {
+    "time": "17:14:46.028",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 499,
+    "speedKmh": 5.3354148688171446,
+    "ageMs": 80
+  },
+  {
+    "time": "17:15:02.015",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 14502,
+    "speedKmh": 5.33541389328756,
+    "ageMs": 65
+  },
+  {
+    "time": "17:15:07.963",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 4001,
+    "speedKmh": 8.111360159792026,
+    "ageMs": 12
+  },
+  {
+    "time": "17:15:17.503",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 5000,
+    "speedKmh": 7.054790353401517,
+    "ageMs": 30
+  },
+  {
+    "time": "17:15:19.963",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 492,
+    "speedKmh": 8.111362458750431,
+    "ageMs": 12
+  },
+  {
+    "time": "17:15:31.550",
+    "reason": "insufficient_evidence",
+    "erasedMs": 500,
+    "speedKmh": null,
+    "ageMs": 97
+  },
+  {
+    "time": "17:15:38.523",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2001,
+    "speedKmh": null,
+    "ageMs": 69
+  },
+  {
+    "time": "17:15:50.507",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2001,
+    "speedKmh": 5.4075795685343815,
+    "ageMs": 55
+  },
+  {
+    "time": "17:16:05.981",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2001,
+    "speedKmh": null,
+    "ageMs": 23
+  },
+  {
+    "time": "17:16:30.476",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2001,
+    "speedKmh": null,
+    "ageMs": 4
+  },
+  {
+    "time": "17:16:37.042",
+    "reason": "insufficient_evidence",
+    "erasedMs": 2001,
+    "speedKmh": null,
+    "ageMs": 88
+  },
+  {
+    "time": "17:16:41.547",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2502,
+    "speedKmh": 5.335418369448578,
+    "ageMs": 92
+  },
+  {
+    "time": "17:16:54.467",
+    "reason": "insufficient_evidence",
+    "erasedMs": 10001,
+    "speedKmh": null,
+    "ageMs": 8
+  },
+  {
+    "time": "17:16:59.984",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 4000,
+    "speedKmh": 5.832442607065944,
+    "ageMs": 17
+  },
+  {
+    "time": "17:17:05.003",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 5.335418151073817,
+    "ageMs": 46
+  },
+  {
+    "time": "17:17:11.460",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1501,
+    "speedKmh": 5.3373564787367584,
+    "ageMs": 4
+  },
+  {
+    "time": "17:17:18.029",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 4023,
+    "speedKmh": 5.337356479684864,
+    "ageMs": 72
+  },
+  {
+    "time": "17:17:28.489",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 4500,
+    "speedKmh": 5.6570116589773525,
+    "ageMs": 32
+  },
+  {
+    "time": "17:17:35.977",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 3002,
+    "speedKmh": 5.335419679695895,
+    "ageMs": 18
+  },
+  {
+    "time": "17:17:42.030",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 5.335419461321491,
+    "ageMs": 72
+  },
+  {
+    "time": "17:18:00.059",
+    "reason": "stale_gps",
+    "erasedMs": 501,
+    "speedKmh": null,
+    "ageMs": 3101
+  },
+  {
+    "time": "17:18:12.047",
+    "reason": "insufficient_evidence",
+    "erasedMs": 3500,
+    "speedKmh": null,
+    "ageMs": 87
+  },
+  {
+    "time": "17:18:24.977",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 3001,
+    "speedKmh": 5.335419899137246,
+    "ageMs": 16
+  },
+  {
+    "time": "17:18:33.988",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2500,
+    "speedKmh": 7.05480223439393,
+    "ageMs": 27
+  },
+  {
+    "time": "17:18:36.037",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 5.335420116444524,
+    "ageMs": 76
+  },
+  {
+    "time": "17:18:37.988",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 523,
+    "speedKmh": 8.111373949289659,
+    "ageMs": 27
+  },
+  {
+    "time": "17:18:40.966",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1500,
+    "speedKmh": 5.335420116444524,
+    "ageMs": 5
+  },
+  {
+    "time": "17:18:43.020",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 523,
+    "speedKmh": 5.3354203348187506,
+    "ageMs": 59
+  },
+  {
+    "time": "17:18:45.997",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 499,
+    "speedKmh": 5.40758339893996,
+    "ageMs": 36
+  },
+  {
+    "time": "17:18:49.998",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1498,
+    "speedKmh": 7.05480487683289,
+    "ageMs": 36
+  },
+  {
+    "time": "17:18:52.050",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 5.335420989941069,
+    "ageMs": 85
+  },
+  {
+    "time": "17:18:53.999",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 7.0548055474675735,
+    "ageMs": 37
+  },
+  {
+    "time": "17:18:56.976",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 1499,
+    "speedKmh": 7.0548055474675735,
+    "ageMs": 13
+  },
+  {
+    "time": "17:18:59.029",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 7.0548055474675735,
+    "ageMs": 65
+  },
+  {
+    "time": "17:19:03.022",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2022,
+    "speedKmh": 8.111377387928838,
+    "ageMs": 57
+  },
+  {
+    "time": "17:19:07.018",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 2502,
+    "speedKmh": 5.335421645062852,
+    "ageMs": 55
+  },
+  {
+    "time": "17:19:09.067",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 500,
+    "speedKmh": 5.335421863436662,
+    "ageMs": 103
+  },
+  {
+    "time": "17:19:13.980",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 499,
+    "speedKmh": 5.335422955304812,
+    "ageMs": 17
+  },
+  {
+    "time": "17:19:17.052",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 501,
+    "speedKmh": 5.335423392051656,
+    "ageMs": 87
+  },
+  {
+    "time": "17:19:20.025",
+    "reason": "speed_at_or_above_end_threshold",
+    "erasedMs": 499,
+    "speedKmh": 5.4075887614883085,
+    "ageMs": 62
+  }
+]

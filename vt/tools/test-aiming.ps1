@@ -98,5 +98,22 @@ Write-Output 'PASS: VT 3.0 detection windows and reverse block are present in se
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.1 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt31Test'
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.1 tests failed' }
-if($movementRows[0].qualificationRequiredMs -ne 20000 -or $movementRows[0].reapproachMarginM -ne 15 -or !$movementRows[1].gpsMovementPaused){throw 'VT 3.1 log evidence missing'}
+if($movementRows[0].qualificationRequiredMs -ne 0 -or $movementRows[0].reapproachMarginM -ne 15 -or !$movementRows[1].gpsMovementPaused){throw 'VT 3.1 log evidence missing'}
 Write-Output 'PASS: VT 3.1 settings and GPS pause evidence independently parsed'
+
+# VT 3.2: Arrival boundaries, late telemetry vetoes and same-cycle yaw handoff.
+& "$JavaHome/bin/javac.exe" -cp $output -d $output (Join-Path (Split-Path $test) 'Vt32Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.2 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt32Test'
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.2 tests failed' }
+if($movementRows[0].completionToleranceM -ne 1 -or $movementRows[0].excursionStopDistanceM -ne 249 -or [Math]::Abs($movementRows[0].approachRemainingM-($movementRows[0].plannedTravelM-$movementRows[0].forwardProgressM)) -gt 0.00001){throw 'VT 3.2 serialized completion evidence failed'}
+if($movementRows[0].maxMovementSpeedMps -ne 2 -or $movementRows[0].movementAccelerationMps2 -ne 0.25 -or $movementRows[0].movementSlowdownDistanceM -ne 10 -or $movementRows[0].arrivalSpeedPerMetre -ne 0.2){throw 'VT 3.2 movement speed profile log evidence failed'}
+Write-Output 'PASS: VT 3.2 completion tolerance, excursion threshold, speed profile and residual travel independently parsed'
+
+# VT 3.2: No qualification dwell and no return/band recreation on ride end.
+& "$JavaHome/bin/javac.exe" -cp $output -d $output (Join-Path (Split-Path $test) 'Vt32RidePolicyTest.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.2 ride-policy tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt32RidePolicyTest'
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.2 ride-policy tests failed' }
+if($movementRows[0].qualificationWaitEnabled -ne $false -or $movementRows[0].rideEndTriggersReturn -ne $false){throw 'VT 3.2 ride-policy log evidence failed'}
+Write-Output 'PASS: zero-wait and ride-end-return policy independently parsed from production logs'

@@ -113,7 +113,7 @@ public final class ComeToMeController {
 
     /**
      * Fast detection interrupts approach and enables responsive aiming. Only five-second
-     * confirmation cancels the no-ride timer and authorizes a later ride-end return.
+     * confirmation cancels the no-ride timer; ride end does not authorize return (VT 3.2).
      * Observe even when translation is disabled or its movement timeout has latched.
      */
     private void observeSpeed(AimingSession.Fix fix,long now) {
@@ -191,7 +191,8 @@ public final class ComeToMeController {
                 if(event.equals("none")) event="band_recreated";
             }
             if(riding) freezeQualification("ride");
-            if(event.equals("ride_ended")) beginReturn("ride_ended",in,now);
+            // VT 3.2: Ride end only releases the ride gate. It neither returns to central
+            // nor recreates the band; ordinary distance/GPS/control gates decide the next approach.
         }
         advanceQualification(now);
         if(!ride.confirmed && inactiveSince>=0 && now-inactiveSince>=settings.inactivityMs) beginReturn("no_ride_timeout",in,now);
@@ -199,8 +200,9 @@ public final class ComeToMeController {
         if(phase==Phase.RETURNING) {
             returnProgress=projectedReturnProgress(in);
             headingError=YawAimingMath.shortestHeadingError(returnHeading,in.heading);
-            if(returnProgress>=returnDistance) {
-                finishReturn("return_travel_completed"); return;
+            // VT 3.2: Release navigation ownership before the sub-metre crawl.
+            if(returnDistance-returnProgress<=ComeToMeSettings.COMPLETION_TOLERANCE) {
+                finishReturn(returnProgress>=returnDistance ? "return_travel_completed" : "return_arrival_tolerance"); return;
             }
             // Keep the transition neutral. Align once, then hold this saved heading during travel.
             if(now==attemptSince) { reason="return_alignment"; return; }
@@ -236,10 +238,14 @@ public final class ComeToMeController {
         // Progress is net displacement along the frozen heading, never accumulated GPS steps.
         approachProgress=projectedProgress(in);
         headingError=YawAimingMath.shortestHeadingError(approachHeading,in.heading);
-        if(approachProgress>=approachDistance) {
-            enterFilmingHold(now); return;
+        // VT 3.2: Saved projected travel, not live surfer distance, defines arrival.
+        if(approachDistance-approachProgress<=ComeToMeSettings.COMPLETION_TOLERANCE) {
+            enterFilmingHold(now);
+            if(approachProgress<approachDistance) reason="approach_arrival_tolerance";
+            return;
         }
-        if(centralDistance>=ComeToMeSettings.MAX_EXCURSION) {
+        // VT 3.2: Stop 1 m inside the hard 250 m boundary instead of crawling toward it.
+        if(centralDistance>=ComeToMeSettings.EXCURSION_STOP) {
             phase=Phase.HOLDING; reason="excursion_limit"; attemptSince=-1; return;
         }
         // Align once (and again after a safety pause); heading corrections continue during travel.
@@ -301,8 +307,11 @@ public final class ComeToMeController {
 
     /** Increase speed gradually; any blocked movement returns zero immediately in update_state_machine(). */
     private static double rampedSpeed(double previous,double remaining,double dt) {
-        double desired=ComeToMeSettings.MAX_SPEED*Math.min(1,Math.max(0,remaining)/5);
-        // Avoid asymptotically approaching the stopping boundary; 0.05 m/s is the final crawl.
+        // VT 3.2: The arrival slope is independent of cruise speed: 5 m -> 1 m/s,
+        // 2 m -> 0.4 m/s. At 2 m/s cruise, slowdown therefore begins at 10 m.
+        double desired=Math.min(ComeToMeSettings.MAX_SPEED,
+                Math.max(0,remaining)*ComeToMeSettings.ARRIVAL_SPEED_PER_METRE);
+        // VT 3.2: Retain the existing speed profile; callers now finish within 1 m, before the final crawl.
         desired=Math.min(ComeToMeSettings.MAX_SPEED,Math.max(0.05,desired));
         return Math.min(desired,Math.abs(previous)+ComeToMeSettings.ACCELERATION*Math.min(0.5,Math.max(0,dt)));
     }
@@ -316,10 +325,11 @@ public final class ComeToMeController {
         double central=YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon);
         if(requested>0) {
             return approaching() && approachAligned && !riding
-                    && central<ComeToMeSettings.MAX_EXCURSION
-                    && projectedProgress(in)<approachDistance;
+                    && central<ComeToMeSettings.EXCURSION_STOP
+                    && approachDistance-projectedProgress(in)>ComeToMeSettings.COMPLETION_TOLERANCE;
         }
-        return returning() && returnAligned && projectedReturnProgress(in)<returnDistance;
+        // VT 3.2: Submission must use the same arrival boundary as the planner.
+        return returning() && returnAligned && returnDistance-projectedReturnProgress(in)>ComeToMeSettings.COMPLETION_TOLERANCE;
     }
     public ComeToMeSettings settings() { return settings; }
     public boolean returning() { return phase==Phase.RETURNING; }
@@ -335,10 +345,10 @@ public final class ComeToMeController {
                 +" · attempt "+attemptElapsedMs/1000+"/300s";
     }
     public String details() {
-        return String.format(Locale.US,"%s%nLineup %.0f m: %d/20 s · speed %.1f km/h · riding %s%nRide end %d/%d s · no ride %d/%d s · attempt %d/300 s",
-                summary(),settings.lineupWidth,qualifiedMs/1000,speedKmh,riding,slowMs/1000,settings.rideEndMs/1000,
+        return String.format(Locale.US,"%s%nLineup %.0f m: %d/%d s · speed %.1f km/h · riding %s%nRide end %d/%d s · no ride %d/%d s · attempt %d/300 s",
+                summary(),settings.lineupWidth,qualifiedMs/1000,ComeToMeSettings.QUALIFY_MS/1000,speedKmh,riding,slowMs/1000,settings.rideEndMs/1000,
                 inactiveMs/1000,settings.inactivityMs/1000,attemptElapsedMs/1000)
-                +String.format(Locale.US,"%n5s speed %.1f km/h; return-qualified ride %s",ride.confirmationSpeed,ride.confirmed)
+                +String.format(Locale.US,"%n5s speed %.1f km/h; confirmed ride %s",ride.confirmationSpeed,ride.confirmed)
                 +String.format(Locale.US,"%nReturn progress %.1f/%.1f m; completion distance to central %.1f m",
                         returnProgress,returnDistance,returnCompletionCentralDistance);
     }

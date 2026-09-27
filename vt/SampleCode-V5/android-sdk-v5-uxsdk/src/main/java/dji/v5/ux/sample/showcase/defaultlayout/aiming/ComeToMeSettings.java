@@ -2,9 +2,15 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 
 /** Immutable per-session configuration. UI edits apply only while automatic control is stopped. */
 public final class ComeToMeSettings {
-    public static final double MAX_SPEED = 1.0, ACCELERATION = 0.25;
+    // VT 3.2: Faster cruise in both directions; preserve acceleration and arrival slope.
+    public static final double MAX_SPEED = 2.0, ACCELERATION = 0.25;
+    public static final double ARRIVAL_SPEED_PER_METRE = 0.2;
+    public static final double SLOWDOWN_DISTANCE = MAX_SPEED / ARRIVAL_SPEED_PER_METRE;
     public static final double FILM_TOLERANCE = 2, ARRIVAL_RADIUS = 3, MAX_EXCURSION = 250;
-    public static final long QUALIFY_MS = 20000, ATTEMPT_MS = 300000;
+    // VT 3.2: Finish saved travel within 1 m; keep an inward margin at the excursion cap.
+    public static final double COMPLETION_TOLERANCE = 1, EXCURSION_STOP = MAX_EXCURSION - COMPLETION_TOLERANCE;
+    // VT 3.2: Keep band bookkeeping, but impose no qualification delay on a moving surfer.
+    public static final long QUALIFY_MS = 0, ATTEMPT_MS = 300000;
     public final boolean enabled;
     public final double filmingDistance, lineupWidth, rideStartKmh, rideEndKmh, reapproachMargin;
     public final long rideEndMs, inactivityMs;

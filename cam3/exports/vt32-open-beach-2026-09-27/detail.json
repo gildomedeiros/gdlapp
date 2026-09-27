@@ -1,0 +1,361 @@
+[
+  {
+    "file": "3.2 open beach/cam3_full_2026-09-27_163144_220_3d34c4a0.jsonl",
+    "duration": 1744.774,
+    "rideBlockedSec": 1162.05,
+    "phaseSeconds": {
+      "RETURNING": 57.44,
+      "APPROACHING": 285.67,
+      "WAITING": 1162.15,
+      "HOLDING": 239.51
+    },
+    "oldGpsSec": 33.58,
+    "savedOldGpsSeconds": 1.95,
+    "gpsMovementPausedSec": 31.62,
+    "waitingFreshSec": 2.05,
+    "slowCounterResets": {
+      "speed_at_or_above_end_threshold": 106,
+      "insufficient_evidence": 37,
+      "stale_gps": 8
+    },
+    "gpsPctIntervalsLE3": 98.6,
+    "events": [
+      {
+        "timestamp": "2026-09-27T16:32:00.229+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "central_captured",
+        "noRideTimerEvent": "none",
+        "reason": "approach_alignment",
+        "phase": "APPROACHING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 71.309451995953
+      },
+      {
+        "timestamp": "2026-09-27T16:33:04.179+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "none",
+        "noRideTimerEvent": "started_filming_hold",
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "speedKmh": 0.0,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 21.364965302697303
+      },
+      {
+        "timestamp": "2026-09-27T16:38:55.396+10:00",
+        "rideEvent": "ride_started",
+        "plannerEvent": "ride_started",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 21.539769513467476,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 14.07318485275563
+      },
+      {
+        "timestamp": "2026-09-27T16:49:29.852+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 31.015294117291464
+      },
+      {
+        "timestamp": "2026-09-27T16:53:04.364+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "none",
+        "noRideTimerEvent": "cancelled_return_no_ride_timeout",
+        "reason": "return_alignment",
+        "phase": "RETURNING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 26.213319444160312
+      },
+      {
+        "timestamp": "2026-09-27T16:54:01.804+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "return_arrival_tolerance",
+        "noRideTimerEvent": "none",
+        "reason": "return_arrival_tolerance",
+        "phase": "WAITING",
+        "speedKmh": 3.5274067373806326,
+        "rideEndElapsedMs": 1501,
+        "surferDistanceM": 82.68204904005663
+      },
+      {
+        "timestamp": "2026-09-27T16:57:38.907+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 7.054819420211213,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 61.44914952195874
+      },
+      {
+        "timestamp": "2026-09-27T16:58:28.951+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 5.335436494346241,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 50.64773606558269
+      },
+      {
+        "timestamp": "2026-09-27T16:59:14.989+10:00",
+        "rideEvent": "fast_ride_ended",
+        "plannerEvent": "fast_ride_ended",
+        "noRideTimerEvent": "none",
+        "reason": "moving_forward",
+        "phase": "APPROACHING",
+        "speedKmh": 4.003017359052569,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 73.9318096567478
+      },
+      {
+        "timestamp": "2026-09-27T16:59:50.708+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "none",
+        "noRideTimerEvent": "started_filming_hold",
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "speedKmh": 0.0,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 20.936619764069675
+      }
+    ]
+  },
+  {
+    "file": "3.2 open beach/cam3_full_2026-09-27_170347_695_7146d1ab.jsonl",
+    "duration": 1380.512,
+    "rideBlockedSec": 866.6,
+    "phaseSeconds": {
+      "APPROACHING": 485.61,
+      "WAITING": 866.6,
+      "HOLDING": 28.3
+    },
+    "oldGpsSec": 65.93,
+    "savedOldGpsSeconds": 8.01,
+    "gpsMovementPausedSec": 57.92,
+    "waitingFreshSec": 12.52,
+    "slowCounterResets": {
+      "speed_at_or_above_end_threshold": 85,
+      "insufficient_evidence": 17,
+      "stale_gps": 8
+    },
+    "gpsPctIntervalsLE3": 97.46,
+    "events": [
+      {
+        "timestamp": "2026-09-27T17:05:00.149+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "central_captured",
+        "noRideTimerEvent": "none",
+        "reason": "approach_alignment",
+        "phase": "APPROACHING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 84.64661729800405
+      },
+      {
+        "timestamp": "2026-09-27T17:06:09.904+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "none",
+        "noRideTimerEvent": "started_filming_hold",
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "speedKmh": 7.054853110765488,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 26.830539007100057
+      },
+      {
+        "timestamp": "2026-09-27T17:08:47.540+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "approach_alignment",
+        "phase": "APPROACHING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 42.76288763254102
+      },
+      {
+        "timestamp": "2026-09-27T17:10:07.954+10:00",
+        "rideEvent": "ride_started",
+        "plannerEvent": "ride_started",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 24.114105525562714,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 24.733368068937406
+      },
+      {
+        "timestamp": "2026-09-27T17:10:43.470+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 41.43716684260682
+      },
+      {
+        "timestamp": "2026-09-27T17:18:55.029+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 3.52740277373379,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 50.54819865110469
+      },
+      {
+        "timestamp": "2026-09-27T17:19:40.529+10:00",
+        "rideEvent": "fast_ride_ended",
+        "plannerEvent": "fast_ride_ended",
+        "noRideTimerEvent": "none",
+        "reason": "moving_forward",
+        "phase": "APPROACHING",
+        "speedKmh": 0.0,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 73.98953691560361
+      },
+      {
+        "timestamp": "2026-09-27T17:23:00.066+10:00",
+        "rideEvent": "ride_started",
+        "plannerEvent": "ride_started",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 19.36911151592234,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 16.096592308051147
+      },
+      {
+        "timestamp": "2026-09-27T17:23:04.066+10:00",
+        "rideEvent": "ride_confirmed",
+        "plannerEvent": "ride_confirmed",
+        "noRideTimerEvent": "cancelled_confirmed_ride",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 22.62809761083669,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 28.055477225926833
+      },
+      {
+        "timestamp": "2026-09-27T17:26:32.049+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 4.003017360474727,
+        "rideEndElapsedMs": 1001,
+        "surferDistanceM": 77.96893369326992
+      },
+      {
+        "timestamp": "2026-09-27T17:27:22.034+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "ride_detected",
+        "phase": "WAITING",
+        "speedKmh": 5.335440206624078,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 115.20906214237252
+      },
+      {
+        "timestamp": "2026-09-27T17:27:54.089+10:00",
+        "rideEvent": "ride_ended",
+        "plannerEvent": "ride_ended",
+        "noRideTimerEvent": "none",
+        "reason": "moving_forward",
+        "phase": "APPROACHING",
+        "speedKmh": 0.0,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 119.47219169243726
+      }
+    ]
+  },
+  {
+    "file": "3.2 open beach/cam3_full_2026-09-27_172816_555_a825688e.jsonl",
+    "duration": 533.873,
+    "rideBlockedSec": 0,
+    "phaseSeconds": {
+      "APPROACHING": 480.78,
+      "HOLDING": 53.09
+    },
+    "oldGpsSec": 13.06,
+    "savedOldGpsSeconds": 3.98,
+    "gpsMovementPausedSec": 8.88,
+    "waitingFreshSec": 8.88,
+    "slowCounterResets": {},
+    "gpsPctIntervalsLE3": 99.44,
+    "events": [
+      {
+        "timestamp": "2026-09-27T17:28:28.598+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "central_captured",
+        "noRideTimerEvent": "none",
+        "reason": "moving_forward",
+        "phase": "APPROACHING",
+        "speedKmh": null,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 112.12995401042248
+      },
+      {
+        "timestamp": "2026-09-27T17:29:24.782+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "none",
+        "noRideTimerEvent": "started_filming_hold",
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "speedKmh": 5.3354360576065405,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 23.523828565513707
+      },
+      {
+        "timestamp": "2026-09-27T17:33:33.027+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "approach_alignment",
+        "phase": "APPROACHING",
+        "speedKmh": 14.666458113628696,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 36.90253810100915
+      },
+      {
+        "timestamp": "2026-09-27T17:34:35.069+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "moving_forward",
+        "phase": "APPROACHING",
+        "speedKmh": 5.335422955304812,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 35.33854547867913
+      },
+      {
+        "timestamp": "2026-09-27T17:36:51.062+10:00",
+        "rideEvent": "none",
+        "plannerEvent": "band_recreated",
+        "noRideTimerEvent": "none",
+        "reason": "moving_forward",
+        "phase": "APPROACHING",
+        "speedKmh": 5.335438460738946,
+        "rideEndElapsedMs": 0,
+        "surferDistanceM": 38.80651988260391
+      }
+    ]
+  }
+]

@@ -216,7 +216,7 @@ public final class AircraftAimingTelemetry {
     }
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target) { return getSnapshot(target,false); }
     // Only recent authorized translation permits a small velocity allowance. Start/recovery
-    // use 0.5 m/s horizontal at rest, 1.4 during commanded translation, and 0.5 vertical.
+    // VT 3.2: use 0.5 m/s horizontal at rest, MAX_SPEED + 0.4 during commanded translation, and 0.5 vertical.
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating) {
         long oldest = Long.MAX_VALUE;
         String problem = null;

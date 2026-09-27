@@ -10,6 +10,8 @@ public final class MovementLogTest {
         log.enable();
         AimingSessionTest.Fake f=new AimingSessionTest.Fake();
         f.movement=ComeToMeSettings.defaults(); f.aiming();
+        // VT 3.2: Start the measured plan with the fixture target, not Fake.aiming default GPS.
+        f.core.movement.start(f.movement,f.time);
         for(int i=0;i<610;i++) { f.time+=100; f.input=ComeToMeTest.in(f.time,0,0,100,0,0); f.core.tick(); }
         MovementCycleLog.record(log,f.core,f.time,f.core.cycleId,f.forwards.get(f.forwards.size()-1));
         f.core.pauseImmediately("stale_gps"); f.core.tick();
@@ -21,14 +23,14 @@ public final class MovementLogTest {
         if(log.busy()) throw new AssertionError("writer close timeout");
         String text=new String(Files.readAllBytes(output),StandardCharsets.UTF_8);
         if(!text.contains("\"submittedForwardMps\":null") || !text.contains("\"filmingDistanceM\":70.0")
-                || !text.contains("\"version\":\"3.1\"")) throw new AssertionError("movement log metadata");
+                || !text.contains("\"version\":\"3.2\"")) throw new AssertionError("movement log metadata");
         Path returnOutput=Paths.get(args[0],"return-cycle-test.jsonl");
         FullSessionLog returnLog=new FullSessionLog(name->Files.newOutputStream(returnOutput),error->{throw new AssertionError(error);});
         returnLog.enable();
         ComeToMeTest.beginTestReturn(f.core.movement,30,0);
-        MovementCycleLog.record(returnLog,f.core,47000,-1,0);
-        f.core.movement.update_state_machine(ComeToMeTest.in(47500,2,10,160,0,0),47500,.1);
-        MovementCycleLog.record(returnLog,f.core,47500,-1,0);
+        MovementCycleLog.record(returnLog,f.core,147000,-1,0);
+        f.core.movement.update_state_machine(ComeToMeTest.in(147500,2,10,160,0,0),147500,.1);
+        MovementCycleLog.record(returnLog,f.core,147500,-1,0);
         returnLog.disable("test");
         deadline=System.currentTimeMillis()+5000;
         while(returnLog.busy() && System.currentTimeMillis()<deadline) Thread.sleep(5);

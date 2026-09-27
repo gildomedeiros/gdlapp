@@ -8,12 +8,22 @@ public final class MovementCycleLog {
         ComeToMeSettings c=m.settings();
         log.record("movement_cycle","session",session.sessionId(),"cycleId",session.cycleId,
                 "maxMovementSpeedMps",ComeToMeSettings.MAX_SPEED,"movementAccelerationMps2",ComeToMeSettings.ACCELERATION,
+                // VT 3.2: Separate cruise speed from the preserved arrival slope.
+                "movementSlowdownDistanceM",ComeToMeSettings.SLOWDOWN_DISTANCE,
+                "arrivalSpeedPerMetre",ComeToMeSettings.ARRIVAL_SPEED_PER_METRE,
                 // VT 3.1: Preserve qualification and margin evidence on every cycle.
+                "qualificationWaitEnabled",ComeToMeSettings.QUALIFY_MS>0,"rideEndTriggersReturn",false,
                 "qualificationRequiredMs",ComeToMeSettings.QUALIFY_MS,"qualificationStatus",m.qualificationStatus,
                 "qualificationEvent",m.qualificationEvent,"gpsMovementPaused",m.gpsPaused,
                 "waitingForFreshApproachFix",m.qualificationStatus.equals("qualified_waiting_fresh_gps"),
                 "savedNavigationWithOldGps",session.cycleRetainedTarget && (m.approaching() || m.returning()),
                 "maxExcursionM",ComeToMeSettings.MAX_EXCURSION,
+                // VT 3.2: Signed residuals show early arrival versus overshoot; reasons identify the transition.
+                "completionToleranceM",ComeToMeSettings.COMPLETION_TOLERANCE,
+                "excursionStopDistanceM",ComeToMeSettings.EXCURSION_STOP,
+                "approachRemainingM",m.approachDistance-m.approachProgress,
+                "returnRemainingM",m.returnDistance-m.returnProgress,
+                "excursionRemainingM",ComeToMeSettings.EXCURSION_STOP-m.centralDistance,
                 "reapproachMarginM",c.reapproachMargin,"hasFilmed",m.hasFilmed,
                 "approachStartThresholdM",m.approachStartThreshold(),
                 "enabled",c.enabled,"filmingDistanceM",c.filmingDistance,"lineupWidthM",c.lineupWidth,

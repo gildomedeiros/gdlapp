@@ -24,7 +24,7 @@ public final class ComeToMeTest {
         // A separate test below verifies that a fast ride DOES interrupt approach.
         c.start(new ComeToMeSettings(true,70,20,50,8,30000,900000),1000);
         c.update_state_machine(in(1000,0,0,100,0,0),1000,.1);
-        check(c.forward==0 && c.phase==ComeToMeController.Phase.WAITING,"Start never immediately translates");
+        check(c.forward>0 && c.approaching(),"VT 3.2 aligned fresh Start has no qualification wait");
         qualify(c);
         check(c.forward>0 && c.forward<=ComeToMeSettings.MAX_SPEED,"60 seconds of fresh inside-band fixes permits forward movement");
         check(c.centralLat==0 && c.centralLon==0,"saved central unchanged");
@@ -51,7 +51,7 @@ public final class ComeToMeTest {
         // A safety pause preserves the fixed plan; session recovery handles fresh-input dwell.
         check(c.forward>0 && c.approachHeading==0,"recovered approach realigns and resumes its saved plan");
 
-        c=start();
+        c=start(); c.pause(true,1100);
         AimingSession.Inputs same=in(1000,0,0,100,0,0);
         c.update_state_machine(same,62000,.1);
         check(c.forward==0 && c.qualifiedMs==ComeToMeSettings.QUALIFY_MS && !c.approaching(),"timer completes but old fix cannot start approach");
@@ -59,7 +59,7 @@ public final class ComeToMeTest {
         c=start(); qualify(c);
         c.pause(true,62000);
         c.update_state_machine(in(64500,10,0,100,0,0),64500,.1);
-        check(Math.abs(c.centralLat-10*DEG)<1e-9 && c.forward==0,"pilot recovery recaptures central and qualification");
+        check(Math.abs(c.centralLat-10*DEG)<1e-9 && c.approaching(),"pilot recovery recaptures central and qualification");
         c.cancel();
         check(c.phase==ComeToMeController.Phase.OFF && Double.isNaN(c.centralLat),"Stop invalidates central");
 
@@ -76,14 +76,8 @@ public final class ComeToMeTest {
         for(long t=1500;t<=11000;t+=500) c.update_state_machine(in(t,30,0,100+(t-1000)*.006,0,0),t,.1);
         check(c.riding && c.forward==0,"18 km/h threshold detects ride and holds location");
         for(long t=11500;t<=47000;t+=500) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
-        check(c.phase==ComeToMeController.Phase.RETURNING && c.forward<0,"30 seconds below 8 triggers backward return");
-        check(Math.abs(c.returnHeading)<.01,"nose points away from central for backward navigation");
-        c.update_state_machine(in(47500,30,0,160,0,90),47500,.1);
-        check(c.forward<0 && c.returning(),"aligned return continues while saved-heading correction runs");
-        c.update_state_machine(in(48000,2,0,160,0,0),48000,.1);
-        check(!c.returning() && c.forward==0,"central arrival completes inside 3m");
-        c.update_state_machine(in(48500,4,0,160,0,0),48500,.1);
-        check(!c.returning() && c.forward==0,"arrival stays complete after GPS drift outside 3m");
+        check(!c.riding && !c.returning() && c.approaching(),"VT 3.2 confirmed ride end permits approach, never ride-end return");
+        check(c.returnReason.equals("none") && Double.isNaN(c.returnHeading),"ride end leaves return plan unset");
 
         c=start();
         for(long t=1500;t<=11000;t+=500) c.update_state_machine(in(t,30,0,100+(t-1000)*.006,0,0),t,.1);
@@ -153,12 +147,12 @@ public final class ComeToMeTest {
         check(c.approaching() && c.forward>0 && c.approachHeading==heading && c.approachDistance==planned,
                 "sideways target jump cannot change plan or stop aligned approach");
         check(Math.abs(c.approachProgress-10)<.01,"lateral drone travel does not count as forward progress");
-        c.update_state_machine(in(62500,29,15,100,20,0),62500,.1);
-        check(c.approaching(),"29 of 30 metres does not complete approach");
+        c.update_state_machine(in(62500,28.9,15,100,20,0),62500,.1);
+        check(c.approaching(),"VT 3.2: 1.1 m remaining does not complete approach");
         c.update_state_machine(in(63000,30.1,15,100,20,0),63000,.1);
         check(c.phase==ComeToMeController.Phase.HOLDING && c.noRideTimerActive(),"first completed approach starts countdown");
         c.update_state_machine(in(63500,30.1,15,100,40,0),63500,.1);
-        check(c.phase==ComeToMeController.Phase.WAITING && c.noRideTimerActive(),"holding band exit retains countdown");
+        check(c.noRideTimerActive() && !c.returning(),"holding band exit retains countdown without a qualification wait");
         for(long t=64000;t<=123000;t+=500) c.update_state_machine(in(t,30.1,15,100,40,0),t,.1);
         check(c.returning() && c.returnReason.equals("no_ride_timeout") && !c.noRideTimerActive(),
                 "countdown expires even while waiting for a new lineup");
@@ -213,52 +207,52 @@ public final class ComeToMeTest {
         check(!f.core.movement.returning() && !f.core.cycleDecision.equals("return_alignment"),"surfer aiming resumes on central arrival");
     }
 
-    /** Exercise the real ride-end trigger, not a manually injected return phase. */
+    /** VT 3.2: Exercise the surviving no-ride timeout with real hold/timer transitions. */
     static void beginTestReturn(ComeToMeController c,double north,double east) {
-        c.start(ComeToMeSettings.defaults(),1000);
-        c.update_state_machine(in(1000,0,0,100,0,0),1000,.1);
-        for(long t=1500;t<=11000;t+=500)
-            c.update_state_machine(in(t,north,east,100+(t-1000)*.006,0,0),t,.1);
-        for(long t=11500;t<=47000;t+=500)
-            c.update_state_machine(in(t,north,east,160,0,0),t,.1);
+        c.start(new ComeToMeSettings(true,70,50,18,8,30000,60000),1000);
+        c.update_state_machine(in(1000,0,0,60,0,0),1000,.1); // initial hold starts the timer
+        double target=Math.hypot(north,east)<=3 ? 60 : 160;
+        c.update_state_machine(in(61000,north,east,target,0,0),61000,.1);
+        c.update_state_machine(in(62000,north,east,target,0,Double.isFinite(c.returnHeading)?c.returnHeading:0),62000,.1);
     }
 
     static void fixedReturnRegressions() {
         ComeToMeController c=new ComeToMeController(); beginTestReturn(c,30,0);
-        check(c.returning() && c.returnAligned && c.forward<0,"real ride-end starts aligned backward return");
+        check(c.returning() && c.returnAligned && c.forward<0,"no-ride timeout starts aligned backward return");
         check(Math.abs(c.returnDistance-27)<.01,"30m return plans 27m travel with 3m allowance");
         double saved=c.returnHeading; long generation=c.centralGeneration;
-        c.update_state_machine(in(47500,30,10,160,0,4),47500,.1);
+        c.update_state_machine(in(147500,30,10,160,0,4),147500,.1);
         check(c.returnHeading==saved && Math.abs(c.returnProgress)<.01 && c.forward<0,
                 "sideways drift neither changes heading nor advances return progress");
-        check(c.permits(in(47500,30,10,160,0,4),47500,c.forward),"final submission check does not reintroduce 3-degree gate");
-        c.update_state_machine(in(48000,32,10,160,0,4),48000,.1);
+        check(c.permits(in(147500,30,10,160,0,4),147500,c.forward),"final submission check does not reintroduce 3-degree gate");
+        c.update_state_machine(in(148000,32,10,160,0,4),148000,.1);
         check(c.returnProgress< -1.9,"moving away from central produces negative progress");
-        c.pause(false,48100);
-        c.update_state_machine(in(48500,20,10,160,0,4),48500,.1);
+        c.pause(false,148100);
+        c.update_state_machine(in(148500,20,10,160,0,4),148500,.1);
         check(c.forward==0 && !c.returnAligned && c.returnHeading==saved && Math.abs(c.returnProgress-10)<.01,
                 "safety pause preserves origin and heading but requires re-alignment");
-        c.update_state_machine(in(49000,20,10,160,0,0),49000,.1);
+        c.update_state_machine(in(149000,20,10,160,0,0),149000,.1);
         check(c.forward<0 && c.returnAligned,"realigned return resumes original travel");
-        check(!c.permits(in(49000,2,10,160,0,0),49000,c.forward),"late telemetry reaching planned travel suppresses backward command");
-        c.update_state_machine(in(49500,2,10,160,0,0),49500,.1);
+        check(!c.permits(in(149000,2,10,160,0,0),149000,c.forward),"late telemetry reaching planned travel suppresses backward command");
+        c.update_state_machine(in(149500,2,10,160,0,0),149500,.1);
         check(!c.returning() && c.forward==0 && c.reason.equals("return_travel_completed"),"projected completion latches even with lateral miss");
         check(c.returnCompletionCentralDistance>10 && c.returnCompletionCentralDistance<10.3,
                 "completion records GPS miss outside 3m circle");
-        c.update_state_machine(in(50000,5,10,160,0,0),50000,.1);
+        c.update_state_machine(in(150000,5,10,60,0,0),150000,.1);
         check(!c.returning() && c.forward==0 && c.returnCompletionCentralDistance>10,
                 "GPS drift cannot restart completed return or overwrite completion evidence");
-        // Next ride must calculate from this new position to the original central coordinates.
-        for(long t=50500;t<=60000;t+=500)
-            c.update_state_machine(in(t,5,10,160+(t-50000)*.006,0,0),t,.1);
-        for(long t=60500;t<=96000;t+=500)
-            c.update_state_machine(in(t,5,10,220,0,0),t,.1);
+        // VT 3.2: Complete a new approach, then let its no-ride countdown expire.
+        c.update_state_machine(in(151000,5,10,160,0,0),151000,.1);
+        double nextNorth=5+(c.approachDistance+.1)*Math.cos(Math.toRadians(c.approachHeading));
+        double nextEast=10+(c.approachDistance+.1)*Math.sin(Math.toRadians(c.approachHeading));
+        c.update_state_machine(in(152000,nextNorth,nextEast,160,0,c.approachHeading),152000,.1);
+        c.update_state_machine(in(212000,nextNorth,nextEast,160,0,0),212000,.1);
         check(c.returning() && c.centralGeneration==generation && c.centralLat==0 && c.centralLon==0,
                 "next return retains original central");
-        check(Math.abs(c.returnStartLat-5*DEG)<1e-12 && Math.abs(c.returnStartLon-10*DEG)<1e-12
-                && Math.abs(c.returnDistance-(Math.sqrt(125)-3))<.01 && c.returnHeading!=saved,
+        check(Math.abs(c.returnStartLat-nextNorth*DEG)<1e-12 && Math.abs(c.returnStartLon-nextEast*DEG)<1e-12
+                && Math.abs(c.returnDistance-(Math.hypot(nextNorth,nextEast)-3))<.01 && c.returnHeading!=saved,
                 "next return captures fresh origin, bearing and distance rather than repeating old plan");
-        c.pause(true,96500);
+        c.pause(true,212100);
         check(Double.isNaN(c.returnHeading) && !c.returnAligned,"manual intervention discards return plan");
         c=new ComeToMeController(); beginTestReturn(c,2,0);
         check(!c.returning() && c.forward==0 && c.returnDistance==0
@@ -273,19 +267,19 @@ public final class ComeToMeTest {
     static void speedRegressions() {
         ComeToMeController c=start(); qualify(c);
         double last=c.forward;
-        for(long t=61100;t<=66000;t+=100) {
+        for(long t=161100;t<=170000;t+=100) {
             c.update_state_machine(in(t,0,0,100,0,0),t,.1);
-            check(c.forward<=1.0 && c.forward-last<=.025001,"approach retains acceleration bound and 1m/s cap");
+            check(c.forward<=2.0 && c.forward-last<=.025001,"approach retains acceleration bound and 2m/s cap");
             last=c.forward;
         }
-        check(Math.abs(c.forward-1.0)<1e-9,"approach reaches doubled 1m/s speed");
-        c.update_state_machine(in(66500,29,0,100,0,0),66500,.1);
-        check(c.forward>0 && c.forward<=.200001,"approach still slows in final five metres");
+        check(Math.abs(c.forward-2.0)<1e-9,"approach reaches 2m/s speed");
+        c.update_state_machine(in(170500,28.5,0,100,0,0),170500,.1);
+        check(c.forward>0 && c.forward<=.300001,"approach still slows in final five metres");
         c=new ComeToMeController(); beginTestReturn(c,30,0);
-        for(long t=47100;t<=52000;t+=100) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
-        check(Math.abs(c.forward+1.0)<1e-9,"return reaches doubled 1m/s backward speed");
-        c.update_state_machine(in(52500,4,0,160,0,0),52500,.1);
-        check(c.forward<0 && Math.abs(c.forward)<=.200001,"return still slows in final five metres");
+        for(long t=147100;t<=156000;t+=100) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
+        check(Math.abs(c.forward+2.0)<1e-9,"return reaches 2m/s backward speed");
+        c.update_state_machine(in(156500,4.5,0,160,0,0),156500,.1);
+        check(c.forward<0 && Math.abs(c.forward)<=.300001,"return still slows in final five metres");
     }
 
 }

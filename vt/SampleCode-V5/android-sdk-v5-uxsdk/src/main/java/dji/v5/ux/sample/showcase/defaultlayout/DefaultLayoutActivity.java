@@ -262,7 +262,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
             menu.getMenu().add(0,4,3,"Come to me").setCheckable(true)
                     .setChecked(yawAimingController.movementSettings().enabled).setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,5,4,"VT 3.1 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,5,4,"VT 3.2 settings").setEnabled(yawAimingController.canSelectGpsSource());
             menu.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == 1) {
                     new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
@@ -423,7 +423,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.1 · Come to me")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.2 · Come to me")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {

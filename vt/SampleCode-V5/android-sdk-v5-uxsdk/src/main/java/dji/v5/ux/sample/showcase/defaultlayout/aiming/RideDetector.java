@@ -2,8 +2,8 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 import java.util.ArrayDeque;
 /**
  * VT 3.0: GPS evidence only, with no movement or DJI calls.
- * The 1 s estimate enables responsive filming. Only 5 s confirmation authorizes a
- * ride-end return. A brief fast detection must not cancel the no-ride timer.
+ * The 1 s estimate enables responsive filming. VT 3.2 retains 5 s confirmation
+ * to cancel the no-ride timer; ride end no longer triggers return to central.
  */
 public final class RideDetector {
     public static final long FAST_MS=1000, CONFIRM_MS=5000;

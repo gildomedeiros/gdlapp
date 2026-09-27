@@ -13,7 +13,7 @@ public final class Vt31Test {
         f.core.tick();
     }
     public static void main(String[] args) {
-        check(ComeToMeSettings.QUALIFY_MS==20000,"20 second qualification");
+        check(ComeToMeSettings.QUALIFY_MS==0,"VT 3.2 zero qualification");
         check(ComeToMeSettings.defaults().lineupWidth==50,"50 m default band");
         check(ComeToMeSettings.defaults().reapproachMargin==15,"15 m default margin");
         boolean rejected=false;
@@ -25,30 +25,13 @@ public final class Vt31Test {
     }
     static void qualification() {
         ComeToMeController c=ComeToMeTest.start();
-        for(long t=1500;t<=11000;t+=500) step(c,t,100,0);
-        check(c.qualifiedMs==10000 && !c.approaching(),"10 seconds counted");
-        c.pauseForGps(15000); c.pauseForGps(16000);
-        check(c.qualifiedMs==15000 && c.gpsPaused,"GPS gap advances the qualification timer");
-        step(c,21000,100,0);
-        check(c.qualifiedMs==20000 && !c.gpsPaused,"fresh in-band fix can start after completed timer");
-        for(long t=21500;t<=30500;t+=500) step(c,t,100,0);
-        check(c.approaching(),"completed timer already allowed approach");
-        step(c,31000,100,0);
-        check(c.approaching() && c.forward>0,"20 accumulated seconds qualifies");
-        c=ComeToMeTest.start();
-        for(long t=1500;t<=11000;t+=500) step(c,t,100,0);
-        c.pauseForGps(15000); step(c,21000,100,26);
-        check(c.qualifiedMs==0 && c.event.equals("band_recreated"),"outside returned fix resets preserved progress");
-        c=ComeToMeTest.start();
-        for(long t=1500;t<=11000;t+=500) step(c,t,100,0);
-        step(c,12000,106,0);
-        check(c.riding && c.qualifiedMs==10000,"fast ride freezes prior credit");
-        step(c,12500,109,0);
-        check(c.qualifiedMs==10000 && c.forward==0,"ride time earns no qualification");
-        // Keep a fast-only ride latched until stationary end: no return or band reset is involved.
-        c.ride.confirmed=false;
-        for(long t=13000;t<=45000;t+=500) step(c,t,109,0);
-        check(!c.riding && c.qualifiedMs>=10000,"fast-only ride end preserves qualification");
+        check(c.approaching() && c.qualifiedMs==0,"zero wait permits initial approach");
+        c.pause(true,1100);c.pauseForGps(15000);
+        check(!c.approaching() && c.forward==0,"zero wait never bypasses stale GPS after manual reset");
+        step(c,16000,100,0);
+        check(c.approaching(),"fresh GPS permits recaptured approach without dwell");
+        step(c,17000,100,26);
+        check(c.qualifiedMs==0 && c.event.equals("band_recreated") && c.approaching(),"band exit keeps zero wait and existing plan");
     }
     static void margin() {
         ComeToMeController c=new ComeToMeController();
@@ -114,12 +97,12 @@ public final class Vt31Test {
         check(f.core.state()==AimingSession.State.PAUSED,"GPS cannot erase mixed manual pause dwell");
     }
     static void savedNavigation() {
-        ComeToMeController c=ComeToMeTest.start();
+        ComeToMeController c=ComeToMeTest.start(); c.pause(true,1100);
         c.pauseForGps(25000);
-        check(c.qualifiedMs==20000 && !c.approaching(),"qualified outage waits for fresh position");
-        check(c.qualificationStatus.equals("qualified_waiting_fresh_gps"),"waiting for GPS is explicit");
+        check(c.qualifiedMs==ComeToMeSettings.QUALIFY_MS && !c.approaching(),"qualified outage waits for fresh position");
+        check(c.gpsPaused,"GPS pause remains explicit");
         step(c,26000,100,26);
-        check(c.qualifiedMs==0 && !c.approaching(),"outside fresh fix resets completed timer");
+        check(c.qualifiedMs==0 && c.approaching(),"fresh fix after reset can approach with zero qualification");
         c=ComeToMeTest.start(); ComeToMeTest.qualify(c);
         AimingSession.Inputs old=ComeToMeTest.in(61000,30,0,100,0,0);
         AimingSession.Inputs arrived=new AimingSession.Inputs(old.target,old.lat,old.lon,0,65000,null,true);
