@@ -1,0 +1,172 @@
+[
+  {
+    "timestamp": "2026-09-27T09:48:23.123+10:00",
+    "event": "user_start",
+    "detail": "requested"
+  },
+  {
+    "timestamp": "2026-09-27T09:48:23.316+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:48:43.316+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:48:52.372+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:49:56.989+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:50:09.555+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:50:17.042+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:50:37.282+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:51:35.287+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:51:35.388+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:51:44.943+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:51:49.975+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:approach_alignment event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:51:51.103+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:10.667+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:10.768+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:17.952+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:approach_alignment event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:21.443+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:49.651+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:49.752+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:49.957+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:52:58.884+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:53:19.413+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:53:19.516+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:53:27.009+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:approach_alignment event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:53:30.181+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:53:39.938+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:54:00.967+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:54:06.099+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:54:21.066+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:54:27.126+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:55:50.209+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:55:50.314+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:56:43.750+10:00",
+    "event": "stop",
+    "detail": "session=1 reason=screen_closed"
+  },
+  {
+    "timestamp": "2026-09-27T09:56:43.827+10:00",
+    "event": "session_end",
+    "reason": "screen_closed"
+  }
+]

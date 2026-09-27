@@ -1,0 +1,102 @@
+[
+  {
+    "timestamp": "2026-09-27T09:59:01.428+10:00",
+    "event": "movement_settings",
+    "detail": "enabled=true filming=30.0 reapproachMargin=10.0 qualifyMs=20000 width=60.0 rideStart=10.0 rideEnd=5.0 endMs=20000 inactivityMs=600000"
+  },
+  {
+    "timestamp": "2026-09-27T09:59:03.145+10:00",
+    "event": "user_start",
+    "detail": "requested"
+  },
+  {
+    "timestamp": "2026-09-27T09:59:03.304+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:59:23.400+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T09:59:36.059+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:00:54.713+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:00:54.815+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:03:13.071+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:03:18.807+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:03:50.648+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:03:50.750+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:03:59.366+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:04:39.380+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:04:39.482+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:05:02.013+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:ride_detected event=ride_started centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:05:05.095+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=ride_confirmed centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:05:16.049+10:00",
+    "event": "movement_transition",
+    "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=band_recreated centralGeneration=1"
+  },
+  {
+    "timestamp": "2026-09-27T10:06:14.937+10:00",
+    "event": "stop",
+    "detail": "session=1 reason=returning_home"
+  },
+  {
+    "timestamp": "2026-09-27T10:07:42.228+10:00",
+    "event": "stop",
+    "detail": "session=1 reason=screen_closed"
+  },
+  {
+    "timestamp": "2026-09-27T10:07:42.251+10:00",
+    "event": "session_end",
+    "reason": "screen_closed"
+  }
+]

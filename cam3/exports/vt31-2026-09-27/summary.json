@@ -1,0 +1,2240 @@
+[
+  {
+    "file": "3.1/cam3_full_2026-09-27_090337_716_c8d79b97.jsonl",
+    "start": "2026-09-27T09:03:37.970+10:00",
+    "end": "2026-09-27T09:21:50.990+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "aiming_cycle": 10519,
+      "movement_cycle": 10519,
+      "orientation_cycle": 10519,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 1745,
+      "readiness": 2103,
+      "blockers": 2103,
+      "lora_packet": 1534,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 5,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 16,
+      "telemetry_listener_stickRightHorizontal": 20,
+      "telemetry_listener_stickRightVertical": 116,
+      "telemetry_connected": 1,
+      "telemetry_isFlying": 1,
+      "telemetry_position": 1,
+      "telemetry_heading": 1,
+      "telemetry_flightMode": 1,
+      "telemetry_gpsLevel": 1,
+      "telemetry_compassError": 1,
+      "telemetry_velocity": 1,
+      "telemetry_stickLeftHorizontal": 1,
+      "telemetry_stickLeftVertical": 1,
+      "telemetry_stickRightHorizontal": 1,
+      "telemetry_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "lora_gap": 42,
+      "input_event": 137,
+      "user_start": 1,
+      "state": 3,
+      "initial_control": 1,
+      "enable_request": 1,
+      "authority_reason": 1,
+      "sdk_callback": 1,
+      "authority_observed": 2,
+      "sdk_callback_processed": 1,
+      "enable_result": 1,
+      "advanced_request": 1,
+      "movement_transition": 50,
+      "yaw_command": 9719,
+      "first_command": 1,
+      "lora_restart": 1,
+      "stop_request": 1,
+      "stop": 1,
+      "disable_request": 1,
+      "session_end": 1
+    },
+    "packets": 1527,
+    "gaps": {
+      "median": 0.5,
+      "max": 292.565,
+      "over3": 2
+    },
+    "aimStates": {
+      "OFF": 799,
+      "STARTING": 1,
+      "AIMING": 9719
+    },
+    "phases": {
+      "OFF": 799,
+      "WAITING": 4247,
+      "APPROACHING": 2755,
+      "HOLDING": 408,
+      "RETURNING": 2310
+    },
+    "retained": 2763,
+    "savedNavOld": 4,
+    "waitingFresh": 2611,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 16,
+        "True": 10503
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 16,
+        "True": 10503
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 16,
+        "True": 10503
+      },
+      "aircraftAttitudeError": {
+        "not_read": 16,
+        "none": 10503
+      },
+      "gimbalAttitudeError": {
+        "not_read": 16,
+        "none": 10503
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 16,
+        "none": 10503
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:05:00.647+10:00",
+        "event": "user_start",
+        "detail": "requested"
+      },
+      {
+        "timestamp": "2026-09-27T09:05:00.885+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:05:20.933+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:05:31.269+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:06:50.849+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:06:50.955+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:07:03.202+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:07:11.292+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:07:20.230+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:07:30.220+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:07:41.266+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:12:35.278+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> RETURNING:return_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:12:51.383+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:return_alignment -> RETURNING:moving_backward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:12:58.258+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:13:08.774+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:13:17.302+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:13:24.766+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:13:32.315+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:14:06.340+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> WAITING:return_travel_completed event=return_travel_completed centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:14:06.441+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:return_travel_completed -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:14:09.928+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:14:37.317+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:14:56.785+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:15:32.983+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:15:33.086+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:15:38.834+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:ride_detected event=ride_started centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:15:40.788+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:16:21.782+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:16:33.043+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> RETURNING:return_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:16:40.829+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:return_alignment -> RETURNING:return_alignment event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:16:43.699+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:return_alignment -> RETURNING:moving_backward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:16:49.862+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:16:59.831+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:17:15.834+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:17:41.776+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=fast_ride_ended centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:18:00.674+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> WAITING:return_travel_completed event=return_travel_completed centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:18:01.795+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:return_travel_completed -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:18:11.928+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:19:39.791+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:19:48.819+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:19:50.870+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:08.891+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:14.832+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:22.816+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:30.399+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:36.847+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:44.838+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:50.887+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> RETURNING:return_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:20:57.843+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:return_alignment -> RETURNING:return_alignment event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:21:02.033+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:return_alignment -> RETURNING:moving_backward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:21:05.831+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> RETURNING:moving_backward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:21:50.957+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:21:50.990+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_092207_843_c16da0f5.jsonl",
+    "start": "2026-09-27T09:22:07.903+10:00",
+    "end": "2026-09-27T09:28:58.223+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 894,
+      "aiming_cycle": 3955,
+      "movement_cycle": 3955,
+      "orientation_cycle": 3955,
+      "lora_packet": 815,
+      "readiness": 791,
+      "blockers": 791,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 2,
+      "telemetry_listener_stickLeftHorizontal": 29,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 7,
+      "telemetry_connected": 1,
+      "telemetry_isFlying": 1,
+      "telemetry_position": 1,
+      "telemetry_heading": 1,
+      "telemetry_flightMode": 1,
+      "telemetry_gpsLevel": 1,
+      "telemetry_compassError": 1,
+      "telemetry_velocity": 1,
+      "telemetry_stickLeftHorizontal": 1,
+      "telemetry_stickLeftVertical": 1,
+      "telemetry_stickRightHorizontal": 1,
+      "telemetry_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "input_event": 26,
+      "lora_gap": 5,
+      "movement_settings": 1,
+      "user_start": 1,
+      "state": 3,
+      "initial_control": 1,
+      "enable_request": 1,
+      "authority_reason": 1,
+      "sdk_callback": 1,
+      "authority_observed": 2,
+      "sdk_callback_processed": 1,
+      "enable_result": 1,
+      "advanced_request": 1,
+      "movement_transition": 14,
+      "yaw_command": 3073,
+      "first_command": 1,
+      "stop_request": 1,
+      "stop": 1,
+      "disable_request": 1,
+      "session_end": 1
+    },
+    "packets": 815,
+    "gaps": {
+      "median": 0.5,
+      "max": 1.001,
+      "over3": 0
+    },
+    "aimStates": {
+      "OFF": 881,
+      "STARTING": 1,
+      "AIMING": 3073
+    },
+    "phases": {
+      "OFF": 881,
+      "WAITING": 387,
+      "APPROACHING": 2160,
+      "HOLDING": 527
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 18,
+        "True": 3937
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 18,
+        "True": 3937
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 18,
+        "True": 3937
+      },
+      "aircraftAttitudeError": {
+        "not_read": 18,
+        "none": 3937
+      },
+      "gimbalAttitudeError": {
+        "not_read": 18,
+        "none": 3937
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 18,
+        "none": 3937
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:23:35.082+10:00",
+        "event": "movement_settings",
+        "detail": "enabled=true filming=30.0 reapproachMargin=15.0 qualifyMs=20000 width=45.0 rideStart=17.0 rideEnd=5.0 endMs=20000 inactivityMs=300000"
+      },
+      {
+        "timestamp": "2026-09-27T09:23:37.813+10:00",
+        "event": "user_start",
+        "detail": "requested"
+      },
+      {
+        "timestamp": "2026-09-27T09:23:38.014+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:23:58.055+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:24:05.659+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:25:27.843+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:25:45.812+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:25:50.860+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:26:05.876+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:26:12.391+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:27:17.143+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:27:17.251+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:27:54.916+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:28:14.969+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:28:55.711+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:28:55.813+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:28:58.174+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:28:58.223+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_092912_308_ae949dad.jsonl",
+    "start": "2026-09-27T09:29:12.353+10:00",
+    "end": "2026-09-27T09:29:29.758+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 38,
+      "aiming_cycle": 170,
+      "movement_cycle": 170,
+      "orientation_cycle": 170,
+      "readiness": 34,
+      "blockers": 34,
+      "lora_packet": 34,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 1,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 1,
+      "telemetry_connected": 1,
+      "telemetry_isFlying": 1,
+      "telemetry_position": 1,
+      "telemetry_heading": 1,
+      "telemetry_flightMode": 1,
+      "telemetry_gpsLevel": 1,
+      "telemetry_compassError": 1,
+      "telemetry_velocity": 1,
+      "telemetry_stickLeftHorizontal": 1,
+      "telemetry_stickLeftVertical": 1,
+      "telemetry_stickRightHorizontal": 1,
+      "telemetry_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "stop_request": 1,
+      "stop": 1,
+      "state": 1,
+      "session_end": 1
+    },
+    "packets": 34,
+    "gaps": {
+      "median": 0.5,
+      "max": 0.523,
+      "over3": 0
+    },
+    "aimStates": {
+      "OFF": 170
+    },
+    "phases": {
+      "OFF": 170
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 18,
+        "True": 152
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 18,
+        "True": 152
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 18,
+        "True": 152
+      },
+      "aircraftAttitudeError": {
+        "not_read": 18,
+        "none": 152
+      },
+      "gimbalAttitudeError": {
+        "not_read": 18,
+        "none": 152
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 18,
+        "none": 152
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:29:29.727+10:00",
+        "event": "stop",
+        "detail": "session=0 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:29:29.758+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_092930_459_a7b3c669.jsonl",
+    "start": "2026-09-27T09:29:30.503+10:00",
+    "end": "2026-09-27T09:29:37.111+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 15,
+      "aiming_cycle": 63,
+      "movement_cycle": 63,
+      "orientation_cycle": 63,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 1,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "readiness": 13,
+      "blockers": 13,
+      "lora_packet": 13,
+      "stop_request": 1,
+      "stop": 1,
+      "session_end": 1
+    },
+    "packets": 13,
+    "gaps": {
+      "median": 0.5,
+      "max": 0.53,
+      "over3": 0
+    },
+    "aimStates": {
+      "STOPPED": 63
+    },
+    "phases": {
+      "OFF": 63
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 1,
+        "True": 62
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 1,
+        "True": 62
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 1,
+        "True": 62
+      },
+      "aircraftAttitudeError": {
+        "not_read": 1,
+        "none": 62
+      },
+      "gimbalAttitudeError": {
+        "not_read": 1,
+        "none": 62
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 1,
+        "none": 62
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:29:37.075+10:00",
+        "event": "stop",
+        "detail": "session=0 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:29:37.111+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_092938_299_734b9a52.jsonl",
+    "start": "2026-09-27T09:29:38.383+10:00",
+    "end": "2026-09-27T09:29:42.078+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 8,
+      "aiming_cycle": 36,
+      "movement_cycle": 36,
+      "orientation_cycle": 36,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 1,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "readiness": 7,
+      "blockers": 7,
+      "lora_packet": 7,
+      "stop_request": 1,
+      "stop": 1,
+      "session_end": 1
+    },
+    "packets": 7,
+    "gaps": {
+      "median": 0.5,
+      "max": 0.523,
+      "over3": 0
+    },
+    "aimStates": {
+      "STOPPED": 36
+    },
+    "phases": {
+      "OFF": 36
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 1,
+        "True": 35
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 1,
+        "True": 35
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 1,
+        "True": 35
+      },
+      "aircraftAttitudeError": {
+        "not_read": 1,
+        "none": 35
+      },
+      "gimbalAttitudeError": {
+        "not_read": 1,
+        "none": 35
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 1,
+        "none": 35
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:29:42.056+10:00",
+        "event": "stop",
+        "detail": "session=0 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:29:42.078+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_092945_258_78f7439d.jsonl",
+    "start": "2026-09-27T09:29:45.301+10:00",
+    "end": "2026-09-27T09:29:55.160+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 22,
+      "lora_packet": 20,
+      "aiming_cycle": 96,
+      "movement_cycle": 96,
+      "orientation_cycle": 96,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 1,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "readiness": 19,
+      "blockers": 19,
+      "stop_request": 1,
+      "stop": 1,
+      "session_end": 1
+    },
+    "packets": 20,
+    "gaps": {
+      "median": 0.5,
+      "max": 0.524,
+      "over3": 0
+    },
+    "aimStates": {
+      "STOPPED": 96
+    },
+    "phases": {
+      "OFF": 96
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 1,
+        "True": 95
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 1,
+        "True": 95
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 1,
+        "True": 95
+      },
+      "aircraftAttitudeError": {
+        "not_read": 1,
+        "none": 95
+      },
+      "gimbalAttitudeError": {
+        "not_read": 1,
+        "none": 95
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 1,
+        "none": 95
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:29:55.155+10:00",
+        "event": "stop",
+        "detail": "session=0 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:29:55.160+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_092956_143_414c12ad.jsonl",
+    "start": "2026-09-27T09:29:56.192+10:00",
+    "end": "2026-09-27T09:30:18.675+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 50,
+      "aiming_cycle": 217,
+      "movement_cycle": 217,
+      "orientation_cycle": 217,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 1,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "lora_packet": 45,
+      "readiness": 43,
+      "blockers": 43,
+      "stop_request": 1,
+      "stop": 1,
+      "session_end": 1
+    },
+    "packets": 45,
+    "gaps": {
+      "median": 0.5,
+      "max": 0.523,
+      "over3": 0
+    },
+    "aimStates": {
+      "STOPPED": 217
+    },
+    "phases": {
+      "OFF": 217
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 1,
+        "True": 216
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 1,
+        "True": 216
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 1,
+        "True": 216
+      },
+      "aircraftAttitudeError": {
+        "not_read": 1,
+        "none": 216
+      },
+      "gimbalAttitudeError": {
+        "not_read": 1,
+        "none": 216
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 1,
+        "none": 216
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:30:18.672+10:00",
+        "event": "stop",
+        "detail": "session=0 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:30:18.675+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_093020_150_4097e942.jsonl",
+    "start": "2026-09-27T09:30:20.186+10:00",
+    "end": "2026-09-27T09:35:21.938+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "aiming_cycle": 2941,
+      "movement_cycle": 2941,
+      "orientation_cycle": 2941,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 659,
+      "readiness": 588,
+      "blockers": 588,
+      "lora_packet": 600,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 5,
+      "telemetry_listener_stickLeftHorizontal": 5,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 31,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "movement_settings": 1,
+      "input_event": 33,
+      "user_start": 1,
+      "state": 4,
+      "initial_control": 1,
+      "enable_request": 1,
+      "authority_reason": 2,
+      "sdk_callback": 1,
+      "authority_observed": 2,
+      "sdk_callback_processed": 1,
+      "enable_result": 1,
+      "advanced_request": 1,
+      "movement_transition": 9,
+      "yaw_command": 2077,
+      "first_command": 1,
+      "lora_gap": 4,
+      "stop": 2,
+      "stop_request": 1,
+      "session_end": 1
+    },
+    "packets": 600,
+    "gaps": {
+      "median": 0.5,
+      "max": 1.023,
+      "over3": 0
+    },
+    "aimStates": {
+      "STOPPED": 394,
+      "STARTING": 2,
+      "AIMING": 2077,
+      "STOPPING": 49,
+      "RELEASE_UNCONFIRMED": 419
+    },
+    "phases": {
+      "OFF": 862,
+      "WAITING": 196,
+      "APPROACHING": 1327,
+      "HOLDING": 556
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 5,
+        "True": 2936
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 5,
+        "True": 2936
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 5,
+        "True": 2936
+      },
+      "aircraftAttitudeError": {
+        "not_read": 5,
+        "none": 2936
+      },
+      "gimbalAttitudeError": {
+        "not_read": 5,
+        "none": 2936
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 5,
+        "none": 2936
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:30:34.565+10:00",
+        "event": "movement_settings",
+        "detail": "enabled=true filming=30.0 reapproachMargin=15.0 qualifyMs=20000 width=60.0 rideStart=17.0 rideEnd=5.0 endMs=20000 inactivityMs=600000"
+      },
+      {
+        "timestamp": "2026-09-27T09:31:00.444+10:00",
+        "event": "user_start",
+        "detail": "requested"
+      },
+      {
+        "timestamp": "2026-09-27T09:31:00.694+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:31:20.716+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:31:29.584+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:32:40.627+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:32:40.730+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:32:54.922+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:33:04.796+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:33:51.567+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:33:51.670+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:34:34.335+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=returning_home"
+      },
+      {
+        "timestamp": "2026-09-27T09:35:21.923+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:35:21.938+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_093607_134_5c09d2e3.jsonl",
+    "start": "2026-09-27T09:36:07.178+10:00",
+    "end": "2026-09-27T09:46:57.318+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 1414,
+      "aiming_cycle": 6339,
+      "movement_cycle": 6339,
+      "orientation_cycle": 6339,
+      "lora_packet": 1289,
+      "readiness": 1267,
+      "blockers": 1267,
+      "telemetry_listener_stickLeftHorizontal": 6,
+      "telemetry_listener_stickLeftVertical": 41,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 13,
+      "telemetry_connected": 2,
+      "telemetry_isFlying": 2,
+      "telemetry_position": 2,
+      "telemetry_heading": 2,
+      "telemetry_flightMode": 2,
+      "telemetry_gpsLevel": 2,
+      "telemetry_compassError": 2,
+      "telemetry_velocity": 2,
+      "telemetry_stickLeftHorizontal": 1,
+      "telemetry_stickLeftVertical": 1,
+      "telemetry_stickRightHorizontal": 1,
+      "telemetry_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 2,
+      "telemetry_gimbalAttitude": 2,
+      "telemetry_gimbalRelativeYaw": 2,
+      "telemetry_retry_request_connected": 78,
+      "telemetry_retry_request_isFlying": 78,
+      "telemetry_retry_request_position": 78,
+      "telemetry_retry_request_heading": 78,
+      "telemetry_retry_request_flightMode": 78,
+      "telemetry_retry_request_gpsLevel": 78,
+      "telemetry_retry_request_compassError": 78,
+      "telemetry_retry_request_velocity": 78,
+      "telemetry_retry_request_aircraftAttitude": 78,
+      "telemetry_retry_request_gimbalAttitude": 78,
+      "telemetry_retry_request_gimbalRelativeYaw": 78,
+      "telemetry_retry_result_connected": 78,
+      "telemetry_retry_result_isFlying": 78,
+      "telemetry_retry_result_position": 78,
+      "telemetry_retry_result_heading": 78,
+      "telemetry_retry_result_flightMode": 78,
+      "telemetry_retry_result_gpsLevel": 78,
+      "telemetry_retry_result_compassError": 78,
+      "telemetry_retry_result_velocity": 78,
+      "telemetry_retry_result_aircraftAttitude": 78,
+      "telemetry_retry_result_gimbalAttitude": 78,
+      "telemetry_retry_result_gimbalRelativeYaw": 78,
+      "movement_settings": 1,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 6,
+      "input_event": 54,
+      "user_start": 1,
+      "state": 3,
+      "initial_control": 1,
+      "enable_request": 1,
+      "authority_reason": 1,
+      "sdk_callback": 1,
+      "authority_observed": 2,
+      "sdk_callback_processed": 1,
+      "enable_result": 1,
+      "advanced_request": 1,
+      "movement_transition": 30,
+      "yaw_command": 5355,
+      "first_command": 1,
+      "lora_gap": 11,
+      "stop_request": 1,
+      "stop": 1,
+      "disable_request": 1,
+      "session_end": 1
+    },
+    "packets": 1289,
+    "gaps": {
+      "median": 0.5,
+      "max": 1.003,
+      "over3": 0
+    },
+    "aimStates": {
+      "OFF": 983,
+      "STARTING": 1,
+      "AIMING": 5355
+    },
+    "phases": {
+      "OFF": 983,
+      "WAITING": 1926,
+      "APPROACHING": 2336,
+      "HOLDING": 805,
+      "RETURNING": 289
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 410,
+        "True": 5929
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 410,
+        "True": 5929
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 410,
+        "True": 5929
+      },
+      "aircraftAttitudeError": {
+        "not_read": 14,
+        "REQUEST_HANDLER_NOT_FOUND": 396,
+        "none": 5929
+      },
+      "gimbalAttitudeError": {
+        "not_read": 14,
+        "REQUEST_HANDLER_NOT_FOUND": 396,
+        "none": 5929
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 14,
+        "REQUEST_HANDLER_NOT_FOUND": 396,
+        "none": 5929
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:36:24.772+10:00",
+        "event": "movement_settings",
+        "detail": "enabled=true filming=30.0 reapproachMargin=10.0 qualifyMs=20000 width=60.0 rideStart=17.0 rideEnd=5.0 endMs=20000 inactivityMs=600000"
+      },
+      {
+        "timestamp": "2026-09-27T09:37:47.837+10:00",
+        "event": "user_start",
+        "detail": "requested"
+      },
+      {
+        "timestamp": "2026-09-27T09:37:48.028+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:38:08.074+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:38:12.921+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:39:35.154+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:39:35.255+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:40:04.912+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:40:11.562+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:40:36.723+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:40:36.825+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:40:44.923+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:41:16.207+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:41:16.309+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:41:22.972+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:41:28.519+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:41:51.082+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:41:51.184+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:42:02.873+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:42:30.043+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:42:30.144+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:42:35.903+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:band_exit event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:42:55.970+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:band_exit -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:43:35.937+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:ride_detected event=ride_started centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:43:39.422+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=ride_confirmed centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:45:15.933+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:45:46.987+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:12.990+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> RETURNING:return_alignment event=ride_ended centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:27.738+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:return_alignment -> RETURNING:moving_backward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:42.622+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 RETURNING:moving_backward -> WAITING:return_travel_completed event=return_travel_completed centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:42.724+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:return_travel_completed -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:54.910+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:57.233+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:46:57.318+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_094712_391_1048e214.jsonl",
+    "start": "2026-09-27T09:47:12.447+10:00",
+    "end": "2026-09-27T09:56:43.827+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 1238,
+      "aiming_cycle": 5568,
+      "movement_cycle": 5568,
+      "orientation_cycle": 5568,
+      "readiness": 1113,
+      "blockers": 1113,
+      "lora_packet": 1127,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 2,
+      "telemetry_listener_stickLeftHorizontal": 16,
+      "telemetry_listener_stickLeftVertical": 11,
+      "telemetry_listener_stickRightHorizontal": 36,
+      "telemetry_listener_stickRightVertical": 21,
+      "telemetry_connected": 1,
+      "telemetry_isFlying": 1,
+      "telemetry_position": 1,
+      "telemetry_heading": 1,
+      "telemetry_flightMode": 1,
+      "telemetry_gpsLevel": 1,
+      "telemetry_compassError": 1,
+      "telemetry_velocity": 1,
+      "telemetry_stickLeftHorizontal": 1,
+      "telemetry_stickLeftVertical": 1,
+      "telemetry_stickRightHorizontal": 1,
+      "telemetry_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "input_event": 65,
+      "user_start": 1,
+      "state": 3,
+      "initial_control": 1,
+      "enable_request": 1,
+      "authority_reason": 1,
+      "sdk_callback": 1,
+      "authority_observed": 2,
+      "sdk_callback_processed": 1,
+      "enable_result": 1,
+      "advanced_request": 1,
+      "movement_transition": 31,
+      "yaw_command": 4874,
+      "first_command": 1,
+      "lora_gap": 15,
+      "stop_request": 1,
+      "stop": 1,
+      "disable_request": 1,
+      "session_end": 1
+    },
+    "packets": 1127,
+    "gaps": {
+      "median": 0.5,
+      "max": 1.005,
+      "over3": 0
+    },
+    "aimStates": {
+      "OFF": 693,
+      "STARTING": 1,
+      "AIMING": 4874
+    },
+    "phases": {
+      "OFF": 693,
+      "WAITING": 195,
+      "APPROACHING": 3840,
+      "HOLDING": 840
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 19,
+        "True": 5549
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 19,
+        "True": 5549
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 19,
+        "True": 5549
+      },
+      "aircraftAttitudeError": {
+        "not_read": 19,
+        "none": 5549
+      },
+      "gimbalAttitudeError": {
+        "not_read": 19,
+        "none": 5549
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 19,
+        "none": 5549
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:48:23.123+10:00",
+        "event": "user_start",
+        "detail": "requested"
+      },
+      {
+        "timestamp": "2026-09-27T09:48:23.316+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:48:43.316+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:48:52.372+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:49:56.989+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:50:09.555+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:50:17.042+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:50:37.282+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:51:35.287+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:51:35.388+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:51:44.943+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:51:49.975+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:approach_alignment event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:51:51.103+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:10.667+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:10.768+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:17.952+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:approach_alignment event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:21.443+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:49.651+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:49.752+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:49.957+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:52:58.884+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:53:19.413+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:53:19.516+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:53:27.009+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:approach_alignment event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:53:30.181+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:53:39.938+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:54:00.967+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> APPROACHING:moving_forward event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:54:06.099+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:54:21.066+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:54:27.126+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:55:50.209+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:55:50.314+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:56:43.750+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T09:56:43.827+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_095731_541_87dc7310.jsonl",
+    "start": "2026-09-27T09:57:31.580+10:00",
+    "end": "2026-09-27T10:07:42.251+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 1334,
+      "aiming_cycle": 5964,
+      "movement_cycle": 5964,
+      "orientation_cycle": 5964,
+      "lora_packet": 1215,
+      "readiness": 1192,
+      "blockers": 1192,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 5,
+      "telemetry_listener_stickLeftHorizontal": 32,
+      "telemetry_listener_stickLeftVertical": 38,
+      "telemetry_listener_stickRightHorizontal": 15,
+      "telemetry_listener_stickRightVertical": 70,
+      "telemetry_retry_timeout_connected": 1,
+      "telemetry_retry_request_connected": 1,
+      "telemetry_retry_timeout_isFlying": 1,
+      "telemetry_retry_request_isFlying": 1,
+      "telemetry_retry_timeout_position": 1,
+      "telemetry_retry_request_position": 1,
+      "telemetry_retry_timeout_heading": 1,
+      "telemetry_retry_request_heading": 1,
+      "telemetry_retry_timeout_flightMode": 1,
+      "telemetry_retry_request_flightMode": 1,
+      "telemetry_retry_timeout_gpsLevel": 1,
+      "telemetry_retry_request_gpsLevel": 1,
+      "telemetry_retry_timeout_compassError": 1,
+      "telemetry_retry_request_compassError": 1,
+      "telemetry_retry_timeout_velocity": 1,
+      "telemetry_retry_request_velocity": 1,
+      "telemetry_retry_timeout_stickLeftHorizontal": 1,
+      "telemetry_retry_request_stickLeftHorizontal": 1,
+      "telemetry_retry_timeout_stickLeftVertical": 1,
+      "telemetry_retry_request_stickLeftVertical": 1,
+      "telemetry_retry_timeout_stickRightHorizontal": 1,
+      "telemetry_retry_request_stickRightHorizontal": 1,
+      "telemetry_retry_timeout_stickRightVertical": 1,
+      "telemetry_retry_request_stickRightVertical": 1,
+      "telemetry_retry_timeout_aircraftAttitude": 1,
+      "telemetry_retry_request_aircraftAttitude": 1,
+      "telemetry_retry_timeout_gimbalAttitude": 1,
+      "telemetry_retry_request_gimbalAttitude": 1,
+      "telemetry_retry_timeout_gimbalRelativeYaw": 1,
+      "telemetry_retry_request_gimbalRelativeYaw": 1,
+      "telemetry_read_ignored_connected": 1,
+      "telemetry_read_ignored_isFlying": 1,
+      "telemetry_read_ignored_position": 1,
+      "telemetry_read_ignored_heading": 1,
+      "telemetry_read_ignored_flightMode": 1,
+      "telemetry_read_ignored_gpsLevel": 1,
+      "telemetry_read_ignored_compassError": 1,
+      "telemetry_read_ignored_velocity": 1,
+      "telemetry_read_ignored_stickLeftHorizontal": 1,
+      "telemetry_read_ignored_stickLeftVertical": 1,
+      "telemetry_read_ignored_stickRightHorizontal": 1,
+      "telemetry_read_ignored_stickRightVertical": 1,
+      "telemetry_read_ignored_aircraftAttitude": 1,
+      "telemetry_read_ignored_gimbalAttitude": 1,
+      "telemetry_read_ignored_gimbalRelativeYaw": 1,
+      "telemetry_connected": 1,
+      "telemetry_retry_result_connected": 1,
+      "telemetry_isFlying": 1,
+      "telemetry_retry_result_isFlying": 1,
+      "telemetry_position": 1,
+      "telemetry_retry_result_position": 1,
+      "telemetry_heading": 1,
+      "telemetry_retry_result_heading": 1,
+      "telemetry_flightMode": 1,
+      "telemetry_retry_result_flightMode": 1,
+      "telemetry_gpsLevel": 1,
+      "telemetry_retry_result_gpsLevel": 1,
+      "telemetry_compassError": 1,
+      "telemetry_retry_result_compassError": 1,
+      "telemetry_velocity": 1,
+      "telemetry_retry_result_velocity": 1,
+      "telemetry_stickLeftHorizontal": 1,
+      "telemetry_retry_result_stickLeftHorizontal": 1,
+      "telemetry_stickLeftVertical": 1,
+      "telemetry_retry_result_stickLeftVertical": 1,
+      "telemetry_stickRightHorizontal": 1,
+      "telemetry_retry_result_stickRightHorizontal": 1,
+      "telemetry_stickRightVertical": 1,
+      "telemetry_retry_result_stickRightVertical": 1,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_retry_result_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_retry_result_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "telemetry_retry_result_gimbalRelativeYaw": 1,
+      "input_event": 114,
+      "movement_settings": 1,
+      "user_start": 1,
+      "state": 4,
+      "initial_control": 1,
+      "enable_request": 1,
+      "authority_reason": 2,
+      "sdk_callback": 1,
+      "authority_observed": 2,
+      "sdk_callback_processed": 1,
+      "enable_result": 1,
+      "advanced_request": 1,
+      "movement_transition": 15,
+      "yaw_command": 4206,
+      "first_command": 1,
+      "lora_gap": 5,
+      "stop": 2,
+      "stop_request": 1,
+      "session_end": 1
+    },
+    "packets": 1215,
+    "gaps": {
+      "median": 0.5,
+      "max": 1.496,
+      "over3": 0
+    },
+    "aimStates": {
+      "OFF": 897,
+      "STARTING": 1,
+      "AIMING": 4206,
+      "STOPPING": 50,
+      "RELEASE_UNCONFIRMED": 810
+    },
+    "phases": {
+      "OFF": 1757,
+      "WAITING": 908,
+      "APPROACHING": 1728,
+      "HOLDING": 1571
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 70.0,
+      "lineupWidthM": 50.0,
+      "reapproachMarginM": 15.0,
+      "rideStartKmh": 18.0,
+      "rideEndKmh": 8.0,
+      "rideEndMs": 30000,
+      "noRideTimeoutMs": 900000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 27,
+        "True": 5937
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 27,
+        "True": 5937
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 27,
+        "True": 5937
+      },
+      "aircraftAttitudeError": {
+        "not_read": 27,
+        "none": 5937
+      },
+      "gimbalAttitudeError": {
+        "not_read": 27,
+        "none": 5937
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 27,
+        "none": 5937
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T09:59:01.428+10:00",
+        "event": "movement_settings",
+        "detail": "enabled=true filming=30.0 reapproachMargin=10.0 qualifyMs=20000 width=60.0 rideStart=10.0 rideEnd=5.0 endMs=20000 inactivityMs=600000"
+      },
+      {
+        "timestamp": "2026-09-27T09:59:03.145+10:00",
+        "event": "user_start",
+        "detail": "requested"
+      },
+      {
+        "timestamp": "2026-09-27T09:59:03.304+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> WAITING:lineup_qualification event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:59:23.400+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:lineup_qualification -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T09:59:36.059+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:00:54.713+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:00:54.815+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:03:13.071+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:03:18.807+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:03:50.648+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:03:50.750+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:03:59.366+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:04:39.380+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:04:39.482+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:05:02.013+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:ride_detected event=ride_started centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:05:05.095+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=ride_confirmed centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:05:16.049+10:00",
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> WAITING:ride_detected event=band_recreated centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-09-27T10:06:14.937+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=returning_home"
+      },
+      {
+        "timestamp": "2026-09-27T10:07:42.228+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T10:07:42.251+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  },
+  {
+    "file": "3.1/cam3_full_2026-09-27_100744_427_a50c88c3.jsonl",
+    "start": "2026-09-27T10:07:44.482+10:00",
+    "end": "2026-09-27T10:07:46.162+10:00",
+    "version": "3.1",
+    "events": {
+      "session_start": 1,
+      "capture_source": 1,
+      "logging_mode": 1,
+      "lora_connection": 1,
+      "lora_connected": 1,
+      "lora_datagram": 5,
+      "telemetry_listener_connected": 1,
+      "telemetry_listener_flightMode": 1,
+      "telemetry_listener_stickLeftHorizontal": 1,
+      "telemetry_listener_stickLeftVertical": 1,
+      "telemetry_listener_stickRightHorizontal": 1,
+      "telemetry_listener_stickRightVertical": 1,
+      "lora_packet": 4,
+      "aiming_cycle": 16,
+      "movement_cycle": 16,
+      "orientation_cycle": 16,
+      "telemetry_aircraftAttitude": 1,
+      "telemetry_gimbalAttitude": 1,
+      "telemetry_gimbalRelativeYaw": 1,
+      "readiness": 3,
+      "blockers": 3,
+      "stop_request": 1,
+      "stop": 1,
+      "session_end": 1
+    },
+    "packets": 4,
+    "gaps": {
+      "median": 0.499,
+      "max": 0.524,
+      "over3": 0
+    },
+    "aimStates": {
+      "RELEASE_UNCONFIRMED": 16
+    },
+    "phases": {
+      "OFF": 16
+    },
+    "retained": 0,
+    "savedNavOld": 0,
+    "waitingFresh": 0,
+    "settings": {
+      "filmingDistanceM": 30.0,
+      "lineupWidthM": 60.0,
+      "reapproachMarginM": 10.0,
+      "rideStartKmh": 10.0,
+      "rideEndKmh": 5.0,
+      "rideEndMs": 20000,
+      "noRideTimeoutMs": 600000,
+      "maxExcursionM": 250.0
+    },
+    "angles": {
+      "aircraftAttitudeAvailable": {
+        "False": 1,
+        "True": 15
+      },
+      "gimbalAttitudeAvailable": {
+        "False": 1,
+        "True": 15
+      },
+      "gimbalRelativeYawAvailable": {
+        "False": 1,
+        "True": 15
+      },
+      "aircraftAttitudeError": {
+        "not_read": 1,
+        "none": 15
+      },
+      "gimbalAttitudeError": {
+        "not_read": 1,
+        "none": 15
+      },
+      "gimbalRelativeYawError": {
+        "not_read": 1,
+        "none": 15
+      }
+    },
+    "transitions": [
+      {
+        "timestamp": "2026-09-27T10:07:46.134+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      },
+      {
+        "timestamp": "2026-09-27T10:07:46.162+10:00",
+        "event": "session_end",
+        "reason": "screen_closed"
+      }
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "timestamp": "2026-09-27T09:29:55.155+10:00",
+    "event": "stop",
+    "detail": "session=0 reason=screen_closed"
+  },
+  {
+    "timestamp": "2026-09-27T09:29:55.160+10:00",
+    "event": "session_end",
+    "reason": "screen_closed"
+  }
+]
