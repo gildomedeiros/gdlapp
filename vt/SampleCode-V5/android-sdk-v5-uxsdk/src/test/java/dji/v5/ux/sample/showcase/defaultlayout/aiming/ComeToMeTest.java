@@ -75,8 +75,8 @@ public final class ComeToMeTest {
         // Simulate a valid northward ride at 21.6 km/h, without leaving the sideways band.
         for(long t=1500;t<=11000;t+=500) c.update_state_machine(in(t,30,0,100+(t-1000)*.006,0,0),t,.1);
         check(c.riding && c.forward==0,"18 km/h threshold detects ride and holds location");
-        for(long t=11500;t<=47000;t+=500) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
-        check(!c.riding && !c.returning() && c.approaching(),"VT 3.2 confirmed ride end permits approach, never ride-end return");
+        for(long t=11500;t<=96000;t+=500) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
+        check(!c.riding && !c.returning() && c.approaching(),"VT 3.3 timed ride end permits approach, never ride-end return");
         check(c.returnReason.equals("none") && Double.isNaN(c.returnHeading),"ride end leaves return plan unset");
 
         c=start();
@@ -184,7 +184,7 @@ public final class ComeToMeTest {
         check(c.riding && c.forward==0 && !c.approaching() && Double.isNaN(c.approachHeading),
                 "genuine 21.6km/h ride interrupts approach and discards plan");
         c.update_state_machine(in(73500,0,0,300,0,0),73500,.1);
-        check(c.riding && c.speedJumpRejected && c.slowMs==0,"jump cannot end a known ride");
+        check(c.riding && !c.speedJumpRejected && c.slowMs==0,"active timer ignores speed jumps");
         for(double boundary:new double[]{10,200}) new ComeToMeSettings(true,boundary,20,18,8,30000,900000);
         try { new ComeToMeSettings(true,9.99,20,18,8,30000,900000); throw new AssertionError("minimum not enforced"); }
         catch(IllegalArgumentException expected) { checks++; }
@@ -267,18 +267,18 @@ public final class ComeToMeTest {
     static void speedRegressions() {
         ComeToMeController c=start(); qualify(c);
         double last=c.forward;
-        for(long t=161100;t<=170000;t+=100) {
+        for(long t=161100;t<=174000;t+=100) {
             c.update_state_machine(in(t,0,0,100,0,0),t,.1);
-            check(c.forward<=2.0 && c.forward-last<=.025001,"approach retains acceleration bound and 2m/s cap");
+            check(c.forward<=3.0 && c.forward-last<=.025001,"approach retains acceleration bound and 3m/s cap");
             last=c.forward;
         }
-        check(Math.abs(c.forward-2.0)<1e-9,"approach reaches 2m/s speed");
-        c.update_state_machine(in(170500,28.5,0,100,0,0),170500,.1);
+        check(Math.abs(c.forward-3.0)<1e-9,"approach reaches 3m/s speed");
+        c.update_state_machine(in(174500,28.5,0,100,0,0),174500,.1);
         check(c.forward>0 && c.forward<=.300001,"approach still slows in final five metres");
         c=new ComeToMeController(); beginTestReturn(c,30,0);
-        for(long t=147100;t<=156000;t+=100) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
-        check(Math.abs(c.forward+2.0)<1e-9,"return reaches 2m/s backward speed");
-        c.update_state_machine(in(156500,4.5,0,160,0,0),156500,.1);
+        for(long t=147100;t<=160000;t+=100) c.update_state_machine(in(t,30,0,160,0,0),t,.1);
+        check(Math.abs(c.forward+3.0)<1e-9,"return reaches 3m/s backward speed");
+        c.update_state_machine(in(160500,4.5,0,160,0,0),160500,.1);
         check(c.forward<0 && Math.abs(c.forward)<=.300001,"return still slows in final five metres");
     }
 

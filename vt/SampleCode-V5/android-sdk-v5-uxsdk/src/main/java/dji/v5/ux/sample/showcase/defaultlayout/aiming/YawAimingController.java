@@ -69,11 +69,12 @@ public final class YawAimingController implements AimingSession.Port {
             appContext.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit()
                     .putBoolean("comeToMe",config.enabled).putFloat("filming",(float)config.filmingDistance)
                     .putFloat("reapproachMargin",(float)config.reapproachMargin).putFloat("width",(float)config.lineupWidth).putFloat("rideStart",(float)config.rideStartKmh)
-                    .putFloat("rideEnd",(float)config.rideEndKmh).putLong("endMs",config.rideEndMs)
+                    .remove("rideEnd").remove("endMs").putLong("rideDurationMs",config.rideDurationMs)
+                    .remove("additionalTiltPercent").putFloat("closeRangePitchDeg",(float)config.closeRangePitchDeg)
                     .putLong("inactivityMs",config.inactivityMs).apply();
             diagnostic("movement_settings","enabled="+config.enabled+" filming="+config.filmingDistance
                     +" reapproachMargin="+config.reapproachMargin+" qualifyMs="+ComeToMeSettings.QUALIFY_MS+" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
-                    +" endMs="+config.rideEndMs+" inactivityMs="+config.inactivityMs);
+                    +" rideDurationMs="+config.rideDurationMs+" closeRangePitchDeg="+config.closeRangePitchDeg+" inactivityMs="+config.inactivityMs);
         });
     }
     public boolean usesPhoneGps() { return usePhone; }
@@ -95,9 +96,10 @@ public final class YawAimingController implements AimingSession.Port {
     public String targetSummary(AimingSession.Fix fix, long at) {
         String source = usePhone ? "Phone GPS" : "LoRa GPS";
         return fix == null ? source + " unavailable - see Details"
-                : String.format(java.util.Locale.US, "%s - %.1f s old - Gimbal manual", source, Math.max(0, at - fix.time) / 1000.0)
+                : String.format(java.util.Locale.US, "%s - %.1f s old - Gimbal distance tilt", source, Math.max(0, at - fix.time) / 1000.0)
                 + (usePhone ? "" : "\n" + lora.signalSummary());
     }
+    private final VtCameraControl camera;
     private final AircraftAimingTelemetry aircraft;
     private final AimingSession session;
     private final IVirtualStickManager sdk = VirtualStickManager.getInstance();
@@ -179,12 +181,14 @@ public final class YawAimingController implements AimingSession.Port {
         // CAM3 v2.3: Named telemetry callbacks either latch a pause or permanently cancel recovery.
         aircraft = new AircraftAimingTelemetry(this::telemetryEvent,
                 (field, detail) -> diagnostic("telemetry_" + field, detail));
+        camera=new VtCameraControl(executor,this::now,fullLog);
         session = new AimingSession(this);
         android.content.SharedPreferences prefs=context.getSharedPreferences("vt28",Context.MODE_PRIVATE);
         try {
             movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),Math.max(10,prefs.getFloat("filming",70)),
-                    prefs.getFloat("width",50),prefs.getFloat("rideStart",18),prefs.getFloat("rideEnd",8),
-                    prefs.getLong("endMs",30000),prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",15));
+                    prefs.getFloat("width",50),prefs.getFloat("rideStart",18),0.1,1000,
+                    prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",15),
+                    prefs.getLong("rideDurationMs",90000),prefs.getFloat("closeRangePitchDeg",-35));
         } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
@@ -224,7 +228,7 @@ public final class YawAimingController implements AimingSession.Port {
         foreground = false; observer = null;
         stopAiming("screen_closed");
         // CAM3 v2.5: End full capture after source shutdown on screen exit; normal aiming cancellation stays intact.
-        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); session.surferYaw.reset(); fullLog.disable("screen_closed"); });
+        executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); camera.clear(); session.surferYaw.reset(); fullLog.disable("screen_closed"); });
     }
     public void startAiming() {
         // CAM3 v2.1: Record explicit user intent, including attempts rejected by the prerequisites.
@@ -278,9 +282,11 @@ public final class YawAimingController implements AimingSession.Port {
         try {
             AimingSession.Inputs observed=null;
             if (foreground) {
-                aircraft.poll(); observed=inputs();
+                aircraft.poll(); camera.poll(now()); observed=inputs();
             }
             session.tick();
+            if(foreground && observed!=null) camera.update(session,observed,now(),
+                    !yielding && session.maySendYaw() && session.commandEligible(),movementConfig);
             if(foreground && observed!=null) recordAimingCycle(observed); // CAM3 v2.7: Every foreground cycle, not only changed summaries.
             // CAM3 v2.1: Sample diagnostics at most twice per second; file I/O stays on the logger worker.
             if (now() - lastDiagnostic >= 500) {
@@ -320,6 +326,7 @@ public final class YawAimingController implements AimingSession.Port {
                 if (state == AimingSession.State.OFF || state == AimingSession.State.STOPPED) {
                     String invalid = inputs().validate(now());
                     if (invalid != null) reason = invalid;
+                    else if(startProblem()!=null) reason=startProblem();
                     else if (!ready) reason = "authority";
                 }
                 final String message = reason;
@@ -330,6 +337,8 @@ public final class YawAimingController implements AimingSession.Port {
             }
         } catch (RuntimeException ex) { session.stopAiming("sdk_error"); }
     }
+    @Override public String startProblem() { return camera.recordingProblem(now()); }
+    public long sessionId() { return session.sessionId(); }
     @Override public long now() { return SystemClock.elapsedRealtime(); }
     @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(getTargetFix(),session!=null && session.state()==AimingSession.State.AIMING
             && lastTranslationAt>=0 && now()-lastTranslationAt<2000); }
@@ -408,6 +417,7 @@ public final class YawAimingController implements AimingSession.Port {
             logChanged("readiness", signature, detail, 5000);
             // CAM3 v2.2: Independently assess phone quality even when aircraft mode is rejected.
             readinessDetails = aircraft.blockers(at) + "\n" + phoneDetails(in, at)
+                    + "\nRecording prerequisite: " + (startProblem()==null ? "recording confirmed" : startProblem())
                     + "\nControl: " + authority.owner + " (state callbacks: " + stateSequence.get() + ")"
                     + "\n" + (listening ? "Monitoring control changes" : "Control listener unavailable")
                     + "\nSession: " + state + " — " + session.reason()

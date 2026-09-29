@@ -15,16 +15,16 @@ public final class Vt32Test {
             if(returning) { c=new ComeToMeController();ComeToMeTest.beginTestReturn(c,30,0);t=147000; }
             else { c=ComeToMeTest.start();ComeToMeTest.qualify(c);t=61000; }
             c.forward=0;
-            for(int i=1;i<=80;i++) {
+            for(int i=1;i<=140;i++) {
                 t+=100;
                 c.update_state_machine(ComeToMeTest.in(t,returning?30:0,0,returning?160:100,0,0),t,.1);
-                check(Math.abs(Math.abs(c.forward)-Math.min(2,i*.025))<1e-8,"both directions ramp at 0.25 m/s2 to 2 m/s in eight seconds");
+                check(Math.abs(Math.abs(c.forward)-Math.min(3,i*.025))<1e-8,"both directions ramp at 0.25 m/s2 to 3 m/s in twelve seconds and hold the cap");
             }
-            for(double remaining:new double[]{10,8,5,4,3,2,1.01,.99}) {
+            for(double remaining:new double[]{15,12,10,8,5,4,3,2,1.01,.99}) {
                 t+=100;
                 double n=returning?3+remaining:30-remaining;
                 c.update_state_machine(ComeToMeTest.in(t,n,0,returning?160:100,0,0),t,.1);
-                double expected=remaining<=1?0:Math.min(2,.2*remaining);
+                double expected=remaining<=1?0:Math.min(3,.2*remaining);
                 check(Math.abs(Math.abs(c.forward)-expected)<1e-7,"both directions preserve arrival speed at "+remaining+" m");
                 check(returning?c.forward<=0:c.forward>=0,"command sign matches navigation direction");
             }

@@ -18,6 +18,8 @@ public final class AimingSessionTest {
         AimingSession.Inputs input;
         AimingSession.Completion enable, disable;
         int enables, disables, advances;
+        String recordingProblem;
+        public String startProblem() { return recordingProblem; }
         boolean throwSend, throwDisable;
         // CAM3 v2.1: Verify diagnostic-port failure cannot change flight-control outcomes.
         boolean throwDiagnostics;

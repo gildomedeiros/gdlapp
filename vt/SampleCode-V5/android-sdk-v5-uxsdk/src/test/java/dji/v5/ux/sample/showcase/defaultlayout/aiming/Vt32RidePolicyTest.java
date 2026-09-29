@@ -13,15 +13,15 @@ public final class Vt32RidePolicyTest {
             check(c.noRideTimerActive(),"initial filming hold starts no-ride timer");
             double bandLat=c.bandLat,bandLon=c.bandLon,bearing=c.bandBearing;
             boolean confirmed=false,ended=false;
-            for(long t=1500;t<=47000;t+=500) {
+            for(long t=1500;t<=97000;t+=500) {
                 double target=60+Math.min(t-1000,10000)*.006;
                 c.update_state_machine(ComeToMeTest.in(t,near?60:0,0,target,0,0),t,.1);
-                if(c.event.equals("ride_confirmed")) {
+                if(c.event.equals("ride_started")) {
                     confirmed=true;
                     check(!c.noRideTimerActive(),"confirmed ride still cancels no-ride countdown");
                 }
                 if(c.riding) check(c.forward==0 && !c.approaching(),"ride blocks approach movement");
-                if(c.event.equals("ride_ended")) {
+                if(c.event.equals("ride_expired")) {
                     ended=true;
                     check(!c.returning() && c.returnReason.equals("none"),"confirmed ride end never requests return");
                     check(c.bandLat==bandLat && c.bandLon==bandLon && c.bandBearing==bearing,"ride end does not recreate the lineup band");

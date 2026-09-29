@@ -401,6 +401,8 @@ class SlidingDialog @JvmOverloads constructor(
     }
 
     override fun show() {
+        // VT 3.3: automatic landing/RTH prompts must not appear above the touch lock.
+        if (TouchControlLock.isLocked()) return
         window?.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         seekBar.progress = SLIDE_START_THRESHOLD

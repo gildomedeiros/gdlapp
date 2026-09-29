@@ -2,8 +2,8 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 
 /** Immutable per-session configuration. UI edits apply only while automatic control is stopped. */
 public final class ComeToMeSettings {
-    // VT 3.2: Faster cruise in both directions; preserve acceleration and arrival slope.
-    public static final double MAX_SPEED = 2.0, ACCELERATION = 0.25;
+    // VT 3.3: Faster cruise in both directions; preserve acceleration and arrival slope.
+    public static final double MAX_SPEED = 3.0, ACCELERATION = 0.25;
     public static final double ARRIVAL_SPEED_PER_METRE = 0.2;
     public static final double SLOWDOWN_DISTANCE = MAX_SPEED / ARRIVAL_SPEED_PER_METRE;
     public static final double FILM_TOLERANCE = 2, ARRIVAL_RADIUS = 3, MAX_EXCURSION = 250;
@@ -14,6 +14,8 @@ public final class ComeToMeSettings {
     public final boolean enabled;
     public final double filmingDistance, lineupWidth, rideStartKmh, rideEndKmh, reapproachMargin;
     public final long rideEndMs, inactivityMs;
+    public final long rideDurationMs;
+    public final double closeRangePitchDeg;
 
     public ComeToMeSettings(boolean enabled, double filming, double width, double start,
                             double end, long endMs, long inactivityMs) {
@@ -22,6 +24,13 @@ public final class ComeToMeSettings {
     /** VT 3.1: Margin is a start threshold, never added to the saved travel destination. */
     public ComeToMeSettings(boolean enabled, double filming, double width, double start,
                             double end, long endMs, long inactivityMs, double margin) {
+        this(enabled,filming,width,start,end,endMs,inactivityMs,margin,90000,-35);
+    }
+    public ComeToMeSettings(boolean enabled,double filming,double width,double start,
+            double end,long endMs,long inactivityMs,double margin,long durationMs,double closePitchDeg) {
+        if(durationMs<1000 || durationMs>600000 || !inRange(closePitchDeg,-90,0))
+            throw new IllegalArgumentException("Ride duration 1–600 s; close-range pitch -90 to 0 degrees");
+        rideDurationMs=durationMs; closeRangePitchDeg=closePitchDeg;
         if (!inRange(margin,0,200)) throw new IllegalArgumentException("Re-approach margin 0–200 m");
         reapproachMargin=margin;
         if (!inRange(filming,10,200) || !inRange(width,20,200)

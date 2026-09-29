@@ -246,7 +246,10 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     .setNegativeButton(android.R.string.cancel, null).show();
         });
         // CAM3 v2.0: No automatic activation; Stop also cancels pending authority requests.
-        findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> yawAimingController.startAiming());
+        findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> {
+            // VT 3.3: cancel touch gimbal motion before automatic pitch may begin.
+            lockScreenControls(); yawAimingController.startAiming();
+        });
         // CAM3 v2.2: STOP is always accessible and every tap gets honest visible acknowledgement.
         findViewById(R.id.uxsdk_aiming_stop).setOnClickListener(v -> yawAimingController.stopFromUser(state -> {
             if (isFinishing() || isDestroyed()) return;
@@ -262,8 +265,10 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
             menu.getMenu().add(0,4,3,"Come to me").setCheckable(true)
                     .setChecked(yawAimingController.movementSettings().enabled).setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,5,4,"VT 3.2 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,5,4,"VT 3.3 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,6,5,"Lock screen controls");
             menu.setOnMenuItemClickListener(item -> {
+                if(item.getItemId()==6) { lockScreenControls(); return true; }
                 if (item.getItemId() == 1) {
                     new android.app.AlertDialog.Builder(this).setTitle(R.string.uxsdk_aiming_details)
                             .setMessage(yawAimingController.readinessDetails() + "\n\n" + yawAimingController.loggingStatus() + "\n\n" + yawAimingController.movementDetails())
@@ -284,7 +289,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 if(item.getItemId()==4) {
                     dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
                     yawAimingController.setMovementSettings(new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(
-                            !c.enabled,c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideEndKmh,c.rideEndMs,c.inactivityMs,c.reapproachMargin));
+                            !c.enabled,c.filmingDistance,c.lineupWidth,c.rideStartKmh,0.1,1000,c.inactivityMs,c.reapproachMargin,c.rideDurationMs,c.closeRangePitchDeg));
                 }
                 if(item.getItemId()==5) showMovementSettings();
                 return true;
@@ -324,6 +329,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        dji.v5.ux.core.ui.TouchControlLock.unlock(this);
+        if(touchLock!=null) { touchLock.dismiss();touchLock=null; }
         // CAM3 v2.0: Idempotent detach; unresolved grants remain managed without holding this screen.
         yawAimingController.pause(aimingObserver);
         super.onDestroy();
@@ -408,9 +415,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         if(!yawAimingController.canSelectGpsSource()) return;
         dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
         String[] labels={"Filming distance (10–200 m)","Lineup total width (20–200 m)",
-                "Ride start speed (km/h)","Ride end speed (km/h)","Ride end confirmation (seconds)",
-                "No-ride return timeout (minutes)","Re-approach margin (0-200 m)"};
-        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideEndKmh,c.rideEndMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin};
+                "Ride start speed (km/h)","Ride duration (1–600 seconds)",
+                "No-ride return timeout (minutes)","Re-approach margin (0–200 m)","Close-range pitch (-90 to 0 degrees)"};
+        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.closeRangePitchDeg};
         android.widget.LinearLayout form=new android.widget.LinearLayout(this);
         form.setOrientation(android.widget.LinearLayout.VERTICAL);
         int pad=(int)(16*getResources().getDisplayMetrics().density); form.setPadding(pad,pad,pad,pad);
@@ -418,12 +425,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         for(int i=0;i<labels.length;i++) {
             TextView label=new TextView(this); label.setText(labels[i]); form.addView(label);
             fields[i]=new android.widget.EditText(this);
-            fields[i].setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            fields[i].setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL | (i==6 ? android.text.InputType.TYPE_NUMBER_FLAG_SIGNED : 0));
             fields[i].setSingleLine(true); fields[i].setText(String.valueOf(values[i]));
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.2 · Come to me")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.3 · Come to me")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -434,8 +441,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     if(!Double.isFinite(n[i])) throw new IllegalArgumentException("Enter finite numbers");
                 }
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings next=
-                    new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(c.enabled,n[0],n[1],n[2],n[3],
-                            (long)(n[4]*1000),(long)(n[5]*60000),n[6]);
+                    new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(c.enabled,n[0],n[1],n[2],0.1,1000,
+                            (long)(n[4]*60000),n[5],(long)(n[3]*1000),n[6]);
                 if(!yawAimingController.canSelectGpsSource()) throw new IllegalArgumentException("Stop aiming before changing settings");
                 yawAimingController.setMovementSettings(next); dialog.dismiss();
             } catch(IllegalArgumentException bad) { Toast.makeText(this,bad.getMessage(),Toast.LENGTH_LONG).show(); }
@@ -445,6 +452,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
     private void renderAimingState(AimingSession.State state, String reason, boolean ready,
                                    AimingSession.Fix fix, long now) {
+        if(state==AimingSession.State.AIMING && lockedSession!=yawAimingController.sessionId()) {
+            lockedSession=yawAimingController.sessionId(); lockScreenControls();
+        }
         // CAM3 v2.4: Disabled icon remains visibly distinct without a large text button.
         findViewById(R.id.uxsdk_aiming_start).setEnabled(ready);
         findViewById(R.id.uxsdk_aiming_start).setAlpha(ready ? 1f : 0.35f);
@@ -467,6 +477,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         // CAM3 v2.4: Short footer wording; Details retains the complete blocker snapshot.
         if ("telemetry".equals(reason)) explanation = "Aircraft telemetry unavailable";
         if ("gps".equals(reason)) explanation = "Waiting for GPS";
+        if ("recording_off".equals(reason)) explanation="Start video recording first";
+        if ("recording_unknown".equals(reason)) explanation="Waiting for camera recording status";
         // CAM3 v2.3: Show actual recovery countdown and the shared distance threshold.
         if ("recovering".equals(reason)) explanation = getString(R.string.uxsdk_aiming_recovery_countdown,
                 yawAimingController.recoveryRemainingMs() / 1000.0);
@@ -477,6 +489,56 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 (aiming.isEmpty() ? getString(stateLabel) + " — " + explanation : aiming)
                 + " · " + yawAimingController.targetSummary(fix, now).replace("\n", " · "));
         ((TextView) findViewById(R.id.uxsdk_movement_status)).setText(yawAimingController.movementScreen());
+    }
+
+    // VT 3.3: A foreground modal window blocks widgets AND existing dialogs; never persists to preferences.
+    private android.app.Dialog touchLock;
+    private long lockedSession=-1;
+    private boolean previousGimbalTouch;
+    private void lockScreenControls() {
+        if(touchLock!=null || isFinishing() || isDestroyed()) return;
+        dji.v5.ux.core.ui.TouchControlLock.lock(this);
+        previousGimbalTouch=fpvInteractionWidget.isGimbalControlEnabled();
+        fpvInteractionWidget.setGimbalControlEnabled(false);
+        android.app.Dialog lock=new android.app.Dialog(this);
+        touchLock=lock;
+        lock.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        lock.setCancelable(false); lock.setCanceledOnTouchOutside(false);
+        android.widget.FrameLayout cover=new android.widget.FrameLayout(this);
+        cover.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        cover.setClickable(true);
+        android.widget.Button unlock=new android.widget.Button(this);
+        unlock.setText("Controls locked · hold 3 seconds to unlock");
+        unlock.setContentDescription("Hold for three seconds to unlock screen controls. Remote controller remains available.");
+        android.widget.FrameLayout.LayoutParams lp=new android.widget.FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT,android.view.Gravity.TOP|android.view.Gravity.CENTER_HORIZONTAL);
+        lp.topMargin=(int)(36*getResources().getDisplayMetrics().density);cover.addView(unlock,lp);
+        android.os.Handler handler=new android.os.Handler(android.os.Looper.getMainLooper());
+        Runnable release=() -> {
+            if(touchLock==lock) {lock.dismiss();touchLock=null;
+                dji.v5.ux.core.ui.TouchControlLock.unlock(this);
+                fpvInteractionWidget.setGimbalControlEnabled(previousGimbalTouch);
+                yawAimingController.diagnostic("touch_lock","unlocked_by_hold");}
+        };
+        unlock.setOnTouchListener((v,event) -> {
+            int action=event.getActionMasked();
+            if(action==android.view.MotionEvent.ACTION_DOWN) handler.postDelayed(release,3000);
+            else if(action==android.view.MotionEvent.ACTION_UP || action==android.view.MotionEvent.ACTION_CANCEL
+                || action==android.view.MotionEvent.ACTION_POINTER_DOWN
+                || (action==android.view.MotionEvent.ACTION_MOVE && (event.getX()<0 || event.getY()<0
+                    || event.getX()>v.getWidth() || event.getY()>v.getHeight()))) handler.removeCallbacks(release);
+            return true;
+        });
+        lock.setOnDismissListener(d -> handler.removeCallbacks(release));
+        lock.setContentView(cover);lock.show();
+        android.view.Window window=lock.getWindow();
+        if(window!=null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
+        }
+        yawAimingController.diagnostic("touch_lock","locked");
     }
 
     private void hideOtherPanels(@Nullable View widget) {

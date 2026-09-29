@@ -25,3 +25,5 @@ For GPS/aiming behavior, use v2.4 together with the retained control policy in v
 - [VT 3.1 detailed design](detailed_design/detailed_design_v3.1.md) - retained-target yaw, 20 s qualification, 50 m default band, frozen GPS/ride credit and configurable re-approach margin.
 
 - [VT 3.2 detailed design](detailed_design/detailed_design_v3.2.md) - 0 s qualification, no ride-end return, 1 m saved-travel arrival tolerance and 249 m outward stop. Implemented; validation below the release notes.
+
+- [VT 3.3 detailed design](detailed_design/detailed_design_v3.3.md) — fixed ride timer, foreground touch lock, recording prerequisite, distance-based gimbal pitch and logs. Implemented locally; device validation pending.

@@ -844,6 +844,15 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
      * @param isGimbalControlEnabled `true` to enable, `false` to disable.
      */
     public void setGimbalControlEnabled(boolean isGimbalControlEnabled) {
+        if(!isGimbalControlEnabled) {
+            handler.removeCallbacks(longPressed);
+            if(gimbalControlView.isVisible()) {
+                gimbalControlView.hide();
+                addDisposable(widgetModel.rotateGimbalBySpeed(0,0)
+                    .subscribe(() -> {}, UxErrorHandle.logErrorConsumer(TAG,"Lock gimbal touch")));
+            }
+            stopGimbalRotation();
+        }
         this.gimbalControlEnabled = isGimbalControlEnabled;
     }
     //endregion

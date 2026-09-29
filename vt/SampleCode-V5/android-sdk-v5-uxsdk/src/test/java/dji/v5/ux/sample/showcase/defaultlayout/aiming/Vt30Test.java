@@ -33,68 +33,19 @@ public final class Vt30Test {
             check(next<=8 && next-rate<=.400001,"normal cap and acceleration apply at every distance"); rate=next; }
         check(rate==8,"maximum remains 8 deg/s without Nearby");
     }
+    // VT 3.3 replaces speed-based confirmation/exit tests with Vt33Test.
     static void evidence() {
         RideDetector d=new RideDetector();
-        // Actual 1 Hz positions repeated by a 2 Hz transport. 8 m/s is 28.8, not 57.6 km/h.
-        for(long t=1000;t<=7000;t+=500) {
-            feed(d,t,((t-1000)/1000)*8);
-            check(!d.rejected,"duplicate packet must not double plausible movement speed");
-            if(t==2000) check(d.riding && !d.confirmed,"fast detection precedes return confirmation");
-        }
-        check(d.confirmed && Math.abs(d.confirmationSpeed-28.8)<.01,"five-second window confirms real ride");
-        for(long t=7500;t<=39000;t+=500) feed(d,t,48);
-        check(!d.riding && !d.confirmed,"fresh identical coordinates complete ride-end confirmation");
-        d.reset(); for(long t=1000;t<=6000;t+=500) feed(d,t,0);
-        feed(d,6500,3); feed(d,7000,6);
-        check(d.riding && !d.confirmed,"brief burst is a fast-only ride");
-        boolean returnEvent=false;
-        for(long t=7500;t<=39000;t+=500) { feed(d,t,6); returnEvent|=d.event.equals("ride_ended"); }
-        check(!d.riding && !returnEvent,"brief fast detection cannot emit confirmed ride-end event");
-        d.reset(); for(long t=1000;t<=7000;t+=500) feed(d,t,(t-1000)*.006);
-        d.clearEvidence("stale_gps");
-        check(d.riding && d.confirmed && d.slowMs==0,"pause preserves ride and cannot count as slowdown");
-        feed(d,20000,36); check(d.slowMs==0,"one recovery fix is not stationary confirmation");
-        for(long t=20500;t<=24000;t+=500) feed(d,t,36);
-        feed(d,24500,100);
-        check(d.rejected && d.riding && d.slowMs==0,"jump clears low-speed evidence without ending a ride");
-        feed(d,25000,36); feed(d,25500,36);
-        check(d.rejected,"jump back rejected when compared against raw jump evidence");
-        d.reset(); feed(d,1000,0); feed(d,1500,0); feed(d,2000,40);
+        feed(d,1000,0);feed(d,1500,0);feed(d,2000,40);
         check(d.rejected && !d.riding,"implausible jump cannot start a ride");
-        d.reset(); for(long t=1000;t<=7000;t+=500) feed(d,t,(t-1000)*.006);
-        feed(d,100,36);
-        check(d.confirmed && Double.isNaN(d.fastSpeed) && d.slowMs==0,"sender clock reset clears evidence without ending known ride");
+        d.reset();feed(d,1000,0);feed(d,1500,0);feed(d,2000,8);
+        check(d.riding && d.confirmed,"plausible short-window speed starts accepted ride");
     }
     static void movement() {
-        ComeToMeController c=ComeToMeTest.start(); ComeToMeTest.qualify(c);
-        c.update_state_machine(ComeToMeTest.in(61500,30.1,0,100,0,0),61500,.1);
-        check(c.noRideTimerActive(),"filming hold starts timer");
-        c.update_state_machine(ComeToMeTest.in(62000,30.1,0,103,0,0),62000,.1);
-        c.update_state_machine(ComeToMeTest.in(62500,30.1,0,106,0,0),62500,.1);
-        check(c.riding && !c.ride.confirmed && c.noRideTimerActive(),"fast-only ride preserves existing no-ride timer");
-        for(long t=63000;t<=96000;t+=500) c.update_state_machine(ComeToMeTest.in(t,30.1,0,106,0,0),t,.1);
-        check(!c.returning() && !c.riding && c.noRideTimerActive(),"fast-only slowdown does not cause early return");
-        // A fast-only detection near the original timeout must not suppress that timeout.
-        c=new ComeToMeController(); c.start(new ComeToMeSettings(true,70,20,18,8,30000,60000),1000);
-        c.update_state_machine(ComeToMeTest.in(1000,0,0,100,0,0),1000,.1); ComeToMeTest.qualify(c);
-        for(long t=61500;t<=120500;t+=500) c.update_state_machine(ComeToMeTest.in(t,30.1,0,100,0,0),t,.1);
-        c.update_state_machine(ComeToMeTest.in(121000,30.1,0,103,0,0),121000,.1);
-        c.update_state_machine(ComeToMeTest.in(121500,30.1,0,106,0,0),121500,.1);
-        check(c.riding && !c.ride.confirmed && c.returning() && c.returnReason.equals("no_ride_timeout"),
-                "original timeout still expires during fast-only ride");
-        c=ComeToMeTest.start(); ComeToMeTest.qualify(c);
-        c.update_state_machine(ComeToMeTest.in(61500,5,0,103,0,0),61500,.1);
-        c.update_state_machine(ComeToMeTest.in(62000,5,0,106,0,0),62000,.1);
-        check(c.riding && !c.ride.confirmed && c.forward==0 && !c.approaching(),"fast ride stops approach before confirmation");
-        c=new ComeToMeController(); c.start(new ComeToMeSettings(false,70,20,18,8,30000,900000),1000);
-        for(long t=1000;t<=8000;t+=500) c.update_state_machine(ComeToMeTest.in(t,0,0,100+(t-1000)*.006,0,0),t,.1);
-        check(c.riding && c.ride.confirmed && c.phase==ComeToMeController.Phase.OFF && c.forward==0,"ride observer operates with Come to me OFF");
-        for(long t=8500;t<=43000;t+=500) c.update_state_machine(ComeToMeTest.in(t,0,0,142,0,0),t,.1);
-        check(!c.returning() && c.forward==0,"confirmed ride end cannot move disabled planner");
-        c=ComeToMeTest.start(); ComeToMeTest.qualify(c);
+        ComeToMeController c=ComeToMeTest.start();ComeToMeTest.qualify(c);
         for(long t=61500;t<=362000;t+=500) c.update_state_machine(ComeToMeTest.in(t,0,0,100,0,0),t,.1);
         for(long t=362500;t<=370000;t+=500) c.update_state_machine(ComeToMeTest.in(t,0,0,100+(t-362000)*.006,0,0),t,.1);
-        check(c.riding && c.phase==ComeToMeController.Phase.STOPPED && c.forward==0,"ride observation cannot revive timed-out movement");
+        check(c.riding && c.phase==ComeToMeController.Phase.STOPPED && c.forward==0,"ride cannot revive movement timeout");
     }
     static void session() {
         AimingSessionTest.Fake f=new AimingSessionTest.Fake(); f.aiming(); f.core.surferYaw.reset();

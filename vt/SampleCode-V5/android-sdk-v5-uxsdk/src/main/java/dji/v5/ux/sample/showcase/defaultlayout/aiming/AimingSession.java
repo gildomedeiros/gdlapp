@@ -17,6 +17,7 @@ public final class AimingSession {
             if (forward != 0) throw new IllegalStateException("Translation port not implemented");
             sendYaw(yaw);
         }
+        default String startProblem() { return null; }
         long now();
         Inputs inputs();
         Authority authority();
@@ -191,7 +192,7 @@ public final class AimingSession {
         return !enablePending && !claimed && !releasePending && state != State.STARTING
                 // CAM3 v2.2: An unavailable initial owner permits a request, never implicit acquisition.
                 && state != State.AIMING && (a.owner == Owner.RC || a.owner == Owner.UNKNOWN) && !a.enabled
-                && port.inputs().validate(port.now()) == null;
+                && port.inputs().validate(port.now()) == null && port.startProblem()==null;
     }
     public void startAiming() {
         if (!canStart()) return;
@@ -239,6 +240,7 @@ public final class AimingSession {
         }
     }
     public void tick() {
+        if(state==State.PAUSED) movement.advanceRideClock(port.now());
         // CAM3 v2.7: A fresh decision record each cycle, including cycles that issue no command.
         cycleRetainedTarget=false; cycleId++; cycleAt=port.now(); cycleInputs=null; cycleFinalInputs=null; cycleAngle=Double.NaN;
         cycleMultiplier=1; cycleRequestedYaw=Double.NaN; cycleRequestedForward=0; cycleDecision="no_command";

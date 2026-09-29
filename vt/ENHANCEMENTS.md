@@ -227,3 +227,10 @@ VT 3.1 GPS completion update: qualification timer continues through packet gaps;
 ## VT 3.2 implemented
 
 Zero-second qualification, no return/band recreation on ride end, one-metre approach/return completion tolerance, 249 m outward excursion stop and diagnostic residuals. Updated within 3.2: both directions cruise at 2 m/s with 0.25 m/s2 acceleration, slowdown from 10 m and preserved arrival speeds. See [release notes](Docs/VT_3.2.md) and [design](detailed_design/detailed_design_v3.2.md). Device validation pending; existing unrelated backlog retained.
+
+## VT 3.3 — implemented locally
+
+Fixed configurable 90-second ride duration; initial detection cancels no-ride timer; temporary foreground touch lock; recording-required Start; configurable close-range gimbal tilt with logs. See [release summary](Docs/VT_3.3.md). Device validation remains pending. Background operation and recording-stopped warning are excluded. Existing RTH release-confirmation work above remains pending.
+
+### VT 3.3 absolute close-range pitch update
+Replace additional tilt percentage with -90 to 0 degree close-range target (default -35). Separate preference migration, signed settings input and degree logs; retain 30/35 m hysteresis, original-pitch restoration and 3 m/s movement.

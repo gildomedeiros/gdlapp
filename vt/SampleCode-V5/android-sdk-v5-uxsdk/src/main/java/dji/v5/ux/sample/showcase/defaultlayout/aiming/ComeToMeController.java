@@ -14,7 +14,7 @@ public final class ComeToMeController {
     public double bandBearing=Double.NaN,sideways=Double.NaN,distance=Double.NaN,centralDistance=Double.NaN;
     public double speedKmh=Double.NaN,forward=0,headingError=Double.NaN,returnHeading=Double.NaN;
     public boolean riding, insideBand, captureRequired=true;
-    public long qualifiedMs,slowMs,inactiveMs,attemptElapsedMs,centralGeneration;
+    public long qualifiedMs,slowMs,inactiveMs,attemptElapsedMs,centralGeneration,rideRemainingMs;
     // VT 3.1: qualifySince is the last credited monotonic timer tick.
     private long qualifySince=-1,inactiveSince=-1,attemptSince=-1,lastFix=-1;
     private boolean runEnabled;
@@ -39,6 +39,11 @@ public final class ComeToMeController {
         qualifySince=now;
         qualificationStatus=qualifiedMs>=ComeToMeSettings.QUALIFY_MS ? "qualified" : "counting";
     }
+    /** Monotonic ride expiry is independent of GPS and safety pauses. */
+    public void advanceRideClock(long now) {
+        if(ride.advance(now)) { riding=false; slowMs=0; speedKmh=Double.NaN; event="ride_expired"; }
+        rideRemainingMs=ride.remainingMs(now);
+    }
     /** No new approach without fresh GPS; the qualification clock keeps running. */
     public void pauseForGps(long now) {
         event="none"; noRideTimerEvent="none"; qualificationEvent="none"; ride.event="none";
@@ -46,6 +51,7 @@ public final class ComeToMeController {
             ride.clearEvidence("stale_gps"); slowMs=0; speedKmh=Double.NaN;
             approachAligned=false; returnAligned=false;
         }
+        advanceRideClock(now);
         gpsPaused=true; forward=0; advanceQualification(now);
         if(!riding && !captureRequired) qualificationStatus=qualifiedMs>=ComeToMeSettings.QUALIFY_MS
                 ? "qualified_waiting_fresh_gps" : "counting_without_fresh_gps";
@@ -112,14 +118,15 @@ public final class ComeToMeController {
     }
 
     /**
-     * Fast detection interrupts approach and enables responsive aiming. Only five-second
-     * confirmation cancels the no-ride timer; ride end does not authorize return (VT 3.2).
+     * Fast detection interrupts approach and enables responsive aiming. VT 3.3 initial
+     * detection cancels the no-ride timer; fixed ride expiry never authorizes return.
      * Observe even when translation is disabled or its movement timeout has latched.
      */
     private void observeSpeed(AimingSession.Fix fix,long now) {
         boolean wasRiding=ride.riding;
-        ride.observe(fix,settings);
-        riding=ride.riding; speedKmh=ride.fastSpeed; slowMs=ride.slowMs;
+        if(ride.riding) return; // VT 3.3: no speed assessment while the fixed timer runs.
+        ride.observe(fix,settings,now);
+        riding=ride.riding; speedKmh=ride.fastSpeed; slowMs=ride.slowMs; rideRemainingMs=ride.remainingMs(now);
         speedJumpRejected=ride.rejected; rejectedSpeedJumps=ride.rejectedCount;
         event=ride.event;
         if(!runEnabled || phase==Phase.STOPPED) return;
@@ -127,7 +134,7 @@ public final class ComeToMeController {
             clearApproach(); freezeQualification("ride");
             if(phase!=Phase.RETURNING) { phase=Phase.WAITING; attemptSince=-1; reason="ride_detected"; }
         }
-        if(event.equals("ride_confirmed")) { inactiveSince=-1; noRideTimerEvent="cancelled_confirmed_ride"; }
+        if(event.equals("ride_started")) { inactiveSince=-1; noRideTimerEvent="cancelled_ride_detected"; }
     }
 
     /** Start a return once; further ride/band events cannot reset its destination or deadline. */
@@ -162,11 +169,15 @@ public final class ComeToMeController {
         if(gpsPaused) { gpsPaused=false; qualificationEvent="resumed_fresh_gps"; }
         event="none"; noRideTimerEvent="none"; speedJumpRejected=false; double previous=forward; forward=0;
         ride.event="none"; ride.newPacket=false; ride.rejected=false;
+        advanceRideClock(now);
         boolean timedOut=expireAttempt(now); // Observation may continue; an expired move cannot be revived by a fast detection.
         if(in.target==null) return;
         boolean newFix=freshSurfer && in.target.time!=lastFix;
         long oldFix=lastFix;
-        if(newFix) { observeSpeed(in.target,now); lastFix=in.target.time; }
+        if(newFix) {
+            if(!event.equals("ride_expired")) observeSpeed(in.target,now);
+            lastFix=in.target.time;
+        }
         if(!runEnabled) return;
         if(captureRequired) {
             if(!in.steadyHover()) { reason="waiting_for_hover"; return; }
@@ -308,7 +319,7 @@ public final class ComeToMeController {
     /** Increase speed gradually; any blocked movement returns zero immediately in update_state_machine(). */
     private static double rampedSpeed(double previous,double remaining,double dt) {
         // VT 3.2: The arrival slope is independent of cruise speed: 5 m -> 1 m/s,
-        // 2 m -> 0.4 m/s. At 2 m/s cruise, slowdown therefore begins at 10 m.
+        // 2 m -> 0.4 m/s. At 3 m/s cruise, slowdown therefore begins at 15 m.
         double desired=Math.min(ComeToMeSettings.MAX_SPEED,
                 Math.max(0,remaining)*ComeToMeSettings.ARRIVAL_SPEED_PER_METRE);
         // VT 3.2: Retain the existing speed profile; callers now finish within 1 m, before the final crawl.
@@ -337,7 +348,7 @@ public final class ComeToMeController {
         if(!runEnabled) return "Come to me: OFF";
         return (gpsPaused ? "GPS stale · movement paused · " : "")+String.format(Locale.US,"Come to me: %s · %s · surfer %.0f m / target %.0f m · central %.0f m",
                 phase,reason.replace('_',' '),distance,settings.filmingDistance,centralDistance)
-                +" · lineup "+qualifiedMs/1000+"/"+ComeToMeSettings.QUALIFY_MS/1000+"s · "+qualificationStatus.replace('_',' ')+" · ride end "+slowMs/1000+"/"+settings.rideEndMs/1000
+                +" · lineup "+qualifiedMs/1000+"/"+ComeToMeSettings.QUALIFY_MS/1000+"s · "+qualificationStatus.replace('_',' ')+" · ride remaining "+rideRemainingMs/1000+"/"+settings.rideDurationMs/1000
                 +"s · no ride "+inactiveMs/60000+"/"+settings.inactivityMs/60000+"min"
                 +" · progress "+String.format(Locale.US,"%.1f/%.1f m",returning() ? returnProgress : approachProgress,returning() ? returnDistance : approachDistance)
                 +" · no-ride timer "+(noRideTimerActive() ? "running" : "inactive")
@@ -345,10 +356,10 @@ public final class ComeToMeController {
                 +" · attempt "+attemptElapsedMs/1000+"/300s";
     }
     public String details() {
-        return String.format(Locale.US,"%s%nLineup %.0f m: %d/%d s · speed %.1f km/h · riding %s%nRide end %d/%d s · no ride %d/%d s · attempt %d/300 s",
-                summary(),settings.lineupWidth,qualifiedMs/1000,ComeToMeSettings.QUALIFY_MS/1000,speedKmh,riding,slowMs/1000,settings.rideEndMs/1000,
+        return String.format(Locale.US,"%s%nLineup %.0f m: %d/%d s · speed %.1f km/h · riding %s%nRide remaining %d/%d s · no ride %d/%d s · attempt %d/300 s",
+                summary(),settings.lineupWidth,qualifiedMs/1000,ComeToMeSettings.QUALIFY_MS/1000,speedKmh,riding,rideRemainingMs/1000,settings.rideDurationMs/1000,
                 inactiveMs/1000,settings.inactivityMs/1000,attemptElapsedMs/1000)
-                +String.format(Locale.US,"%n5s speed %.1f km/h; confirmed ride %s",ride.confirmationSpeed,ride.confirmed)
+                +"\nRide policy: fixed duration; initial detection accepted immediately"
                 +String.format(Locale.US,"%nReturn progress %.1f/%.1f m; completion distance to central %.1f m",
                         returnProgress,returnDistance,returnCompletionCentralDistance);
     }

@@ -1,9 +1,8 @@
 package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 import java.util.ArrayDeque;
 /**
- * VT 3.0: GPS evidence only, with no movement or DJI calls.
- * The 1 s estimate enables responsive filming. VT 3.2 retains 5 s confirmation
- * to cancel the no-ride timer; ride end no longer triggers return to central.
+ * VT 3.3: short-window detection followed by a fixed monotonic duration.
+ * No speed assessment during an active ride. GPS gaps cannot extend its deadline.
  */
 public final class RideDetector {
     public static final long FAST_MS=1000, CONFIRM_MS=5000;
@@ -11,12 +10,20 @@ public final class RideDetector {
     private final ArrayDeque<AimingSession.Fix> history=new ArrayDeque<>(), jumpHistory=new ArrayDeque<>();
     private AimingSession.Fix last;
     private long slowSince=-1;
+    public long startedAt=-1, expiresAt=-1;
+    private long rearmAfter=-1;
+    public long remainingMs(long now) { return riding ? Math.max(0,expiresAt-now) : 0; }
+    public boolean advance(long now) {
+        if(!riding || expiresAt<0 || now<expiresAt) return false;
+        riding=confirmed=false; rearmAfter=now;
+        clearEvidence("timer_expired"); event="ride_expired"; return true;
+    }
     public boolean riding, confirmed, rejected, newPacket, repeatedCoordinates;
     public double fastSpeed=Double.NaN, confirmationSpeed=Double.NaN, jumpSpeed=Double.NaN;
     public long fastSpanMs, confirmationSpanMs, jumpSpanMs, slowMs, rejectedCount;
     public String event="none", evidence="warming_up", slowResetReason="none";
     /** New sessions/manual repositioning must not inherit a previous ride. */
-    public void reset() { riding=confirmed=false; rejectedCount=0; clearEvidence("reset"); event="none"; }
+    public void reset() { riding=confirmed=false; startedAt=expiresAt=rearmAfter=-1; rejectedCount=0; clearEvidence("reset"); event="none"; }
     /** Missing data is never zero speed. Preserve a known ride across a safety pause. */
     public void clearEvidence(String reason) {
         history.clear(); jumpHistory.clear(); last=null; slowSince=-1; slowMs=0;
@@ -41,8 +48,10 @@ public final class RideDetector {
      * The protocol has no independent GPS-fix ID. This corrects packet timing without
      * pretending identical coordinates distinguish a duplicate from a stationary GPS fix.
      */
-    public void observe(AimingSession.Fix fix,ComeToMeSettings config) {
+    public void observe(AimingSession.Fix fix,ComeToMeSettings config) { observe(fix,config,fix.time); }
+    public void observe(AimingSession.Fix fix,ComeToMeSettings config,long now) {
         event="none"; rejected=false; newPacket=false; slowResetReason="none";
+        if(riding || fix.time<=rearmAfter) return;
         if(last!=null && fix.time==last.time) return;
         if(last!=null && (fix.time<last.time || fix.time-last.time>3000 || fix.sampleTime<=last.sampleTime))
             clearEvidence("gap_or_clock_reset");
@@ -60,31 +69,15 @@ public final class RideDetector {
         }
         history.addLast(fix);
         while(history.size()>1 && fix.sampleTime-history.peekFirst().sampleTime>7000) history.removeFirst();
-        AimingSession.Fix fast=reference(history,fix,FAST_MS), confirm=reference(history,fix,CONFIRM_MS);
+        AimingSession.Fix fast=reference(history,fix,FAST_MS);
         fastSpanMs=fast==null ? 0 : fix.sampleTime-fast.sampleTime;
-        confirmationSpanMs=confirm==null ? 0 : fix.sampleTime-confirm.sampleTime;
+        confirmationSpanMs=0; // VT 3.3: no separate confirmation window.
         fastSpeed=fastSpanMs>=FAST_MS && fastSpanMs<=2000 ? speed(fast,fix) : Double.NaN;
-        confirmationSpeed=confirmationSpanMs>=CONFIRM_MS && confirmationSpanMs<=7000 ? speed(confirm,fix) : Double.NaN;
+        confirmationSpeed=Double.NaN;
         evidence=Double.isFinite(fastSpeed) ? "valid" : "warming_up";
-        if(!riding && Double.isFinite(fastSpeed) && fastSpeed>=config.rideStartKmh) {
-            riding=true; slowSince=-1; slowMs=0; event="ride_started";
-        }
-        if(!confirmed && Double.isFinite(confirmationSpeed) && confirmationSpeed>=config.rideStartKmh) {
-            riding=true; confirmed=true; event="ride_confirmed";
-        }
-        if(!Double.isFinite(fastSpeed)) {
-            slowSince=-1; slowMs=0; slowResetReason="insufficient_evidence"; return;
-        }
-        if(riding && fastSpeed<config.rideEndKmh) {
-            if(slowSince<0) slowSince=fix.time;
-            slowMs=Math.max(0,fix.time-slowSince);
-            if(slowMs>=config.rideEndMs) {
-                event=confirmed ? "ride_ended" : "fast_ride_ended";
-                riding=confirmed=false; slowSince=-1; slowMs=0;
-            }
-        } else {
-            if(slowSince>=0) slowResetReason="speed_at_or_above_end_threshold";
-            slowSince=-1; slowMs=0;
+        if(Double.isFinite(fastSpeed) && fastSpeed>=config.rideStartKmh) {
+            riding=confirmed=true; startedAt=now; expiresAt=startedAt+config.rideDurationMs;
+            slowSince=-1; slowMs=0; evidence="timer_active"; event="ride_started";
         }
     }
 }
