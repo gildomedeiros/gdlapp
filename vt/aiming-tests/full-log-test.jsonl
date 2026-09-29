@@ -1,0 +1,3 @@
+{"record":1,"timestamp":"2026-09-29T22:29:57.156+10:00","epochMs":1790684997156,"monoMs":1268609102,"event":"session_start","version":"3.3","format":1}
+{"record":2,"timestamp":"2026-09-29T22:29:57.155+10:00","epochMs":1790684997155,"monoMs":1268609101,"event":"packet","latitude":-28.1,"longitude":153.2,"raw":"bad\u000a\"\\\u0009data","missingAccuracy":null}
+{"record":3,"timestamp":"2026-09-29T22:29:57.159+10:00","epochMs":1790684997159,"monoMs":1268609106,"event":"session_end","reason":"user_off"}
