@@ -185,7 +185,7 @@ public final class YawAimingController implements AimingSession.Port {
         // CAM3 v2.3: Named telemetry callbacks either latch a pause or permanently cancel recovery.
         aircraft = new AircraftAimingTelemetry(this::telemetryEvent,
                 (field, detail) -> diagnostic("telemetry_" + field, detail));
-        camera=new VtCameraControl(executor,this::now,fullLog);
+        camera=new VtCameraControl(appContext,executor,this::now,fullLog);
         session = new AimingSession(this);
         android.content.SharedPreferences prefs=context.getSharedPreferences("vt28",Context.MODE_PRIVATE);
         try {

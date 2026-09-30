@@ -246,3 +246,7 @@ Add Long-range pitch (-90 to 0 degrees, default -6) beside Close-range pitch. Ap
 - Rotation speed configurable 1-30 deg/s (default 15), acceleration 0.5-30 deg/s squared (default 8). Captured per session for normal/ride aiming, saved approach and return headings. Preserve existing near-target slope, normal/navigation 3-degree tolerance, ride behavior and surfer-only reversal blocking. Actual configured limits recorded in aiming_cycle. Final command submission enforces session speed cap; factory enforces hard 30 deg/s ceiling.
 - Long-range/close-range pitch defaults now -10/-25 degrees. Existing saved angles are preserved. New rotation preferences use 15/8 when absent. Settings editable only while stopped; Come to me toggle retains both pitch and rotation settings.
 - No altitude commands added. Version stays 3.3/code 17. Tests cover configurable rate/acceleration limits and invalid values, unchanged near-target behavior and height freshness/formatting. Physical UI/flight validation remains required.
+
+## VT 3.4 — automatic gimbal distance bands
+
+JSON-configured bands with a 5 m outward buffer; automatic startup selection; full configuration, band-switch and gimbal-result logging. Replaces long/close pitch UI only. See [VT 3.4](Docs/VT_3.4.md). Device validation pending.

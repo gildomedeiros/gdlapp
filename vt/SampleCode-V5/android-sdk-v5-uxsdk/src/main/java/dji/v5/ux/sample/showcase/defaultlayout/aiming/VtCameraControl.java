@@ -19,12 +19,17 @@ public final class VtCameraControl {
     private final Slot<Boolean> recording=new Slot<>(KeyTools.createKey(CameraKey.KeyIsRecording,ComponentIndexType.LEFT_OR_MAIN));
     private final Slot<Attitude> attitude=new Slot<>(KeyTools.createKey(GimbalKey.KeyGimbalAttitude,ComponentIndexType.LEFT_OR_MAIN));
     private final Slot<GimbalAttitudeRange> range=new Slot<>(KeyTools.createKey(GimbalKey.KeyGimbalAttitudeRange,ComponentIndexType.LEFT_OR_MAIN));
-    public final GimbalPitchPolicy policy=new GimbalPitchPolicy();
+    public final GimbalBandPolicy policy=new GimbalBandPolicy();
+    private final android.content.Context context;
+    private GimbalBandConfig bands;
+    private String lastDeferred="none";
     private long generation,lastPoll=-1,sessionId=-1,lastLog=-1,commandAt=-1;
     private int attempts;
     private long commandId;
     private double sentTarget=Double.NaN;
-    private boolean pending,commandNeeded;
+    private int sentBand;
+    private long sentCommandId;
+    private boolean pending,commandNeeded,reachedLogged;
     private String result="none";
     private static final class Slot<T> {
         final DJIKey<T> key; T value; long at=-1,request=-1,ticket;
@@ -32,7 +37,7 @@ public final class VtCameraControl {
         boolean fresh(long now) { return value!=null && at>=0 && now>=at && now-at<=1500; }
         void clear() { value=null; at=request=-1; ticket++; }
     }
-    public VtCameraControl(Executor worker,LongSupplier clock,FullSessionLog log) { this.worker=worker;this.clock=clock;this.log=log; }
+    public VtCameraControl(android.content.Context context,Executor worker,LongSupplier clock,FullSessionLog log) { this.context=context;this.worker=worker;this.clock=clock;this.log=log; }
     public void clear() {
         generation++; recording.clear();attitude.clear();range.clear();lastPoll=-1;
         policy.reset();sessionId=-1;pending=commandNeeded=false;
@@ -45,44 +50,70 @@ public final class VtCameraControl {
             public void onFailure(IDJIError e) { worker.execute(() -> {if(g==generation && token==s.ticket) {s.value=null;s.at=-1;s.request=-1;} }); }
         });
     }
+    private void deferred(String reason) {
+        if(!reason.equals(lastDeferred)) {
+            log.record("gimbal_band_deferred","session",sessionId,"activeBand",policy.band+1,"reason",reason);
+            lastDeferred=reason;
+        }
+    }
     public void poll(long now) {
         if(lastPoll>=0 && now-lastPoll<500) return;lastPoll=now;
         read(recording,now);read(attitude,now);read(range,now);
     }
     public String recordingProblem(long now) { return RecordingGate.problem(recording.value,recording.at,now); }
     public void update(AimingSession session,AimingSession.Inputs in,long now,boolean allowed,ComeToMeSettings settings) {
+        if(session.sessionId()<=0) return;
         if(session.sessionId()!=sessionId) {
-            sessionId=session.sessionId();policy.reset();pending=commandNeeded=false;attempts=0;commandAt=-1;result="none";
+            sessionId=session.sessionId();policy.reset();pending=commandNeeded=false;attempts=0;commandAt=-1;result="none";lastLog=-1;lastDeferred="none";
+            GimbalBandStorage.Loaded loaded=GimbalBandStorage.load(context);bands=loaded.config;
+            log.record("gimbal_band_config","session",sessionId,"configPath",loaded.path,"source",loaded.source,
+                "fileContents",loaded.raw,"effectiveJson",loaded.effective,"validationError",loaded.error,"bufferMetres",bands.bufferMetres);
         }
-        if(!allowed) return;
+        if(!allowed) { deferred("control_not_allowed"); return; }
         double actual=attitude.fresh(now) ? attitude.value.getPitch() : Double.NaN;
         double distance=in.target==null ? Double.NaN : YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon);
         long age=in.target==null ? -1 : now-in.target.time;
         boolean gpsFresh=age>=0 && age<=3000;
+        deferred(!gpsFresh ? "stale_surfer_gps" : !attitude.fresh(now) ? "stale_gimbal_attitude" : !range.fresh(now) ? "stale_gimbal_range" : pending ? "pending_command" : commandAt>=0 && now-commandAt<3000 ? "command_cooldown" : "none");
         if(!pending && (commandAt<0 || now-commandAt>=2000) && range.fresh(now) && range.value.getPitch()!=null) {
             double min=range.value.getPitch().getMin(), max=range.value.getPitch().getMax();
-            if(policy.update(actual,distance,gpsFresh,settings.closeRangePitchDeg,settings.longRangePitchDeg,min,max)) {
+            int oldBand=policy.band;
+            boolean needsCommand=policy.update(actual,distance,gpsFresh,bands,min,max);
+            if(oldBand!=policy.band) {
+                // Record every crossed threshold, including multi-band jumps.
+                StringBuilder thresholds=new StringBuilder();
+                if(oldBand>=0) for(int i=Math.min(oldBand,policy.band);i<Math.max(oldBand,policy.band);i++) {
+                    if(thresholds.length()>0)thresholds.append(",");
+                    thresholds.append(bands.upper(i)+(policy.band>oldBand ? bands.bufferMetres : 0));
+                }
+                commandNeeded=needsCommand;attempts=0;
+                log.record("gimbal_band_switch","session",sessionId,"cycleId",session.cycleId,
+                    "previousBand",oldBand+1,"activeBand",policy.band+1,"distanceM",distance,"gpsAgeMs",age,
+                    "crossedThresholdsM",thresholds.toString(),"reason",policy.reason,"configuredPitchDeg",bands.pitch(policy.band),
+                    "targetPitchDeg",policy.target,"actualPitchDeg",actual,"commandNeeded",needsCommand);
+            }
+            if(needsCommand) {
                 commandNeeded=true;attempts=0;result="requested";
             }
         }
         if(commandNeeded && !pending && gpsFresh && attitude.fresh(now) && range.fresh(now)
                 && attempts<3 && (commandAt<0 || now-commandAt>=3000)) {
             commandAt=now;attempts++;pending=true;commandNeeded=false;
-            final long token=sessionId,g=generation,id=++commandId; final double target=policy.target; sentTarget=target;
+            final long token=sessionId,g=generation,id=++commandId; final double target=policy.target; sentTarget=target;sentBand=policy.band+1;sentCommandId=id;reachedLogged=false;
             GimbalAngleRotation rotation=new GimbalAngleRotation();
             rotation.setMode(GimbalAngleRotationMode.ABSOLUTE_ANGLE);
             rotation.setPitch(target); rotation.setPitchIgnored(false);
             rotation.setRollIgnored(true);rotation.setYawIgnored(true);
             rotation.setDuration(2.0);rotation.setJointReferenceUsed(false);
-            log.record("gimbal_pitch_command","session",token,"cycleId",session.cycleId,"longRangePitchDeg",settings.longRangePitchDeg,
-                "targetPitchDeg",target,"actualPitchDeg",actual,"closeRangePitchDeg",settings.closeRangePitchDeg,
+            log.record("gimbal_pitch_command","session",token,"cycleId",session.cycleId,"activeBand",policy.band+1,
+                "commandId",id,"targetPitchDeg",target,"actualPitchDeg",actual,"bufferMetres",bands.bufferMetres,
                 "distanceM",distance,"gpsAgeMs",age,"trigger",policy.reason,"attempt",attempts);
             sdk.performAction(KeyTools.createKey(GimbalKey.KeyRotateByAngle,ComponentIndexType.LEFT_OR_MAIN),rotation,
                 new CommonCallbacks.CompletionCallbackWithParam<EmptyMsg>() {
                     public void onSuccess(EmptyMsg ignored) { finish("accepted",false); }
                     public void onFailure(IDJIError error) { finish(error==null ? "unknown_error" : error.errorCode(),true); }
                     private void finish(String value,boolean failed) { worker.execute(() -> {
-                        log.record("gimbal_pitch_result","session",token,"targetPitchDeg",target,"result",value);
+                        log.record("gimbal_pitch_result","session",token,"commandId",id,"targetPitchDeg",target,"result",value);
                         if(g!=generation || token!=sessionId || id!=commandId) return;
                         pending=false;result=value;if(failed) commandNeeded=true;
                     }); }
@@ -91,13 +122,18 @@ public final class VtCameraControl {
         if(pending && now-commandAt>5000) {
             pending=false;commandId++;result="callback_timeout";
             if(policy.target==sentTarget) commandNeeded=false;
-            log.record("gimbal_pitch_result","session",sessionId,"targetPitchDeg",sentTarget,"result",result);
+            log.record("gimbal_pitch_result","session",sessionId,"commandId",sentCommandId,"targetPitchDeg",sentTarget,"result",result);
+        }
+        if(!reachedLogged && commandAt>=0 && attitude.fresh(now) && now>=commandAt+2000 && Math.abs(actual-sentTarget)<=1) {
+            reachedLogged=true;
+            log.record("gimbal_pitch_reached","session",sessionId,"commandId",sentCommandId,"activeBand",sentBand,
+                "targetPitchDeg",sentTarget,"actualPitchDeg",actual,"elapsedMs",now-commandAt);
         }
         if(lastLog<0 || now-lastLog>=500) {
             lastLog=now;
             log.record("gimbal_pitch_cycle","session",sessionId,"cycleId",session.cycleId,
-                "longRangePitchDeg",settings.longRangePitchDeg,"targetPitchDeg",policy.target,"actualPitchDeg",actual,
-                "closeRangePitchDeg",settings.closeRangePitchDeg,"closeRange",policy.close,
+                "activeBand",policy.band+1,"targetPitchDeg",policy.target,"actualPitchDeg",actual,
+                "bufferMetres",bands.bufferMetres,"deferredReason",lastDeferred,
                 "distanceM",distance,"gpsAgeMs",age,"trigger",policy.reason,"commandResult",result,
                 "targetReached",Double.isFinite(actual)&&Double.isFinite(policy.target)&&Math.abs(actual-policy.target)<=1,
                 "pitchFresh",attitude.fresh(now),"rangeFresh",range.fresh(now),

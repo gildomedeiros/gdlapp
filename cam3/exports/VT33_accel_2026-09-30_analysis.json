@@ -1,0 +1,829 @@
+[
+  {
+    "file": "3.3 test accel/cam3_full_2026-09-30_113120_702_c714cdeb.jsonl",
+    "start": "11:31:38.126",
+    "stop": "11:32:19.613",
+    "seconds": 41.49,
+    "stopReason": "session=1 reason=returning_home",
+    "settings": {
+      "filmingDistanceM": 20.0,
+      "reapproachMarginM": 5.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "maxMovementSpeedMps": 3.0
+    },
+    "yawLimits": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "maxSubmittedYaw": 15.0,
+    "heightFreshStats": [
+      9.9,
+      9.9,
+      10.0
+    ],
+    "heightFreshCycles": 403,
+    "heightCycles": 403,
+    "states": {
+      "STARTING": 0.22,
+      "AIMING": 34.79,
+      "PAUSED": 6.34
+    },
+    "phases": {
+      "WAITING": 6.56,
+      "HOLDING": 34.79
+    },
+    "yawOwners": {
+      "surfer": 41.35
+    },
+    "rides": [],
+    "ridingCycles": 0,
+    "approaches": [],
+    "returns": [],
+    "maxActualSpeed": 0.1,
+    "pitchSettings": [
+      [
+        -18.0,
+        -25.0
+      ]
+    ],
+    "pitch": [
+      {
+        "time": "11:31:38.382",
+        "trigger": "startup_long_range",
+        "from": 0.0,
+        "target": -18.0,
+        "distance": 13.52,
+        "reached": "11:31:40.965"
+      },
+      {
+        "time": "11:31:41.482",
+        "trigger": "below_30m",
+        "from": -17.900000000000002,
+        "target": -25.0,
+        "distance": 13.48,
+        "reached": "11:31:44.051"
+      }
+    ],
+    "pitchResults": {
+      "accepted": 2
+    },
+    "packets": 82,
+    "pps": 1.977,
+    "gapsMs": [
+      375,
+      500,
+      552
+    ],
+    "p90gapMs": 522,
+    "gapsOver3": 0,
+    "rssi": [
+      -90,
+      -70.5,
+      -68
+    ],
+    "snr": [
+      8.5,
+      9.8,
+      11.0
+    ],
+    "missing": 0,
+    "statesEvents": [
+      [
+        "11:31:38.134",
+        "session=1 STOPPED -> STARTING reason=acquiring"
+      ],
+      [
+        "11:31:38.381",
+        "session=1 STARTING -> AIMING reason=aiming"
+      ],
+      [
+        "11:31:50.836",
+        "session=1 AIMING -> PAUSED reason=pilot_stick"
+      ],
+      [
+        "11:31:57.178",
+        "session=1 PAUSED -> AIMING reason=aiming"
+      ],
+      [
+        "11:32:19.613",
+        "session=1 AIMING -> STOPPING reason=returning_home"
+      ]
+    ],
+    "yawFailures": [],
+    "locks": [
+      [
+        "11:31:38.126",
+        "locked"
+      ]
+    ]
+  },
+  {
+    "file": "3.3 test accel/cam3_full_2026-09-30_114600_842_df864d80.jsonl",
+    "start": "11:46:44.824",
+    "stop": "11:48:02.857",
+    "seconds": 78.03,
+    "stopReason": "session=1 reason=screen_closed",
+    "settings": {
+      "filmingDistanceM": 20.0,
+      "reapproachMarginM": 5.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "maxMovementSpeedMps": 3.0
+    },
+    "yawLimits": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "maxSubmittedYaw": 15.0,
+    "heightFreshStats": [
+      10.3,
+      10.3,
+      10.4
+    ],
+    "heightFreshCycles": 740,
+    "heightCycles": 740,
+    "states": {
+      "STARTING": 0.11,
+      "AIMING": 77.77
+    },
+    "phases": {
+      "WAITING": 0.11,
+      "APPROACHING": 44.91,
+      "HOLDING": 32.86
+    },
+    "yawOwners": {
+      "surfer": 32.97,
+      "approach": 44.91
+    },
+    "rides": [],
+    "ridingCycles": 0,
+    "approaches": [
+      {
+        "start": "11:46:44.993",
+        "travel": 24.52,
+        "distance": 44.52,
+        "heading": 1.198255599765389,
+        "moving": "11:47:07.237",
+        "initialHeadingError": -171.50174440023466,
+        "alignmentSeconds": 22.24,
+        "end": "11:47:29.904",
+        "duration": 44.91,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 20.04
+      }
+    ],
+    "returns": [],
+    "maxActualSpeed": 2.6076809620810595,
+    "pitchSettings": [
+      [
+        -18.0,
+        -25.0
+      ]
+    ],
+    "pitch": [
+      {
+        "time": "11:46:44.991",
+        "trigger": "startup_long_range",
+        "from": 0.0,
+        "target": -18.0,
+        "distance": 44.52,
+        "reached": "11:46:48.139"
+      },
+      {
+        "time": "11:47:18.304",
+        "trigger": "below_30m",
+        "from": -18.0,
+        "target": -25.0,
+        "distance": 29.94,
+        "reached": "11:47:20.841"
+      }
+    ],
+    "pitchResults": {
+      "accepted": 2
+    },
+    "packets": 156,
+    "pps": 1.999,
+    "gapsMs": [
+      471,
+      500,
+      529
+    ],
+    "p90gapMs": 520,
+    "gapsOver3": 0,
+    "rssi": [
+      -73,
+      -69.0,
+      -63
+    ],
+    "snr": [
+      9.3,
+      9.9,
+      10.8
+    ],
+    "missing": 0,
+    "statesEvents": [
+      [
+        "11:46:44.826",
+        "session=1 OFF -> STARTING reason=acquiring"
+      ],
+      [
+        "11:46:44.987",
+        "session=1 STARTING -> AIMING reason=aiming"
+      ],
+      [
+        "11:48:02.857",
+        "session=1 AIMING -> STOPPING reason=screen_closed"
+      ]
+    ],
+    "yawFailures": [],
+    "locks": [
+      [
+        "11:46:44.824",
+        "locked"
+      ],
+      [
+        "11:48:00.998",
+        "unlocked_by_hold"
+      ]
+    ]
+  },
+  {
+    "file": "3.3 test accel/cam3_full_2026-09-30_114823_852_758f6470.jsonl",
+    "start": "11:49:05.200",
+    "stop": "11:52:57.896",
+    "seconds": 232.7,
+    "stopReason": "session=1 reason=screen_closed",
+    "settings": {
+      "filmingDistanceM": 20.0,
+      "reapproachMarginM": 5.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "maxMovementSpeedMps": 3.0
+    },
+    "yawLimits": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "maxSubmittedYaw": 15.0,
+    "heightFreshStats": [
+      10.3,
+      10.3,
+      10.6
+    ],
+    "heightFreshCycles": 2216,
+    "heightCycles": 2216,
+    "states": {
+      "STARTING": 0.24,
+      "AIMING": 221.85,
+      "PAUSED": 10.53
+    },
+    "phases": {
+      "WAITING": 10.77,
+      "APPROACHING": 65.85,
+      "HOLDING": 156.0
+    },
+    "yawOwners": {
+      "surfer": 166.77,
+      "approach": 65.85
+    },
+    "rides": [],
+    "ridingCycles": 0,
+    "approaches": [
+      {
+        "start": "11:49:05.462",
+        "travel": 23.46,
+        "distance": 43.46,
+        "heading": 3.1567388227624065,
+        "moving": "11:49:25.130",
+        "initialHeadingError": -173.74326117723763,
+        "alignmentSeconds": 19.67,
+        "end": "11:49:47.686",
+        "duration": 42.22,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 17.03
+      },
+      {
+        "start": "11:51:52.556",
+        "travel": 26.63,
+        "distance": 46.63,
+        "heading": 343.93180281601246,
+        "moving": "11:51:52.556",
+        "initialHeadingError": 2.3318028160124413,
+        "alignmentSeconds": 0.0,
+        "end": "11:52:16.183",
+        "duration": 23.63,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 17.77
+      }
+    ],
+    "returns": [],
+    "maxActualSpeed": 7.689603370785778,
+    "pitchSettings": [
+      [
+        -18.0,
+        -35.0
+      ]
+    ],
+    "pitch": [
+      {
+        "time": "11:49:05.460",
+        "trigger": "startup_long_range",
+        "from": -25.0,
+        "target": -18.0,
+        "distance": 43.46,
+        "reached": "11:49:08.112"
+      },
+      {
+        "time": "11:49:37.276",
+        "trigger": "below_30m",
+        "from": -17.900000000000002,
+        "target": -35.0,
+        "distance": 29.04,
+        "reached": "11:49:40.341"
+      },
+      {
+        "time": "11:51:52.556",
+        "trigger": "above_35m",
+        "from": -34.9,
+        "target": -18.0,
+        "distance": 46.63,
+        "reached": "11:51:55.193"
+      },
+      {
+        "time": "11:52:04.232",
+        "trigger": "below_30m",
+        "from": -18.0,
+        "target": -35.0,
+        "distance": 29.47,
+        "reached": "11:52:07.288"
+      }
+    ],
+    "pitchResults": {
+      "accepted": 4
+    },
+    "packets": 454,
+    "pps": 1.951,
+    "gapsMs": [
+      469,
+      500,
+      1501
+    ],
+    "p90gapMs": 521,
+    "gapsOver3": 0,
+    "rssi": [
+      -79,
+      -62.0,
+      -28
+    ],
+    "snr": [
+      7.2,
+      10.0,
+      12.5
+    ],
+    "missing": 11,
+    "statesEvents": [
+      [
+        "11:49:05.201",
+        "session=1 OFF -> STARTING reason=acquiring"
+      ],
+      [
+        "11:49:05.455",
+        "session=1 STARTING -> AIMING reason=aiming"
+      ],
+      [
+        "11:51:42.026",
+        "session=1 AIMING -> PAUSED reason=pilot_stick"
+      ],
+      [
+        "11:51:52.550",
+        "session=1 PAUSED -> AIMING reason=aiming"
+      ],
+      [
+        "11:52:57.896",
+        "session=1 AIMING -> STOPPING reason=screen_closed"
+      ]
+    ],
+    "yawFailures": [],
+    "locks": [
+      [
+        "11:49:05.200",
+        "locked"
+      ],
+      [
+        "11:52:55.846",
+        "unlocked_by_hold"
+      ]
+    ]
+  },
+  {
+    "file": "3.3 test accel/cam3_full_2026-09-30_115315_460_68479a60.jsonl",
+    "start": "11:54:13.872",
+    "stop": "12:04:28.702",
+    "seconds": 614.83,
+    "stopReason": "session=1 reason=screen_closed",
+    "settings": {
+      "filmingDistanceM": 20.0,
+      "reapproachMarginM": 5.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "maxMovementSpeedMps": 3.0
+    },
+    "yawLimits": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "maxSubmittedYaw": 15.0,
+    "heightFreshStats": [
+      9.6,
+      9.6,
+      9.8
+    ],
+    "heightFreshCycles": 5985,
+    "heightCycles": 5985,
+    "states": {
+      "STARTING": 0.1,
+      "AIMING": 614.42
+    },
+    "phases": {
+      "WAITING": 0.1,
+      "APPROACHING": 184.0,
+      "HOLDING": 430.42
+    },
+    "yawOwners": {
+      "surfer": 430.52,
+      "approach": 184.0
+    },
+    "rides": [],
+    "ridingCycles": 0,
+    "approaches": [
+      {
+        "start": "11:54:14.241",
+        "travel": 31.87,
+        "distance": 51.87,
+        "heading": 97.15363955774535,
+        "moving": "11:54:29.690",
+        "initialHeadingError": 138.75363955774537,
+        "alignmentSeconds": 15.45,
+        "end": "11:54:55.458",
+        "duration": 41.22,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 23.21
+      },
+      {
+        "start": "11:55:26.461",
+        "travel": 5.35,
+        "distance": 25.35,
+        "heading": 310.2459015462534,
+        "moving": "11:55:35.518",
+        "initialHeadingError": -8.654098453746656,
+        "alignmentSeconds": 9.06,
+        "end": "11:55:44.358",
+        "duration": 17.9,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 23.96
+      },
+      {
+        "start": "11:56:19.505",
+        "travel": 5.1,
+        "distance": 25.1,
+        "heading": 94.47111253990943,
+        "moving": "11:56:24.934",
+        "initialHeadingError": 8.57111253990945,
+        "alignmentSeconds": 5.43,
+        "end": "11:56:35.219",
+        "duration": 15.71,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 25.03
+      },
+      {
+        "start": "11:56:35.321",
+        "travel": 5.03,
+        "distance": 25.03,
+        "heading": 108.21666632037602,
+        "moving": "11:56:44.886",
+        "initialHeadingError": 16.516666320375975,
+        "alignmentSeconds": 9.56,
+        "end": "11:56:54.236",
+        "duration": 18.91,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 11.44
+      },
+      {
+        "start": "12:00:48.489",
+        "travel": 5.84,
+        "distance": 25.84,
+        "heading": 190.95686990689163,
+        "moving": "12:00:49.211",
+        "initialHeadingError": 3.156869906891643,
+        "alignmentSeconds": 0.72,
+        "end": "12:00:58.344",
+        "duration": 9.86,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 33.22
+      },
+      {
+        "start": "12:00:58.447",
+        "travel": 13.22,
+        "distance": 33.22,
+        "heading": 189.92890999368683,
+        "moving": "12:00:58.447",
+        "initialHeadingError": 1.9289099936868297,
+        "alignmentSeconds": 0.0,
+        "end": "12:01:12.721",
+        "duration": 14.27,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 20.79
+      },
+      {
+        "start": "12:03:07.435",
+        "travel": 5.34,
+        "distance": 25.34,
+        "heading": 107.84486092585229,
+        "moving": "12:03:13.280",
+        "initialHeadingError": 9.344860925852345,
+        "alignmentSeconds": 5.84,
+        "end": "12:03:22.924",
+        "duration": 15.49,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 25.81
+      },
+      {
+        "start": "12:03:23.031",
+        "travel": 5.81,
+        "distance": 25.81,
+        "heading": 125.42340670530064,
+        "moving": "12:03:35.750",
+        "initialHeadingError": 20.52340670530066,
+        "alignmentSeconds": 12.72,
+        "end": "12:03:46.009",
+        "duration": 22.98,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 34.09
+      },
+      {
+        "start": "12:03:46.112",
+        "travel": 14.09,
+        "distance": 34.09,
+        "heading": 148.83251850447266,
+        "moving": "12:03:55.340",
+        "initialHeadingError": 26.432518504472682,
+        "alignmentSeconds": 9.23,
+        "end": "12:04:13.777",
+        "duration": 27.66,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 20.91
+      }
+    ],
+    "returns": [],
+    "maxActualSpeed": 3.0016662039607267,
+    "pitchSettings": [
+      [
+        -18.0,
+        -35.0
+      ]
+    ],
+    "pitch": [
+      {
+        "time": "11:54:14.241",
+        "trigger": "startup_long_range",
+        "from": -35.0,
+        "target": -18.0,
+        "distance": 51.87,
+        "reached": "11:54:17.315"
+      },
+      {
+        "time": "11:54:44.638",
+        "trigger": "below_30m",
+        "from": -17.900000000000002,
+        "target": -35.0,
+        "distance": 29.38,
+        "reached": "11:54:47.725"
+      }
+    ],
+    "pitchResults": {
+      "accepted": 2
+    },
+    "packets": 1218,
+    "pps": 1.981,
+    "gapsMs": [
+      440,
+      500,
+      1026
+    ],
+    "p90gapMs": 518,
+    "gapsOver3": 0,
+    "rssi": [
+      -107,
+      -55.5,
+      -41
+    ],
+    "snr": [
+      6.2,
+      9.8,
+      13.0
+    ],
+    "missing": 12,
+    "statesEvents": [
+      [
+        "11:54:13.873",
+        "session=1 OFF -> STARTING reason=acquiring"
+      ],
+      [
+        "11:54:14.240",
+        "session=1 STARTING -> AIMING reason=aiming"
+      ]
+    ],
+    "yawFailures": [],
+    "locks": [
+      [
+        "11:54:13.872",
+        "locked"
+      ],
+      [
+        "12:04:26.169",
+        "unlocked_by_hold"
+      ]
+    ]
+  },
+  {
+    "file": "3.3 test accel/cam3_full_2026-09-30_120445_025_d98001e3.jsonl",
+    "start": "12:05:48.793",
+    "stop": "12:09:06.259",
+    "seconds": 197.47,
+    "stopReason": "session=1 reason=screen_closed",
+    "settings": {
+      "filmingDistanceM": 20.0,
+      "reapproachMarginM": 5.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "maxMovementSpeedMps": 3.0
+    },
+    "yawLimits": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "maxSubmittedYaw": 15.0,
+    "heightFreshStats": [
+      10.2,
+      10.3,
+      10.4
+    ],
+    "heightFreshCycles": 1813,
+    "heightCycles": 1866,
+    "states": {
+      "STARTING": 0.11,
+      "AIMING": 191.77,
+      "PAUSED": 5.44
+    },
+    "phases": {
+      "WAITING": 0.11,
+      "APPROACHING": 101.77,
+      "HOLDING": 95.45
+    },
+    "yawOwners": {
+      "surfer": 95.56,
+      "approach": 101.77
+    },
+    "rides": [],
+    "ridingCycles": 0,
+    "approaches": [
+      {
+        "start": "12:05:49.014",
+        "travel": 41.44,
+        "distance": 61.44,
+        "heading": 151.0427793836866,
+        "moving": "12:06:06.837",
+        "initialHeadingError": -179.15722061631345,
+        "alignmentSeconds": 17.82,
+        "end": "12:06:38.667",
+        "duration": 49.65,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 20.53
+      },
+      {
+        "start": "12:07:21.049",
+        "travel": 5.47,
+        "distance": 25.47,
+        "heading": 333.74883224629053,
+        "moving": "12:07:26.983",
+        "initialHeadingError": -5.951167753709456,
+        "alignmentSeconds": 5.93,
+        "end": "12:07:36.974",
+        "duration": 15.93,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 27.22
+      },
+      {
+        "start": "12:07:37.077",
+        "travel": 7.22,
+        "distance": 27.22,
+        "heading": 328.4529941800197,
+        "moving": "12:07:43.969",
+        "initialHeadingError": -8.147005819980336,
+        "alignmentSeconds": 6.89,
+        "end": "12:07:57.070",
+        "duration": 19.99,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 21.97
+      },
+      {
+        "start": "12:08:37.499",
+        "travel": 5.53,
+        "distance": 25.53,
+        "heading": 36.2858007102235,
+        "moving": "12:08:43.733",
+        "initialHeadingError": 8.585800710223452,
+        "alignmentSeconds": 6.23,
+        "end": "12:08:53.694",
+        "duration": 16.2,
+        "reason": "approach_arrival_tolerance",
+        "endDistance": 23.61
+      }
+    ],
+    "returns": [],
+    "maxActualSpeed": 2.7730849247724096,
+    "pitchSettings": [
+      [
+        -18.0,
+        -35.0
+      ]
+    ],
+    "pitch": [
+      {
+        "time": "12:05:49.010",
+        "trigger": "startup_long_range",
+        "from": -13.9,
+        "target": -18.0,
+        "distance": 61.44,
+        "reached": "12:05:51.653"
+      },
+      {
+        "time": "12:06:29.783",
+        "trigger": "below_30m",
+        "from": -17.900000000000002,
+        "target": -35.0,
+        "distance": 29.13,
+        "reached": "12:06:32.513"
+      }
+    ],
+    "pitchResults": {
+      "accepted": 2
+    },
+    "packets": 390,
+    "pps": 1.975,
+    "gapsMs": [
+      449,
+      500,
+      1023
+    ],
+    "p90gapMs": 521,
+    "gapsOver3": 0,
+    "rssi": [
+      -56,
+      -52.0,
+      -40
+    ],
+    "snr": [
+      7.0,
+      9.8,
+      12.5
+    ],
+    "missing": 5,
+    "statesEvents": [
+      [
+        "12:05:48.794",
+        "session=1 OFF -> STARTING reason=acquiring"
+      ],
+      [
+        "12:05:49.005",
+        "session=1 STARTING -> AIMING reason=aiming"
+      ],
+      [
+        "12:09:00.783",
+        "session=1 AIMING -> PAUSED reason=connection"
+      ],
+      [
+        "12:09:06.259",
+        "session=1 PAUSED -> STOPPING reason=screen_closed"
+      ]
+    ],
+    "yawFailures": [],
+    "locks": [
+      [
+        "12:05:48.793",
+        "locked"
+      ]
+    ]
+  }
+]

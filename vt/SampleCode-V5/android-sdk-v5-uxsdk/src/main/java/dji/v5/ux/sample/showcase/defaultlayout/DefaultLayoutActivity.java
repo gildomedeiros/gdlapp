@@ -247,7 +247,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         });
         // CAM3 v2.0: No automatic activation; Stop also cancels pending authority requests.
         findViewById(R.id.uxsdk_aiming_start).setOnClickListener(v -> {
-            // VT 3.3: cancel touch gimbal motion before automatic pitch may begin.
+            // VT 3.4: cancel touch gimbal motion before automatic pitch may begin.
             lockScreenControls(); yawAimingController.startAiming();
         });
         // CAM3 v2.2: STOP is always accessible and every tap gets honest visible acknowledgement.
@@ -265,7 +265,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
             menu.getMenu().add(0,4,3,"Come to me").setCheckable(true)
                     .setChecked(yawAimingController.movementSettings().enabled).setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,5,4,"VT 3.3 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,5,4,"VT 3.4 settings").setEnabled(yawAimingController.canSelectGpsSource());
             menu.getMenu().add(0,6,5,"Lock screen controls");
             menu.setOnMenuItemClickListener(item -> {
                 if(item.getItemId()==6) { lockScreenControls(); return true; }
@@ -416,8 +416,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
         String[] labels={"Filming distance (10–200 m)","Lineup total width (20–200 m)",
                 "Ride start speed (km/h)","Ride duration (1–600 seconds)",
-                "No-ride return timeout (minutes)","Re-approach margin (0–200 m)","Close-range pitch (-90 to 0 degrees)","Long-range pitch (-90 to 0 degrees)","Max rotation speed (1-30 deg/s)","Rotation acceleration (0.5-30 deg/s²)"};
-        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.closeRangePitchDeg,c.longRangePitchDeg,c.maxYawRate,c.yawAcceleration};
+                "No-ride return timeout (minutes)","Re-approach margin (0–200 m)","Max rotation speed (1-30 deg/s)","Rotation acceleration (0.5-30 deg/s²)"};
+        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.maxYawRate,c.yawAcceleration};
         android.widget.LinearLayout form=new android.widget.LinearLayout(this);
         form.setOrientation(android.widget.LinearLayout.VERTICAL);
         int pad=(int)(16*getResources().getDisplayMetrics().density); form.setPadding(pad,pad,pad,pad);
@@ -425,12 +425,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         for(int i=0;i<labels.length;i++) {
             TextView label=new TextView(this); label.setText(labels[i]); form.addView(label);
             fields[i]=new android.widget.EditText(this);
-            fields[i].setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL | ((i==6 || i==7) ? android.text.InputType.TYPE_NUMBER_FLAG_SIGNED : 0));
+            fields[i].setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
             fields[i].setSingleLine(true); fields[i].setText(String.valueOf(values[i]));
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.3 · Come to me")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.4 · Come to me")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -442,7 +442,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 }
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings next=
                     new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(c.enabled,n[0],n[1],n[2],0.1,1000,
-                            (long)(n[4]*60000),n[5],(long)(n[3]*1000),n[6],n[7],n[8],n[9]);
+                            (long)(n[4]*60000),n[5],(long)(n[3]*1000),c.closeRangePitchDeg,c.longRangePitchDeg,n[6],n[7]);
                 if(!yawAimingController.canSelectGpsSource()) throw new IllegalArgumentException("Stop aiming before changing settings");
                 yawAimingController.setMovementSettings(next); dialog.dismiss();
             } catch(IllegalArgumentException bad) { Toast.makeText(this,bad.getMessage(),Toast.LENGTH_LONG).show(); }
@@ -492,7 +492,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.uxsdk_movement_status)).setText(yawAimingController.movementScreen());
     }
 
-    // VT 3.3: A foreground modal window blocks widgets AND existing dialogs; never persists to preferences.
+    // VT 3.4: A foreground modal window blocks widgets AND existing dialogs; never persists to preferences.
     private android.app.Dialog touchLock;
     private long lockedSession=-1;
     private boolean previousGimbalTouch;

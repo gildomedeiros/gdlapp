@@ -123,3 +123,17 @@ Write-Output 'PASS: zero-wait and ride-end-return policy independently parsed fr
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.3 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt33Test'
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.3 tests failed' }
+
+# VT 3.4: compile and exercise the production JSON parser and distance-band policy.
+$gsonJar = (Get-ChildItem "$env:USERPROFILE/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/*/gson-2.10.1.jar" | Select-Object -First 1).FullName
+if (!$gsonJar) { throw 'Gson 2.10.1 jar missing' }
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/GimbalBandConfig.java" "$source/GimbalBandPolicy.java" (Join-Path (Split-Path $test) 'Vt34Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt34Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets/vt_gimbal_bands.json')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests failed' }
+
+# JVM-only Android storage seams; compile production loader without aircraft/Android runtime.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path $projectRoot 'tools/gimbal-test-stubs/Context.java') (Join-Path $projectRoot 'tools/gimbal-test-stubs/AssetManager.java') "$source/GimbalBandStorage.java" (Join-Path $projectRoot 'tools/gimbal-test-stubs/GimbalBandStorageTest.java')
+if ($LASTEXITCODE -ne 0) { throw 'Gimbal configuration storage tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.GimbalBandStorageTest' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets/vt_gimbal_bands.json') $output
+if ($LASTEXITCODE -ne 0) { throw 'Gimbal configuration storage tests failed' }
