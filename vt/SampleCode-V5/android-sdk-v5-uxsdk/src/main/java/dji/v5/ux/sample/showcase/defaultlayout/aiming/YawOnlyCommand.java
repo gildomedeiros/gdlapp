@@ -6,7 +6,7 @@ import dji.sdk.keyvalue.value.flightcontroller.*;
 public final class YawOnlyCommand {
     private YawOnlyCommand() { }
     public static VirtualStickFlightControlParam build(double rate) {
-        if (!Double.isFinite(rate) || Math.abs(rate)>YawAimingMath.MAX_RATE) throw new IllegalArgumentException("Yaw limit");
+        if (!Double.isFinite(rate) || Math.abs(rate)>YawAimingMath.HARD_MAX_RATE) throw new IllegalArgumentException("Yaw limit");
         VirtualStickFlightControlParam command = new VirtualStickFlightControlParam();
         command.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
         command.setRollPitchControlMode(RollPitchControlMode.VELOCITY);

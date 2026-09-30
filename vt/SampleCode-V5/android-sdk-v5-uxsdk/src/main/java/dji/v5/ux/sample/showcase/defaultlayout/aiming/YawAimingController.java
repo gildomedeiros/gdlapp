@@ -58,6 +58,8 @@ public final class YawAimingController implements AimingSession.Port {
     private volatile ComeToMeSettings movementConfig=ComeToMeSettings.defaults();
     private volatile String movementScreen="Come to me: waiting for Start",movementDetails="",aimingScreen="";
     private volatile boolean fullLogWanted=true;
+    private volatile String heightScreen="Height: —";
+    public String heightScreen() { return heightScreen; }
     public String movementScreen() { return movementScreen; }
     public String movementDetails() { return movementDetails; }
     public String aimingScreen() { return aimingScreen; }
@@ -72,10 +74,11 @@ public final class YawAimingController implements AimingSession.Port {
                     .remove("rideEnd").remove("endMs").putLong("rideDurationMs",config.rideDurationMs)
                     .remove("additionalTiltPercent").putFloat("closeRangePitchDeg",(float)config.closeRangePitchDeg)
                     .putFloat("longRangePitchDeg",(float)config.longRangePitchDeg)
+                    .putFloat("maxYawRate",(float)config.maxYawRate).putFloat("yawAcceleration",(float)config.yawAcceleration)
                     .putLong("inactivityMs",config.inactivityMs).apply();
             diagnostic("movement_settings","enabled="+config.enabled+" filming="+config.filmingDistance
                     +" reapproachMargin="+config.reapproachMargin+" qualifyMs="+ComeToMeSettings.QUALIFY_MS+" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
-                    +" rideDurationMs="+config.rideDurationMs+" longRangePitchDeg="+config.longRangePitchDeg+" closeRangePitchDeg="+config.closeRangePitchDeg+" inactivityMs="+config.inactivityMs);
+                    +" rideDurationMs="+config.rideDurationMs+" maxYawRate="+config.maxYawRate+" yawAcceleration="+config.yawAcceleration+" longRangePitchDeg="+config.longRangePitchDeg+" closeRangePitchDeg="+config.closeRangePitchDeg+" inactivityMs="+config.inactivityMs);
         });
     }
     public boolean usesPhoneGps() { return usePhone; }
@@ -189,7 +192,8 @@ public final class YawAimingController implements AimingSession.Port {
             movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),Math.max(10,prefs.getFloat("filming",70)),
                     prefs.getFloat("width",50),prefs.getFloat("rideStart",18),0.1,1000,
                     prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",15),
-                    prefs.getLong("rideDurationMs",90000),prefs.getFloat("closeRangePitchDeg",-35),prefs.getFloat("longRangePitchDeg",-6));
+                    prefs.getLong("rideDurationMs",90000),prefs.getFloat("closeRangePitchDeg",-25),prefs.getFloat("longRangePitchDeg",-10),
+                    prefs.getFloat("maxYawRate",15),prefs.getFloat("yawAcceleration",8));
         } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
@@ -306,6 +310,7 @@ public final class YawAimingController implements AimingSession.Port {
                 Observer target = observer;
                 AimingSession.State state = session.state();
                 // CAM3 v2.3: Main-thread rendering uses a worker-produced recovery snapshot.
+                heightScreen=aircraft.height(now()).display();
                 recoveryRemaining = session.recoveryRemainingMs();
                 movementDetails=session.movement.details();
                 movementScreen=session.movement.summary();
@@ -465,6 +470,7 @@ public final class YawAimingController implements AimingSession.Port {
         if(forward!=0 && (!active || !session.movement.permits(inputs(),now(),forward))) forward=0;
         // Callback cancellation can arrive during the final position read.
         if((rate!=0 || forward!=0) && (!foreground || yielding || !session.maySendYaw() || !session.commandEligible())) return;
+        if(!Double.isFinite(rate) || Math.abs(rate)>session.movement.settings().maxYawRate) throw new IllegalArgumentException("Configured yaw limit");
         sdk.sendVirtualStickAdvancedParam(AimingMotionCommand.build(rate,forward));
         lastSubmittedForward=forward;
         if(forward!=0) lastTranslationAt=now();

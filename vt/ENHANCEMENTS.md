@@ -238,3 +238,11 @@ Replace additional tilt percentage with -90 to 0 degree close-range target (defa
 ### VT 3.3 - configurable long-range pitch
 
 Add Long-range pitch (-90 to 0 degrees, default -6) beside Close-range pitch. Apply long-range at startup and above 35 m; below 30 m use close-range; preserve mode between thresholds. Replace manual baseline capture, retain fresh-input/control gates and hardware limits. Persist both angles and log startup/transition commands and measured pitch. Navigation and version remain unchanged.
+
+## VT 3.3 - height readout and configurable yaw limits
+
+- Always-visible height strip above the VT footer, visible through the transparent touch lock. Height is barometric metres above takeoff, not terrain/water clearance. Optional SDK KeyAltitude polling at 500 ms; stale (>1500 ms), absent or nonfinite values show Height: —. Missing height never pauses flight.
+- Each orientation_cycle records heightAboveTakeoffM, heightUnits, heightReference, heightSampleAtMs, heightAgeMs, heightFresh, heightAvailable and heightError. Stale finite values remain in logs with freshness false.
+- Rotation speed configurable 1-30 deg/s (default 15), acceleration 0.5-30 deg/s squared (default 8). Captured per session for normal/ride aiming, saved approach and return headings. Preserve existing near-target slope, normal/navigation 3-degree tolerance, ride behavior and surfer-only reversal blocking. Actual configured limits recorded in aiming_cycle. Final command submission enforces session speed cap; factory enforces hard 30 deg/s ceiling.
+- Long-range/close-range pitch defaults now -10/-25 degrees. Existing saved angles are preserved. New rotation preferences use 15/8 when absent. Settings editable only while stopped; Come to me toggle retains both pitch and rotation settings.
+- No altitude commands added. Version stays 3.3/code 17. Tests cover configurable rate/acceleration limits and invalid values, unchanged near-target behavior and height freshness/formatting. Physical UI/flight validation remains required.

@@ -304,6 +304,20 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Optional takeoff-relative height stays visible beneath the transparent touch lock. -->
+    <TextView
+        android:id="@+id/vt_height"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="28dp"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="#EE101820"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:text="Height: — · above takeoff" />
+
     <!-- CAM3 v2.4: One fixed row leaves more video space while keeping Stop directly accessible. -->
     <LinearLayout
         android:id="@+id/uxsdk_aiming_panel"

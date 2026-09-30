@@ -1,0 +1,358 @@
+[
+  {
+    "file": "cam3_full_2026-09-30_083642_008_dde09b67.jsonl",
+    "start": "08:36:56.275",
+    "stop": "08:45:16.693",
+    "stopReason": "session=1 reason=screen_closed",
+    "durationSeconds": 500.418,
+    "settings": {
+      "maxMovementSpeedMps": 3.0,
+      "filmingDistanceM": 20.0,
+      "reapproachMarginM": 5.0,
+      "rideDurationMs": 20000,
+      "rideStartKmh": 18.0,
+      "noRideTimeoutMs": 1200000
+    },
+    "phaseSeconds": {
+      "WAITING": 0.2,
+      "APPROACHING": 437.0,
+      "HOLDING": 63.1
+    },
+    "aimingStates": {
+      "STARTING": 0.2,
+      "AIMING": 479.1,
+      "PAUSED": 21.0
+    },
+    "aimingReasons": {
+      "acquiring": 0.1,
+      "advanced_wait": 0.1,
+      "aiming": 479.1,
+      "telemetry": 20.9,
+      "connection": 0.1
+    },
+    "yawPurposeSeconds": {
+      "surfer": 63.3,
+      "approach": 437.0
+    },
+    "rides": [],
+    "approaches": [
+      {
+        "start": "08:36:56.554",
+        "distance": 30.195968905598335,
+        "travel": 10.195968905598335,
+        "heading": 67.33708047483151,
+        "maxCommand": 1.4147500000000004,
+        "moveAt": "08:37:02.724",
+        "end": "08:37:15.623",
+        "seconds": 19.07,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 7.431579379254899,
+        "remaining": 0.9459641308215492
+      },
+      {
+        "start": "08:37:31.820",
+        "distance": 25.348047944854617,
+        "travel": 5.348047944854617,
+        "heading": 201.44629221448338,
+        "maxCommand": 0.9286959888819283,
+        "moveAt": "08:37:39.230",
+        "end": "08:37:51.089",
+        "seconds": 19.27,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 52.71964450006403,
+        "remaining": 0.9670591690921251
+      },
+      {
+        "start": "08:37:51.191",
+        "distance": 52.71964450006403,
+        "travel": 32.71964450006403,
+        "heading": 205.60516626842303,
+        "maxCommand": 3.0,
+        "moveAt": "08:38:00.446",
+        "end": "08:38:25.077",
+        "seconds": 33.89,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 65.45785668892094,
+        "remaining": 0.9235752204952838
+      },
+      {
+        "start": "08:38:25.179",
+        "distance": 65.45785668892094,
+        "travel": 45.45785668892094,
+        "heading": 210.75607167389353,
+        "maxCommand": 3.0,
+        "moveAt": "08:38:31.771",
+        "end": "08:39:00.167",
+        "seconds": 34.99,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 59.46938475636255,
+        "remaining": 0.8927200803847057
+      },
+      {
+        "start": "08:39:00.271",
+        "distance": 59.46938475636255,
+        "travel": 39.46938475636255,
+        "heading": 221.99623562113362,
+        "maxCommand": 3.0,
+        "moveAt": "08:39:08.911",
+        "end": "08:39:36.606",
+        "seconds": 36.34,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 38.96731910798993,
+        "remaining": 0.9445473678104079
+      },
+      {
+        "start": "08:39:36.709",
+        "distance": 38.96731910798993,
+        "travel": 18.96731910798993,
+        "heading": 235.50532261373513,
+        "maxCommand": 2.2100000000000017,
+        "moveAt": "08:39:45.332",
+        "end": "08:40:04.870",
+        "seconds": 28.16,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 39.99222086198039,
+        "remaining": 0.8662078283606824
+      },
+      {
+        "start": "08:40:04.971",
+        "distance": 39.99222086198039,
+        "travel": 19.992220861980392,
+        "heading": 248.75177253331984,
+        "maxCommand": 2.1706539930067756,
+        "moveAt": "08:40:14.219",
+        "end": "08:40:33.623",
+        "seconds": 28.65,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 23.76639578514121,
+        "remaining": 0.9547965221415815
+      },
+      {
+        "start": "08:40:47.813",
+        "distance": 25.12283210549468,
+        "travel": 5.12283210549468,
+        "heading": 278.27387780216867,
+        "maxCommand": 0.873,
+        "moveAt": "08:40:54.283",
+        "end": "08:41:03.948",
+        "seconds": 16.14,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 38.37365879739671,
+        "remaining": 0.9324062893949288
+      },
+      {
+        "start": "08:41:04.050",
+        "distance": 38.37365879739671,
+        "travel": 18.373658797396708,
+        "heading": 312.04086295667,
+        "maxCommand": 2.0580000000000016,
+        "moveAt": "08:41:16.787",
+        "end": "08:41:35.831",
+        "seconds": 31.78,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 43.80128593203733,
+        "remaining": 0.9040157331842344
+      },
+      {
+        "start": "08:41:35.936",
+        "distance": 43.80128593203733,
+        "travel": 23.80128593203733,
+        "heading": 322.6587201903008,
+        "maxCommand": 2.48481157909328,
+        "moveAt": "08:41:44.161",
+        "end": "08:42:04.614",
+        "seconds": 28.68,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 27.566195506492697,
+        "remaining": 0.9651712990086097
+      },
+      {
+        "start": "08:42:04.717",
+        "distance": 27.566195506492697,
+        "travel": 7.566195506492697,
+        "heading": 28.250651479403246,
+        "maxCommand": 1.0502500000000001,
+        "moveAt": "08:42:19.599",
+        "end": "08:42:31.285",
+        "seconds": 26.57,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 44.25879766074348,
+        "remaining": 0.88700381759047
+      },
+      {
+        "start": "08:42:31.387",
+        "distance": 44.98280178465417,
+        "travel": 24.98280178465417,
+        "heading": 47.977675382282655,
+        "maxCommand": 2.5670000000000015,
+        "moveAt": "08:42:41.029",
+        "end": "08:43:02.668",
+        "seconds": 31.28,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 71.80344880565451,
+        "remaining": 0.8948321636404053
+      },
+      {
+        "start": "08:43:02.769",
+        "distance": 71.80344880565451,
+        "travel": 51.80344880565451,
+        "heading": 57.421919767807424,
+        "maxCommand": 3.0,
+        "moveAt": "08:43:12.321",
+        "end": "08:43:42.717",
+        "seconds": 39.95,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 68.51823091251502,
+        "remaining": 0.9557806105697964
+      },
+      {
+        "start": "08:43:42.819",
+        "distance": 69.38968217300962,
+        "travel": 49.38968217300962,
+        "heading": 62.83382982198998,
+        "maxCommand": 3.0,
+        "moveAt": "08:43:49.798",
+        "end": "08:44:20.679",
+        "seconds": 37.86,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 49.74349465921658,
+        "remaining": 0.8999654639687549
+      },
+      {
+        "start": "08:44:20.783",
+        "distance": 49.74349465921658,
+        "travel": 29.74349465921658,
+        "heading": 58.599806019243715,
+        "maxCommand": 2.9515582635889364,
+        "moveAt": "08:44:20.783",
+        "end": "08:44:45.192",
+        "seconds": 24.41,
+        "endPhase": "HOLDING",
+        "endReason": "approach_arrival_tolerance",
+        "endDistance": 20.337325591293965,
+        "remaining": 0.9049170298590248
+      }
+    ],
+    "returns": [],
+    "distance": [
+      6.51,
+      45.892,
+      84.954
+    ],
+    "maxActualSpeed": 3.04138126514911,
+    "maxCommand": 3.0,
+    "pitchOriginal": [],
+    "pitchActual": [
+      -25.0,
+      -18.0,
+      -17.9
+    ],
+    "pitch": [
+      {
+        "time": "08:36:59.023",
+        "target": -25.0,
+        "distance": 29.96,
+        "actualWithin0.3": "08:37:01.187",
+        "delay": 2.16
+      },
+      {
+        "time": "08:37:37.795",
+        "target": -18.0,
+        "distance": 36.05,
+        "actualWithin0.3": "08:37:40.360",
+        "delay": 2.56
+      },
+      {
+        "time": "08:40:24.381",
+        "target": -25.0,
+        "distance": 28.81,
+        "actualWithin0.3": "08:40:27.047",
+        "delay": 2.67
+      },
+      {
+        "time": "08:41:00.349",
+        "target": -18.0,
+        "distance": 35.17,
+        "actualWithin0.3": "08:41:03.021",
+        "delay": 2.67
+      },
+      {
+        "time": "08:41:54.328",
+        "target": -25.0,
+        "distance": 29.14,
+        "actualWithin0.3": "08:41:56.491",
+        "delay": 2.16
+      },
+      {
+        "time": "08:42:18.878",
+        "target": -18.0,
+        "distance": 35.48,
+        "actualWithin0.3": "08:42:21.138",
+        "delay": 2.26
+      },
+      {
+        "time": "08:44:34.020",
+        "target": -25.0,
+        "distance": 29.66,
+        "actualWithin0.3": "08:44:36.577",
+        "delay": 2.56
+      }
+    ],
+    "pitchResults": {
+      "accepted": 7
+    },
+    "recording": {
+      "True": 922,
+      "False": 10
+    },
+    "locks": [
+      {
+        "time": "08:36:56.275",
+        "detail": "locked"
+      },
+      {
+        "time": "08:44:48.588",
+        "detail": "unlocked_by_hold"
+      }
+    ],
+    "packets": 951,
+    "rate": 1.9,
+    "gaps": [
+      0.078,
+      0.5,
+      1.5
+    ],
+    "gapsOver3": 0,
+    "gapsOver5": 0,
+    "rssi": [
+      -120,
+      -96,
+      -46
+    ],
+    "snr": [
+      -6.0,
+      9.5,
+      12.5
+    ],
+    "gpsStaleSeconds": 0,
+    "orientationFresh": {
+      "True": 4661,
+      "False": 199
+    },
+    "oldGpsNavigationCycles": 0
+  }
+]

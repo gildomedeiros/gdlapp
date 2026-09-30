@@ -357,7 +357,7 @@ public final class AimingSession {
                 surferYaw.reset();
                 double desiredHeading=movement.returning() ? movement.returnHeading : movement.approachHeading;
                 cycleAngle=YawAimingMath.shortestHeadingError(desiredHeading,in.heading);
-                rate=YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0));
+                rate=YawAimingMath.calculateYawRate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0),movement.settings().maxYawRate,movement.settings().yawAcceleration);
                 cycleDecision=movement.returning() ? "return_alignment" : "approach_heading";
                 cycleMultiplier=1;
             } else {
@@ -368,7 +368,7 @@ public final class AimingSession {
                     // A single yaw owner: shortest route, then block opposite corrections.
                     // Never wrap a blocked correction into an almost-full-circle turn.
                     cycleAngle=YawAimingMath.shortestHeadingError(bearing,in.heading);
-                    rate=surferYaw.calculate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0),movement.riding,now);
+                    rate=surferYaw.calculate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0),movement.riding,now,movement.settings().maxYawRate,movement.settings().yawAcceleration);
                     cycleDecision=surferYaw.blocked ? "reverse_blocked"
                             : surferYaw.requestedDirection==0 ? "aligned_zero"
                             : movement.riding ? "riding_correction" : "surfer_correction";

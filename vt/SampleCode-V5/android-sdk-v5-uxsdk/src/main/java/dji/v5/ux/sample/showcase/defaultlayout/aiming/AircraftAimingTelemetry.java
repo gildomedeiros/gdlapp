@@ -43,7 +43,9 @@ public final class AircraftAimingTelemetry {
             KeyTools.createKey(GimbalKey.KeyGimbalAttitude, ComponentIndexType.LEFT_OR_MAIN));
     private final Slot<Double> gimbalRelativeYaw = new Slot<>("gimbalRelativeYaw",
             KeyTools.createKey(GimbalKey.KeyYawRelativeToAircraftHeading, ComponentIndexType.LEFT_OR_MAIN));
-    private final List<Slot<?>> angleSlots = java.util.Arrays.asList(aircraftAttitude, gimbalAttitude, gimbalRelativeYaw);
+    private final Slot<Double> height = new Slot<>("height",KeyTools.createKey(FlightControllerKey.KeyAltitude));
+    private final List<Slot<?>> angleSlots = java.util.Arrays.asList(aircraftAttitude, gimbalAttitude, gimbalRelativeYaw, height);
+    public synchronized HeightReading height(long now) { return new HeightReading(height.value,height.time,now); }
     // CAM3 v2.3: Report named pause versus permanent-stop events to the controller.
     private final BiConsumer<String, Boolean> unsafe;
     // CAM3 v2.3: Listener threads see lifecycle and independent connection/mode vetoes.
@@ -170,6 +172,9 @@ public final class AircraftAimingTelemetry {
         addAttitude(fields, "aircraft", aircraftAttitude.value);
         addAttitude(fields, "gimbal", gimbalAttitude.value);
         java.util.Collections.addAll(fields, "gimbalYawRelativeToAircraftDeg", finiteAngle(gimbalRelativeYaw.value));
+        HeightReading h=height(now);
+        java.util.Collections.addAll(fields,"heightAboveTakeoffM",h.metres,"heightReference","takeoff",
+                "heightUnits","metres");
         log.record("orientation_cycle", fields.toArray());
     }
     private static boolean validAngle(Double value) { return value != null && Double.isFinite(value); }

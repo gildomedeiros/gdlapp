@@ -15,6 +15,10 @@ public final class SurferYawController {
         blocked=false; desiredRate=0;
     }
     public double calculate(double error,double previous,double dt,boolean riding,long now) {
+        return calculate(error,previous,dt,riding,now,YawAimingMath.MAX_RATE,YawAimingMath.MAX_ACCELERATION);
+    }
+    public double calculate(double error,double previous,double dt,boolean riding,long now,double maxRate,double acceleration) {
+        YawAimingMath.validateLimits(maxRate,acceleration);
         if(!Double.isFinite(error)||!Double.isFinite(previous)||!Double.isFinite(dt)||dt<=0||dt>.5)
             throw new IllegalArgumentException("Invalid surfer yaw input");
         if(lastPermittedAt>now) reset();
@@ -24,13 +28,13 @@ public final class SurferYawController {
         remainingMs=lastPermittedAt<0 ? 0 : Math.max(0,REVERSE_BLOCK_MS-(now-lastPermittedAt));
         // Aligned and blocked opposite requests never refresh the permitted-direction clock.
         if(requestedDirection==0) return 0;
-        desiredRate=requestedDirection*Math.min(YawAimingMath.MAX_RATE,effective*.5);
+        desiredRate=requestedDirection*Math.min(maxRate,effective*.5);
         if(permittedDirection!=0 && requestedDirection!=permittedDirection && remainingMs>0) {
             blocked=true; return 0;
         }
         permittedDirection=requestedDirection; lastPermittedAt=now; remainingMs=REVERSE_BLOCK_MS;
         if(error*previous<0) return 0; // Do not prolong the old turn while reversing through zero.
-        double step=YawAimingMath.MAX_ACCELERATION*dt;
+        double step=acceleration*dt;
         return previous+Math.max(-step,Math.min(step,desiredRate-previous));
     }
     public static String directionName(int d) { return d>0 ? "right" : d<0 ? "left" : "none"; }

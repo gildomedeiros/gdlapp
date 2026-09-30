@@ -30,8 +30,8 @@ public final class Vt30Test {
         check(YawAimingMath.shortestHeadingError(359,1)==-2,"north crossing uses short left error");
         y.reset(); double rate=0;
         for(int i=0;i<30;i++) { double next=y.calculate(170,rate,.1,true,1000+i*100);
-            check(next<=8 && next-rate<=.400001,"normal cap and acceleration apply at every distance"); rate=next; }
-        check(rate==8,"maximum remains 8 deg/s without Nearby");
+            check(next<=YawAimingMath.MAX_RATE && next-rate<=YawAimingMath.MAX_ACCELERATION*.1+0.000001,"normal cap and acceleration apply at every distance"); rate=next; }
+        check(rate==YawAimingMath.MAX_RATE,"default maximum respected");
     }
     // VT 3.3 replaces speed-based confirmation/exit tests with Vt33Test.
     static void evidence() {

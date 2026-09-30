@@ -72,8 +72,8 @@ public final class AimingSessionTest {
         near(-2, YawAimingMath.shortestHeadingError(359, 1), "wrap negative");
         near(90, YawAimingMath.bearingToTarget(0, 0, 0, 1), "east bearing");
         near(0, YawAimingMath.bearingToTarget(0, 0, 1, 0), "north bearing");
-        near(0.4, YawAimingMath.calculateYawRate(90, 0, .1), "acceleration limit");
-        near(8, YawAimingMath.calculateYawRate(90, 8, .1), "rate cap");
+        near(0.8, YawAimingMath.calculateYawRate(90, 0, .1), "acceleration limit");
+        near(15, YawAimingMath.calculateYawRate(90, 15, .1), "rate cap");
         near(0, YawAimingMath.calculateYawRate(1, 8, .1), "tolerance stops");
         near(0, YawAimingMath.calculateYawRate(-10, 8, .1), "direction reversal brakes");
         check(YawAimingMath.isBearingUsable(0, 3), "v2.7 coincident input allowed; command is zero");
@@ -246,7 +246,7 @@ public final class AimingSessionTest {
         check(f.core.state() == AimingSession.State.PAUSED, "another stick event resets timer");
         f.advance(100);
         check(f.core.state() == AimingSession.State.AIMING && f.enables == 1, "auto resume never re-enables control");
-        check(Math.abs(f.sent.get(f.sent.size() - 1)) <= .0041, "resume starts yaw acceleration from zero");
+        check(Math.abs(f.sent.get(f.sent.size() - 1)) <= YawAimingMath.MAX_ACCELERATION * .001 + .0001, "resume starts yaw acceleration from zero");
         check(f.diagnosticEvents.stream().anyMatch(e -> e.startsWith("recovery_reset"))
                 && f.diagnosticEvents.stream().anyMatch(e -> e.startsWith("resumed")), "reset and resume logged");
 

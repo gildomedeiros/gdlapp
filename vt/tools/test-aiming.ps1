@@ -119,7 +119,7 @@ if($movementRows[0].qualificationWaitEnabled -ne $false -or $movementRows[0].rid
 Write-Output 'PASS: zero-wait and ride-end-return policy independently parsed from production logs'
 
 # VT 3.3: clock expiry without GPS, fresh rearm, pitch hysteresis and recording prerequisite.
-& "$JavaHome/bin/javac.exe" -cp $output -d $output "$source/GimbalPitchPolicy.java" "$source/RecordingGate.java" (Join-Path (Split-Path $test) 'Vt33Test.java')
+& "$JavaHome/bin/javac.exe" -cp $output -d $output "$source/HeightReading.java" "$source/GimbalPitchPolicy.java" "$source/RecordingGate.java" (Join-Path (Split-Path $test) 'Vt33Test.java')
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.3 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt33Test'
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.3 tests failed' }

@@ -45,7 +45,7 @@ public final class Vt33Test {
   p.reset();check(p.update(0,40,true,-90,-90,-80,20) && p.target==-80,"long clamped to hardware");
   check(!p.update(-80,20,true,-90,-90,-80,20) && p.close && p.target==-80,"close clamped too");
   p.reset();check(p.update(-24,40,true,0,0,-90,20) && p.target==0,"zero means horizon");
-  check(ComeToMeSettings.defaults().closeRangePitchDeg==-35 && ComeToMeSettings.defaults().longRangePitchDeg==-6,"defaults");
+  check(ComeToMeSettings.defaults().closeRangePitchDeg==-25 && ComeToMeSettings.defaults().longRangePitchDeg==-10,"defaults");
   for(double angle:new double[]{-90,0,-35}) {
    ComeToMeSettings angles=new ComeToMeSettings(true,70,50,18,.1,1000,60000,15,90000,angle,angle);
    check(angles.closeRangePitchDeg==angle && angles.longRangePitchDeg==angle,"valid angles");
@@ -56,6 +56,31 @@ public final class Vt33Test {
    rejected=false;try {new ComeToMeSettings(true,70,50,18,.1,1000,60000,15,90000,-35,angle);} catch(IllegalArgumentException expected) {rejected=true;}
    check(rejected,"invalid long angle rejected");
   }
+  check(ComeToMeSettings.defaults().maxYawRate==15 && ComeToMeSettings.defaults().yawAcceleration==8,"new yaw defaults");
+  for(double cap:new double[]{1,8,15,30}) {
+   SurferYawController yaw=new SurferYawController(); double nav=0,follow=0;
+   for(int i=0;i<100;i++) {
+    double n=YawAimingMath.calculateYawRate(170,nav,.1,cap,8);
+    double f=yaw.calculate(170,follow,.1,false,1000+i*100,cap,8);
+    check(n<=cap && f<=cap && n-nav<=.800001 && f-follow<=.800001,"custom navigation and aiming cap/acceleration");
+    nav=n;follow=f;
+   }
+   check(nav==cap && follow==cap,"custom maximum attained");
+   check(YawAimingMath.calculateYawRate(3,nav,.1,cap,8)==0,"tolerance preserved");
+  }
+  check(YawAimingMath.calculateYawRate(7,2,.1,15,8)==2,"near-target slope preserved");
+  check(YawAimingMath.calculateYawRate(170,0,.1,15,.5)==.05,"custom acceleration used");
+  for(double bad:new double[]{0,31,Double.NaN,Double.POSITIVE_INFINITY}) {
+   boolean rejected=false;try {new ComeToMeSettings(true,70,50,18,.1,1000,60000,15,90000,-25,-10,bad,8);}catch(IllegalArgumentException expected){rejected=true;}
+   check(rejected,"invalid configured max rejected");
+   rejected=false;try {new ComeToMeSettings(true,70,50,18,.1,1000,60000,15,90000,-25,-10,15,bad);}catch(IllegalArgumentException expected){rejected=true;}
+   check(rejected,"invalid configured acceleration rejected");
+  }
+  check(new HeightReading(10.5,1000,1100).display().equals("Height: 10.5 m · above takeoff"),"height display units and reference");
+  check(new HeightReading(-2.0,1000,1100).fresh,"negative takeoff-relative height valid");
+  check(new HeightReading(10.0,1000,2500).fresh,"height freshness boundary");
+  for(HeightReading h:new HeightReading[]{new HeightReading(null,1000,1100),new HeightReading(Double.NaN,1000,1100),new HeightReading(10.0,1000,2501),new HeightReading(10.0,1200,1100)})
+   check(!h.fresh && h.display().equals("Height: — · above takeoff"),"invalid/stale height hidden");
   check(RecordingGate.problem(false,1000,1100).equals("recording_off"),"recording off blocks Start");
   check(RecordingGate.problem(null,1000,1100).equals("recording_unknown"),"unknown recording blocks Start");
   check(RecordingGate.problem(true,1000,3100).equals("recording_unknown"),"stale recording blocks Start");
