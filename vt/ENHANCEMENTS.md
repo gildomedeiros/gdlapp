@@ -250,3 +250,7 @@ Add Long-range pitch (-90 to 0 degrees, default -6) beside Close-range pitch. Ap
 ## VT 3.4 — automatic gimbal distance bands
 
 JSON-configured bands with a 5 m outward buffer; automatic startup selection; full configuration, band-switch and gimbal-result logging. Replaces long/close pitch UI only. See [VT 3.4](Docs/VT_3.4.md). Device validation pending.
+
+## VT 3.5 — timed backward retreat implemented locally
+
+Independent configurable 25 m minimum / 10 s duration / 3 m/s fixed speed / 5 s Come to me cooldown. Immediate repeated retreats, retained GPS including NOFIX, active surfer aiming and gimbal, protection cancellation and structured retreat events. See [VT 3.5](Docs/VT_3.5.md). Flight validation pending.

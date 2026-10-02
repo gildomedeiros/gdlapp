@@ -8,7 +8,7 @@ $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 # CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
-& "$JavaHome/bin/javac.exe" -d $output "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
+& "$JavaHome/bin/javac.exe" -d $output "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }
@@ -137,3 +137,12 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Gimbal configuration storage tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.GimbalBandStorageTest' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets/vt_gimbal_bands.json') $output
 if ($LASTEXITCODE -ne 0) { throw 'Gimbal configuration storage tests failed' }
+
+# VT 3.5: production retreat/session integration and independent structured log parsing.
+& "$JavaHome/bin/javac.exe" -cp $output -d $output "$source/RetreatLog.java" (Join-Path (Split-Path $test) 'Vt35Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.5 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt35Test' $output
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.5 tests failed' }
+$retreatRows=@(Get-Content (Join-Path $output 'retreat-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object event -like 'retreat_*')
+if($retreatRows.Count -ne 2 -or $retreatRows[0].minimumDistanceM -ne 25 -or $retreatRows[0].speedMps -ne 3 -or $retreatRows[0].durationMs -ne 10000 -or $retreatRows[0].cooldownMs -ne 5000 -or $retreatRows[0].submittedForwardMps -ne -3 -or !$retreatRows[1].retainedTarget -or $null -ne $retreatRows[1].submittedForwardMps -or $null -eq $retreatRows[1].targetLatitude){throw 'VT 3.5 structured retreat evidence failed'}
+Write-Output 'PASS: independent JSON parser verifies retreat settings, retained position and submission evidence'

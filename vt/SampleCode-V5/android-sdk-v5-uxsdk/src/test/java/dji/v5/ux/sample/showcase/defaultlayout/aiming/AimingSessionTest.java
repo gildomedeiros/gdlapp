@@ -26,6 +26,9 @@ public final class AimingSessionTest {
         // CAM3 v2.2: Simulate reason-first takeover independently of the last state snapshot.
         ComeToMeSettings movement=new ComeToMeSettings(false,70,20,18,8,30000,900000);
         final List<Double> forwards=new ArrayList<>();
+        // VT 3.5: Legacy scenarios retain their original settings; retreat cases explicitly enable it.
+        RetreatSettings retreat=RetreatSettings.disabled();
+        public RetreatSettings retreatSettings() { return retreat; }
         public ComeToMeSettings movementSettings() { return movement; }
         public void sendMotion(double yaw,double forward) { forwards.add(forward); sendYaw(yaw); }
         boolean lost;

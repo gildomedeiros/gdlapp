@@ -29,3 +29,5 @@ For GPS/aiming behavior, use v2.4 together with the retained control policy in v
 - [VT 3.3 detailed design](detailed_design/detailed_design_v3.3.md) — fixed ride timer, foreground touch lock, recording prerequisite, distance-based gimbal pitch and logs. Implemented locally; device validation pending.
 
 - [VT 3.4 detailed design](detailed_design/detailed_design_v3.4.md) — JSON gimbal bands, buffers and diagnostic events.
+
+- [VT 3.5 detailed design](detailed_design/detailed_design_v3.5.md) — configurable fixed-speed timed retreat, retained GPS, active aiming/gimbal and transition logs. Implemented locally; device validation pending.

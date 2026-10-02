@@ -164,6 +164,9 @@ public final class ComeToMeController {
     }
     // Only existing navigation may run with old surfer GPS. All aircraft checks stay active.
     public void update_state_machine(AimingSession.Inputs in,long now,double dt,boolean freshSurfer) {
+        update_state_machine(in,now,dt,freshSurfer,false);
+    }
+    public void update_state_machine(AimingSession.Inputs in,long now,double dt,boolean freshSurfer,boolean retreatBlocked) {
         if(!freshSurfer && !approaching() && !returning()) { pauseForGps(now); return; }
         qualificationEvent="none";
         if(gpsPaused) { gpsPaused=false; qualificationEvent="resumed_fresh_gps"; }
@@ -206,6 +209,8 @@ public final class ComeToMeController {
             // nor recreates the band; ordinary distance/GPS/control gates decide the next approach.
         }
         advanceQualification(now);
+        // Retreat/cooldown suppress new navigation without suppressing fresh ride evidence.
+        if(retreatBlocked && !returning()) { reason="retreat_or_cooldown"; return; }
         if(!ride.confirmed && inactiveSince>=0 && now-inactiveSince>=settings.inactivityMs) beginReturn("no_ride_timeout",in,now);
         inactiveMs=inactiveSince<0 ? 0 : Math.max(0,now-inactiveSince);
         if(phase==Phase.RETURNING) {
@@ -312,6 +317,11 @@ public final class ComeToMeController {
         returnCompletionCentralDistance=Double.NaN; returnAligned=false;
     }
 
+    // VT 3.5: Cancel only the approach, preserving central, ride and no-ride bookkeeping.
+    public void replaceApproachForRetreat() {
+        clearApproach();attemptSince=-1;forward=0;
+        phase=Phase.WAITING;reason="retreat";
+    }
     public boolean approaching() { return phase==Phase.APPROACHING; }
     public boolean noRideTimerActive() { return inactiveSince>=0; }
     private static boolean aligned(double error) { return Double.isFinite(error)&&Math.abs(error)<=YawAimingMath.ALIGNMENT_DEGREES; }

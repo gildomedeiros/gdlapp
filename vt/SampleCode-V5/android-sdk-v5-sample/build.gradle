@@ -24,8 +24,9 @@ android {
         // CAM3 v2.7: Nearby direction commitment, no distance pause, per-cycle full log.
         // VT 3.0: Fast/confirmed rides, timed surfer-yaw reverse block; retire Nearby.
         // VT 3.2: Zero qualification, no ride-end return, 2 m/s cruise and one-metre arrival tolerance.
-        versionCode 18
-        versionName "3.4"
+        // VT 3.5: Independent timed backward retreat, retained target and event logs.
+        versionCode 19
+        versionName "3.5"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN

@@ -10,7 +10,7 @@ import dji.sdk.keyvalue.value.flightcontroller.VirtualStickFlightControlParam;
 public final class AimingMotionCommand {
     private AimingMotionCommand() { }
     public static VirtualStickFlightControlParam build(double yaw,double forward) {
-        if(!Double.isFinite(forward) || Math.abs(forward)>ComeToMeSettings.MAX_SPEED)
+        if(!Double.isFinite(forward) || (forward>ComeToMeSettings.MAX_SPEED || -forward>Math.max(ComeToMeSettings.MAX_SPEED,RetreatSettings.MAX_SPEED)))
             throw new IllegalArgumentException("Forward velocity limit");
         VirtualStickFlightControlParam command=YawOnlyCommand.build(yaw);
         command.setRoll(forward);

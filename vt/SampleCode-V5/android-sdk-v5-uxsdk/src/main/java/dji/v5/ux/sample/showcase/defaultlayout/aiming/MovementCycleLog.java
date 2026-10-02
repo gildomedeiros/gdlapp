@@ -7,6 +7,9 @@ public final class MovementCycleLog {
         ComeToMeController m=session.movement;
         ComeToMeSettings c=m.settings();
         log.record("movement_cycle","session",session.sessionId(),"cycleId",session.cycleId,
+                // VT 3.5: Distinguish independent retreat translation from saved navigation.
+                "translationPurpose",session.retreat.active ? "retreat" : m.returning() ? "return" : m.approaching() ? "approach" : "none",
+                "retreatActive",session.retreat.active,"retreatCooldownRemainingMs",session.retreat.cooldownRemaining(now),
                 "maxMovementSpeedMps",ComeToMeSettings.MAX_SPEED,"movementAccelerationMps2",ComeToMeSettings.ACCELERATION,
                 // VT 3.2: Separate cruise speed from the preserved arrival slope.
                 "movementSlowdownDistanceM",ComeToMeSettings.SLOWDOWN_DISTANCE,

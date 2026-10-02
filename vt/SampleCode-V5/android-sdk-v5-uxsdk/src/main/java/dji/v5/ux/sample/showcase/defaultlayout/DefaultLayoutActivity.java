@@ -414,10 +414,14 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private void showMovementSettings() {
         if(!yawAimingController.canSelectGpsSource()) return;
         dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
+        // VT 3.5: Add independent fixed-speed retreat settings to the stopped-only form.
+        dji.v5.ux.sample.showcase.defaultlayout.aiming.RetreatSettings r=yawAimingController.retreatSettings();
         String[] labels={"Filming distance (10–200 m)","Lineup total width (20–200 m)",
                 "Ride start speed (km/h)","Ride duration (1–600 seconds)",
-                "No-ride return timeout (minutes)","Re-approach margin (0–200 m)","Max rotation speed (1-30 deg/s)","Rotation acceleration (0.5-30 deg/s²)"};
-        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.maxYawRate,c.yawAcceleration};
+                "No-ride return timeout (minutes)","Re-approach margin (0–200 m)","Max rotation speed (1-30 deg/s)","Rotation acceleration (0.5-30 deg/s²)",
+                "Retreat minimum distance (1-200 m)","Retreat duration (1-60 seconds)",
+                "Retreat fixed speed (0.1-3 m/s)","Come to me cooldown after retreat (0-60 seconds)"};
+        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.maxYawRate,c.yawAcceleration,r.minimumDistance,r.durationMs/1000.0,r.speed,r.cooldownMs/1000.0};
         android.widget.LinearLayout form=new android.widget.LinearLayout(this);
         form.setOrientation(android.widget.LinearLayout.VERTICAL);
         int pad=(int)(16*getResources().getDisplayMetrics().density); form.setPadding(pad,pad,pad,pad);
@@ -430,7 +434,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.4 · Come to me")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.5 · Movement and retreat")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -443,8 +447,10 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings next=
                     new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(c.enabled,n[0],n[1],n[2],0.1,1000,
                             (long)(n[4]*60000),n[5],(long)(n[3]*1000),c.closeRangePitchDeg,c.longRangePitchDeg,n[6],n[7]);
+                dji.v5.ux.sample.showcase.defaultlayout.aiming.RetreatSettings retreat=
+                    new dji.v5.ux.sample.showcase.defaultlayout.aiming.RetreatSettings(true,n[8],(long)(n[9]*1000),n[10],(long)(n[11]*1000));
                 if(!yawAimingController.canSelectGpsSource()) throw new IllegalArgumentException("Stop aiming before changing settings");
-                yawAimingController.setMovementSettings(next); dialog.dismiss();
+                yawAimingController.setMovementSettings(next); yawAimingController.setRetreatSettings(retreat); dialog.dismiss();
             } catch(IllegalArgumentException bad) { Toast.makeText(this,bad.getMessage(),Toast.LENGTH_LONG).show(); }
         }));
         dialog.show();

@@ -74,11 +74,14 @@ public final class VtCameraControl {
         double distance=in.target==null ? Double.NaN : YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon);
         long age=in.target==null ? -1 : now-in.target.time;
         boolean gpsFresh=age>=0 && age<=3000;
-        deferred(!gpsFresh ? "stale_surfer_gps" : !attitude.fresh(now) ? "stale_gimbal_attitude" : !range.fresh(now) ? "stale_gimbal_range" : pending ? "pending_command" : commandAt>=0 && now-commandAt<3000 ? "command_cooldown" : "none");
+        // VT 3.5: During retreat/cooldown only, retained surfer GPS may select bands using live aircraft telemetry.
+        boolean retainedRetreat=(age>3000 || session.cycleRetainedTarget) && session.retainedRetreatTarget(in,now);
+        boolean gpsUsable=gpsFresh || retainedRetreat;
+        deferred(!gpsUsable ? "stale_surfer_gps" : !attitude.fresh(now) ? "stale_gimbal_attitude" : !range.fresh(now) ? "stale_gimbal_range" : pending ? "pending_command" : commandAt>=0 && now-commandAt<3000 ? "command_cooldown" : "none");
         if(!pending && (commandAt<0 || now-commandAt>=2000) && range.fresh(now) && range.value.getPitch()!=null) {
             double min=range.value.getPitch().getMin(), max=range.value.getPitch().getMax();
             int oldBand=policy.band;
-            boolean needsCommand=policy.update(actual,distance,gpsFresh,bands,min,max);
+            boolean needsCommand=policy.update(actual,distance,gpsUsable,bands,min,max);
             if(oldBand!=policy.band) {
                 // Record every crossed threshold, including multi-band jumps.
                 StringBuilder thresholds=new StringBuilder();
@@ -96,7 +99,7 @@ public final class VtCameraControl {
                 commandNeeded=true;attempts=0;result="requested";
             }
         }
-        if(commandNeeded && !pending && gpsFresh && attitude.fresh(now) && range.fresh(now)
+        if(commandNeeded && !pending && gpsUsable && attitude.fresh(now) && range.fresh(now)
                 && attempts<3 && (commandAt<0 || now-commandAt>=3000)) {
             commandAt=now;attempts++;pending=true;commandNeeded=false;
             final long token=sessionId,g=generation,id=++commandId; final double target=policy.target; sentTarget=target;sentBand=policy.band+1;sentCommandId=id;reachedLogged=false;
@@ -107,7 +110,7 @@ public final class VtCameraControl {
             rotation.setDuration(2.0);rotation.setJointReferenceUsed(false);
             log.record("gimbal_pitch_command","session",token,"cycleId",session.cycleId,"activeBand",policy.band+1,
                 "commandId",id,"targetPitchDeg",target,"actualPitchDeg",actual,"bufferMetres",bands.bufferMetres,
-                "distanceM",distance,"gpsAgeMs",age,"trigger",policy.reason,"attempt",attempts);
+                "distanceM",distance,"gpsAgeMs",age,"retainedRetreatTarget",retainedRetreat,"trigger",policy.reason,"attempt",attempts);
             sdk.performAction(KeyTools.createKey(GimbalKey.KeyRotateByAngle,ComponentIndexType.LEFT_OR_MAIN),rotation,
                 new CommonCallbacks.CompletionCallbackWithParam<EmptyMsg>() {
                     public void onSuccess(EmptyMsg ignored) { finish("accepted",false); }
@@ -134,7 +137,7 @@ public final class VtCameraControl {
             log.record("gimbal_pitch_cycle","session",sessionId,"cycleId",session.cycleId,
                 "activeBand",policy.band+1,"targetPitchDeg",policy.target,"actualPitchDeg",actual,
                 "bufferMetres",bands.bufferMetres,"deferredReason",lastDeferred,
-                "distanceM",distance,"gpsAgeMs",age,"trigger",policy.reason,"commandResult",result,
+                "distanceM",distance,"gpsAgeMs",age,"retainedRetreatTarget",retainedRetreat,"trigger",policy.reason,"commandResult",result,
                 "targetReached",Double.isFinite(actual)&&Double.isFinite(policy.target)&&Math.abs(actual-policy.target)<=1,
                 "pitchFresh",attitude.fresh(now),"rangeFresh",range.fresh(now),
                 "recording",recording.value,"recordingAgeMs",recording.at<0 ? -1 : now-recording.at);

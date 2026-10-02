@@ -12,6 +12,8 @@ public final class AimingSession {
     public enum Owner { RC, MSDK, OTHER, UNKNOWN }
     public interface Completion { void complete(boolean success); }
     public interface Port {
+        default RetreatSettings retreatSettings() { return RetreatSettings.disabled(); }
+        default void retreatEvent(String event,String reason) { diagnostic(event,reason); }
         default ComeToMeSettings movementSettings() { return new ComeToMeSettings(false,70,20,18,8,30000,900000); }
         default void sendMotion(double yaw, double forward) {
             if (forward != 0) throw new IllegalStateException("Translation port not implemented");
@@ -102,6 +104,11 @@ public final class AimingSession {
     }
     // VT 3.0: Executor-owned movement and surfer yaw state; neither helper calls DJI.
     public final ComeToMeController movement=new ComeToMeController();
+    // VT 3.5: Independent retreat owns translation only; normal surfer yaw remains active.
+    public final RetreatController retreat=new RetreatController(this::retreatEvent);
+    private void retreatEvent(String event,String why) {
+        try { port.retreatEvent(event,why); } catch(RuntimeException ignored) { }
+    }
     public double cycleRequestedForward;
     public final SurferYawController surferYaw=new SurferYawController();
     public long cycleId, cycleAt;
@@ -119,10 +126,27 @@ public final class AimingSession {
     private Fix lastFreshAimingTarget;
     public boolean cycleRetainedTarget;
     /** VT 3.1: Active aiming and saved navigation can use a known old surfer fix; aircraft checks remain strict. */
+    // VT 3.5: Retain a valid session fix only for retreat/cooldown; never relax aircraft gates.
+    public Inputs controlInputs(Inputs raw,long now) {
+        if(raw.target!=null || lastFreshAimingTarget==null || !activated) return raw;
+        Inputs retained=new Inputs(lastFreshAimingTarget,raw.lat,raw.lon,raw.heading,raw.aircraftTime,
+                raw.problem,raw.safeToNeutral,raw.horizontalSpeed,raw.verticalSpeed,raw.horizontalSpeedLimit);
+        // Only retreat and its cooldown may retain an explicitly unavailable target.
+        return retreat.ownsRetainedTarget(movement,retained,now) ? retained : raw;
+    }
     private String controlProblem(Inputs in,long now) {
-        boolean retained=state==State.AIMING && activated
-                && lastFreshAimingTarget!=null && in.target==lastFreshAimingTarget;
+        boolean retained=activated && lastFreshAimingTarget!=null && in.target==lastFreshAimingTarget
+                && (state==State.AIMING || retreat.ownsRetainedTarget(movement,in,now));
         return in.validate(now,retained);
+    }
+    public boolean retainedRetreatTarget(Inputs in,long now) {
+        return activated && retreat.ownsRetainedTarget(movement,in,now) && in.validate(now,true)==null;
+    }
+    public boolean permitsMotion(Inputs raw,long now,double forward) {
+        Inputs in=controlInputs(raw,now);
+        if(retreat.active) return forward==0 || retreat.permits(movement,in,now,forward);
+        if(forward>0 && retreat.blocksApproach(movement,in,now)) return false;
+        return movement.permits(in,now,forward);
     }
     // CAM3 v2.3: Callback threads must latch loss during a previously activated pause, including UNKNOWN owner.
     private volatile boolean activated;
@@ -137,6 +161,8 @@ public final class AimingSession {
                 || "heading".equals(p) || "aircraft_gps".equals(p) || "pilot_stick".equals(p) || "hover".equals(p);
     }
     private void pauseAiming(String cause) {
+        // VT 3.5: Every protection pause cancels the timer rather than suspending it.
+        retreat.cancel(port.now(),cause);
         // VT 3.1: Mixed pauses retain the conservative recovery rule; GPS cannot erase another cause.
         boolean gps="stale_gps".equals(cause);
         gpsOnlyRecovery=state==State.PAUSED ? gpsOnlyRecovery && gps : gps;
@@ -200,12 +226,14 @@ public final class AimingSession {
         surferYaw.reset();
         lastFreshAimingTarget=null; gpsOnlyRecovery=false;
         movement.start(port.movementSettings(),port.now());
+        retreat.start(port.retreatSettings());
         cancelled.set(false);
         // CAM3 v2.3: A new explicit session owns its recovery state.
         pauseRequested.set(false); refreshControl = false; recoveryAuthority = null; recoverySince = -1; activated = false;
         // CAM3 v2.1: Allocate the diagnostic session before logging its first transition.
         long token = ++session;
         reason = "acquiring"; setState(State.STARTING);
+        retreatEvent("retreat_settings","session_start");
         started = port.now(); lastTick = 0; rate = 0;
         advancedRequested = false; enableSucceeded = false; releaseAttempted = false;
         enablePending = true; claimed = true;
@@ -257,7 +285,9 @@ public final class AimingSession {
                 if (port.now() < lastTick || port.now() - lastTick > 500) { stopAiming("loop_stall"); return; }
                 lastTick = port.now();
             }
-            Inputs in = port.inputs();
+            Inputs rawInputs=port.inputs();
+            Inputs in = controlInputs(rawInputs,port.now());
+            cycleRetainedTarget=in!=rawInputs;
             cycleInputs=in; // CAM3 v2.7: Log the exact snapshot used by this decision.
             String problem = controlProblem(in,port.now());
             if (problem != null && !recoverable(problem)) { stopAiming(problem); return; }
@@ -340,17 +370,20 @@ public final class AimingSession {
             long oldGeneration=movement.centralGeneration;
             // VT 3.1: No stale fixes enter qualification or ride detection. Retained yaw
             // uses the same coordinate with live aircraft heading, never extrapolation.
-            if(in.validate(now)==null) {
+            // VT 3.5: Observe fresh rides but prevent forward navigation during retreat/cooldown.
+            boolean blockApproach=retreat.blocksApproach(movement,in,now);
+            if(rawInputs.validate(now)==null) {
                 lastFreshAimingTarget=in.target;
-                movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0));
+                movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0),true,blockApproach);
             } else {
                 cycleRetainedTarget=true;
                 // A saved plan needs live aircraft telemetry, not new surfer packets.
                 // Never feed an old fix to ride detection or start a new approach from it.
                 if(movement.approaching() || movement.returning())
-                    movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0),false);
+                    movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0),false,blockApproach);
                 else movement.pauseForGps(now);
             }
+            retreat.update(movement,in,now);
             if(movement.event.equals("ride_ended") || movement.event.equals("fast_ride_ended")) surferYaw.reset();
             if(movement.returning() || movement.approaching()) {
                 // Navigation may correct its saved heading in either direction without cooldown.
@@ -378,12 +411,12 @@ public final class AimingSession {
                     || oldGeneration!=movement.centralGeneration || !movement.event.equals("none"))
                 diagnostic("movement_transition",oldMovement+" -> "+movement.phase+":"+movement.reason
                         +" event="+movement.event+" centralGeneration="+movement.centralGeneration);
-            cycleRequestedForward=movement.forward;
+            cycleRequestedForward=retreat.active ? -retreat.settings.speed : movement.forward;
             cycleRequestedYaw=rate;
             // Fresh read immediately before sending; a pause must not revive a previously calculated command.
             Authority latest = port.authority();
             // CAM3 v2.3: Last-moment recoverable failures pause instead of cancelling the session.
-            Inputs finalInputs=port.inputs();
+            Inputs finalInputs=controlInputs(port.inputs(),port.now());
             cycleFinalInputs=finalInputs; // Preserve the final veto snapshot, not just the earlier calculation inputs.
             String finalProblem = controlProblem(finalInputs,port.now());
             if (!cancelled.get() && (pauseRequested.get() || (finalProblem != null && recoverable(finalProblem)))) {
@@ -393,7 +426,7 @@ public final class AimingSession {
                     || port.now() - now > 200 || finalProblem != null) {
                 stopAiming("inputs_changed"); return;
             }
-            if(!movement.permits(finalInputs,port.now(),cycleRequestedForward)) {
+            if(!permitsMotion(finalInputs,port.now(),cycleRequestedForward)) {
                 cycleRequestedForward=0; movement.forward=0;
             }
             port.sendMotion(rate,cycleRequestedForward);
@@ -408,6 +441,8 @@ public final class AimingSession {
         if (state == State.PAUSED) diagnostic("recovery_cancelled", "reason=" + why);
         recoverySince = -1; pauseRequested.set(false);
         cancelled.set(true); rate = 0; reason = why;
+        // VT 3.5: Explicit stop/control loss cannot leave a live retreat or resume timer.
+        retreat.stop(port.now(),why);
         lastFreshAimingTarget=null;
         movement.cancel();
         surferYaw.reset(); // No direction commitment survives Stop.

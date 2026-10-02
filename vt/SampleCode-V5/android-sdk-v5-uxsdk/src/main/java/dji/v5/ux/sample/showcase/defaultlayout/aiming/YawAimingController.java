@@ -56,6 +56,25 @@ public final class YawAimingController implements AimingSession.Port {
     private long lastTranslationAt=-1;
     private double lastSubmittedForward;
     private volatile ComeToMeSettings movementConfig=ComeToMeSettings.defaults();
+    // VT 3.5: Separate persisted retreat controls; existing movement preferences are untouched.
+    private volatile RetreatSettings retreatConfig=RetreatSettings.defaults();
+    @Override public RetreatSettings retreatSettings() { return retreatConfig; }
+    public void setRetreatSettings(RetreatSettings config) {
+        executor.execute(() -> {
+            if(!canSelectGpsSource()) return;
+            retreatConfig=config;
+            appContext.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit()
+                .putFloat("retreatDistance",(float)config.minimumDistance).putFloat("retreatSpeed",(float)config.speed)
+                .putLong("retreatDurationMs",config.durationMs).putLong("retreatCooldownMs",config.cooldownMs).apply();
+            diagnostic("retreat_settings_saved","distance="+config.minimumDistance+" speed="+config.speed
+                +" durationMs="+config.durationMs+" cooldownMs="+config.cooldownMs);
+        });
+    }
+    @Override public void retreatEvent(String event,String reason) {
+        RetreatLog.record(fullLog,session,now(),event,reason,submittedCycle,lastSubmittedForward);
+        // One structured full-log event, plus coordinate-free minimal diagnostics (no duplicate full event).
+        if(MinimalLogPolicy.keep(event,reason)) logger.event(event,"session="+session.sessionId()+" reason="+reason);
+    }
     private volatile String movementScreen="Come to me: waiting for Start",movementDetails="",aimingScreen="";
     private volatile boolean fullLogWanted=true;
     private volatile String heightScreen="Height: —";
@@ -195,6 +214,10 @@ public final class YawAimingController implements AimingSession.Port {
                     prefs.getLong("rideDurationMs",90000),prefs.getFloat("closeRangePitchDeg",-25),prefs.getFloat("longRangePitchDeg",-10),
                     prefs.getFloat("maxYawRate",15),prefs.getFloat("yawAcceleration",8));
         } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
+        try {
+            retreatConfig=new RetreatSettings(true,prefs.getFloat("retreatDistance",25),prefs.getLong("retreatDurationMs",10000),
+                prefs.getFloat("retreatSpeed",3),prefs.getLong("retreatCooldownMs",5000));
+        } catch(IllegalArgumentException invalid) { retreatConfig=RetreatSettings.defaults(); }
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
     public void resume(Observer callback) {
@@ -290,7 +313,7 @@ public final class YawAimingController implements AimingSession.Port {
                 aircraft.poll(); camera.poll(now()); observed=inputs();
             }
             session.tick();
-            if(foreground && observed!=null) camera.update(session,observed,now(),
+            if(foreground && observed!=null) camera.update(session,session.controlInputs(observed,now()),now(),
                     !yielding && session.maySendYaw() && session.commandEligible(),movementConfig);
             if(foreground && observed!=null) recordAimingCycle(observed); // CAM3 v2.7: Every foreground cycle, not only changed summaries.
             // CAM3 v2.1: Sample diagnostics at most twice per second; file I/O stays on the logger worker.
@@ -314,6 +337,8 @@ public final class YawAimingController implements AimingSession.Port {
                 recoveryRemaining = session.recoveryRemainingMs();
                 movementDetails=session.movement.details();
                 movementScreen=session.movement.summary();
+                String retreatStatus=session.retreat.summary(now());
+                if(!retreatStatus.isEmpty()) { movementScreen=retreatStatus; movementDetails+="\n"+retreatStatus; }
                 if(state==AimingSession.State.OFF || state==AimingSession.State.STOPPED)
                     movementScreen=movementConfig.enabled ? "Come to me: ON — waiting for Start" : "Come to me: OFF";
                 if(state==AimingSession.State.PAUSED) movementScreen="Come to me: PAUSED — "+session.reason();
@@ -450,6 +475,7 @@ public final class YawAimingController implements AimingSession.Port {
             long at=now();
             AimingCycleLog.record(fullLog,session,observed,at,usePhone,submittedCycle,lastCommandRate);
             MovementCycleLog.record(fullLog,session,at,submittedCycle,lastSubmittedForward);
+            RetreatLog.record(fullLog,session,at,"retreat_cycle",session.retreat.reason,submittedCycle,lastSubmittedForward);
             aircraft.recordAngles(fullLog,session.sessionId(),session.cycleId,at);
         } catch(RuntimeException ignored) { /* Logging cannot change a steering decision. */ }
     }
@@ -467,7 +493,8 @@ public final class YawAimingController implements AimingSession.Port {
                 || (a.owner == AimingSession.Owner.MSDK && a.enabled && a.advanced));
         if (!active && !neutral) return;
         // CAM3 v2.7: Retain ownership gates; permit only the opt-in bounded speed increase.
-        if(forward!=0 && (!active || !session.movement.permits(inputs(),now(),forward))) forward=0;
+        // VT 3.5: Revalidate the selected translation owner immediately before SDK submission.
+        if(forward!=0 && (!active || !session.permitsMotion(inputs(),now(),forward))) forward=0;
         // Callback cancellation can arrive during the final position read.
         if((rate!=0 || forward!=0) && (!foreground || yielding || !session.maySendYaw() || !session.commandEligible())) return;
         if(!Double.isFinite(rate) || Math.abs(rate)>session.movement.settings().maxYawRate) throw new IllegalArgumentException("Configured yaw limit");
