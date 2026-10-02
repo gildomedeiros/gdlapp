@@ -1,0 +1,3818 @@
+[
+  {
+    "file": "3.5/cam3_full_2026-10-02_172258_411_6abd7343.jsonl",
+    "start": "17:23:04.082",
+    "end": "17:24:59.416",
+    "seconds": 115.334,
+    "settings": {
+      "filmingDistanceM": 30.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 3.0,
+      "movementAccelerationMps2": 0.25,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "retreatSettings": {
+      "minimumDistanceM": 25.0,
+      "durationMs": 10000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "height": {
+      "min": 8.7,
+      "median": 8.7,
+      "p90": 19.3,
+      "max": 19.4
+    },
+    "distance": {
+      "min": 23.27,
+      "median": 45.33,
+      "p90": 68.68,
+      "max": 69.0
+    },
+    "yawError": {
+      "min": 0.01,
+      "median": 3.13,
+      "p90": 38.8,
+      "max": 179.86
+    },
+    "yawOver15": 0.13068731848983542,
+    "stateSeconds": {
+      "STARTING": 0.23,
+      "AIMING": 106.59,
+      "PAUSED": 8.47
+    },
+    "phaseSeconds": {
+      "WAITING": 23.74,
+      "APPROACHING": 82.8,
+      "HOLDING": 8.75
+    },
+    "retreats": [
+      {
+        "start": "17:24:10.472",
+        "end": "17:24:20.476",
+        "seconds": 10.004,
+        "periods": 1,
+        "startDistance": 24.19976866929821,
+        "endDistance": 49.56212552932701,
+        "minDistance": 23.267848341796494,
+        "aircraftPathM": 27.292092820652954,
+        "aircraftDisplacementM": 27.263584427091285,
+        "surferDisplacementM": 1.9623053652798348,
+        "speed": {
+          "min": 0.0,
+          "median": 2.89,
+          "p90": 2.91,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 0.08,
+          "median": 0.37,
+          "p90": 1.39,
+          "max": 1.84
+        },
+        "submitted": {
+          "-3.0": 97
+        },
+        "retained": 0,
+        "riding": 0
+      }
+    ],
+    "approaches": [
+      {
+        "start": "17:23:04.358",
+        "end": "17:23:15.814",
+        "seconds": 11.456,
+        "endReason": "manual_reposition",
+        "startDistance": 68.27176026542489,
+        "endDistance": 68.93825166502631
+      },
+      {
+        "start": "17:23:24.284",
+        "end": "17:24:01.827",
+        "seconds": 37.543,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 68.88390476370887,
+        "endDistance": 31.01620579478076
+      },
+      {
+        "start": "17:24:25.514",
+        "end": "17:24:46.595",
+        "seconds": 21.081,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 53.189657565010585,
+        "endDistance": 39.395396612611165
+      }
+    ],
+    "approachOutcomes": {
+      "manual_reposition": 1,
+      "approach_arrival_tolerance": 2
+    },
+    "rides": [],
+    "pause": [
+      {
+        "record": 987,
+        "timestamp": "2026-10-02T17:23:15.813+10:00",
+        "epochMs": 1790925795813,
+        "monoMs": 28168866,
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "record": 1162,
+        "timestamp": "2026-10-02T17:23:19.178+10:00",
+        "epochMs": 1790925799178,
+        "monoMs": 28172231,
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      },
+      {
+        "record": 1181,
+        "timestamp": "2026-10-02T17:23:19.481+10:00",
+        "epochMs": 1790925799481,
+        "monoMs": 28172534,
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "record": 1297,
+        "timestamp": "2026-10-02T17:23:21.736+10:00",
+        "epochMs": 1790925801736,
+        "monoMs": 28174789,
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      }
+    ],
+    "retreatCounts": {
+      "retreat_started": 1,
+      "retreat_repeated": 0,
+      "retreat_finished": 1,
+      "retreat_cancelled": 0,
+      "retreat_approach_replaced": 0
+    },
+    "pitchCommands": 9,
+    "pitchReached": 9,
+    "pitchReachMs": {
+      "min": 2052,
+      "median": 2064,
+      "p90": 2481,
+      "max": 2481
+    },
+    "gimbalConfigs": [
+      {
+        "record": 284,
+        "timestamp": "2026-10-02T17:23:04.128+10:00",
+        "epochMs": 1790925784128,
+        "monoMs": 28157180,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "/storage/emulated/0/Android/data/com.dji.sampleV5.aircraft/files/vt_gimbal_bands.json",
+        "source": "external_file",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "packetGapsMs": {
+      "min": 395,
+      "median": 500,
+      "p90": 522,
+      "max": 1000
+    },
+    "gapsOver3": [],
+    "missing": 1,
+    "packets": 230,
+    "retainedSeconds": {
+      "False": 115.29
+    },
+    "nofix": 0,
+    "transitions": [
+      {
+        "record": 305,
+        "timestamp": "2026-10-02T17:23:04.349+10:00",
+        "epochMs": 1790925784349,
+        "monoMs": 28157402,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> APPROACHING:approach_alignment event=central_captured centralGeneration=1"
+      },
+      {
+        "record": 1421,
+        "timestamp": "2026-10-02T17:23:24.284+10:00",
+        "epochMs": 1790925804284,
+        "monoMs": 28177336,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:manual_reposition -> APPROACHING:approach_alignment event=central_captured centralGeneration=2"
+      },
+      {
+        "record": 1993,
+        "timestamp": "2026-10-02T17:23:33.973+10:00",
+        "epochMs": 1790925813973,
+        "monoMs": 28187025,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=2"
+      },
+      {
+        "record": 3633,
+        "timestamp": "2026-10-02T17:24:01.826+10:00",
+        "epochMs": 1790925841826,
+        "monoMs": 28214878,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=2"
+      },
+      {
+        "record": 3641,
+        "timestamp": "2026-10-02T17:24:01.929+10:00",
+        "epochMs": 1790925841929,
+        "monoMs": 28214981,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=2"
+      },
+      {
+        "record": 4150,
+        "timestamp": "2026-10-02T17:24:10.472+10:00",
+        "epochMs": 1790925850472,
+        "monoMs": 28223524,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=2"
+      },
+      {
+        "record": 4156,
+        "timestamp": "2026-10-02T17:24:10.576+10:00",
+        "epochMs": 1790925850576,
+        "monoMs": 28223629,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=2"
+      },
+      {
+        "record": 5047,
+        "timestamp": "2026-10-02T17:24:25.513+10:00",
+        "epochMs": 1790925865513,
+        "monoMs": 28238565,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=2"
+      },
+      {
+        "record": 6301,
+        "timestamp": "2026-10-02T17:24:46.594+10:00",
+        "epochMs": 1790925886594,
+        "monoMs": 28259647,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=2"
+      },
+      {
+        "record": 6307,
+        "timestamp": "2026-10-02T17:24:46.696+10:00",
+        "epochMs": 1790925886696,
+        "monoMs": 28259749,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=2"
+      }
+    ]
+  },
+  {
+    "file": "3.5/cam3_full_2026-10-02_172512_345_14325adb.jsonl",
+    "start": "17:26:05.776",
+    "end": "17:29:02.876",
+    "seconds": 177.1,
+    "settings": {
+      "filmingDistanceM": 30.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 3.0,
+      "movementAccelerationMps2": 0.25,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "retreatSettings": {
+      "minimumDistanceM": 25.0,
+      "durationMs": 3000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "height": {
+      "min": 9.2,
+      "median": 9.3,
+      "p90": 9.3,
+      "max": 9.3
+    },
+    "distance": {
+      "min": 23.05,
+      "median": 37.37,
+      "p90": 54.55,
+      "max": 54.83
+    },
+    "yawError": {
+      "min": 0.01,
+      "median": 1.32,
+      "p90": 6.24,
+      "max": 167.37
+    },
+    "yawOver15": 0.06647230320699708,
+    "stateSeconds": {
+      "STARTING": 0.1,
+      "AIMING": 176.87
+    },
+    "phaseSeconds": {
+      "WAITING": 39.51,
+      "APPROACHING": 114.11,
+      "HOLDING": 23.35
+    },
+    "retreats": [
+      {
+        "start": "17:26:58.933",
+        "end": "17:27:02.023",
+        "seconds": 3.09,
+        "periods": 1,
+        "startDistance": 24.14322217149586,
+        "endDistance": 25.966603984590158,
+        "minDistance": 23.161340966908995,
+        "aircraftPathM": 5.7479848764908335,
+        "aircraftDisplacementM": 5.729139576301008,
+        "surferDisplacementM": 3.9246089041377368,
+        "speed": {
+          "min": 0.0,
+          "median": 2.61,
+          "p90": 2.91,
+          "max": 2.91
+        },
+        "yawError": {
+          "min": 2.58,
+          "median": 2.85,
+          "p90": 3.74,
+          "max": 3.74
+        },
+        "submitted": {
+          "-3.0": 30
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:27:05.932",
+        "end": "17:27:09.031",
+        "seconds": 3.099,
+        "periods": 1,
+        "startDistance": 24.220219066220942,
+        "endDistance": 27.581259647435086,
+        "minDistance": 23.803976463479064,
+        "aircraftPathM": 6.336660128802926,
+        "aircraftDisplacementM": 6.286810192605658,
+        "surferDisplacementM": 2.943456678103308,
+        "speed": {
+          "min": 0.0,
+          "median": 2.81,
+          "p90": 2.92,
+          "max": 2.92
+        },
+        "yawError": {
+          "min": 1.93,
+          "median": 2.99,
+          "p90": 3.76,
+          "max": 4.07
+        },
+        "submitted": {
+          "-3.0": 30
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:27:15.929",
+        "end": "17:27:19.017",
+        "seconds": 3.088,
+        "periods": 1,
+        "startDistance": 24.1065334392812,
+        "endDistance": 28.133578707661318,
+        "minDistance": 23.136991382639717,
+        "aircraftPathM": 6.009678399812546,
+        "aircraftDisplacementM": 5.990035371855531,
+        "surferDisplacementM": 1.9623046347111865,
+        "speed": {
+          "min": 0.0,
+          "median": 2.71,
+          "p90": 3.01,
+          "max": 3.11
+        },
+        "yawError": {
+          "min": 0.72,
+          "median": 1.14,
+          "p90": 2.12,
+          "max": 2.12
+        },
+        "submitted": {
+          "-3.0": 30
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:28:15.434",
+        "end": "17:28:18.526",
+        "seconds": 3.092,
+        "periods": 1,
+        "startDistance": 24.67124359209212,
+        "endDistance": 25.4964908188918,
+        "minDistance": 23.0515203893132,
+        "aircraftPathM": 6.7421445919395575,
+        "aircraftDisplacementM": 6.735425449431104,
+        "surferDisplacementM": 5.991009611286588,
+        "speed": {
+          "min": 0.0,
+          "median": 2.9,
+          "p90": 3.01,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 2.45,
+          "median": 3.09,
+          "p90": 5.24,
+          "max": 5.39
+        },
+        "submitted": {
+          "-3.0": 30
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:28:23.461",
+        "end": "17:28:26.538",
+        "seconds": 3.077,
+        "periods": 1,
+        "startDistance": 24.88269551814425,
+        "endDistance": 31.578709419059265,
+        "minDistance": 24.78636636956617,
+        "aircraftPathM": 7.689961421359059,
+        "aircraftDisplacementM": 7.676588483380567,
+        "surferDisplacementM": 0.9811525913188821,
+        "speed": {
+          "min": 0.0,
+          "median": 2.75,
+          "p90": 3.1,
+          "max": 3.1
+        },
+        "yawError": {
+          "min": 1.9,
+          "median": 2.87,
+          "p90": 3.4,
+          "max": 3.53
+        },
+        "submitted": {
+          "-3.0": 30
+        },
+        "retained": 0,
+        "riding": 0
+      }
+    ],
+    "approaches": [
+      {
+        "start": "17:26:06.008",
+        "end": "17:26:48.740",
+        "seconds": 42.732,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 54.43056459445761,
+        "endDistance": 32.00088945201444
+      },
+      {
+        "start": "17:27:24.064",
+        "end": "17:27:34.679",
+        "seconds": 10.615,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 36.12805180019683,
+        "endDistance": 42.732327850250876
+      },
+      {
+        "start": "17:27:34.781",
+        "end": "17:27:50.644",
+        "seconds": 15.863,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 42.732327850250876,
+        "endDistance": 39.89448162711742
+      },
+      {
+        "start": "17:27:50.745",
+        "end": "17:28:04.432",
+        "seconds": 13.687,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 39.89448162711742,
+        "endDistance": 30.850575911497693
+      },
+      {
+        "start": "17:28:31.565",
+        "end": "17:28:46.598",
+        "seconds": 15.033,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 40.24844802681885,
+        "endDistance": 41.77493605674891
+      }
+    ],
+    "approachOutcomes": {
+      "approach_arrival_tolerance": 5
+    },
+    "rides": [],
+    "pause": [],
+    "retreatCounts": {
+      "retreat_started": 5,
+      "retreat_repeated": 0,
+      "retreat_finished": 5,
+      "retreat_cancelled": 0,
+      "retreat_approach_replaced": 0
+    },
+    "pitchCommands": 11,
+    "pitchReached": 11,
+    "pitchReachMs": {
+      "min": 2016,
+      "median": 2062,
+      "p90": 2165,
+      "max": 2259
+    },
+    "gimbalConfigs": [
+      {
+        "record": 2576,
+        "timestamp": "2026-10-02T17:26:05.904+10:00",
+        "epochMs": 1790925965904,
+        "monoMs": 28338956,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "/storage/emulated/0/Android/data/com.dji.sampleV5.aircraft/files/vt_gimbal_bands.json",
+        "source": "external_file",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "packetGapsMs": {
+      "min": 376,
+      "median": 500.0,
+      "p90": 518,
+      "max": 998
+    },
+    "gapsOver3": [],
+    "missing": 3,
+    "packets": 351,
+    "retainedSeconds": {
+      "False": 176.97
+    },
+    "nofix": 0,
+    "transitions": [
+      {
+        "record": 2585,
+        "timestamp": "2026-10-02T17:26:06.005+10:00",
+        "epochMs": 1790925966005,
+        "monoMs": 28339058,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> APPROACHING:approach_alignment event=central_captured centralGeneration=1"
+      },
+      {
+        "record": 3796,
+        "timestamp": "2026-10-02T17:26:26.564+10:00",
+        "epochMs": 1790925986564,
+        "monoMs": 28359616,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 5105,
+        "timestamp": "2026-10-02T17:26:48.739+10:00",
+        "epochMs": 1790926008739,
+        "monoMs": 28381792,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 5111,
+        "timestamp": "2026-10-02T17:26:48.841+10:00",
+        "epochMs": 1790926008841,
+        "monoMs": 28381893,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 5711,
+        "timestamp": "2026-10-02T17:26:58.933+10:00",
+        "epochMs": 1790926018933,
+        "monoMs": 28391986,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 5719,
+        "timestamp": "2026-10-02T17:26:59.042+10:00",
+        "epochMs": 1790926019042,
+        "monoMs": 28392094,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 6128,
+        "timestamp": "2026-10-02T17:27:05.932+10:00",
+        "epochMs": 1790926025932,
+        "monoMs": 28398985,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 6134,
+        "timestamp": "2026-10-02T17:27:06.034+10:00",
+        "epochMs": 1790926026034,
+        "monoMs": 28399086,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 6609,
+        "timestamp": "2026-10-02T17:27:14.079+10:00",
+        "epochMs": 1790926034079,
+        "monoMs": 28407132,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 6719,
+        "timestamp": "2026-10-02T17:27:15.929+10:00",
+        "epochMs": 1790926035929,
+        "monoMs": 28408982,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 6727,
+        "timestamp": "2026-10-02T17:27:16.035+10:00",
+        "epochMs": 1790926036035,
+        "monoMs": 28409087,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 7205,
+        "timestamp": "2026-10-02T17:27:24.064+10:00",
+        "epochMs": 1790926044064,
+        "monoMs": 28417116,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 7828,
+        "timestamp": "2026-10-02T17:27:34.678+10:00",
+        "epochMs": 1790926054678,
+        "monoMs": 28427731,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 7835,
+        "timestamp": "2026-10-02T17:27:34.780+10:00",
+        "epochMs": 1790926054780,
+        "monoMs": 28427833,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 8771,
+        "timestamp": "2026-10-02T17:27:50.643+10:00",
+        "epochMs": 1790926070643,
+        "monoMs": 28443696,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 8781,
+        "timestamp": "2026-10-02T17:27:50.745+10:00",
+        "epochMs": 1790926070745,
+        "monoMs": 28443797,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 9588,
+        "timestamp": "2026-10-02T17:28:04.432+10:00",
+        "epochMs": 1790926084432,
+        "monoMs": 28457484,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 9594,
+        "timestamp": "2026-10-02T17:28:04.533+10:00",
+        "epochMs": 1790926084533,
+        "monoMs": 28457585,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 10242,
+        "timestamp": "2026-10-02T17:28:15.434+10:00",
+        "epochMs": 1790926095434,
+        "monoMs": 28468487,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 10248,
+        "timestamp": "2026-10-02T17:28:15.536+10:00",
+        "epochMs": 1790926095536,
+        "monoMs": 28468589,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 10718,
+        "timestamp": "2026-10-02T17:28:23.461+10:00",
+        "epochMs": 1790926103461,
+        "monoMs": 28476513,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 10724,
+        "timestamp": "2026-10-02T17:28:23.562+10:00",
+        "epochMs": 1790926103562,
+        "monoMs": 28476615,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 11203,
+        "timestamp": "2026-10-02T17:28:31.564+10:00",
+        "epochMs": 1790926111564,
+        "monoMs": 28484616,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 12092,
+        "timestamp": "2026-10-02T17:28:46.597+10:00",
+        "epochMs": 1790926126597,
+        "monoMs": 28499649,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 12098,
+        "timestamp": "2026-10-02T17:28:46.699+10:00",
+        "epochMs": 1790926126699,
+        "monoMs": 28499751,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      }
+    ]
+  },
+  {
+    "file": "3.5/cam3_full_2026-10-02_172917_244_c2220047.jsonl",
+    "start": "17:30:04.567",
+    "end": "17:42:40.929",
+    "seconds": 756.362,
+    "settings": {
+      "filmingDistanceM": 30.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 3.0,
+      "movementAccelerationMps2": 0.25,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "retreatSettings": {
+      "minimumDistanceM": 20.0,
+      "durationMs": 3000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "height": {
+      "min": 10.5,
+      "median": 10.6,
+      "p90": 10.7,
+      "max": 10.7
+    },
+    "distance": {
+      "min": 12.29,
+      "median": 29.27,
+      "p90": 52.99,
+      "max": 60.5
+    },
+    "yawError": {
+      "min": 0.02,
+      "median": 5.08,
+      "p90": 10.35,
+      "max": 156.36
+    },
+    "yawOver15": 0.053216618035292484,
+    "stateSeconds": {
+      "STARTING": 0.11,
+      "AIMING": 756.16
+    },
+    "phaseSeconds": {
+      "WAITING": 187.84,
+      "APPROACHING": 293.11,
+      "HOLDING": 275.31
+    },
+    "retreats": [
+      {
+        "start": "17:31:02.435",
+        "end": "17:31:05.504",
+        "seconds": 3.069,
+        "periods": 1,
+        "startDistance": 19.159493076461004,
+        "endDistance": 22.55540275764169,
+        "minDistance": 18.391877500257458,
+        "aircraftPathM": 6.738271831680666,
+        "aircraftDisplacementM": 6.737550651344418,
+        "surferDisplacementM": 3.6891292742970436,
+        "speed": {
+          "min": 0.0,
+          "median": 2.84,
+          "p90": 2.86,
+          "max": 2.86
+        },
+        "yawError": {
+          "min": 0.98,
+          "median": 1.57,
+          "p90": 3.61,
+          "max": 3.61
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:31:10.466",
+        "end": "17:31:13.533",
+        "seconds": 3.067,
+        "periods": 1,
+        "startDistance": 19.54072106181538,
+        "endDistance": 21.487151830452426,
+        "minDistance": 18.11718883808178,
+        "aircraftPathM": 6.653451987823167,
+        "aircraftDisplacementM": 6.650225360161978,
+        "surferDisplacementM": 5.0302058086413854,
+        "speed": {
+          "min": 0.0,
+          "median": 2.83,
+          "p90": 2.93,
+          "max": 2.93
+        },
+        "yawError": {
+          "min": 0.03,
+          "median": 0.68,
+          "p90": 4.24,
+          "max": 4.82
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:31:19.483",
+        "end": "17:31:22.563",
+        "seconds": 3.08,
+        "periods": 1,
+        "startDistance": 19.24504887955306,
+        "endDistance": 23.944247377041684,
+        "minDistance": 19.163417601025536,
+        "aircraftPathM": 6.7704392613229825,
+        "aircraftDisplacementM": 6.7317774144672,
+        "surferDisplacementM": 3.8702104566661473,
+        "speed": {
+          "min": 0.0,
+          "median": 2.92,
+          "p90": 3.01,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 3.7,
+          "median": 7.01,
+          "p90": 8.5,
+          "max": 8.5
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:31:30.006",
+        "end": "17:31:33.053",
+        "seconds": 3.047,
+        "periods": 1,
+        "startDistance": 19.81240476456218,
+        "endDistance": 24.762489834710816,
+        "minDistance": 19.81240476456218,
+        "aircraftPathM": 6.367639246777653,
+        "aircraftDisplacementM": 6.3624571632663764,
+        "surferDisplacementM": 2.2554566340376327,
+        "speed": {
+          "min": 0.0,
+          "median": 2.82,
+          "p90": 2.97,
+          "max": 3.04
+        },
+        "yawError": {
+          "min": 4.47,
+          "median": 7.11,
+          "p90": 9.1,
+          "max": 9.1
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:31:49.935",
+        "end": "17:31:52.986",
+        "seconds": 3.051,
+        "periods": 1,
+        "startDistance": 19.787844446953496,
+        "endDistance": 23.743135825382314,
+        "minDistance": 19.476768216945008,
+        "aircraftPathM": 6.635046609811463,
+        "aircraftDisplacementM": 6.630491128695807,
+        "surferDisplacementM": 3.1464870066331914,
+        "speed": {
+          "min": 0.0,
+          "median": 2.92,
+          "p90": 3.01,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 3.53,
+          "median": 4.7,
+          "p90": 6.45,
+          "max": 6.45
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:32:02.988",
+        "end": "17:32:06.043",
+        "seconds": 3.055,
+        "periods": 1,
+        "startDistance": 19.3653238371015,
+        "endDistance": 21.08222230300721,
+        "minDistance": 17.81018800137632,
+        "aircraftPathM": 5.590450830616374,
+        "aircraftDisplacementM": 5.58463736457771,
+        "surferDisplacementM": 4.905762040594963,
+        "speed": {
+          "min": 0.0,
+          "median": 2.51,
+          "p90": 2.88,
+          "max": 2.88
+        },
+        "yawError": {
+          "min": 6.24,
+          "median": 9.28,
+          "p90": 9.66,
+          "max": 11.58
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:32:09.950",
+        "end": "17:32:13.014",
+        "seconds": 3.064,
+        "periods": 1,
+        "startDistance": 19.716062931037804,
+        "endDistance": 24.844207151511707,
+        "minDistance": 19.632374566356777,
+        "aircraftPathM": 6.938015441940477,
+        "aircraftDisplacementM": 6.922360694466989,
+        "surferDisplacementM": 3.335847799210475,
+        "speed": {
+          "min": 0.0,
+          "median": 2.86,
+          "p90": 2.94,
+          "max": 2.94
+        },
+        "yawError": {
+          "min": 2.45,
+          "median": 5.1,
+          "p90": 7.22,
+          "max": 7.22
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:33:50.519",
+        "end": "17:33:53.572",
+        "seconds": 3.053,
+        "periods": 1,
+        "startDistance": 19.778393901382174,
+        "endDistance": 22.459723961765977,
+        "minDistance": 18.921350986866965,
+        "aircraftPathM": 6.14431138020454,
+        "aircraftDisplacementM": 6.138942676030211,
+        "surferDisplacementM": 3.9246081707795293,
+        "speed": {
+          "min": 0.0,
+          "median": 2.82,
+          "p90": 3.0,
+          "max": 3.0
+        },
+        "yawError": {
+          "min": 3.8,
+          "median": 6.5,
+          "p90": 8.53,
+          "max": 8.55
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:34:58.459",
+        "end": "17:35:01.508",
+        "seconds": 3.049,
+        "periods": 1,
+        "startDistance": 19.321710830661452,
+        "endDistance": 22.740812868061862,
+        "minDistance": 19.225795110537884,
+        "aircraftPathM": 5.712519181952224,
+        "aircraftDisplacementM": 5.71104508320958,
+        "surferDisplacementM": 3.689129930059803,
+        "speed": {
+          "min": 0.0,
+          "median": 2.42,
+          "p90": 3.03,
+          "max": 3.03
+        },
+        "yawError": {
+          "min": 5.29,
+          "median": 7.38,
+          "p90": 8.59,
+          "max": 8.59
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:35:14.497",
+        "end": "17:35:17.511",
+        "seconds": 3.014,
+        "periods": 1,
+        "startDistance": 19.157607289251438,
+        "endDistance": 23.447306667740108,
+        "minDistance": 18.29220255861419,
+        "aircraftPathM": 6.122766071862312,
+        "aircraftDisplacementM": 6.098887624016208,
+        "surferDisplacementM": 3.870209530620359,
+        "speed": {
+          "min": 0.0,
+          "median": 2.71,
+          "p90": 3.0,
+          "max": 3.0
+        },
+        "yawError": {
+          "min": 4.3,
+          "median": 8.5,
+          "p90": 11.82,
+          "max": 11.82
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:36:22.010",
+        "end": "17:36:25.070",
+        "seconds": 3.06,
+        "periods": 1,
+        "startDistance": 19.984278853610444,
+        "endDistance": 24.381748416463257,
+        "minDistance": 19.072792244936384,
+        "aircraftPathM": 7.213780832361056,
+        "aircraftDisplacementM": 7.211722843794542,
+        "surferDisplacementM": 3.14648879801952,
+        "speed": {
+          "min": 0.0,
+          "median": 2.91,
+          "p90": 3.04,
+          "max": 3.04
+        },
+        "yawError": {
+          "min": 3.8,
+          "median": 5.91,
+          "p90": 9.26,
+          "max": 9.26
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:36:38.928",
+        "end": "17:36:41.973",
+        "seconds": 3.045,
+        "periods": 1,
+        "startDistance": 19.247496596274917,
+        "endDistance": 23.799431394399427,
+        "minDistance": 19.233121941475233,
+        "aircraftPathM": 6.8621575467329095,
+        "aircraftDisplacementM": 6.845690986793205,
+        "surferDisplacementM": 3.6891301464223054,
+        "speed": {
+          "min": 0.0,
+          "median": 2.94,
+          "p90": 3.03,
+          "max": 3.03
+        },
+        "yawError": {
+          "min": 4.09,
+          "median": 6.48,
+          "p90": 9.4,
+          "max": 9.4
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:36:58.499",
+        "end": "17:37:01.537",
+        "seconds": 3.038,
+        "periods": 1,
+        "startDistance": 19.818670972157353,
+        "endDistance": 25.798115769335165,
+        "minDistance": 19.818670972157353,
+        "aircraftPathM": 5.9647691876586855,
+        "aircraftDisplacementM": 5.960841501904187,
+        "surferDisplacementM": 3.870208789782008,
+        "speed": {
+          "min": 0.0,
+          "median": 2.62,
+          "p90": 2.86,
+          "max": 2.88
+        },
+        "yawError": {
+          "min": 6.21,
+          "median": 10.17,
+          "p90": 12.66,
+          "max": 13.01
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:37:09.426",
+        "end": "17:37:15.543",
+        "seconds": 6.117,
+        "periods": 2,
+        "startDistance": 19.102132414589253,
+        "endDistance": 23.626728320744313,
+        "minDistance": 16.06386963243305,
+        "aircraftPathM": 15.561828922614174,
+        "aircraftDisplacementM": 15.559762018249666,
+        "surferDisplacementM": 11.019402068374143,
+        "speed": {
+          "min": 0.0,
+          "median": 2.86,
+          "p90": 2.96,
+          "max": 2.96
+        },
+        "yawError": {
+          "min": 0.29,
+          "median": 1.53,
+          "p90": 5.42,
+          "max": 6.37
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:39:19.964",
+        "end": "17:39:32.145",
+        "seconds": 12.181,
+        "periods": 4,
+        "startDistance": 17.945009414044165,
+        "endDistance": 30.20391543639485,
+        "minDistance": 12.287927471739064,
+        "aircraftPathM": 33.673599834076825,
+        "aircraftDisplacementM": 33.63206265079675,
+        "surferDisplacementM": 21.36010332421493,
+        "speed": {
+          "min": 0.0,
+          "median": 2.88,
+          "p90": 2.97,
+          "max": 2.97
+        },
+        "yawError": {
+          "min": 0.08,
+          "median": 2.66,
+          "p90": 4.86,
+          "max": 7.45
+        },
+        "submitted": {
+          "-3.0": 116
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:40:45.965",
+        "end": "17:40:52.045",
+        "seconds": 6.08,
+        "periods": 2,
+        "startDistance": 17.861304720681318,
+        "endDistance": 21.531233218300976,
+        "minDistance": 13.569529608587137,
+        "aircraftPathM": 15.278849603853542,
+        "aircraftDisplacementM": 15.063425493405582,
+        "surferDisplacementM": 16.977365748389442,
+        "speed": {
+          "min": 0.0,
+          "median": 2.98,
+          "p90": 3.03,
+          "max": 3.03
+        },
+        "yawError": {
+          "min": 5.77,
+          "median": 12.82,
+          "p90": 17.26,
+          "max": 20.53
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 44
+      },
+      {
+        "start": "17:41:37.453",
+        "end": "17:41:40.500",
+        "seconds": 3.047,
+        "periods": 1,
+        "startDistance": 19.840156512969877,
+        "endDistance": 24.062013291984574,
+        "minDistance": 19.326888557471186,
+        "aircraftPathM": 6.178977294544359,
+        "aircraftDisplacementM": 6.151198305856553,
+        "surferDisplacementM": 2.2238985328069827,
+        "speed": {
+          "min": 0.0,
+          "median": 2.92,
+          "p90": 2.95,
+          "max": 2.95
+        },
+        "yawError": {
+          "min": 3.5,
+          "median": 6.87,
+          "p90": 10.08,
+          "max": 10.08
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:41:59.000",
+        "end": "17:42:11.090",
+        "seconds": 12.09,
+        "periods": 4,
+        "startDistance": 19.535614839687593,
+        "endDistance": 26.206710978310326,
+        "minDistance": 14.864623589432039,
+        "aircraftPathM": 31.871994162979533,
+        "aircraftDisplacementM": 31.781788275696027,
+        "surferDisplacementM": 28.876546978542898,
+        "speed": {
+          "min": 0.0,
+          "median": 2.9,
+          "p90": 2.92,
+          "max": 2.92
+        },
+        "yawError": {
+          "min": 0.76,
+          "median": 6.44,
+          "p90": 8.28,
+          "max": 9.97
+        },
+        "submitted": {
+          "-3.0": 116
+        },
+        "retained": 0,
+        "riding": 63
+      }
+    ],
+    "approaches": [
+      {
+        "start": "17:30:04.773",
+        "end": "17:30:52.841",
+        "seconds": 48.068,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 53.92877950351164,
+        "endDistance": 26.87183208194865
+      },
+      {
+        "start": "17:32:21.488",
+        "end": "17:32:33.555",
+        "seconds": 12.067,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 36.04695679991505,
+        "endDistance": 46.918456682743646
+      },
+      {
+        "start": "17:32:33.659",
+        "end": "17:32:58.418",
+        "seconds": 24.759,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 46.918456682743646,
+        "endDistance": 58.306309213100874
+      },
+      {
+        "start": "17:32:58.520",
+        "end": "17:33:34.877",
+        "seconds": 36.357,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 58.306309213100874,
+        "endDistance": 31.154326870916986
+      },
+      {
+        "start": "17:34:08.948",
+        "end": "17:34:24.214",
+        "seconds": 15.266,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 35.05590441646757,
+        "endDistance": 38.70533448979225
+      },
+      {
+        "start": "17:34:24.322",
+        "end": "17:34:42.177",
+        "seconds": 17.855,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 38.70533448979225,
+        "endDistance": 31.85365189976871
+      },
+      {
+        "start": "17:35:25.499",
+        "end": "17:35:34.618",
+        "seconds": 9.119,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 35.18144991023449,
+        "endDistance": 41.73490906002549
+      },
+      {
+        "start": "17:35:34.720",
+        "end": "17:35:49.770",
+        "seconds": 15.05,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 41.73490906002549,
+        "endDistance": 37.785970934564325
+      },
+      {
+        "start": "17:35:49.873",
+        "end": "17:36:05.560",
+        "seconds": 15.687,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 37.785970934564325,
+        "endDistance": 30.02435668587525
+      },
+      {
+        "start": "17:37:33.014",
+        "end": "17:37:46.953",
+        "seconds": 13.939,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 35.13478398821788,
+        "endDistance": 40.753113957271374
+      },
+      {
+        "start": "17:37:47.059",
+        "end": "17:38:13.626",
+        "seconds": 26.567,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 40.753113957271374,
+        "endDistance": 33.61004597326574
+      },
+      {
+        "start": "17:39:37.509",
+        "end": "17:39:49.998",
+        "seconds": 12.489,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 35.725881423516086,
+        "endDistance": 49.013033533809235
+      },
+      {
+        "start": "17:39:50.103",
+        "end": "17:40:12.976",
+        "seconds": 22.873,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 49.013033533809235,
+        "endDistance": 43.52843206833149
+      },
+      {
+        "start": "17:40:13.079",
+        "end": "17:40:36.095",
+        "seconds": 23.016,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 43.52843206833149,
+        "endDistance": 32.36955561049693
+      }
+    ],
+    "approachOutcomes": {
+      "approach_arrival_tolerance": 14
+    },
+    "rides": [
+      {
+        "start": "17:40:47.426",
+        "speed": 18.542761874047336
+      },
+      {
+        "start": "17:42:04.519",
+        "speed": 18.108699230052245
+      }
+    ],
+    "pause": [],
+    "retreatCounts": {
+      "retreat_started": 18,
+      "retreat_repeated": 8,
+      "retreat_finished": 18,
+      "retreat_cancelled": 0,
+      "retreat_approach_replaced": 0
+    },
+    "pitchCommands": 52,
+    "pitchReached": 52,
+    "pitchReachMs": {
+      "min": 2000,
+      "median": 2200.5,
+      "p90": 2413,
+      "max": 2537
+    },
+    "gimbalConfigs": [
+      {
+        "record": 2269,
+        "timestamp": "2026-10-02T17:30:04.660+10:00",
+        "epochMs": 1790926204660,
+        "monoMs": 28577712,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "/storage/emulated/0/Android/data/com.dji.sampleV5.aircraft/files/vt_gimbal_bands.json",
+        "source": "external_file",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "packetGapsMs": {
+      "min": 427,
+      "median": 500.0,
+      "p90": 519,
+      "max": 1524
+    },
+    "gapsOver3": [],
+    "missing": 16,
+    "packets": 1497,
+    "retainedSeconds": {
+      "False": 756.27
+    },
+    "nofix": 0,
+    "transitions": [
+      {
+        "record": 2276,
+        "timestamp": "2026-10-02T17:30:04.765+10:00",
+        "epochMs": 1790926204765,
+        "monoMs": 28577818,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> APPROACHING:approach_alignment event=central_captured centralGeneration=1"
+      },
+      {
+        "record": 3834,
+        "timestamp": "2026-10-02T17:30:31.979+10:00",
+        "epochMs": 1790926231979,
+        "monoMs": 28605032,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 5035,
+        "timestamp": "2026-10-02T17:30:52.840+10:00",
+        "epochMs": 1790926252840,
+        "monoMs": 28625893,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 5043,
+        "timestamp": "2026-10-02T17:30:52.945+10:00",
+        "epochMs": 1790926252945,
+        "monoMs": 28625998,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 5590,
+        "timestamp": "2026-10-02T17:31:02.435+10:00",
+        "epochMs": 1790926262435,
+        "monoMs": 28635488,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 5599,
+        "timestamp": "2026-10-02T17:31:02.539+10:00",
+        "epochMs": 1790926262539,
+        "monoMs": 28635592,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 6059,
+        "timestamp": "2026-10-02T17:31:10.467+10:00",
+        "epochMs": 1790926270467,
+        "monoMs": 28643519,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 6065,
+        "timestamp": "2026-10-02T17:31:10.570+10:00",
+        "epochMs": 1790926270570,
+        "monoMs": 28643622,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 6529,
+        "timestamp": "2026-10-02T17:31:18.636+10:00",
+        "epochMs": 1790926278636,
+        "monoMs": 28651688,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 6579,
+        "timestamp": "2026-10-02T17:31:19.484+10:00",
+        "epochMs": 1790926279484,
+        "monoMs": 28652536,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 6585,
+        "timestamp": "2026-10-02T17:31:19.591+10:00",
+        "epochMs": 1790926279591,
+        "monoMs": 28652644,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 7051,
+        "timestamp": "2026-10-02T17:31:27.621+10:00",
+        "epochMs": 1790926287621,
+        "monoMs": 28660673,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 7190,
+        "timestamp": "2026-10-02T17:31:30.006+10:00",
+        "epochMs": 1790926290006,
+        "monoMs": 28663059,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 7196,
+        "timestamp": "2026-10-02T17:31:30.108+10:00",
+        "epochMs": 1790926290108,
+        "monoMs": 28663161,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 7668,
+        "timestamp": "2026-10-02T17:31:38.105+10:00",
+        "epochMs": 1790926298105,
+        "monoMs": 28671157,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 8345,
+        "timestamp": "2026-10-02T17:31:49.935+10:00",
+        "epochMs": 1790926309935,
+        "monoMs": 28682988,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 8354,
+        "timestamp": "2026-10-02T17:31:50.041+10:00",
+        "epochMs": 1790926310041,
+        "monoMs": 28683093,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 8825,
+        "timestamp": "2026-10-02T17:31:58.043+10:00",
+        "epochMs": 1790926318043,
+        "monoMs": 28691096,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 9113,
+        "timestamp": "2026-10-02T17:32:02.989+10:00",
+        "epochMs": 1790926322989,
+        "monoMs": 28696041,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 9122,
+        "timestamp": "2026-10-02T17:32:03.092+10:00",
+        "epochMs": 1790926323092,
+        "monoMs": 28696145,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 9524,
+        "timestamp": "2026-10-02T17:32:09.952+10:00",
+        "epochMs": 1790926329952,
+        "monoMs": 28703004,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 9530,
+        "timestamp": "2026-10-02T17:32:10.057+10:00",
+        "epochMs": 1790926330057,
+        "monoMs": 28703110,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 9998,
+        "timestamp": "2026-10-02T17:32:18.105+10:00",
+        "epochMs": 1790926338105,
+        "monoMs": 28711157,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 10195,
+        "timestamp": "2026-10-02T17:32:21.485+10:00",
+        "epochMs": 1790926341485,
+        "monoMs": 28714537,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 10230,
+        "timestamp": "2026-10-02T17:32:22.014+10:00",
+        "epochMs": 1790926342014,
+        "monoMs": 28715066,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 10896,
+        "timestamp": "2026-10-02T17:32:33.552+10:00",
+        "epochMs": 1790926353552,
+        "monoMs": 28726605,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 10902,
+        "timestamp": "2026-10-02T17:32:33.658+10:00",
+        "epochMs": 1790926353658,
+        "monoMs": 28726710,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 11268,
+        "timestamp": "2026-10-02T17:32:40.022+10:00",
+        "epochMs": 1790926360022,
+        "monoMs": 28733075,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 12328,
+        "timestamp": "2026-10-02T17:32:58.417+10:00",
+        "epochMs": 1790926378417,
+        "monoMs": 28751469,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 12334,
+        "timestamp": "2026-10-02T17:32:58.519+10:00",
+        "epochMs": 1790926378519,
+        "monoMs": 28751571,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 12786,
+        "timestamp": "2026-10-02T17:33:06.396+10:00",
+        "epochMs": 1790926386396,
+        "monoMs": 28759448,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 14430,
+        "timestamp": "2026-10-02T17:33:34.873+10:00",
+        "epochMs": 1790926414873,
+        "monoMs": 28787925,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 14439,
+        "timestamp": "2026-10-02T17:33:34.979+10:00",
+        "epochMs": 1790926414979,
+        "monoMs": 28788031,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 15341,
+        "timestamp": "2026-10-02T17:33:50.519+10:00",
+        "epochMs": 1790926430519,
+        "monoMs": 28803572,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 15350,
+        "timestamp": "2026-10-02T17:33:50.622+10:00",
+        "epochMs": 1790926430622,
+        "monoMs": 28803674,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 15822,
+        "timestamp": "2026-10-02T17:33:58.628+10:00",
+        "epochMs": 1790926438628,
+        "monoMs": 28811680,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 16417,
+        "timestamp": "2026-10-02T17:34:08.943+10:00",
+        "epochMs": 1790926448943,
+        "monoMs": 28821996,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 16760,
+        "timestamp": "2026-10-02T17:34:14.853+10:00",
+        "epochMs": 1790926454853,
+        "monoMs": 28827906,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 17299,
+        "timestamp": "2026-10-02T17:34:24.212+10:00",
+        "epochMs": 1790926464212,
+        "monoMs": 28837264,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 17305,
+        "timestamp": "2026-10-02T17:34:24.320+10:00",
+        "epochMs": 1790926464320,
+        "monoMs": 28837373,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 17604,
+        "timestamp": "2026-10-02T17:34:29.452+10:00",
+        "epochMs": 1790926469452,
+        "monoMs": 28842505,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 18334,
+        "timestamp": "2026-10-02T17:34:42.176+10:00",
+        "epochMs": 1790926482176,
+        "monoMs": 28855228,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 18340,
+        "timestamp": "2026-10-02T17:34:42.283+10:00",
+        "epochMs": 1790926482283,
+        "monoMs": 28855335,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 19280,
+        "timestamp": "2026-10-02T17:34:58.460+10:00",
+        "epochMs": 1790926498460,
+        "monoMs": 28871513,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 19289,
+        "timestamp": "2026-10-02T17:34:58.565+10:00",
+        "epochMs": 1790926498565,
+        "monoMs": 28871617,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 19761,
+        "timestamp": "2026-10-02T17:35:06.534+10:00",
+        "epochMs": 1790926506534,
+        "monoMs": 28879587,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 20219,
+        "timestamp": "2026-10-02T17:35:14.497+10:00",
+        "epochMs": 1790926514497,
+        "monoMs": 28887550,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 20231,
+        "timestamp": "2026-10-02T17:35:14.605+10:00",
+        "epochMs": 1790926514605,
+        "monoMs": 28887657,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 20702,
+        "timestamp": "2026-10-02T17:35:22.568+10:00",
+        "epochMs": 1790926522568,
+        "monoMs": 28895620,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 20871,
+        "timestamp": "2026-10-02T17:35:25.497+10:00",
+        "epochMs": 1790926525497,
+        "monoMs": 28898549,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 21404,
+        "timestamp": "2026-10-02T17:35:34.616+10:00",
+        "epochMs": 1790926534616,
+        "monoMs": 28907668,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 21410,
+        "timestamp": "2026-10-02T17:35:34.719+10:00",
+        "epochMs": 1790926534719,
+        "monoMs": 28907771,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 22288,
+        "timestamp": "2026-10-02T17:35:49.769+10:00",
+        "epochMs": 1790926549769,
+        "monoMs": 28922822,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 22294,
+        "timestamp": "2026-10-02T17:35:49.872+10:00",
+        "epochMs": 1790926549872,
+        "monoMs": 28922925,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 22478,
+        "timestamp": "2026-10-02T17:35:53.030+10:00",
+        "epochMs": 1790926553030,
+        "monoMs": 28926083,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 23198,
+        "timestamp": "2026-10-02T17:36:05.559+10:00",
+        "epochMs": 1790926565559,
+        "monoMs": 28938611,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 23204,
+        "timestamp": "2026-10-02T17:36:05.662+10:00",
+        "epochMs": 1790926565662,
+        "monoMs": 28938715,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 24154,
+        "timestamp": "2026-10-02T17:36:22.010+10:00",
+        "epochMs": 1790926582010,
+        "monoMs": 28955063,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 24163,
+        "timestamp": "2026-10-02T17:36:22.117+10:00",
+        "epochMs": 1790926582117,
+        "monoMs": 28955170,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 24635,
+        "timestamp": "2026-10-02T17:36:30.124+10:00",
+        "epochMs": 1790926590124,
+        "monoMs": 28963176,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 25146,
+        "timestamp": "2026-10-02T17:36:38.929+10:00",
+        "epochMs": 1790926598929,
+        "monoMs": 28971981,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 25155,
+        "timestamp": "2026-10-02T17:36:39.033+10:00",
+        "epochMs": 1790926599033,
+        "monoMs": 28972085,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 25629,
+        "timestamp": "2026-10-02T17:36:47.027+10:00",
+        "epochMs": 1790926607027,
+        "monoMs": 28980080,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 26287,
+        "timestamp": "2026-10-02T17:36:58.499+10:00",
+        "epochMs": 1790926618499,
+        "monoMs": 28991552,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 26299,
+        "timestamp": "2026-10-02T17:36:58.607+10:00",
+        "epochMs": 1790926618607,
+        "monoMs": 28991659,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 26771,
+        "timestamp": "2026-10-02T17:37:06.587+10:00",
+        "epochMs": 1790926626587,
+        "monoMs": 28999639,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 26935,
+        "timestamp": "2026-10-02T17:37:09.426+10:00",
+        "epochMs": 1790926629426,
+        "monoMs": 29002479,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 26944,
+        "timestamp": "2026-10-02T17:37:09.530+10:00",
+        "epochMs": 1790926629530,
+        "monoMs": 29002582,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 27593,
+        "timestamp": "2026-10-02T17:37:20.580+10:00",
+        "epochMs": 1790926640580,
+        "monoMs": 29013633,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 28312,
+        "timestamp": "2026-10-02T17:37:33.012+10:00",
+        "epochMs": 1790926653012,
+        "monoMs": 29026065,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 28603,
+        "timestamp": "2026-10-02T17:37:37.932+10:00",
+        "epochMs": 1790926657932,
+        "monoMs": 29030985,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 29124,
+        "timestamp": "2026-10-02T17:37:46.951+10:00",
+        "epochMs": 1790926666951,
+        "monoMs": 29040003,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 29130,
+        "timestamp": "2026-10-02T17:37:47.057+10:00",
+        "epochMs": 1790926667057,
+        "monoMs": 29040109,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 29753,
+        "timestamp": "2026-10-02T17:37:57.824+10:00",
+        "epochMs": 1790926677824,
+        "monoMs": 29050877,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 30666,
+        "timestamp": "2026-10-02T17:38:13.625+10:00",
+        "epochMs": 1790926693625,
+        "monoMs": 29066678,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 30672,
+        "timestamp": "2026-10-02T17:38:13.727+10:00",
+        "epochMs": 1790926693727,
+        "monoMs": 29066779,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 34503,
+        "timestamp": "2026-10-02T17:39:19.964+10:00",
+        "epochMs": 1790926759964,
+        "monoMs": 29133017,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 34512,
+        "timestamp": "2026-10-02T17:39:20.069+10:00",
+        "epochMs": 1790926760069,
+        "monoMs": 29133121,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 35510,
+        "timestamp": "2026-10-02T17:39:37.190+10:00",
+        "epochMs": 1790926777190,
+        "monoMs": 29150243,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 35531,
+        "timestamp": "2026-10-02T17:39:37.507+10:00",
+        "epochMs": 1790926777507,
+        "monoMs": 29150560,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 35682,
+        "timestamp": "2026-10-02T17:39:40.018+10:00",
+        "epochMs": 1790926780018,
+        "monoMs": 29153070,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 36264,
+        "timestamp": "2026-10-02T17:39:49.992+10:00",
+        "epochMs": 1790926789992,
+        "monoMs": 29163044,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 36270,
+        "timestamp": "2026-10-02T17:39:50.101+10:00",
+        "epochMs": 1790926790101,
+        "monoMs": 29163154,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 36571,
+        "timestamp": "2026-10-02T17:39:55.228+10:00",
+        "epochMs": 1790926795228,
+        "monoMs": 29168281,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 37603,
+        "timestamp": "2026-10-02T17:40:12.975+10:00",
+        "epochMs": 1790926812975,
+        "monoMs": 29186028,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 37609,
+        "timestamp": "2026-10-02T17:40:13.078+10:00",
+        "epochMs": 1790926813078,
+        "monoMs": 29186130,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 37845,
+        "timestamp": "2026-10-02T17:40:17.152+10:00",
+        "epochMs": 1790926817152,
+        "monoMs": 29190204,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 38945,
+        "timestamp": "2026-10-02T17:40:36.094+10:00",
+        "epochMs": 1790926836094,
+        "monoMs": 29209146,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 38951,
+        "timestamp": "2026-10-02T17:40:36.199+10:00",
+        "epochMs": 1790926836199,
+        "monoMs": 29209251,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 39527,
+        "timestamp": "2026-10-02T17:40:45.965+10:00",
+        "epochMs": 1790926845965,
+        "monoMs": 29219017,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 39537,
+        "timestamp": "2026-10-02T17:40:46.068+10:00",
+        "epochMs": 1790926846068,
+        "monoMs": 29219120,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 39619,
+        "timestamp": "2026-10-02T17:40:47.426+10:00",
+        "epochMs": 1790926847426,
+        "monoMs": 29220478,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat_or_cooldown event=ride_started centralGeneration=1"
+      },
+      {
+        "record": 40185,
+        "timestamp": "2026-10-02T17:40:57.074+10:00",
+        "epochMs": 1790926857074,
+        "monoMs": 29230126,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:ride_detected event=none centralGeneration=1"
+      },
+      {
+        "record": 40783,
+        "timestamp": "2026-10-02T17:41:07.456+10:00",
+        "epochMs": 1790926867456,
+        "monoMs": 29240508,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> HOLDING:within_reapproach_margin event=ride_expired centralGeneration=1"
+      },
+      {
+        "record": 42517,
+        "timestamp": "2026-10-02T17:41:37.453+10:00",
+        "epochMs": 1790926897453,
+        "monoMs": 29270505,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 42526,
+        "timestamp": "2026-10-02T17:41:37.555+10:00",
+        "epochMs": 1790926897555,
+        "monoMs": 29270608,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 43000,
+        "timestamp": "2026-10-02T17:41:45.528+10:00",
+        "epochMs": 1790926905528,
+        "monoMs": 29278581,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 43778,
+        "timestamp": "2026-10-02T17:41:59.000+10:00",
+        "epochMs": 1790926919000,
+        "monoMs": 29292053,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 43790,
+        "timestamp": "2026-10-02T17:41:59.107+10:00",
+        "epochMs": 1790926919107,
+        "monoMs": 29292160,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 44108,
+        "timestamp": "2026-10-02T17:42:04.519+10:00",
+        "epochMs": 1790926924519,
+        "monoMs": 29297571,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat_or_cooldown event=ride_started centralGeneration=1"
+      },
+      {
+        "record": 44789,
+        "timestamp": "2026-10-02T17:42:16.115+10:00",
+        "epochMs": 1790926936115,
+        "monoMs": 29309167,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:ride_detected event=none centralGeneration=1"
+      },
+      {
+        "record": 45279,
+        "timestamp": "2026-10-02T17:42:24.585+10:00",
+        "epochMs": 1790926944585,
+        "monoMs": 29317637,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:ride_detected -> HOLDING:within_reapproach_margin event=ride_expired centralGeneration=1"
+      }
+    ]
+  },
+  {
+    "file": "3.5/cam3_full_2026-10-02_174448_256_60f6bb1d.jsonl",
+    "start": "17:45:48.905",
+    "end": "17:50:55.399",
+    "seconds": 306.494,
+    "settings": {
+      "filmingDistanceM": 27.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 3.0,
+      "movementAccelerationMps2": 0.25,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "retreatSettings": {
+      "minimumDistanceM": 20.0,
+      "durationMs": 3000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "height": {
+      "min": 9.9,
+      "median": 10.0,
+      "p90": 10.0,
+      "max": 10.0
+    },
+    "distance": {
+      "min": 10.67,
+      "median": 33.59,
+      "p90": 49.47,
+      "max": 60.94
+    },
+    "yawError": {
+      "min": 0.0,
+      "median": 2.75,
+      "p90": 7.72,
+      "max": 154.71
+    },
+    "yawOver15": 0.048259220958290244,
+    "stateSeconds": {
+      "STARTING": 0.11,
+      "AIMING": 306.33
+    },
+    "phaseSeconds": {
+      "WAITING": 59.11,
+      "APPROACHING": 192.47,
+      "HOLDING": 54.86
+    },
+    "retreats": [
+      {
+        "start": "17:46:42.029",
+        "end": "17:46:48.182",
+        "seconds": 6.153,
+        "periods": 2,
+        "startDistance": 18.76519356613803,
+        "endDistance": 27.19345175223342,
+        "minDistance": 15.687839206022838,
+        "aircraftPathM": 16.069820016638033,
+        "aircraftDisplacementM": 15.97519610051353,
+        "surferDisplacementM": 8.182499775199714,
+        "speed": {
+          "min": 0.0,
+          "median": 2.94,
+          "p90": 2.98,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 2.7,
+          "median": 4.97,
+          "p90": 8.37,
+          "max": 9.89
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:47:07.478",
+        "end": "17:47:10.544",
+        "seconds": 3.066,
+        "periods": 1,
+        "startDistance": 19.77861902403572,
+        "endDistance": 21.034283498018578,
+        "minDistance": 16.319440607905495,
+        "aircraftPathM": 6.323576496456769,
+        "aircraftDisplacementM": 6.317714143614679,
+        "surferDisplacementM": 5.150772197128648,
+        "speed": {
+          "min": 0.0,
+          "median": 2.64,
+          "p90": 2.95,
+          "max": 3.04
+        },
+        "yawError": {
+          "min": 0.18,
+          "median": 1.31,
+          "p90": 2.57,
+          "max": 2.58
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:48:11.019",
+        "end": "17:48:20.200",
+        "seconds": 9.181,
+        "periods": 3,
+        "startDistance": 18.85491618347577,
+        "endDistance": 20.63567441869746,
+        "minDistance": 12.278666955282471,
+        "aircraftPathM": 24.22907145614746,
+        "aircraftDisplacementM": 24.21617843653173,
+        "surferDisplacementM": 22.442473063689615,
+        "speed": {
+          "min": 0.0,
+          "median": 2.91,
+          "p90": 3.0,
+          "max": 3.0
+        },
+        "yawError": {
+          "min": 0.0,
+          "median": 1.81,
+          "p90": 3.86,
+          "max": 4.65
+        },
+        "submitted": {
+          "-3.0": 87
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:49:33.531",
+        "end": "17:49:42.749",
+        "seconds": 9.218,
+        "periods": 3,
+        "startDistance": 18.373317133210485,
+        "endDistance": 24.376654418112906,
+        "minDistance": 10.665581616079693,
+        "aircraftPathM": 24.418012314093083,
+        "aircraftDisplacementM": 24.408494145901088,
+        "surferDisplacementM": 19.150126704813406,
+        "speed": {
+          "min": 0.0,
+          "median": 2.92,
+          "p90": 2.97,
+          "max": 2.97
+        },
+        "yawError": {
+          "min": 0.26,
+          "median": 3.67,
+          "p90": 7.05,
+          "max": 8.47
+        },
+        "submitted": {
+          "-3.0": 87
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:50:27.449",
+        "end": "17:50:33.525",
+        "seconds": 6.076,
+        "periods": 2,
+        "startDistance": 19.08443934550157,
+        "endDistance": 27.19242080691768,
+        "minDistance": 18.152683308089895,
+        "aircraftPathM": 15.34104021188665,
+        "aircraftDisplacementM": 15.33469138246454,
+        "surferDisplacementM": 7.219147083350659,
+        "speed": {
+          "min": 0.0,
+          "median": 2.92,
+          "p90": 3.01,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 0.88,
+          "median": 2.65,
+          "p90": 4.35,
+          "max": 4.9
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 0
+      }
+    ],
+    "approaches": [
+      {
+        "start": "17:45:49.066",
+        "end": "17:46:35.495",
+        "seconds": 46.429,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 60.94221334342145,
+        "endDistance": 26.43810776320709
+      },
+      {
+        "start": "17:47:19.510",
+        "end": "17:47:28.337",
+        "seconds": 8.827,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 32.57675557422653,
+        "endDistance": 40.03101030917921
+      },
+      {
+        "start": "17:47:28.443",
+        "end": "17:47:45.245",
+        "seconds": 16.802,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 41.39339701676384,
+        "endDistance": 43.71330412580422
+      },
+      {
+        "start": "17:47:45.349",
+        "end": "17:48:03.666",
+        "seconds": 18.317,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 43.71330412580422,
+        "endDistance": 28.847670187204823
+      },
+      {
+        "start": "17:48:28.455",
+        "end": "17:48:38.064",
+        "seconds": 9.609,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 32.1855366277927,
+        "endDistance": 39.27646360938817
+      },
+      {
+        "start": "17:48:38.169",
+        "end": "17:48:55.431",
+        "seconds": 17.262,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 39.27646360938817,
+        "endDistance": 40.105529876983276
+      },
+      {
+        "start": "17:48:55.533",
+        "end": "17:49:19.101",
+        "seconds": 23.568,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 40.105529876983276,
+        "endDistance": 29.591457852906466
+      },
+      {
+        "start": "17:49:47.805",
+        "end": "17:50:03.860",
+        "seconds": 16.055,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 32.188217052604806,
+        "endDistance": 43.11187746810851
+      },
+      {
+        "start": "17:50:03.962",
+        "end": "17:50:22.819",
+        "seconds": 18.857,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 43.11187746810851,
+        "endDistance": 27.991435416428654
+      },
+      {
+        "start": "17:50:38.553",
+        "end": "17:50:53.381",
+        "seconds": 14.828,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 33.95626316446021,
+        "endDistance": 37.29424523160435
+      }
+    ],
+    "approachOutcomes": {
+      "approach_arrival_tolerance": 10
+    },
+    "rides": [],
+    "pause": [],
+    "retreatCounts": {
+      "retreat_started": 5,
+      "retreat_repeated": 6,
+      "retreat_finished": 5,
+      "retreat_cancelled": 0,
+      "retreat_approach_replaced": 0
+    },
+    "pitchCommands": 25,
+    "pitchReached": 25,
+    "pitchReachMs": {
+      "min": 2003,
+      "median": 2202,
+      "p90": 2431,
+      "max": 2447
+    },
+    "gimbalConfigs": [
+      {
+        "record": 2978,
+        "timestamp": "2026-10-02T17:45:48.959+10:00",
+        "epochMs": 1790927148959,
+        "monoMs": 29522011,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "/storage/emulated/0/Android/data/com.dji.sampleV5.aircraft/files/vt_gimbal_bands.json",
+        "source": "external_file",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "packetGapsMs": {
+      "min": 468,
+      "median": 500.0,
+      "p90": 520,
+      "max": 1025
+    },
+    "gapsOver3": [],
+    "missing": 10,
+    "packets": 603,
+    "retainedSeconds": {
+      "False": 306.44
+    },
+    "nofix": 0,
+    "transitions": [
+      {
+        "record": 2985,
+        "timestamp": "2026-10-02T17:45:49.061+10:00",
+        "epochMs": 1790927149061,
+        "monoMs": 29522114,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> APPROACHING:approach_alignment event=central_captured centralGeneration=1"
+      },
+      {
+        "record": 4186,
+        "timestamp": "2026-10-02T17:46:10.024+10:00",
+        "epochMs": 1790927170024,
+        "monoMs": 29543076,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 5654,
+        "timestamp": "2026-10-02T17:46:35.494+10:00",
+        "epochMs": 1790927195494,
+        "monoMs": 29568546,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 5660,
+        "timestamp": "2026-10-02T17:46:35.597+10:00",
+        "epochMs": 1790927195597,
+        "monoMs": 29568650,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 6032,
+        "timestamp": "2026-10-02T17:46:42.029+10:00",
+        "epochMs": 1790927202029,
+        "monoMs": 29575081,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 6041,
+        "timestamp": "2026-10-02T17:46:42.134+10:00",
+        "epochMs": 1790927202134,
+        "monoMs": 29575186,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 6688,
+        "timestamp": "2026-10-02T17:46:53.257+10:00",
+        "epochMs": 1790927213257,
+        "monoMs": 29586309,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 7505,
+        "timestamp": "2026-10-02T17:47:07.479+10:00",
+        "epochMs": 1790927227479,
+        "monoMs": 29600531,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 7515,
+        "timestamp": "2026-10-02T17:47:07.589+10:00",
+        "epochMs": 1790927227589,
+        "monoMs": 29600641,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 7985,
+        "timestamp": "2026-10-02T17:47:15.617+10:00",
+        "epochMs": 1790927235617,
+        "monoMs": 29608670,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 8212,
+        "timestamp": "2026-10-02T17:47:19.509+10:00",
+        "epochMs": 1790927239509,
+        "monoMs": 29612561,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 8718,
+        "timestamp": "2026-10-02T17:47:28.336+10:00",
+        "epochMs": 1790927248336,
+        "monoMs": 29621388,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 8726,
+        "timestamp": "2026-10-02T17:47:28.439+10:00",
+        "epochMs": 1790927248439,
+        "monoMs": 29621491,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 9692,
+        "timestamp": "2026-10-02T17:47:45.244+10:00",
+        "epochMs": 1790927265244,
+        "monoMs": 29638296,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 9698,
+        "timestamp": "2026-10-02T17:47:45.347+10:00",
+        "epochMs": 1790927265347,
+        "monoMs": 29638400,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 10759,
+        "timestamp": "2026-10-02T17:48:03.665+10:00",
+        "epochMs": 1790927283665,
+        "monoMs": 29656717,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 10765,
+        "timestamp": "2026-10-02T17:48:03.768+10:00",
+        "epochMs": 1790927283768,
+        "monoMs": 29656820,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 11185,
+        "timestamp": "2026-10-02T17:48:11.019+10:00",
+        "epochMs": 1790927291019,
+        "monoMs": 29664072,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 11194,
+        "timestamp": "2026-10-02T17:48:11.128+10:00",
+        "epochMs": 1790927291128,
+        "monoMs": 29664181,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 12017,
+        "timestamp": "2026-10-02T17:48:25.287+10:00",
+        "epochMs": 1790927305287,
+        "monoMs": 29678339,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 12201,
+        "timestamp": "2026-10-02T17:48:28.453+10:00",
+        "epochMs": 1790927308453,
+        "monoMs": 29681506,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 12757,
+        "timestamp": "2026-10-02T17:48:38.063+10:00",
+        "epochMs": 1790927318063,
+        "monoMs": 29691115,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 12763,
+        "timestamp": "2026-10-02T17:48:38.167+10:00",
+        "epochMs": 1790927318167,
+        "monoMs": 29691220,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 13755,
+        "timestamp": "2026-10-02T17:48:55.429+10:00",
+        "epochMs": 1790927335429,
+        "monoMs": 29708482,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 13762,
+        "timestamp": "2026-10-02T17:48:55.532+10:00",
+        "epochMs": 1790927335532,
+        "monoMs": 29708584,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 14174,
+        "timestamp": "2026-10-02T17:49:02.687+10:00",
+        "epochMs": 1790927342687,
+        "monoMs": 29715739,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 15121,
+        "timestamp": "2026-10-02T17:49:19.097+10:00",
+        "epochMs": 1790927359097,
+        "monoMs": 29732150,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 15127,
+        "timestamp": "2026-10-02T17:49:19.204+10:00",
+        "epochMs": 1790927359204,
+        "monoMs": 29732256,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 15954,
+        "timestamp": "2026-10-02T17:49:33.532+10:00",
+        "epochMs": 1790927373532,
+        "monoMs": 29746584,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 15963,
+        "timestamp": "2026-10-02T17:49:33.638+10:00",
+        "epochMs": 1790927373638,
+        "monoMs": 29746690,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 16787,
+        "timestamp": "2026-10-02T17:49:47.804+10:00",
+        "epochMs": 1790927387804,
+        "monoMs": 29760856,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 17176,
+        "timestamp": "2026-10-02T17:49:54.469+10:00",
+        "epochMs": 1790927394469,
+        "monoMs": 29767522,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 17719,
+        "timestamp": "2026-10-02T17:50:03.859+10:00",
+        "epochMs": 1790927403859,
+        "monoMs": 29776911,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 17728,
+        "timestamp": "2026-10-02T17:50:03.961+10:00",
+        "epochMs": 1790927403961,
+        "monoMs": 29777014,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 18821,
+        "timestamp": "2026-10-02T17:50:22.818+10:00",
+        "epochMs": 1790927422818,
+        "monoMs": 29795870,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 18827,
+        "timestamp": "2026-10-02T17:50:22.921+10:00",
+        "epochMs": 1790927422921,
+        "monoMs": 29795973,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 19091,
+        "timestamp": "2026-10-02T17:50:27.450+10:00",
+        "epochMs": 1790927427450,
+        "monoMs": 29800502,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 19101,
+        "timestamp": "2026-10-02T17:50:27.557+10:00",
+        "epochMs": 1790927427557,
+        "monoMs": 29800609,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 19749,
+        "timestamp": "2026-10-02T17:50:38.553+10:00",
+        "epochMs": 1790927438553,
+        "monoMs": 29811605,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 19966,
+        "timestamp": "2026-10-02T17:50:42.240+10:00",
+        "epochMs": 1790927442240,
+        "monoMs": 29815292,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 20603,
+        "timestamp": "2026-10-02T17:50:53.379+10:00",
+        "epochMs": 1790927453379,
+        "monoMs": 29826432,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 20611,
+        "timestamp": "2026-10-02T17:50:53.482+10:00",
+        "epochMs": 1790927453482,
+        "monoMs": 29826535,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      }
+    ]
+  },
+  {
+    "file": "3.5/cam3_full_2026-10-02_175110_550_ad3d7cb0.jsonl",
+    "start": "17:52:25.796",
+    "end": "17:57:43.318",
+    "seconds": 317.522,
+    "settings": {
+      "filmingDistanceM": 27.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 3.0,
+      "movementAccelerationMps2": 0.25,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "retreatSettings": {
+      "minimumDistanceM": 20.0,
+      "durationMs": 3000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "height": {
+      "min": 9.9,
+      "median": 10.0,
+      "p90": 10.0,
+      "max": 10.0
+    },
+    "distance": {
+      "min": 13.64,
+      "median": 36.17,
+      "p90": 57.94,
+      "max": 70.49
+    },
+    "yawError": {
+      "min": 0.0,
+      "median": 4.97,
+      "p90": 13.05,
+      "max": 111.15
+    },
+    "yawOver15": 0.07943453382699428,
+    "stateSeconds": {
+      "STARTING": 0.33,
+      "AIMING": 313.21,
+      "PAUSED": 3.91
+    },
+    "phaseSeconds": {
+      "WAITING": 79.9,
+      "APPROACHING": 190.89,
+      "HOLDING": 46.65
+    },
+    "retreats": [
+      {
+        "start": "17:52:48.309",
+        "end": "17:52:54.459",
+        "seconds": 6.15,
+        "periods": 2,
+        "startDistance": 19.537746062635254,
+        "endDistance": 24.881920038665893,
+        "minDistance": 16.158011600614557,
+        "aircraftPathM": 15.289694427359988,
+        "aircraftDisplacementM": 14.054579371928364,
+        "surferDisplacementM": 9.021818588768417,
+        "speed": {
+          "min": 0.0,
+          "median": 2.91,
+          "p90": 2.94,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 1.56,
+          "median": 3.62,
+          "p90": 5.43,
+          "max": 6.45
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:53:06.005",
+        "end": "17:53:12.112",
+        "seconds": 6.107,
+        "periods": 2,
+        "startDistance": 19.42854605363199,
+        "endDistance": 25.49972777378213,
+        "minDistance": 18.52848252790973,
+        "aircraftPathM": 16.921793756142392,
+        "aircraftDisplacementM": 16.9081768356099,
+        "surferDisplacementM": 11.864981913725897,
+        "speed": {
+          "min": 0.0,
+          "median": 3.04,
+          "p90": 3.06,
+          "max": 3.08
+        },
+        "yawError": {
+          "min": 0.17,
+          "median": 5.04,
+          "p90": 7.04,
+          "max": 7.88
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:54:10.957",
+        "end": "17:54:17.084",
+        "seconds": 6.127,
+        "periods": 2,
+        "startDistance": 18.681587669875654,
+        "endDistance": 31.04755187592738,
+        "minDistance": 17.203266851202528,
+        "aircraftPathM": 15.250875109180678,
+        "aircraftDisplacementM": 15.24930680782991,
+        "surferDisplacementM": 5.559746332412502,
+        "speed": {
+          "min": 0.0,
+          "median": 2.83,
+          "p90": 2.92,
+          "max": 2.92
+        },
+        "yawError": {
+          "min": 0.0,
+          "median": 2.79,
+          "p90": 5.41,
+          "max": 5.67
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:54:44.024",
+        "end": "17:54:47.096",
+        "seconds": 3.072,
+        "periods": 1,
+        "startDistance": 19.99552265006325,
+        "endDistance": 22.277205531560206,
+        "minDistance": 19.15674363269438,
+        "aircraftPathM": 6.790812374797305,
+        "aircraftDisplacementM": 6.7898903846393726,
+        "surferDisplacementM": 4.510908339653599,
+        "speed": {
+          "min": 0.0,
+          "median": 2.82,
+          "p90": 2.95,
+          "max": 2.95
+        },
+        "yawError": {
+          "min": 0.29,
+          "median": 0.87,
+          "p90": 1.31,
+          "max": 1.31
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:54:51.444",
+        "end": "17:54:54.501",
+        "seconds": 3.057,
+        "periods": 1,
+        "startDistance": 19.448855574030215,
+        "endDistance": 21.55136152865808,
+        "minDistance": 17.45594124651813,
+        "aircraftPathM": 6.618815998938674,
+        "aircraftDisplacementM": 6.612982371572078,
+        "surferDisplacementM": 4.510909611075221,
+        "speed": {
+          "min": 0.0,
+          "median": 2.82,
+          "p90": 2.91,
+          "max": 2.95
+        },
+        "yawError": {
+          "min": 0.05,
+          "median": 0.81,
+          "p90": 2.07,
+          "max": 2.07
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:55:01.462",
+        "end": "17:55:04.505",
+        "seconds": 3.043,
+        "periods": 1,
+        "startDistance": 19.80411438307349,
+        "endDistance": 24.176316745902554,
+        "minDistance": 18.99292090679796,
+        "aircraftPathM": 6.522315178553425,
+        "aircraftDisplacementM": 6.497341595812299,
+        "surferDisplacementM": 2.9658686868694155,
+        "speed": {
+          "min": 0.0,
+          "median": 2.84,
+          "p90": 2.93,
+          "max": 2.93
+        },
+        "yawError": {
+          "min": 5.63,
+          "median": 8.03,
+          "p90": 10.0,
+          "max": 10.07
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:55:19.947",
+        "end": "17:55:23.003",
+        "seconds": 3.056,
+        "periods": 1,
+        "startDistance": 19.802210623804413,
+        "endDistance": 21.782141785146287,
+        "minDistance": 18.351846232954763,
+        "aircraftPathM": 6.146834260565208,
+        "aircraftDisplacementM": 6.127445513337717,
+        "surferDisplacementM": 5.0302049153043455,
+        "speed": {
+          "min": 0.0,
+          "median": 2.7,
+          "p90": 2.97,
+          "max": 2.97
+        },
+        "yawError": {
+          "min": 4.86,
+          "median": 9.04,
+          "p90": 10.74,
+          "max": 12.42
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "riding": 0
+      },
+      {
+        "start": "17:57:02.957",
+        "end": "17:57:12.212",
+        "seconds": 9.255,
+        "periods": 3,
+        "startDistance": 19.397545487415957,
+        "endDistance": 29.341485316520014,
+        "minDistance": 13.6351173774332,
+        "aircraftPathM": 25.30563273453078,
+        "aircraftDisplacementM": 25.276835676613445,
+        "surferDisplacementM": 15.374705554552962,
+        "speed": {
+          "min": 0.0,
+          "median": 2.98,
+          "p90": 3.01,
+          "max": 3.01
+        },
+        "yawError": {
+          "min": 0.17,
+          "median": 3.38,
+          "p90": 4.77,
+          "max": 5.33
+        },
+        "submitted": {
+          "-3.0": 90
+        },
+        "retained": 0,
+        "riding": 0
+      }
+    ],
+    "approaches": [
+      {
+        "start": "17:52:26.201",
+        "end": "17:52:48.314",
+        "seconds": 22.113,
+        "endReason": "retreat",
+        "startDistance": 35.834766699636106,
+        "endDistance": 19.537746062635254
+      },
+      {
+        "start": "17:53:17.121",
+        "end": "17:53:33.493",
+        "seconds": 16.372,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 33.68317625495148,
+        "endDistance": 51.06758573318733
+      },
+      {
+        "start": "17:53:33.601",
+        "end": "17:54:06.838",
+        "seconds": 33.237,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 51.06758573318733,
+        "endDistance": 26.886346218076053
+      },
+      {
+        "start": "17:54:22.185",
+        "end": "17:54:36.875",
+        "seconds": 14.69,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 41.27756519562055,
+        "endDistance": 31.59342193136459
+      },
+      {
+        "start": "17:55:30.533",
+        "end": "17:55:48.044",
+        "seconds": 17.511,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 32.41588967790945,
+        "endDistance": 52.60643968725135
+      },
+      {
+        "start": "17:55:48.147",
+        "end": "17:56:20.270",
+        "seconds": 32.123,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 52.60643968725135,
+        "endDistance": 50.229003328231904
+      },
+      {
+        "start": "17:56:20.373",
+        "end": "17:56:49.241",
+        "seconds": 28.868,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 50.229003328231904,
+        "endDistance": 28.944871441350106
+      },
+      {
+        "start": "17:57:17.234",
+        "end": "17:57:31.727",
+        "seconds": 14.493,
+        "endReason": "approach_arrival_tolerance",
+        "startDistance": 39.622849890261655,
+        "endDistance": 44.92342342643278
+      }
+    ],
+    "approachOutcomes": {
+      "retreat": 1,
+      "approach_arrival_tolerance": 7
+    },
+    "rides": [],
+    "pause": [
+      {
+        "record": 21803,
+        "timestamp": "2026-10-02T17:57:39.406+10:00",
+        "epochMs": 1790927859406,
+        "monoMs": 30232458,
+        "event": "pause",
+        "detail": "session=1 cause=connection"
+      },
+      {
+        "record": 21812,
+        "timestamp": "2026-10-02T17:57:39.508+10:00",
+        "epochMs": 1790927859508,
+        "monoMs": 30232561,
+        "event": "pause",
+        "detail": "session=1 cause=telemetry"
+      }
+    ],
+    "retreatCounts": {
+      "retreat_started": 8,
+      "retreat_repeated": 5,
+      "retreat_finished": 8,
+      "retreat_cancelled": 0,
+      "retreat_approach_replaced": 1
+    },
+    "pitchCommands": 31,
+    "pitchReached": 31,
+    "pitchReachMs": {
+      "min": 2001,
+      "median": 2130,
+      "p90": 2438,
+      "max": 2525
+    },
+    "gimbalConfigs": [
+      {
+        "record": 3525,
+        "timestamp": "2026-10-02T17:52:25.871+10:00",
+        "epochMs": 1790927545871,
+        "monoMs": 29918923,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "/storage/emulated/0/Android/data/com.dji.sampleV5.aircraft/files/vt_gimbal_bands.json",
+        "source": "external_file",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -55\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "packetGapsMs": {
+      "min": 470,
+      "median": 500,
+      "p90": 518,
+      "max": 1025
+    },
+    "gapsOver3": [],
+    "missing": 3,
+    "packets": 632,
+    "retainedSeconds": {
+      "False": 317.45
+    },
+    "nofix": 0,
+    "transitions": [
+      {
+        "record": 3550,
+        "timestamp": "2026-10-02T17:52:26.193+10:00",
+        "epochMs": 1790927546193,
+        "monoMs": 29919246,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:capture_central -> APPROACHING:approach_alignment event=central_captured centralGeneration=1"
+      },
+      {
+        "record": 4517,
+        "timestamp": "2026-10-02T17:52:43.086+10:00",
+        "epochMs": 1790927563086,
+        "monoMs": 29936138,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 4822,
+        "timestamp": "2026-10-02T17:52:48.309+10:00",
+        "epochMs": 1790927568309,
+        "monoMs": 29941362,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 4828,
+        "timestamp": "2026-10-02T17:52:48.418+10:00",
+        "epochMs": 1790927568418,
+        "monoMs": 29941470,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 5481,
+        "timestamp": "2026-10-02T17:52:59.542+10:00",
+        "epochMs": 1790927579542,
+        "monoMs": 29952595,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:filming_distance_reached event=none centralGeneration=1"
+      },
+      {
+        "record": 5487,
+        "timestamp": "2026-10-02T17:52:59.646+10:00",
+        "epochMs": 1790927579646,
+        "monoMs": 29952699,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 5851,
+        "timestamp": "2026-10-02T17:53:06.005+10:00",
+        "epochMs": 1790927586005,
+        "monoMs": 29959058,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 5861,
+        "timestamp": "2026-10-02T17:53:06.110+10:00",
+        "epochMs": 1790927586110,
+        "monoMs": 29959163,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 6501,
+        "timestamp": "2026-10-02T17:53:17.120+10:00",
+        "epochMs": 1790927597120,
+        "monoMs": 29970172,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 6775,
+        "timestamp": "2026-10-02T17:53:21.814+10:00",
+        "epochMs": 1790927601814,
+        "monoMs": 29974867,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 7449,
+        "timestamp": "2026-10-02T17:53:33.491+10:00",
+        "epochMs": 1790927613491,
+        "monoMs": 29986544,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 7455,
+        "timestamp": "2026-10-02T17:53:33.597+10:00",
+        "epochMs": 1790927613597,
+        "monoMs": 29986650,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 8086,
+        "timestamp": "2026-10-02T17:53:44.496+10:00",
+        "epochMs": 1790927624496,
+        "monoMs": 29997548,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 9376,
+        "timestamp": "2026-10-02T17:54:06.837+10:00",
+        "epochMs": 1790927646837,
+        "monoMs": 30019889,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 9384,
+        "timestamp": "2026-10-02T17:54:06.943+10:00",
+        "epochMs": 1790927646943,
+        "monoMs": 30019996,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 9619,
+        "timestamp": "2026-10-02T17:54:10.958+10:00",
+        "epochMs": 1790927650958,
+        "monoMs": 30024010,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 9628,
+        "timestamp": "2026-10-02T17:54:11.066+10:00",
+        "epochMs": 1790927651066,
+        "monoMs": 30024118,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 10282,
+        "timestamp": "2026-10-02T17:54:22.184+10:00",
+        "epochMs": 1790927662184,
+        "monoMs": 30035237,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 11134,
+        "timestamp": "2026-10-02T17:54:36.874+10:00",
+        "epochMs": 1790927676874,
+        "monoMs": 30049926,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 11143,
+        "timestamp": "2026-10-02T17:54:36.976+10:00",
+        "epochMs": 1790927676976,
+        "monoMs": 30050029,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 11555,
+        "timestamp": "2026-10-02T17:54:44.025+10:00",
+        "epochMs": 1790927684025,
+        "monoMs": 30057077,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 11564,
+        "timestamp": "2026-10-02T17:54:44.132+10:00",
+        "epochMs": 1790927684132,
+        "monoMs": 30057184,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 11990,
+        "timestamp": "2026-10-02T17:54:51.444+10:00",
+        "epochMs": 1790927691444,
+        "monoMs": 30064496,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 11996,
+        "timestamp": "2026-10-02T17:54:51.546+10:00",
+        "epochMs": 1790927691546,
+        "monoMs": 30064599,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 12461,
+        "timestamp": "2026-10-02T17:54:59.561+10:00",
+        "epochMs": 1790927699561,
+        "monoMs": 30072613,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 12571,
+        "timestamp": "2026-10-02T17:55:01.462+10:00",
+        "epochMs": 1790927701462,
+        "monoMs": 30074515,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 12577,
+        "timestamp": "2026-10-02T17:55:01.564+10:00",
+        "epochMs": 1790927701564,
+        "monoMs": 30074617,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 13047,
+        "timestamp": "2026-10-02T17:55:09.539+10:00",
+        "epochMs": 1790927709539,
+        "monoMs": 30082591,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 13646,
+        "timestamp": "2026-10-02T17:55:19.949+10:00",
+        "epochMs": 1790927719949,
+        "monoMs": 30093001,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 13657,
+        "timestamp": "2026-10-02T17:55:20.064+10:00",
+        "epochMs": 1790927720064,
+        "monoMs": 30093116,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 14129,
+        "timestamp": "2026-10-02T17:55:28.071+10:00",
+        "epochMs": 1790927728071,
+        "monoMs": 30101123,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 14268,
+        "timestamp": "2026-10-02T17:55:30.532+10:00",
+        "epochMs": 1790927730532,
+        "monoMs": 30103584,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 14766,
+        "timestamp": "2026-10-02T17:55:39.058+10:00",
+        "epochMs": 1790927739058,
+        "monoMs": 30112110,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 15286,
+        "timestamp": "2026-10-02T17:55:48.042+10:00",
+        "epochMs": 1790927748042,
+        "monoMs": 30121094,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 15292,
+        "timestamp": "2026-10-02T17:55:48.145+10:00",
+        "epochMs": 1790927748145,
+        "monoMs": 30121198,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 15868,
+        "timestamp": "2026-10-02T17:55:58.087+10:00",
+        "epochMs": 1790927758087,
+        "monoMs": 30131139,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 17138,
+        "timestamp": "2026-10-02T17:56:20.267+10:00",
+        "epochMs": 1790927780267,
+        "monoMs": 30153320,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 17144,
+        "timestamp": "2026-10-02T17:56:20.372+10:00",
+        "epochMs": 1790927780372,
+        "monoMs": 30153425,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "record": 17598,
+        "timestamp": "2026-10-02T17:56:28.247+10:00",
+        "epochMs": 1790927788247,
+        "monoMs": 30161299,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 18820,
+        "timestamp": "2026-10-02T17:56:49.240+10:00",
+        "epochMs": 1790927809240,
+        "monoMs": 30182292,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 18826,
+        "timestamp": "2026-10-02T17:56:49.344+10:00",
+        "epochMs": 1790927809344,
+        "monoMs": 30182397,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "record": 19620,
+        "timestamp": "2026-10-02T17:57:02.958+10:00",
+        "epochMs": 1790927822958,
+        "monoMs": 30196010,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "record": 19630,
+        "timestamp": "2026-10-02T17:57:03.061+10:00",
+        "epochMs": 1790927823061,
+        "monoMs": 30196113,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "record": 20483,
+        "timestamp": "2026-10-02T17:57:17.233+10:00",
+        "epochMs": 1790927837233,
+        "monoMs": 30210286,
+        "event": "movement_transition",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "record": 21329,
+        "timestamp": "2026-10-02T17:57:31.723+10:00",
+        "epochMs": 1790927851723,
+        "monoMs": 30224775,
+        "event": "movement_transition",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "record": 21335,
+        "timestamp": "2026-10-02T17:57:31.829+10:00",
+        "epochMs": 1790927851829,
+        "monoMs": 30224882,
+        "event": "movement_transition",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      }
+    ]
+  }
+]
