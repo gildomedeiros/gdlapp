@@ -12,7 +12,16 @@ final class GimbalBandStorage {
             return new String(out.toByteArray(),StandardCharsets.UTF_8);
         }
     }
+    // VT 3.7: Shared folder first; unreadable/invalid shared config retains the legacy loader.
     static Loaded load(Context context) {
+        String raw=null;
+        try {
+            raw=SharedConfigStorage.read(context,NAME);
+            if(raw!=null){Loaded x=new Loaded();x.config=GimbalBandConfig.parse(raw);x.raw=x.effective=raw;x.path=SharedConfigStorage.folder(context)+"/"+NAME;x.source="shared_folder";return x;}
+        }catch(Exception e){Loaded x=loadLegacy(context);x.error="Shared folder: "+e+"; legacy: "+x.error;x.source="legacy_fallback/"+x.source;return x;}
+        return loadLegacy(context);
+    }
+    static Loaded loadLegacy(Context context) {
         Loaded x=new Loaded();
         try {x.effective=read(context.getAssets().open(NAME));x.config=GimbalBandConfig.parse(x.effective);}
         catch(Exception e){throw new IllegalStateException("Invalid bundled gimbal config",e);}

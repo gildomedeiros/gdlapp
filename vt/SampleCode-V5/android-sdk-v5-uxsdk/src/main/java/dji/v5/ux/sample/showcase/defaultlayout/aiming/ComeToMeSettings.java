@@ -2,11 +2,10 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 
 /** Immutable per-session configuration. UI edits apply only while automatic control is stopped. */
 public final class ComeToMeSettings {
-    // VT 3.3: Faster cruise in both directions; preserve acceleration and arrival slope.
-    public static final double MAX_SPEED = 3.0, ACCELERATION = 0.25;
+    // VT 3.6: Command the distance-limited speed immediately; preserve cruise cap and arrival slope.
+    public static final double DEFAULT_MAX_SPEED = 4.0, HARD_MAX_SPEED = 5.0, DEFAULT_APPROACH_MARGIN = 5.0;
     public static final double ARRIVAL_SPEED_PER_METRE = 0.2;
-    public static final double SLOWDOWN_DISTANCE = MAX_SPEED / ARRIVAL_SPEED_PER_METRE;
-    public static final double FILM_TOLERANCE = 2, ARRIVAL_RADIUS = 3, MAX_EXCURSION = 250;
+    public static final double ARRIVAL_RADIUS = 3, MAX_EXCURSION = 250;
     // VT 3.2: Finish saved travel within 1 m; keep an inward margin at the excursion cap.
     public static final double COMPLETION_TOLERANCE = 1, EXCURSION_STOP = MAX_EXCURSION - COMPLETION_TOLERANCE;
     // VT 3.2: Keep band bookkeeping, but impose no qualification delay on a moving surfer.
@@ -16,11 +15,11 @@ public final class ComeToMeSettings {
     public final long rideEndMs, inactivityMs;
     public final long rideDurationMs;
     public final double closeRangePitchDeg, longRangePitchDeg;
-    public final double maxYawRate, yawAcceleration;
+    public final double maxYawRate, yawAcceleration, maxMovementSpeed;
 
     public ComeToMeSettings(boolean enabled, double filming, double width, double start,
                             double end, long endMs, long inactivityMs) {
-        this(enabled,filming,width,start,end,endMs,inactivityMs,15);
+        this(enabled,filming,width,start,end,endMs,inactivityMs,DEFAULT_APPROACH_MARGIN);
     }
     /** VT 3.1: Margin is a start threshold, never added to the saved travel destination. */
     public ComeToMeSettings(boolean enabled, double filming, double width, double start,
@@ -39,6 +38,15 @@ public final class ComeToMeSettings {
     public ComeToMeSettings(boolean enabled,double filming,double width,double start,
             double end,long endMs,long inactivityMs,double margin,long durationMs,double closePitchDeg,double longPitchDeg,
             double maxYawRate,double yawAcceleration) {
+        this(enabled,filming,width,start,end,endMs,inactivityMs,margin,durationMs,closePitchDeg,longPitchDeg,
+                maxYawRate,yawAcceleration,DEFAULT_MAX_SPEED);
+    }
+    // VT 3.6: Independent configurable approach/return cap; preserve all existing settings when copied.
+    public ComeToMeSettings(boolean enabled,double filming,double width,double start,
+            double end,long endMs,long inactivityMs,double margin,long durationMs,double closePitchDeg,double longPitchDeg,
+            double maxYawRate,double yawAcceleration,double maxMovementSpeed) {
+        if(!inRange(maxMovementSpeed,0.1,HARD_MAX_SPEED)) throw new IllegalArgumentException("Movement maximum speed 0.1-5 m/s");
+        this.maxMovementSpeed=maxMovementSpeed;
         YawAimingMath.validateLimits(maxYawRate,yawAcceleration);
         this.maxYawRate=maxYawRate; this.yawAcceleration=yawAcceleration;
         if(!inRange(longPitchDeg,-90,0)) throw new IllegalArgumentException("Long-range pitch -90 to 0 degrees");
@@ -54,6 +62,10 @@ public final class ComeToMeSettings {
             throw new IllegalArgumentException("Filming distance 10–200 m; lineup width 20–200 m; ride start 1–100 km/h; end below start; end 1–300 s; no-ride 1–120 min");
         this.enabled=enabled; filmingDistance=filming; lineupWidth=width;
         rideStartKmh=start; rideEndKmh=end; rideEndMs=endMs; this.inactivityMs=inactivityMs;
+    }
+    public ComeToMeSettings withMaxMovementSpeed(double speed) {
+        return new ComeToMeSettings(enabled,filmingDistance,lineupWidth,rideStartKmh,rideEndKmh,rideEndMs,inactivityMs,
+                reapproachMargin,rideDurationMs,closeRangePitchDeg,longRangePitchDeg,maxYawRate,yawAcceleration,speed);
     }
     public static ComeToMeSettings defaults() { return new ComeToMeSettings(true,70,50,18,8,30000,900000); }
     private static boolean inRange(double v,double lo,double hi) { return Double.isFinite(v)&&v>=lo&&v<=hi; }

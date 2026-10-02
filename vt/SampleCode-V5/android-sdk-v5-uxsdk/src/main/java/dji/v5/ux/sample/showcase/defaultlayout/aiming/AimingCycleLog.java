@@ -26,7 +26,12 @@ public final class AimingCycleLog {
                     "permittedDirection",SurferYawController.directionName(yaw.permittedDirection),
                     "lastPermittedDirectionMs",yaw.lastPermittedAt,"reverseBlocked",yaw.blocked,
                     "reverseBlockRemainingMs",yaw.remainingMs,"reverseBlockMs",SurferYawController.REVERSE_BLOCK_MS,
-                    "desiredYawRate",yaw.desiredRate,"maxYawRate",session.movement.settings().maxYawRate,
+                    // VT 3.7: Log the selected curve and pre-ramp desired speed for navigation too.
+                    "rotationCurve",session.movement.returning()||session.movement.approaching()||!session.movement.riding?"normal":"riding",
+                    "rotationConfigSource",session.rotationCurve==null?"legacy_formula":"json",
+                    "desiredYawRate",Double.isFinite(session.cycleAngle)?RotationSpeedCurve.desired(session.cycleAngle,
+                        !session.movement.returning()&&!session.movement.approaching()&&session.movement.riding,
+                        session.movement.settings().maxYawRate,session.rotationCurve):null,"maxYawRate",session.movement.settings().maxYawRate,
                     "maxYawAcceleration",session.movement.settings().yawAcceleration,
                     "finalInputProblem",finalIn==null ? null : finalIn.validate(at),
                     "finalHorizontalSpeedMps",finalIn==null ? null : finalIn.horizontalSpeed,

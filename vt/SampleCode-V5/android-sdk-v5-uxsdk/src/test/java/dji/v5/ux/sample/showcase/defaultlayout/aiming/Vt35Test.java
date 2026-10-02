@@ -9,7 +9,7 @@ public final class Vt35Test {
     static AimingSessionTest.Fake start(double distance,double rideThreshold) {
         AimingSessionTest.Fake f=new AimingSessionTest.Fake();
         f.movement=new ComeToMeSettings(true,10,100,rideThreshold,8,30000,1200000,5);
-        f.retreat=RetreatSettings.defaults();f.aiming();step(f,0,distance,20,false);return f;
+        f.retreat=new RetreatSettings(true,25,10000,3,5000);f.aiming();step(f,0,distance,20,false);return f;
     }
     static void step(AimingSessionTest.Fake f,double drone,double target,double heading,boolean nofix) {
         f.time+=100;
@@ -26,7 +26,7 @@ public final class Vt35Test {
     }
     static void timers() {
         AimingSessionTest.Fake f=start(20);
-        check(f.core.retreat.active && forward(f)==-3,"fixed 3 m/s immediately, independent of 0.25 approach acceleration");
+        check(f.core.retreat.active && forward(f)==-3,"configured 3 m/s immediately, independent of approach settings");
         check(!f.core.movement.approaching() && event(f,"retreat_approach_replaced"),"active approach replaced and logged");
         check(f.core.cycleDecision.equals("surfer_correction") && f.sent.get(f.sent.size()-1)<0,"surfer yaw remains active while reversing");
         long deadline=f.core.retreat.deadline;
@@ -124,8 +124,8 @@ public final class Vt35Test {
     }
     static void settings() {
         RetreatSettings c=RetreatSettings.defaults();
-        check(c.minimumDistance==25 && c.durationMs==10000 && c.speed==3 && c.cooldownMs==5000,"agreed defaults");
-        for(double bad:new double[]{Double.NaN,Double.POSITIVE_INFINITY,0,-1,3.01}) {
+        check(c.minimumDistance==23 && c.durationMs==3000 && c.speed==5 && c.cooldownMs==5000,"agreed defaults");
+        for(double bad:new double[]{Double.NaN,Double.POSITIVE_INFINITY,0,-1,5.01}) {
             boolean rejected=false;try {new RetreatSettings(true,25,10000,bad,5000);}catch(IllegalArgumentException e){rejected=true;}
             check(rejected,"invalid retreat speed rejected");
         }

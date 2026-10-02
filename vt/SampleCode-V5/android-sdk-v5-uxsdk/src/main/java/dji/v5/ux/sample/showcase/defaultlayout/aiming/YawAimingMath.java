@@ -47,12 +47,16 @@ public final class YawAimingMath {
         return calculateYawRate(error,previous,seconds,MAX_RATE,MAX_ACCELERATION);
     }
     public static double calculateYawRate(double error,double previous,double seconds,double maxRate,double acceleration) {
+        return calculateYawRate(error,previous,seconds,maxRate,acceleration,null);
+    }
+    // VT 3.7: Optional normal curve; acceleration, stop and sign-change behavior stay intact.
+    public static double calculateYawRate(double error,double previous,double seconds,double maxRate,double acceleration,RotationSpeedCurve curve) {
         validateLimits(maxRate,acceleration);
         if (!Double.isFinite(error) || !Double.isFinite(previous) || !Double.isFinite(seconds)
                 || seconds <= 0 || seconds > 0.5) throw new IllegalArgumentException("Invalid yaw input");
         // A stop or a sign change never prolongs rotation in the wrong direction for smoothness.
         if (Math.abs(error) <= ALIGNMENT_DEGREES || error * previous < 0) return 0;
-        double desired = Math.copySign(Math.min(maxRate, (Math.abs(error) - ALIGNMENT_DEGREES) * 0.5), error);
+        double desired = RotationSpeedCurve.desired(error,false,maxRate,curve);
         double step = acceleration * seconds;
         return previous + Math.max(-step, Math.min(step, desired - previous));
     }

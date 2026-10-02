@@ -15,7 +15,7 @@ public final class Vt31Test {
     public static void main(String[] args) {
         check(ComeToMeSettings.QUALIFY_MS==0,"VT 3.2 zero qualification");
         check(ComeToMeSettings.defaults().lineupWidth==50,"50 m default band");
-        check(ComeToMeSettings.defaults().reapproachMargin==15,"15 m default margin");
+        check(ComeToMeSettings.defaults().reapproachMargin==5,"VT 3.6 shared 5 m default margin");
         boolean rejected=false;
         try { new ComeToMeSettings(true,70,50,18,8,30000,900000,Double.NaN); }
         catch(IllegalArgumentException e) { rejected=true; }
@@ -37,16 +37,16 @@ public final class Vt31Test {
         ComeToMeController c=new ComeToMeController();
         c.start(ComeToMeSettings.defaults(),1000);
         for(long t=1000;t<=21000;t+=500) step(c,t,80,0);
-        check(c.approaching() && Math.abs(c.approachDistance-10)<.001,"first approach ignores extra margin");
+        check(c.approaching() && Math.abs(c.approachDistance-10)<.001,"VT 3.6 first approach respects the same 5 m margin");
         c.update_state_machine(ComeToMeTest.in(21500,10,0,80,0,0),21500,.1);
         check(c.hasFilmed && c.phase==ComeToMeController.Phase.HOLDING,"arrival latches subsequent-approach margin");
-        for(long t=22000;t<=29000;t+=500) c.update_state_machine(ComeToMeTest.in(t,10,0,80+(t-22000)/500,0,0),t,.1);
-        check(!c.approaching(),"inside 85 m threshold keeps yaw with surfer");
-        c.update_state_machine(ComeToMeTest.in(29500,10,0,95,0,0),29500,.1);
+        for(long t=22000;t<=24000;t+=500) c.update_state_machine(ComeToMeTest.in(t,10,0,80+(t-22000)/500,0,0),t,.1);
+        check(!c.approaching(),"inside 75 m threshold keeps yaw with surfer");
+        c.update_state_machine(ComeToMeTest.in(29500,10,0,85,0,0),29500,.1);
         check(!c.approaching(),"exact margin boundary does not approach");
         long timer=c.inactiveMs;
-        c.update_state_machine(ComeToMeTest.in(30500,10,0,96,0,0),30500,.1);
-        check(c.approaching() && Math.abs(c.approachDistance-16)<.001,"beyond margin plans to 70 m, not 85 m");
+        c.update_state_machine(ComeToMeTest.in(30500,10,0,86,0,0),30500,.1);
+        check(c.approaching() && Math.abs(c.approachDistance-6)<.001,"beyond margin plans to 70 m, not 75 m");
         check(c.inactiveMs>timer && c.noRideTimerActive(),"re-approach preserves no-ride deadline");
         c.pause(true,30600);
         check(!c.hasFilmed,"manual reposition begins a new first approach");

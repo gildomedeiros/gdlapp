@@ -11,7 +11,7 @@ public final class ComeToMeTest {
     }
     static ComeToMeController start() {
         ComeToMeController c=new ComeToMeController();
-        c.start(ComeToMeSettings.defaults(),1000);
+        c.start(ComeToMeSettings.defaults().withMaxMovementSpeed(3),1000);
         c.update_state_machine(in(1000,0,0,100,0,0),1000,.1);
         return c;
     }
@@ -26,7 +26,7 @@ public final class ComeToMeTest {
         c.update_state_machine(in(1000,0,0,100,0,0),1000,.1);
         check(c.forward>0 && c.approaching(),"VT 3.2 aligned fresh Start has no qualification wait");
         qualify(c);
-        check(c.forward>0 && c.forward<=ComeToMeSettings.MAX_SPEED,"60 seconds of fresh inside-band fixes permits forward movement");
+        check(c.forward>0 && c.forward<=c.settings().maxMovementSpeed,"60 seconds of fresh inside-band fixes permits forward movement");
         check(c.centralLat==0 && c.centralLon==0,"saved central unchanged");
         c.update_state_machine(in(61500,0,0,100,0,4),61500,.1);
         check(c.forward>0,"aligned approach keeps moving while heading is corrected");
@@ -42,7 +42,7 @@ public final class ComeToMeTest {
         check(c.phase==ComeToMeController.Phase.HOLDING && c.forward==0,"stop when projected planned travel is completed");
         c.update_state_machine(in(62000,29,0,80,0,0),62000,.1);
         check(c.forward==0 && c.phase==ComeToMeController.Phase.HOLDING,"closer surfer never causes retreat");
-        c.update_state_machine(in(62500,29,0,105,0,0),62500,.1);
+        c.update_state_machine(in(62500,29,0,103,0,0),62500,.1);
         check(c.forward==0,"holding does not chase distance noise");
 
         c=start(); qualify(c);
@@ -95,7 +95,7 @@ public final class ComeToMeTest {
         for(long t=962500;t<=1262000;t+=500) c.update_state_machine(in(t,30,0,100,25,0),t,.1);
         check(c.phase==ComeToMeController.Phase.STOPPED,"return timeout latches independently of approach");
 
-        c=new ComeToMeController(); c.start(ComeToMeSettings.defaults(),1000);
+        c=new ComeToMeController(); c.start(ComeToMeSettings.defaults().withMaxMovementSpeed(3),1000);
         c.update_state_machine(in(1000,0,0,400,0,0),1000,.1);
         for(long t=1500;t<=61000;t+=500) c.update_state_machine(in(t,0,0,400,0,0),t,.1);
         c.update_state_machine(in(61500,200.1,0,400,0,0),61500,.1);
@@ -209,7 +209,7 @@ public final class ComeToMeTest {
 
     /** VT 3.2: Exercise the surviving no-ride timeout with real hold/timer transitions. */
     static void beginTestReturn(ComeToMeController c,double north,double east) {
-        c.start(new ComeToMeSettings(true,70,50,18,8,30000,60000),1000);
+        c.start(new ComeToMeSettings(true,70,50,18,8,30000,60000).withMaxMovementSpeed(3),1000);
         c.update_state_machine(in(1000,0,0,60,0,0),1000,.1); // initial hold starts the timer
         double target=Math.hypot(north,east)<=3 ? 60 : 160;
         c.update_state_machine(in(61000,north,east,target,0,0),61000,.1);
@@ -269,7 +269,7 @@ public final class ComeToMeTest {
         double last=c.forward;
         for(long t=161100;t<=174000;t+=100) {
             c.update_state_machine(in(t,0,0,100,0,0),t,.1);
-            check(c.forward<=3.0 && c.forward-last<=.025001,"approach retains acceleration bound and 3m/s cap");
+            check(Math.abs(c.forward-3)<1e-8,"VT 3.6 immediately commands 3 m/s for a distant saved destination");
             last=c.forward;
         }
         check(Math.abs(c.forward-3.0)<1e-9,"approach reaches 3m/s speed");

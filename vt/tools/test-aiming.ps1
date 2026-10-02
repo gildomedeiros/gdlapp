@@ -8,7 +8,7 @@ $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 # CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
-& "$JavaHome/bin/javac.exe" -d $output "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
+& "$JavaHome/bin/javac.exe" -d $output "$source/RotationSpeedCurve.java" "$source/TranslationSpeedAllowance.java" "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }
@@ -98,7 +98,7 @@ Write-Output 'PASS: VT 3.3 ride policy and retained reverse block are present in
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.1 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt31Test'
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.1 tests failed' }
-if($movementRows[0].qualificationRequiredMs -ne 0 -or $movementRows[0].reapproachMarginM -ne 15 -or !$movementRows[1].gpsMovementPaused){throw 'VT 3.1 log evidence missing'}
+if($movementRows[0].qualificationRequiredMs -ne 0 -or $movementRows[0].reapproachMarginM -ne 5 -or !$movementRows[1].gpsMovementPaused){throw 'VT 3.1 log evidence missing'}
 Write-Output 'PASS: VT 3.1 settings and GPS pause evidence independently parsed'
 
 # VT 3.2: Arrival boundaries, late telemetry vetoes and same-cycle yaw handoff.
@@ -107,7 +107,7 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 3.2 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt32Test'
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.2 tests failed' }
 if($movementRows[0].completionToleranceM -ne 1 -or $movementRows[0].excursionStopDistanceM -ne 249 -or [Math]::Abs($movementRows[0].approachRemainingM-($movementRows[0].plannedTravelM-$movementRows[0].forwardProgressM)) -gt 0.00001){throw 'VT 3.2 serialized completion evidence failed'}
-if($movementRows[0].maxMovementSpeedMps -ne 3 -or $movementRows[0].movementAccelerationMps2 -ne 0.25 -or $movementRows[0].movementSlowdownDistanceM -ne 15 -or $movementRows[0].arrivalSpeedPerMetre -ne 0.2){throw 'VT 3.2 movement speed profile log evidence failed'}
+if($movementRows[0].maxMovementSpeedMps -ne 4 -or $null -ne $movementRows[0].movementAccelerationMps2 -or $movementRows[0].movementAccelerationRampEnabled -ne $false -or $movementRows[0].firstApproachUsesSameMargin -ne $true -or $movementRows[0].movementSlowdownDistanceM -ne 20 -or $movementRows[0].arrivalSpeedPerMetre -ne 0.2){throw 'VT 3.2 movement speed profile log evidence failed'}
 Write-Output 'PASS: VT 3.2 completion tolerance, excursion threshold, speed profile and residual travel independently parsed'
 
 # VT 3.2: No qualification dwell and no return/band recreation on ride end.
@@ -133,7 +133,7 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests did not compile' }
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests failed' }
 
 # JVM-only Android storage seams; compile production loader without aircraft/Android runtime.
-& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path $projectRoot 'tools/gimbal-test-stubs/Context.java') (Join-Path $projectRoot 'tools/gimbal-test-stubs/AssetManager.java') "$source/GimbalBandStorage.java" (Join-Path $projectRoot 'tools/gimbal-test-stubs/GimbalBandStorageTest.java')
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path $projectRoot 'tools/gimbal-test-stubs/Context.java') (Join-Path $projectRoot 'tools/gimbal-test-stubs/AssetManager.java') (Join-Path $projectRoot 'tools/gimbal-test-stubs/SharedConfigStorage.java') "$source/GimbalBandStorage.java" (Join-Path $projectRoot 'tools/gimbal-test-stubs/GimbalBandStorageTest.java')
 if ($LASTEXITCODE -ne 0) { throw 'Gimbal configuration storage tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.GimbalBandStorageTest' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets/vt_gimbal_bands.json') $output
 if ($LASTEXITCODE -ne 0) { throw 'Gimbal configuration storage tests failed' }
@@ -146,3 +146,27 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 3.5 tests failed' }
 $retreatRows=@(Get-Content (Join-Path $output 'retreat-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object event -like 'retreat_*')
 if($retreatRows.Count -ne 2 -or $retreatRows[0].minimumDistanceM -ne 25 -or $retreatRows[0].speedMps -ne 3 -or $retreatRows[0].durationMs -ne 10000 -or $retreatRows[0].cooldownMs -ne 5000 -or $retreatRows[0].submittedForwardMps -ne -3 -or !$retreatRows[1].retainedTarget -or $null -ne $retreatRows[1].submittedForwardMps -or $null -eq $retreatRows[1].targetLatitude){throw 'VT 3.5 structured retreat evidence failed'}
 Write-Output 'PASS: independent JSON parser verifies retreat settings, retained position and submission evidence'
+
+# VT 3.6: immediate distance-limited movement, unified margin and scoped 5 m/s retreat envelope.
+& "$JavaHome/bin/javac.exe" -cp $output -d $output (Join-Path (Split-Path $test) 'Vt36Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.6 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt36Test' $output
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.6 tests failed' }
+$vt36=@(Get-Content (Join-Path $output 'vt36-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$r36=@($vt36 | Where-Object event -eq 'retreat_cycle')[0]
+$m36=@($vt36 | Where-Object event -eq 'movement_cycle')[0]
+if($r36.minimumDistanceM -ne 23 -or $r36.durationMs -ne 3000 -or $r36.speedMps -ne 5 -or $r36.speedKmh -ne 18 -or $r36.maximumSpeedMps -ne 5 -or $r36.submittedForwardMps -ne -5 -or $r36.cooldownMs -ne 5000 -or $m36.approachStartThresholdM -ne 35 -or $m36.movementAccelerationRampEnabled -ne $false -or $null -ne $m36.movementAccelerationMps2 -or $m36.movementSpeedPolicy -ne 'distance_limited_immediate'){throw 'VT 3.6 serialized settings/policy mismatch'}
+Write-Output 'PASS: independent JSON parser verifies VT 3.6 retreat defaults and movement policy'
+
+# VT 3.7: Use production parser, rotation math, migration policy and actual session/logging.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/RotationSpeedConfig.java" "$source/RotationSpeedStorage.java" "$source/ConfigFileMigration.java" (Join-Path (Split-Path $test) 'Vt37Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.7 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt37Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets/vt_rotation_speeds.json') $output
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.7 tests failed' }
+$vt37=@(Get-Content (Join-Path $output 'vt37-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$cycle37=@($vt37 | Where-Object event -eq 'aiming_cycle')[0]
+$config37=@($vt37 | Where-Object event -eq 'rotation_speed_config')[0]
+if($cycle37.rotationCurve -ne 'riding' -or $cycle37.rotationConfigSource -ne 'json' -or [Math]::Abs($cycle37.desiredYawRate + 6) -gt 0.000001 -or $cycle37.submitted -ne $true -or $null -eq $cycle37.submittedYawRate){throw 'VT 3.7 rotation log evidence mismatch'}
+$parsedRotation=$config37.fileContents | ConvertFrom-Json
+if($parsedRotation.riding[-1].speedDegPerSec -ne 30){throw 'VT 3.7 config snapshot missing'}
+Write-Output 'PASS: independent JSON parser verifies rotation config, selected curve, desired and submitted commands'

@@ -254,3 +254,29 @@ JSON-configured bands with a 5 m outward buffer; automatic startup selection; fu
 ## VT 3.5 — timed backward retreat implemented locally
 
 Independent configurable 25 m minimum / 10 s duration / 3 m/s fixed speed / 5 s Come to me cooldown. Immediate repeated retreats, retained GPS including NOFIX, active surfer aiming and gimbal, protection cancellation and structured retreat events. See [VT 3.5](Docs/VT_3.5.md). Flight validation pending.
+
+## VT 3.6 — one 5 m approach margin
+
+Status: IMPLEMENTED in VT 3.6 (2026-10-02). The configurable margin defaults to 5 m and applies to all approaches; stored user values are preserved.
+
+Use one 5 m approach-start margin for both the first approach and all later approaches. Remove the separate fixed 2 m first-approach rule. The same margin applies after Stop/Start, manual repositioning and retreat; no first-versus-subsequent distinction.
+
+Example: with filming distance 30 m, an approach may start only when actual separation is above 35 m, subject to the existing ride, GPS, cooldown and protection gates. The saved approach destination still uses filming distance 30 m; do not add the margin to the destination. Retreat distance and the 5-second Come to me cooldown remain separate and unchanged.
+
+Acceptance: verify the same threshold at initial Start, after filming hold, after manual intervention, and after retreat/cooldown; equality at filming distance + 5 m does not start an approach. Preserve saved-destination navigation, aiming, gimbal behaviour and all existing protections. Current VT 3.5 source and APK remain unchanged by this backlog entry.
+## VT 3.6 — retreat maximum and default 18 km/h
+
+Status: IMPLEMENTED in VT 3.6 (2026-10-02). 18 km/h maximum/default; stored user settings are preserved. Prior VT 3.5 APK retained.
+
+Raise the configurable fixed retreat speed maximum to 18 km/h (5 m/s), and set its default to that maximum. Keep retreat speed independent of Come to me speed, acceleration and arrival slowdown. VT 3.5 used a 3 m/s maximum/default; VT 3.6 now implements the higher retreat limit.
+
+Implementation must update retreat configuration validation, settings UI/ranges, default preference loading, retreat command limits and the aircraft velocity allowance during authorized retreat so the new speed is not rejected by the existing 3 m/s movement envelope. Preserve approach/return speed limits and all other protection rules; do not globally raise unrelated movement limits. Log the configured retreat speed with explicit units. Preserve deliberately saved user speeds; use 5 m/s as the default when no retreat speed is stored.
+
+Acceptance: verify 5 m/s is accepted and is the default, values above it are rejected, commanded retreat is not inadvertently capped at 3 m/s, fresh measured velocity is assessed against the appropriate retreat allowance, and non-retreat movement retains its existing limits. Timers, distance triggers, aiming/gimbal behaviour and Come to me cooldown remain unchanged.
+## VT 3.6 — implemented locally
+
+Immediate distance-limited approach/return commands with existing arrival slowdown, one configurable approach margin (default 5 m), retreat maximum/default 18 km/h (5 m/s), default separation 23 m and period 3 seconds. Existing 5-second cooldown and protection rules retained; higher telemetry allowance scoped to recent actual retreat submissions. See [VT 3.6](Docs/VT_3.6.md). Flight validation pending.
+
+## Implemented in VT 3.7
+
+External normal/ride rotation curves and a user-selected Download/VT configuration folder for both JSON files, with create-only migration preserving the old gimbal file. See [release notes](Docs/VT_3.7.md). Device validation pending.

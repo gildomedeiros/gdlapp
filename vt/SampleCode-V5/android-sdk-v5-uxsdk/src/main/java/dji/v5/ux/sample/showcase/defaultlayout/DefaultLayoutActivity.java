@@ -110,6 +110,23 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     // CAM3 v2.0: Stable observer identity prevents an old screen detaching a newer screen's controls.
     private final YawAimingController.Observer aimingObserver = this::renderAimingState;
     // CAM3 v2.5: Only Android 7-9 need runtime permission for public Downloads.
+    // VT 3.7: Android folder grant persists across upgrades; canceled selection changes nothing.
+    private final ActivityResultLauncher<android.net.Uri> configurationFolder = registerForActivityResult(
+        new androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree(), uri -> {
+            if(uri!=null)yawAimingController.selectConfigurationFolder(uri,message -> {
+                if(!isFinishing()&&!isDestroyed())Toast.makeText(this,message,Toast.LENGTH_LONG).show();
+            });
+        });
+    private void chooseConfigurationFolder() {
+        if(!yawAimingController.canSelectGpsSource())return;
+        new android.app.AlertDialog.Builder(this).setTitle("Configuration folder")
+            .setMessage("Select or create VT inside Internal storage > Download, then tap Use this folder. Both JSON files will be kept there. Existing files are never overwritten; your old gimbal file stays in place. Edit files while stopped, then Start to reload.")
+            .setNegativeButton(android.R.string.cancel,null).setPositiveButton("Choose folder",(d,w)->{
+                android.net.Uri initial=null;
+                if(android.os.Build.VERSION.SDK_INT>=26)initial=android.net.Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload");
+                configurationFolder.launch(initial);
+            }).show();
+    }
     private final ActivityResultLauncher<String> fullLogPermission = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(), granted -> {
                 Toast.makeText(this, granted ? "Storage allowed; enable Full Log from the menu"
@@ -265,8 +282,10 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     .setChecked(yawAimingController.fullLogEnabled()).setEnabled(!yawAimingController.fullLogBusy());
             menu.getMenu().add(0,4,3,"Come to me").setCheckable(true)
                     .setChecked(yawAimingController.movementSettings().enabled).setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,5,4,"VT 3.4 settings").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,5,4,"VT 3.7 settings").setEnabled(yawAimingController.canSelectGpsSource());
             menu.getMenu().add(0,6,5,"Lock screen controls");
+            // VT 3.7: Configuration folder is changed only while stopped.
+            menu.getMenu().add(0,7,6,"Configuration folder").setEnabled(yawAimingController.canSelectGpsSource());
             menu.setOnMenuItemClickListener(item -> {
                 if(item.getItemId()==6) { lockScreenControls(); return true; }
                 if (item.getItemId() == 1) {
@@ -289,9 +308,10 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 if(item.getItemId()==4) {
                     dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings c=yawAimingController.movementSettings();
                     yawAimingController.setMovementSettings(new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(
-                            !c.enabled,c.filmingDistance,c.lineupWidth,c.rideStartKmh,0.1,1000,c.inactivityMs,c.reapproachMargin,c.rideDurationMs,c.closeRangePitchDeg,c.longRangePitchDeg,c.maxYawRate,c.yawAcceleration));
+                            !c.enabled,c.filmingDistance,c.lineupWidth,c.rideStartKmh,0.1,1000,c.inactivityMs,c.reapproachMargin,c.rideDurationMs,c.closeRangePitchDeg,c.longRangePitchDeg,c.maxYawRate,c.yawAcceleration,c.maxMovementSpeed));
                 }
                 if(item.getItemId()==5) showMovementSettings();
+                if(item.getItemId()==7) chooseConfigurationFolder();
                 return true;
             });
             menu.show();
@@ -418,10 +438,10 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         dji.v5.ux.sample.showcase.defaultlayout.aiming.RetreatSettings r=yawAimingController.retreatSettings();
         String[] labels={"Filming distance (10–200 m)","Lineup total width (20–200 m)",
                 "Ride start speed (km/h)","Ride duration (1–600 seconds)",
-                "No-ride return timeout (minutes)","Re-approach margin (0–200 m)","Max rotation speed (1-30 deg/s)","Rotation acceleration (0.5-30 deg/s²)",
+                "No-ride return timeout (minutes)","Approach margin — all approaches (0–200 m)","Max rotation speed (1-30 deg/s)","Rotation acceleration (0.5-30 deg/s²)",
                 "Retreat minimum distance (1-200 m)","Retreat duration (1-60 seconds)",
-                "Retreat fixed speed (0.1-3 m/s)","Come to me cooldown after retreat (0-60 seconds)"};
-        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.maxYawRate,c.yawAcceleration,r.minimumDistance,r.durationMs/1000.0,r.speed,r.cooldownMs/1000.0};
+                "Retreat fixed speed (0.1-5 m/s; max 18 km/h)","Come to me cooldown after retreat (0-60 seconds)","Approach/return maximum speed (0.1-5 m/s)"};
+        double[] values={c.filmingDistance,c.lineupWidth,c.rideStartKmh,c.rideDurationMs/1000.0,c.inactivityMs/60000.0,c.reapproachMargin,c.maxYawRate,c.yawAcceleration,r.minimumDistance,r.durationMs/1000.0,r.speed,r.cooldownMs/1000.0,c.maxMovementSpeed};
         android.widget.LinearLayout form=new android.widget.LinearLayout(this);
         form.setOrientation(android.widget.LinearLayout.VERTICAL);
         int pad=(int)(16*getResources().getDisplayMetrics().density); form.setPadding(pad,pad,pad,pad);
@@ -434,7 +454,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             fields[i].setContentDescription(labels[i]); form.addView(fields[i]);
         }
         android.widget.ScrollView scroll=new android.widget.ScrollView(this); scroll.addView(form);
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.5 · Movement and retreat")
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("VT 3.7 · Movement and retreat")
                 .setView(scroll).setNegativeButton(android.R.string.cancel,null)
                 .setPositiveButton("Save",null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -446,7 +466,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 }
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings next=
                     new dji.v5.ux.sample.showcase.defaultlayout.aiming.ComeToMeSettings(c.enabled,n[0],n[1],n[2],0.1,1000,
-                            (long)(n[4]*60000),n[5],(long)(n[3]*1000),c.closeRangePitchDeg,c.longRangePitchDeg,n[6],n[7]);
+                            (long)(n[4]*60000),n[5],(long)(n[3]*1000),c.closeRangePitchDeg,c.longRangePitchDeg,n[6],n[7],n[12]);
                 dji.v5.ux.sample.showcase.defaultlayout.aiming.RetreatSettings retreat=
                     new dji.v5.ux.sample.showcase.defaultlayout.aiming.RetreatSettings(true,n[8],(long)(n[9]*1000),n[10],(long)(n[11]*1000));
                 if(!yawAimingController.canSelectGpsSource()) throw new IllegalArgumentException("Stop aiming before changing settings");

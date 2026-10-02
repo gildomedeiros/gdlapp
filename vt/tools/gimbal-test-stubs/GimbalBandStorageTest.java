@@ -29,6 +29,17 @@ public final class GimbalBandStorageTest {
   String event=Files.readAllLines(logfile).stream().filter(x->x.contains("gimbal_band_config")).findFirst().get();
   com.google.gson.JsonObject row=com.google.gson.JsonParser.parseString(event).getAsJsonObject();
   ok(row.get("fileContents").getAsString().equals(custom)&&row.get("effectiveJson").getAsString().equals(custom));
+  Files.write(file,custom.getBytes(StandardCharsets.UTF_8));
+  SharedConfigStorage.raw=first.effective;
+  ok(GimbalBandStorage.load(context).source.equals("shared_folder"));
+  ok(GimbalBandStorage.load(context).config.pitch(0)==-35);
+  SharedConfigStorage.raw="{invalid";
+  GimbalBandStorage.Loaded sharedBad=GimbalBandStorage.load(context);
+  ok(sharedBad.config.pitch(0)==-40&&sharedBad.source.startsWith("legacy_fallback")&&!sharedBad.error.equals("none"));
+  SharedConfigStorage.error="permission revoked";SharedConfigStorage.raw=null;
+  ok(GimbalBandStorage.load(context).config.pitch(0)==-40);
+  ok(new String(Files.readAllBytes(file),StandardCharsets.UTF_8).equals(custom));
+  SharedConfigStorage.error=null;
   System.out.println("PASS: override seeding, immutable session config, reload, fallback, oversized input and full JSON log round-trip");
  }
 }

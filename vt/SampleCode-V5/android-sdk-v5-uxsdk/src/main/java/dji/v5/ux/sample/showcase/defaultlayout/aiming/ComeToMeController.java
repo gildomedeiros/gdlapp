@@ -22,7 +22,8 @@ public final class ComeToMeController {
     public String qualificationStatus="idle", qualificationEvent="none";
     public boolean gpsPaused, hasFilmed;
     public double approachStartThreshold() {
-        return settings.filmingDistance+(hasFilmed ? settings.reapproachMargin : ComeToMeSettings.FILM_TOLERANCE);
+        // VT 3.6: One configurable margin applies before and after the first filming hold.
+        return settings.filmingDistance+settings.reapproachMargin;
     }
     private void resetQualification(String why) {
         qualifiedMs=0; qualifySince=-1; qualificationStatus="waiting"; qualificationEvent="reset_"+why;
@@ -170,7 +171,7 @@ public final class ComeToMeController {
         if(!freshSurfer && !approaching() && !returning()) { pauseForGps(now); return; }
         qualificationEvent="none";
         if(gpsPaused) { gpsPaused=false; qualificationEvent="resumed_fresh_gps"; }
-        event="none"; noRideTimerEvent="none"; speedJumpRejected=false; double previous=forward; forward=0;
+        event="none"; noRideTimerEvent="none"; speedJumpRejected=false; forward=0;
         ride.event="none"; ride.newPacket=false; ride.rejected=false;
         advanceRideClock(now);
         boolean timedOut=expireAttempt(now); // Observation may continue; an expired move cannot be revived by a fast detection.
@@ -227,7 +228,7 @@ public final class ComeToMeController {
                 returnAligned=true;
             }
             reason="moving_backward";
-            forward=-rampedSpeed(previous,returnDistance-returnProgress,dt);
+            forward=-arrivalSpeed(returnDistance-returnProgress);
             return;
         }
 
@@ -238,7 +239,8 @@ public final class ComeToMeController {
         // Keep the no-ride timer running; small distance changes never seize yaw ownership.
         if((phase==Phase.WAITING || (phase==Phase.HOLDING && !reason.equals("excursion_limit")))
                 && qualifiedMs>=ComeToMeSettings.QUALIFY_MS) {
-            if(distance<=approachStartThreshold()) {
+            // VT 3.6: Ignore sub-micrometre geodesic rounding at the shared boundary.
+            if(distance<=approachStartThreshold()+0.000001) {
                 if(!hasFilmed) enterFilmingHold(now);
                 else { phase=Phase.HOLDING; reason="within_reapproach_margin"; }
                 return;
@@ -272,7 +274,7 @@ public final class ComeToMeController {
         reason="moving_forward";
         double remaining=Math.min(approachDistance-approachProgress,
                 ComeToMeSettings.MAX_EXCURSION-centralDistance);
-        forward=rampedSpeed(previous,remaining,dt);
+        forward=arrivalSpeed(remaining);
     }
 
     /** Record arrival once. Subsequent band exits and arrivals cannot erase an active countdown. */
@@ -326,20 +328,22 @@ public final class ComeToMeController {
     public boolean noRideTimerActive() { return inactiveSince>=0; }
     private static boolean aligned(double error) { return Double.isFinite(error)&&Math.abs(error)<=YawAimingMath.ALIGNMENT_DEGREES; }
 
-    /** Increase speed gradually; any blocked movement returns zero immediately in update_state_machine(). */
-    private static double rampedSpeed(double previous,double remaining,double dt) {
+    /** VT 3.6: Immediate distance-limited command; blocked movement still returns zero. */
+    private double arrivalSpeed(double remaining) {
         // VT 3.2: The arrival slope is independent of cruise speed: 5 m -> 1 m/s,
         // 2 m -> 0.4 m/s. At 3 m/s cruise, slowdown therefore begins at 15 m.
-        double desired=Math.min(ComeToMeSettings.MAX_SPEED,
+        double desired=Math.min(settings.maxMovementSpeed,
                 Math.max(0,remaining)*ComeToMeSettings.ARRIVAL_SPEED_PER_METRE);
         // VT 3.2: Retain the existing speed profile; callers now finish within 1 m, before the final crawl.
-        desired=Math.min(ComeToMeSettings.MAX_SPEED,Math.max(0.05,desired));
-        return Math.min(desired,Math.abs(previous)+ComeToMeSettings.ACCELERATION*Math.min(0.5,Math.max(0,dt)));
+        desired=Math.min(settings.maxMovementSpeed,Math.max(0.05,desired));
+        return desired; // VT 3.6: Remove the software acceleration ramp, retain arrival braking.
     }
 
     /** Revalidate translation against the last snapshot immediately before SDK submission. */
     public boolean permits(AimingSession.Inputs in,long now,double requested) {
         if(requested==0) return true;
+        // VT 3.6: Enforce the configured approach/return cap independently of retreat speed.
+        if(!Double.isFinite(requested) || Math.abs(requested)>settings.maxMovementSpeed) return false;
         if(!runEnabled || captureRequired || in.validate(now,approaching() || returning())!=null || expireAttempt(now)) return false;
         // A newly arrived fix must pass the band/ride update before authorizing another movement.
         if(in.target.time!=lastFix) return false;

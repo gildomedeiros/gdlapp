@@ -10,7 +10,7 @@ public final class RetreatLog {
         AimingSession.Fix fix=in==null ? null : in.target;
         log.record(event,"session",session.sessionId(),"cycleId",session.cycleId,"reason",reason,
             "enabled",c.enabled,"active",r.active,"minimumDistanceM",c.minimumDistance,
-            "durationMs",c.durationMs,"speedMps",c.speed,"cooldownMs",c.cooldownMs,
+            "durationMs",c.durationMs,"speedMps",c.speed,"speedKmh",c.speed*3.6,"maximumSpeedMps",RetreatSettings.MAX_SPEED,"cooldownMs",c.cooldownMs,
             "startedAtMs",r.startedAt,"periodStartedAtMs",r.periodStartedAt,"period",r.period,
             "elapsedMs",r.startedAt<0 ? 0 : Math.max(0,now-r.startedAt),"remainingMs",r.remaining(now),
             "cooldownRemainingMs",r.cooldownRemaining(now),"startDistanceM",r.startDistance,"distanceM",r.distance,

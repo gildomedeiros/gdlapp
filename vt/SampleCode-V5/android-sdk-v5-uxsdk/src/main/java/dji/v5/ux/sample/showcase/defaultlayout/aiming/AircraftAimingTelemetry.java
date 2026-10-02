@@ -223,6 +223,15 @@ public final class AircraftAimingTelemetry {
     // Only recent authorized translation permits a small velocity allowance. Start/recovery
     // VT 3.2: use 0.5 m/s horizontal at rest, MAX_SPEED + 0.4 during commanded translation, and 0.5 vertical.
     public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating) {
+        return getSnapshot(target,translating,0);
+    }
+    // VT 3.6: Preserve all telemetry gates; only a recent authorized retreat expands horizontal allowance.
+    public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating,double recentRetreatSpeed) {
+        return getSnapshot(target,translating,ComeToMeSettings.DEFAULT_MAX_SPEED,recentRetreatSpeed);
+    }
+    // VT 3.6: The session's configured movement cap also controls the measured-speed gate.
+    public synchronized AimingSession.Inputs getSnapshot(AimingSession.Fix target,boolean translating,double movementSpeed,double recentRetreatSpeed) {
+        double horizontalLimit=TranslationSpeedAllowance.horizontalLimit(translating,movementSpeed,recentRetreatSpeed);
         long oldest = Long.MAX_VALUE;
         String problem = null;
         for (Slot<?> slot : slots) {
@@ -249,7 +258,7 @@ public final class AircraftAimingTelemetry {
                 Velocity3D v = velocity.value;
                 if (v.getX() == null || v.getY() == null || v.getZ() == null
                         || !Double.isFinite(v.getX()) || !Double.isFinite(v.getY()) || !Double.isFinite(v.getZ())
-                        || Math.hypot(v.getX(), v.getY()) > (translating ? ComeToMeSettings.MAX_SPEED + 0.4 : 0.5) || Math.abs(v.getZ()) > 0.5) problem = "hover";
+                        || Math.hypot(v.getX(), v.getY()) > horizontalLimit || Math.abs(v.getZ()) > 0.5) problem = "hover";
             }
         }
         LocationCoordinate2D p = position.value;
@@ -260,7 +269,7 @@ public final class AircraftAimingTelemetry {
                 velocity.value==null || velocity.value.getX()==null || velocity.value.getY()==null
                         ? Double.NaN : Math.hypot(velocity.value.getX(),velocity.value.getY()),
                 velocity.value==null || velocity.value.getZ()==null ? Double.NaN : velocity.value.getZ(),
-                translating ? ComeToMeSettings.MAX_SPEED+0.4 : 0.5);
+                horizontalLimit);
     }
     // CAM3 v2.1: Immutable diagnostic copy; ages are excluded from the duplicate-suppression signature.
     public synchronized DiagnosticSnapshot diagnostics(long now, AimingSession.Fix target) {

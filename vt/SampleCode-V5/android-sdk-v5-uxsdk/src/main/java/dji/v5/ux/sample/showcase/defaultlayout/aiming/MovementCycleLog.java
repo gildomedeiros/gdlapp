@@ -10,9 +10,12 @@ public final class MovementCycleLog {
                 // VT 3.5: Distinguish independent retreat translation from saved navigation.
                 "translationPurpose",session.retreat.active ? "retreat" : m.returning() ? "return" : m.approaching() ? "approach" : "none",
                 "retreatActive",session.retreat.active,"retreatCooldownRemainingMs",session.retreat.cooldownRemaining(now),
-                "maxMovementSpeedMps",ComeToMeSettings.MAX_SPEED,"movementAccelerationMps2",ComeToMeSettings.ACCELERATION,
+                "maxMovementSpeedMps",c.maxMovementSpeed,"maxMovementSpeedKmh",c.maxMovementSpeed*3.6,"movementAccelerationMps2",null,
+                // VT 3.6: Do not report the retired software ramp as an active setting.
+                "movementAccelerationRampEnabled",false,"movementSpeedPolicy","distance_limited_immediate",
+                "firstApproachUsesSameMargin",true,
                 // VT 3.2: Separate cruise speed from the preserved arrival slope.
-                "movementSlowdownDistanceM",ComeToMeSettings.SLOWDOWN_DISTANCE,
+                "movementSlowdownDistanceM",c.maxMovementSpeed/ComeToMeSettings.ARRIVAL_SPEED_PER_METRE,
                 "arrivalSpeedPerMetre",ComeToMeSettings.ARRIVAL_SPEED_PER_METRE,
                 // VT 3.1: Preserve qualification and margin evidence on every cycle.
                 "qualificationWaitEnabled",ComeToMeSettings.QUALIFY_MS>0,"rideEndTriggersReturn",false,

@@ -18,6 +18,10 @@ public final class SurferYawController {
         return calculate(error,previous,dt,riding,now,YawAimingMath.MAX_RATE,YawAimingMath.MAX_ACCELERATION);
     }
     public double calculate(double error,double previous,double dt,boolean riding,long now,double maxRate,double acceleration) {
+        return calculate(error,previous,dt,riding,now,maxRate,acceleration,null);
+    }
+    // VT 3.7: Optional curve changes magnitude only, preserving reverse-block and ramp.
+    public double calculate(double error,double previous,double dt,boolean riding,long now,double maxRate,double acceleration,RotationSpeedCurve curve) {
         YawAimingMath.validateLimits(maxRate,acceleration);
         if(!Double.isFinite(error)||!Double.isFinite(previous)||!Double.isFinite(dt)||dt<=0||dt>.5)
             throw new IllegalArgumentException("Invalid surfer yaw input");
@@ -28,7 +32,7 @@ public final class SurferYawController {
         remainingMs=lastPermittedAt<0 ? 0 : Math.max(0,REVERSE_BLOCK_MS-(now-lastPermittedAt));
         // Aligned and blocked opposite requests never refresh the permitted-direction clock.
         if(requestedDirection==0) return 0;
-        desiredRate=requestedDirection*Math.min(maxRate,effective*.5);
+        desiredRate=RotationSpeedCurve.desired(error,riding,maxRate,curve);
         if(permittedDirection!=0 && requestedDirection!=permittedDirection && remainingMs>0) {
             blocked=true; return 0;
         }

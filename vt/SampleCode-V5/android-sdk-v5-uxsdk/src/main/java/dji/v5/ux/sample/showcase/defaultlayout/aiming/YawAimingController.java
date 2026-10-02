@@ -54,6 +54,9 @@ public final class YawAimingController implements AimingSession.Port {
     private volatile boolean usePhone;
     private long submittedCycle=-1;
     private long lastTranslationAt=-1;
+    // VT 3.6: Keep the existing two-second braking allowance, scoped to actual retreat submissions.
+    private long lastRetreatTranslationAt=-1, lastRetreatSession=-1;
+    private double lastRetreatSpeed;
     private double lastSubmittedForward;
     private volatile ComeToMeSettings movementConfig=ComeToMeSettings.defaults();
     // VT 3.5: Separate persisted retreat controls; existing movement preferences are untouched.
@@ -93,10 +96,11 @@ public final class YawAimingController implements AimingSession.Port {
                     .remove("rideEnd").remove("endMs").putLong("rideDurationMs",config.rideDurationMs)
                     .remove("additionalTiltPercent").putFloat("closeRangePitchDeg",(float)config.closeRangePitchDeg)
                     .putFloat("longRangePitchDeg",(float)config.longRangePitchDeg)
+                    .putFloat("maxMovementSpeed",(float)config.maxMovementSpeed)
                     .putFloat("maxYawRate",(float)config.maxYawRate).putFloat("yawAcceleration",(float)config.yawAcceleration)
                     .putLong("inactivityMs",config.inactivityMs).apply();
             diagnostic("movement_settings","enabled="+config.enabled+" filming="+config.filmingDistance
-                    +" reapproachMargin="+config.reapproachMargin+" qualifyMs="+ComeToMeSettings.QUALIFY_MS+" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
+                    +" maxMovementSpeedMps="+config.maxMovementSpeed+" reapproachMargin="+config.reapproachMargin+" qualifyMs="+ComeToMeSettings.QUALIFY_MS+" width="+config.lineupWidth+" rideStart="+config.rideStartKmh+" rideEnd="+config.rideEndKmh
                     +" rideDurationMs="+config.rideDurationMs+" maxYawRate="+config.maxYawRate+" yawAcceleration="+config.yawAcceleration+" longRangePitchDeg="+config.longRangePitchDeg+" closeRangePitchDeg="+config.closeRangePitchDeg+" inactivityMs="+config.inactivityMs);
         });
     }
@@ -210,13 +214,14 @@ public final class YawAimingController implements AimingSession.Port {
         try {
             movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),Math.max(10,prefs.getFloat("filming",70)),
                     prefs.getFloat("width",50),prefs.getFloat("rideStart",18),0.1,1000,
-                    prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",15),
+                    prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",(float)ComeToMeSettings.DEFAULT_APPROACH_MARGIN),
                     prefs.getLong("rideDurationMs",90000),prefs.getFloat("closeRangePitchDeg",-25),prefs.getFloat("longRangePitchDeg",-10),
-                    prefs.getFloat("maxYawRate",15),prefs.getFloat("yawAcceleration",8));
+                    prefs.getFloat("maxYawRate",15),prefs.getFloat("yawAcceleration",8),
+                    prefs.getFloat("maxMovementSpeed",(float)ComeToMeSettings.DEFAULT_MAX_SPEED));
         } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
         try {
-            retreatConfig=new RetreatSettings(true,prefs.getFloat("retreatDistance",25),prefs.getLong("retreatDurationMs",10000),
-                prefs.getFloat("retreatSpeed",3),prefs.getLong("retreatCooldownMs",5000));
+            retreatConfig=new RetreatSettings(true,prefs.getFloat("retreatDistance",(float)RetreatSettings.DEFAULT_DISTANCE),prefs.getLong("retreatDurationMs",RetreatSettings.DEFAULT_DURATION_MS),
+                prefs.getFloat("retreatSpeed",(float)RetreatSettings.MAX_SPEED),prefs.getLong("retreatCooldownMs",RetreatSettings.DEFAULT_COOLDOWN_MS));
         } catch(IllegalArgumentException invalid) { retreatConfig=RetreatSettings.defaults(); }
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
@@ -258,6 +263,16 @@ public final class YawAimingController implements AimingSession.Port {
         // CAM3 v2.5: End full capture after source shutdown on screen exit; normal aiming cancellation stays intact.
         executor.execute(() -> { phone.stop(); lora.stop(); aircraft.stop(); camera.clear(); session.surferYaw.reset(); fullLog.disable("screen_closed"); });
     }
+    // VT 3.7: Copy configurations before committing the selected folder; keep legacy files untouched.
+    public void selectConfigurationFolder(android.net.Uri uri,java.util.function.Consumer<String> feedback) {
+        executor.execute(()->{
+            String result;
+            if(!canSelectGpsSource())result="Stop automatic control before changing the configuration folder.";
+            else try {SharedConfigStorage.select(appContext,uri);result="Configuration folder ready. Existing files preserved. Changes apply on next Start.";diagnostic("configuration_folder",uri.toString());}
+            catch(Exception e){result="Folder setup failed; existing configuration remains active. "+e.getMessage();diagnostic("configuration_folder_error",e.toString());}
+            final String message=result;main.post(()->feedback.accept(message));
+        });
+    }
     public void startAiming() {
         // CAM3 v2.1: Record explicit user intent, including attempts rejected by the prerequisites.
         diagnostic("user_start", "requested");
@@ -265,6 +280,15 @@ public final class YawAimingController implements AimingSession.Port {
         executor.execute(() -> {
             if (foreground && listening && intent.get() == request) {
                 yielding = false;
+                // VT 3.7: Never reload a curve during active control or recovery.
+                if(canSelectGpsSource()) {
+                    RotationSpeedStorage.Loaded loaded=RotationSpeedStorage.load(appContext);
+                    session.rotationCurve=loaded.curve;
+                    fullLog.record("rotation_speed_config","nextSession",session.sessionId()+1,"source",loaded.source,
+                        "configPath",loaded.path,"fileContents",loaded.raw,"validationError",loaded.error,
+                        "maxYawRate",movementConfig.maxYawRate,"acceleration",movementConfig.yawAcceleration);
+                    diagnostic("rotation_speed_config",loaded.source+" error="+loaded.error);
+                }
                 session.startAiming();
             }
         });
@@ -371,8 +395,16 @@ public final class YawAimingController implements AimingSession.Port {
     @Override public String startProblem() { return camera.recordingProblem(now()); }
     public long sessionId() { return session.sessionId(); }
     @Override public long now() { return SystemClock.elapsedRealtime(); }
-    @Override public AimingSession.Inputs inputs() { return aircraft.getSnapshot(getTargetFix(),session!=null && session.state()==AimingSession.State.AIMING
-            && lastTranslationAt>=0 && now()-lastTranslationAt<2000); }
+    @Override public AimingSession.Inputs inputs() {
+        long at=now();
+        boolean translating=session!=null && session.state()==AimingSession.State.AIMING
+                && lastTranslationAt>=0 && at>=lastTranslationAt && at-lastTranslationAt<2000;
+        double recentRetreat=session!=null && lastRetreatSession==session.sessionId() && lastRetreatTranslationAt>=0 && at>=lastRetreatTranslationAt && at-lastRetreatTranslationAt<2000
+                ? lastRetreatSpeed : 0;
+        double movementSpeed=session!=null && session.state()==AimingSession.State.AIMING
+                ? session.movement.settings().maxMovementSpeed : movementConfig.maxMovementSpeed;
+        return aircraft.getSnapshot(getTargetFix(),translating,movementSpeed,recentRetreat);
+    }
     @Override public AimingSession.Authority authority() {
         // CAM3 v2.2: Preserve raw observation identity; takeover is a separate cancellation latch.
         return authority;
@@ -501,6 +533,9 @@ public final class YawAimingController implements AimingSession.Port {
         sdk.sendVirtualStickAdvancedParam(AimingMotionCommand.build(rate,forward));
         lastSubmittedForward=forward;
         if(forward!=0) lastTranslationAt=now();
+        if(forward<0 && session.retreat.active) {
+            lastRetreatTranslationAt=lastTranslationAt;lastRetreatSpeed=-forward;lastRetreatSession=session.sessionId();
+        }
         submittedCycle=session.cycleId;
         // CAM3 v2.5: Log actual submissions after the unchanged flight-control call.
         fullLog.record("yaw_command", "submittedForwardMps", forward, "submittedYawRate", rate, "session", session.sessionId(), "cycleId", session.cycleId); // CAM3 v2.7: Join submissions to decisions.

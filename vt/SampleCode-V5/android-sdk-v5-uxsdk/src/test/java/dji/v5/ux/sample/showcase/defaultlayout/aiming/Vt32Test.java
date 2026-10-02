@@ -7,7 +7,7 @@ public final class Vt32Test {
     static void step(ComeToMeController c,long t,double n,double target) {
         c.update_state_machine(ComeToMeTest.in(t,n,0,target,0,0),t,.1);
     }
-    // VT 3.2: Check the actual shared planner in both directions, including a full ramp from rest.
+    // VT 3.2: Check the actual shared planner in both directions, including immediate speed selection from rest (VT 3.6).
     static void speedProfile() {
         for(boolean returning:new boolean[]{false,true}) {
             ComeToMeController c;
@@ -18,7 +18,7 @@ public final class Vt32Test {
             for(int i=1;i<=140;i++) {
                 t+=100;
                 c.update_state_machine(ComeToMeTest.in(t,returning?30:0,0,returning?160:100,0,0),t,.1);
-                check(Math.abs(Math.abs(c.forward)-Math.min(3,i*.025))<1e-8,"both directions ramp at 0.25 m/s2 to 3 m/s in twelve seconds and hold the cap");
+                check(Math.abs(Math.abs(c.forward)-3)<1e-8,"VT 3.6 both directions immediately command cruise speed and retain the cap");
             }
             for(double remaining:new double[]{15,12,10,8,5,4,3,2,1.01,.99}) {
                 t+=100;
