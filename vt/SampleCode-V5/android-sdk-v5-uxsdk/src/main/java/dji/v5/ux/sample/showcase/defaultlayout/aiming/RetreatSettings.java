@@ -7,10 +7,17 @@ public final class RetreatSettings {
     public static final double MAX_SPEED=5.0;
     public static final double DEFAULT_DISTANCE=23;
     public static final long DEFAULT_DURATION_MS=3000, DEFAULT_COOLDOWN_MS=5000;
+    // VT 3.8: Count only starts made without fresh GPS.
+    public final int maxStartsWithoutFreshGps;
     public final boolean enabled;
     public final double minimumDistance, speed;
     public final long durationMs, cooldownMs;
     public RetreatSettings(boolean enabled,double minimumDistance,long durationMs,double speed,long cooldownMs) {
+        this(enabled,minimumDistance,durationMs,speed,cooldownMs,1);
+    }
+    public RetreatSettings(boolean enabled,double minimumDistance,long durationMs,double speed,long cooldownMs,int maxStartsWithoutFreshGps) {
+        if(maxStartsWithoutFreshGps<0||maxStartsWithoutFreshGps>100)throw new IllegalArgumentException("maxStartsWithoutFreshGps must be an integer 0-100");
+        this.maxStartsWithoutFreshGps=maxStartsWithoutFreshGps;
         if(!Double.isFinite(minimumDistance)||minimumDistance<1||minimumDistance>200
                 ||durationMs<1000||durationMs>60000||!Double.isFinite(speed)||speed<0.1||speed>MAX_SPEED
                 ||cooldownMs<0||cooldownMs>60000)

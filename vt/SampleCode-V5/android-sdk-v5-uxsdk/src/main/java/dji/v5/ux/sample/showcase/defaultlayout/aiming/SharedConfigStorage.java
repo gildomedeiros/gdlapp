@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 /** VT 3.7: User-granted directory, no broad storage permission and no overwrite of custom files. */
 public final class SharedConfigStorage {
     public static final String ROTATION="vt_rotation_speeds.json";
+    // VT 3.8: A new file is seeded once per selected folder; deleted files subsequently block Start.
+    public static final String RETREAT="vt_retreat_settings.json";
     private static final String KEY="configurationTree";
     public static String folder(Context c){return c.getSharedPreferences("vt28",Context.MODE_PRIVATE).getString(KEY,null);}
     private static Uri find(Context c,Uri tree,String name)throws IOException {
@@ -32,9 +34,8 @@ public final class SharedConfigStorage {
         Uri file=find(c,Uri.parse(selected),name);if(file==null)throw new FileNotFoundException(name+" missing in selected folder");
         return readUri(c,file);
     }
-    public static void select(Context c,Uri tree)throws IOException {
-        c.getContentResolver().takePersistableUriPermission(tree,Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        ConfigFileMigration.Files files=new ConfigFileMigration.Files() {
+    private static ConfigFileMigration.Files files(Context c,Uri tree) {
+        return new ConfigFileMigration.Files() {
             public boolean exists(String name)throws IOException{return find(c,tree,name)!=null;}
             public String read(String name)throws IOException{Uri u=find(c,tree,name);if(u==null)throw new FileNotFoundException(name);return readUri(c,u);}
             public void create(String name,String contents)throws IOException {
@@ -48,14 +49,27 @@ public final class SharedConfigStorage {
                         out.write(contents.getBytes(StandardCharsets.UTF_8));
                     }
                     if(!created.equals(find(c,tree,name))||!contents.equals(readUri(c,created)))throw new IOException("Cannot verify "+name);
-                }catch(Exception e){try{DocumentsContract.deleteDocument(c.getContentResolver(),created);}catch(Exception ignored){}throw new IOException("Copy failed: "+name,e);}
+                }catch(Exception e){try{DocumentsContract.deleteDocument(c.getContentResolver(),created);}catch(Exception cleanup){e.addSuppressed(cleanup);}throw new IOException("Copy failed: "+name+"; "+e.toString()+"; cleanup failures="+java.util.Arrays.toString(e.getSuppressed()),e);}
             }
         };
+    }
+    public static boolean ensureRetreat(Context c)throws IOException {
+        String selected=folder(c);
+        if(selected==null)throw new IOException("No configuration folder selected. Choose Download/VT using Configuration folder.");
+        if(selected.equals(c.getSharedPreferences("vt28",Context.MODE_PRIVATE).getString("retreatSeededTree",null)))return false;
+        boolean created=ConfigFileMigration.ensure(files(c,Uri.parse(selected)),RETREAT,()->GimbalBandStorage.read(c.getAssets().open(RETREAT)));
+        if(!c.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit().putString("retreatSeededTree",selected).commit())throw new IOException("Cannot save retreat file setup state");
+        return created;
+    }
+    public static void select(Context c,Uri tree)throws IOException {
+        c.getContentResolver().takePersistableUriPermission(tree,Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        ConfigFileMigration.Files files=files(c,tree);
         ConfigFileMigration.ensure(files,GimbalBandStorage.NAME,()->{
             File dir=c.getExternalFilesDir(null);File old=dir==null?null:new File(dir,GimbalBandStorage.NAME);
             return old!=null&&old.exists()?GimbalBandStorage.read(new FileInputStream(old)):GimbalBandStorage.read(c.getAssets().open(GimbalBandStorage.NAME));
         });
         ConfigFileMigration.ensure(files,ROTATION,()->GimbalBandStorage.read(c.getAssets().open(ROTATION)));
-        if(!c.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit().putString(KEY,tree.toString()).commit())throw new IOException("Cannot save folder selection");
+        ConfigFileMigration.ensure(files,RETREAT,()->GimbalBandStorage.read(c.getAssets().open(RETREAT)));
+        if(!c.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit().putString("retreatSeededTree",tree.toString()).putString(KEY,tree.toString()).commit())throw new IOException("Cannot save folder selection");
     }
 }

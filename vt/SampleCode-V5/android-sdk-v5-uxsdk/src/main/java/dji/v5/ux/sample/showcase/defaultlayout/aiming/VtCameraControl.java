@@ -22,6 +22,10 @@ public final class VtCameraControl {
     public final GimbalBandPolicy policy=new GimbalBandPolicy();
     private final android.content.Context context;
     private GimbalBandConfig bands;
+    // VT 3.8: A validated Start snapshot replaces in-flight file loading/fallback.
+    private VtSessionConfig prepared;
+    private String preparedPath;
+    public void prepareConfiguration(VtSessionConfig config,String path){prepared=config;preparedPath=path;}
     private String lastDeferred="none";
     private long generation,lastPoll=-1,sessionId=-1,lastLog=-1,commandAt=-1;
     private int attempts;
@@ -65,9 +69,10 @@ public final class VtCameraControl {
         if(session.sessionId()<=0) return;
         if(session.sessionId()!=sessionId) {
             sessionId=session.sessionId();policy.reset();pending=commandNeeded=false;attempts=0;commandAt=-1;result="none";lastLog=-1;lastDeferred="none";
-            GimbalBandStorage.Loaded loaded=GimbalBandStorage.load(context);bands=loaded.config;
-            log.record("gimbal_band_config","session",sessionId,"configPath",loaded.path,"source",loaded.source,
-                "fileContents",loaded.raw,"effectiveJson",loaded.effective,"validationError",loaded.error,"bufferMetres",bands.bufferMetres);
+            if(prepared==null)throw new IllegalStateException("Missing validated gimbal Start configuration");
+            bands=prepared.gimbal;
+            log.record("gimbal_band_config","session",sessionId,"configPath",preparedPath,"source","shared_folder",
+                "fileContents",prepared.gimbalJson,"effectiveJson",prepared.gimbalJson,"validationError","none","bufferMetres",bands.bufferMetres);
         }
         if(!allowed) { deferred("control_not_allowed"); return; }
         double actual=attitude.fresh(now) ? attitude.value.getPitch() : Double.NaN;

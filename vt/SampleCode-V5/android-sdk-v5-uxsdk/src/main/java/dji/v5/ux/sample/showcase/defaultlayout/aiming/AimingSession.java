@@ -291,6 +291,9 @@ public final class AimingSession {
             Inputs in = controlInputs(rawInputs,port.now());
             cycleRetainedTarget=in!=rawInputs;
             cycleInputs=in; // CAM3 v2.7: Log the exact snapshot used by this decision.
+            // VT 3.8: Reuse one fresh-input decision; fresh fixes can restore allowance during recovery too.
+            boolean freshSurferGps=rawInputs.validate(port.now())==null;
+            retreat.observeGps(freshSurferGps,rawInputs.target);
             String problem = controlProblem(in,port.now());
             if (problem != null && !recoverable(problem)) { stopAiming(problem); return; }
             Authority a = port.authority();
@@ -374,7 +377,7 @@ public final class AimingSession {
             // uses the same coordinate with live aircraft heading, never extrapolation.
             // VT 3.5: Observe fresh rides but prevent forward navigation during retreat/cooldown.
             boolean blockApproach=retreat.blocksApproach(movement,in,now);
-            if(rawInputs.validate(now)==null) {
+            if(freshSurferGps) {
                 lastFreshAimingTarget=in.target;
                 movement.update_state_machine(in,now,Math.max(0.001,elapsed/1000.0),true,blockApproach);
             } else {

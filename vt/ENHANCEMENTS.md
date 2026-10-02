@@ -280,3 +280,7 @@ Immediate distance-limited approach/return commands with existing arrival slowdo
 ## Implemented in VT 3.7
 
 External normal/ride rotation curves and a user-selected Download/VT configuration folder for both JSON files, with create-only migration preserving the old gimbal file. See [release notes](Docs/VT_3.7.md). Device validation pending.
+
+## Implemented in VT 3.8
+
+Retreat settings moved to a default-seeded JSON file without migrating saved retreat values. Starts without fresh GPS are configurable, default one; active timers finish and fresh fixes reset the allowance. All three JSON configurations must validate before Start, with visible errors and no fallback. See [release notes](Docs/VT_3.8.md).

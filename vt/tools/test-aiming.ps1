@@ -127,7 +127,7 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 3.3 tests failed' }
 # VT 3.4: compile and exercise the production JSON parser and distance-band policy.
 $gsonJar = (Get-ChildItem "$env:USERPROFILE/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/*/gson-2.10.1.jar" | Select-Object -First 1).FullName
 if (!$gsonJar) { throw 'Gson 2.10.1 jar missing' }
-& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/GimbalBandConfig.java" "$source/GimbalBandPolicy.java" (Join-Path (Split-Path $test) 'Vt34Test.java')
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/StrictConfigJson.java" "$source/GimbalBandConfig.java" "$source/GimbalBandPolicy.java" (Join-Path (Split-Path $test) 'Vt34Test.java')
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt34Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets/vt_gimbal_bands.json')
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.4 tests failed' }
@@ -170,3 +170,14 @@ if($cycle37.rotationCurve -ne 'riding' -or $cycle37.rotationConfigSource -ne 'js
 $parsedRotation=$config37.fileContents | ConvertFrom-Json
 if($parsedRotation.riding[-1].speedDegPerSec -ne 30){throw 'VT 3.7 config snapshot missing'}
 Write-Output 'PASS: independent JSON parser verifies rotation config, selected curve, desired and submitted commands'
+
+# VT 3.8: Default stale-GPS limit and no-fallback preflight configuration transaction.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/RetreatJsonConfig.java" "$source/VtSessionConfig.java" (Join-Path (Split-Path $test) 'Vt38Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.8 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt38Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
+if ($LASTEXITCODE -ne 0) { throw 'VT 3.8 tests failed' }
+$v38=@(Get-Content (Join-Path $output 'vt38-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$blocked38=@($v38 | Where-Object event -eq 'retreat_start_blocked')[0]
+$reset38=@($v38 | Where-Object event -eq 'retreat_gps_allowance_reset')[0]
+if($blocked38.reason -ne 'stale_gps_retreat_limit' -or $blocked38.gpsFresh -ne $false -or $blocked38.maxStartsWithoutFreshGps -ne 1 -or $blocked38.startsWithoutFreshGps -ne 1 -or $blocked38.active -ne $false -or $reset38.gpsFresh -ne $true -or $reset38.startsWithoutFreshGps -ne 0 -or $reset38.previousStartsWithoutFreshGps -ne 1){throw 'VT 3.8 allowance log evidence mismatch'}
+Write-Output 'PASS: independent JSON parser verifies stale-GPS block and fresh-fix allowance reset'

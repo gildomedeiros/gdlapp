@@ -23,7 +23,7 @@ public final class MovementLogTest {
         if(log.busy()) throw new AssertionError("writer close timeout");
         String text=new String(Files.readAllBytes(output),StandardCharsets.UTF_8);
         if(!text.contains("\"submittedForwardMps\":null") || !text.contains("\"filmingDistanceM\":70.0")
-                || !text.contains("\"version\":\"3.7\"")) throw new AssertionError("movement log metadata");
+                || !text.contains("\"version\":\"3.8\"")) throw new AssertionError("movement log metadata");
         Path returnOutput=Paths.get(args[0],"return-cycle-test.jsonl");
         FullSessionLog returnLog=new FullSessionLog(name->Files.newOutputStream(returnOutput),error->{throw new AssertionError(error);});
         returnLog.enable();

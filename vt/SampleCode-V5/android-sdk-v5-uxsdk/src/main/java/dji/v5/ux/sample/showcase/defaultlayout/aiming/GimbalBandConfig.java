@@ -13,13 +13,8 @@ public final class GimbalBandConfig {
         double n=e.getAsDouble();if(!Double.isFinite(n))throw new IllegalArgumentException("Non-finite number");return n;
     }
     public static GimbalBandConfig parse(String json) {
-        JsonObject o;
-        try {
-            com.google.gson.stream.JsonReader reader=new com.google.gson.stream.JsonReader(new java.io.StringReader(json));
-            reader.setLenient(false);
-            o=com.google.gson.internal.Streams.parse(reader).getAsJsonObject();
-            if(reader.peek()!=com.google.gson.stream.JsonToken.END_DOCUMENT)throw new IllegalArgumentException("Trailing JSON content");
-        } catch(java.io.IOException e){throw new IllegalArgumentException("Invalid JSON",e);}
+        // VT 3.8: Invalid/duplicate JSON blocks Start; no silent value replacement.
+        JsonObject o=StrictConfigJson.object(json);
         double b=number(o.get("bufferMetres"));if(b<0 || b>100)throw new IllegalArgumentException("bufferMetres must be 0..100");
         JsonArray a=o.getAsJsonArray("bands");if(a==null || a.size()<1 || a.size()>32)throw new IllegalArgumentException("Expected 1..32 bands");
         double[] u=new double[a.size()],p=new double[a.size()];double prev=0;

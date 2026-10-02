@@ -35,3 +35,5 @@ For GPS/aiming behavior, use v2.4 together with the retained control policy in v
 - [VT 3.6 detailed design](detailed_design/detailed_design_v3.6.md) — immediate distance-limited movement, shared 5 m default approach margin, retreat defaults 23 m / 3 s / 5 m/s. Implemented locally; flight validation pending.
 
 - [VT 3.7 detailed design](detailed_design/detailed_design_v3.7.md) — rotation JSON, accessible configuration folder and preservation of existing files.
+
+- [VT 3.8 detailed design](detailed_design/detailed_design_v3.8.md) — JSON-only retreat settings, bounded starts without fresh GPS and explicit Start-blocking configuration errors.

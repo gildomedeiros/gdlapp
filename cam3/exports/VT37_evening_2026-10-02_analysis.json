@@ -1,0 +1,2298 @@
+[
+  {
+    "file": "C:/Users/gildo/temp\\cam3_full_2026-10-02_205321_699_f93669ed.jsonl",
+    "start": "20:54:30.460",
+    "stop": "21:00:39.798",
+    "end": "21:00:39.814",
+    "started": true,
+    "settings": {
+      "enabled": true,
+      "filmingDistanceM": 27.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 4.0,
+      "movementAccelerationMps2": null,
+      "movementAccelerationRampEnabled": false,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "configs": [
+      {
+        "record": 3336,
+        "timestamp": "2026-10-02T20:54:30.636+10:00",
+        "epochMs": 1790938470636,
+        "monoMs": 37012658,
+        "event": "rotation_speed_config",
+        "nextSession": 1,
+        "source": "shared_folder",
+        "configPath": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2Fvtconf",
+        "fileContents": "{\r\n  \"version\": 1,\r\n  \"normal\": [\r\n    {\r\n      \"headingErrorDeg\": 0,\r\n      \"speedDegPerSec\": 0\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 3,\r\n      \"speedDegPerSec\": 0\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 5,\r\n      \"speedDegPerSec\": 2\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 10,\r\n      \"speedDegPerSec\": 3.5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 20,\r\n      \"speedDegPerSec\": 8.5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 33,\r\n      \"speedDegPerSec\": 15\r\n    }\r\n  ],\r\n  \"riding\": [\r\n    {\r\n      \"headingErrorDeg\": 0,\r\n      \"speedDegPerSec\": 0\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 3,\r\n      \"speedDegPerSec\": 1.5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 5,\r\n      \"speedDegPerSec\": 5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 10,\r\n      \"speedDegPerSec\": 10\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 20,\r\n      \"speedDegPerSec\": 20\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 30,\r\n      \"speedDegPerSec\": 30\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "maxYawRate": 15.0,
+        "acceleration": 8.0
+      },
+      {
+        "record": 3343,
+        "timestamp": "2026-10-02T20:54:30.666+10:00",
+        "epochMs": 1790938470666,
+        "monoMs": 37012688,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2Fvtconf/vt_gimbal_bands.json",
+        "source": "shared_folder",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -56\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -56\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "retreatSettings": [
+      {
+        "minimumDistanceM": 20.0,
+        "durationMs": 3000,
+        "speedMps": 3.0,
+        "cooldownMs": 5000
+      }
+    ],
+    "events": [
+      {
+        "timestamp": "2026-10-02T20:55:15.050+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:18.396+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:22.055+10:00",
+        "event": "resumed",
+        "detail": "session=1 stable inputs; yaw restarts from zero"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:56.839+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:57.573+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:57.783+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:58.508+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:58.716+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:58.818+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:59.028+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:03.188+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:05.171+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=pilot_stick"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:08.382+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=hover"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:11.510+10:00",
+        "event": "resumed",
+        "detail": "session=1 stable inputs; yaw restarts from zero"
+      },
+      {
+        "timestamp": "2026-10-02T21:00:39.798+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=screen_closed"
+      }
+    ],
+    "states": {
+      "STARTING": 2,
+      "AIMING": 3297,
+      "PAUSED": 208
+    },
+    "phaseCounts": {
+      "WAITING": 576,
+      "HOLDING": 1923,
+      "APPROACHING": 1008
+    },
+    "stateSeconds": {
+      "STARTING": 0.21,
+      "AIMING": 347.1430000000011,
+      "PAUSED": 21.682000000000027
+    },
+    "activeStats": {
+      "distanceM": {
+        "min": 14.19,
+        "median": 26.69,
+        "p90": 37.8,
+        "max": 46.28
+      },
+      "relativeBearingDeg": {
+        "min": 0.01,
+        "median": 2.96,
+        "p90": 7.37,
+        "max": 152.03
+      },
+      "horizontalSpeedMps": {
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 1.22,
+        "max": 3.54
+      },
+      "targetAgeMs": {
+        "min": 4,
+        "median": 257,
+        "p90": 457,
+        "max": 991
+      },
+      "desiredYawRate": {
+        "min": -3.87,
+        "median": 0.0,
+        "p90": 1.6,
+        "max": 15.0
+      },
+      "requestedYawRate": {
+        "min": -3.6,
+        "median": 0.0,
+        "p90": 1.54,
+        "max": 15.0
+      },
+      "submittedYawRate": {
+        "min": -3.6,
+        "median": 0.0,
+        "p90": 1.54,
+        "max": 15.0
+      }
+    },
+    "height": {
+      "min": 9.6,
+      "median": 9.7,
+      "p90": 9.7,
+      "max": 9.8
+    },
+    "yawGroups": {
+      "approach": {
+        "count": 1008,
+        "error": {
+          "min": 0.11,
+          "median": 3.59,
+          "p90": 7.53,
+          "max": 37.2
+        },
+        "reverseBlocked": 0,
+        "over15": 30
+      },
+      "surfer": {
+        "count": 2289,
+        "error": {
+          "min": 0.01,
+          "median": 2.86,
+          "p90": 7.03,
+          "max": 152.03
+        },
+        "reverseBlocked": 0,
+        "over15": 104
+      }
+    },
+    "rotationSources": {
+      "json": 3297
+    },
+    "curves": {
+      "normal": 3297
+    },
+    "retreats": [
+      {
+        "start": "20:55:46.867",
+        "end": "20:55:49.952",
+        "seconds": 3.085,
+        "periods": 1,
+        "startDistance": 19.772467496851696,
+        "endDistance": 21.656582989926896,
+        "minDistance": 18.373063228823217,
+        "droneDisplacement": 5.485151890688377,
+        "targetDisplacement": 3.8699797037455257,
+        "speed": {
+          "min": 0.0,
+          "median": 2.28,
+          "p90": 2.92,
+          "max": 2.92
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "repeats": []
+      },
+      {
+        "start": "20:57:52.885",
+        "end": "20:57:55.944",
+        "seconds": 3.06,
+        "periods": 1,
+        "startDistance": 19.3520437614423,
+        "endDistance": 21.798450181846746,
+        "minDistance": 18.25718802172338,
+        "droneDisplacement": 5.922177250164979,
+        "targetDisplacement": 3.4770814767039524,
+        "speed": {
+          "min": 0.0,
+          "median": 2.62,
+          "p90": 2.94,
+          "max": 2.94
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "repeats": []
+      },
+      {
+        "start": "20:58:39.351",
+        "end": "20:58:45.476",
+        "seconds": 6.126,
+        "periods": 2,
+        "startDistance": 17.86223169432703,
+        "endDistance": 21.785157946968454,
+        "minDistance": 14.193950993186252,
+        "droneDisplacement": 15.394142375564682,
+        "targetDisplacement": 11.609939113381666,
+        "speed": {
+          "min": 0.0,
+          "median": 2.91,
+          "p90": 2.92,
+          "max": 2.94
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "repeats": [
+          {
+            "time": "20:58:42.417",
+            "distance": 14.312193169470115
+          }
+        ]
+      },
+      {
+        "start": "20:59:33.419",
+        "end": "20:59:39.533",
+        "seconds": 6.114,
+        "periods": 2,
+        "startDistance": 19.415818311253002,
+        "endDistance": 20.779342756842063,
+        "minDistance": 15.63260001164466,
+        "droneDisplacement": 15.790772414544026,
+        "targetDisplacement": 15.00648541134329,
+        "speed": {
+          "min": 0.0,
+          "median": 2.91,
+          "p90": 2.98,
+          "max": 3.0
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "repeats": [
+          {
+            "time": "20:59:36.464",
+            "distance": 15.63260001164466
+          }
+        ]
+      }
+    ],
+    "transitions": [
+      {
+        "timestamp": "2026-10-02T20:54:30.872+10:00",
+        "detail": "session=1 WAITING:capture_central -> HOLDING:filming_distance_reached event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T20:54:30.977+10:00",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:22.056+10:00",
+        "detail": "session=1 WAITING:manual_reposition -> HOLDING:filming_distance_reached event=central_captured centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:22.166+10:00",
+        "detail": "session=1 HOLDING:filming_distance_reached -> HOLDING:within_reapproach_margin event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:28.931+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:moving_forward event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:35.827+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:35.931+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:46.868+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:46.973+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:55.033+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=2"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:11.510+10:00",
+        "detail": "session=1 WAITING:manual_reposition -> APPROACHING:approach_alignment event=central_captured centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:17.264+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:31.541+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:31.647+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:56.892+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:57.310+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:06.143+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:06.245+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:08.874+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:19.433+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:19.536+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:52.885+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:52.994+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:00.998+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:10.917+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:18.921+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:19.030+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:21.020+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:33.544+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:33.647+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:39.353+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:39.462+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:50.500+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:53.851+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:01.526+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:01.630+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:04.173+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:13.090+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:13.193+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:15.187+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:28.370+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:28.476+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:33.419+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:33.524+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=3"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:44.570+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=3"
+      }
+    ],
+    "approaches": [
+      {
+        "start": "20:55:28.933",
+        "end": "20:55:35.829",
+        "startDistance": 32.00188686452337,
+        "endDistance": 26.521967555025977,
+        "planned": 5.001886864523371,
+        "lastRemaining": 1.1548922850313055,
+        "lastProgress": 3.8469945794920655,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.53,
+          "p90": 0.99,
+          "max": 1.0
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.53,
+          "p90": 0.99,
+          "max": 1.0
+        }
+      },
+      {
+        "start": "20:56:11.514",
+        "end": "20:56:31.542",
+        "startDistance": 46.28016159198894,
+        "endDistance": 26.900501576604047,
+        "planned": 19.280161591988943,
+        "lastRemaining": 1.0511487897109717,
+        "lastProgress": 18.22901280227797,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.46,
+          "p90": 3.22,
+          "max": 3.82
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.46,
+          "p90": 3.22,
+          "max": 3.82
+        }
+      },
+      {
+        "start": "20:56:56.894",
+        "end": "20:57:06.144",
+        "startDistance": 32.89217586769237,
+        "endDistance": 37.94954505406191,
+        "planned": 5.892175867692373,
+        "lastRemaining": 1.001049942308736,
+        "lastProgress": 4.891125925383637,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.49,
+          "p90": 1.17,
+          "max": 1.18
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.49,
+          "p90": 1.17,
+          "max": 1.18
+        }
+      },
+      {
+        "start": "20:57:06.247",
+        "end": "20:57:19.435",
+        "startDistance": 37.94954505406191,
+        "endDistance": 30.922609449747434,
+        "planned": 10.949545054061907,
+        "lastRemaining": 1.1304776635070226,
+        "lastProgress": 9.819067390554885,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.52,
+          "p90": 2.04,
+          "max": 2.19
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.52,
+          "p90": 2.04,
+          "max": 2.19
+        }
+      },
+      {
+        "start": "20:58:10.919",
+        "end": "20:58:18.924",
+        "startDistance": 32.32497883546497,
+        "endDistance": 37.467967484842085,
+        "planned": 5.324978835464968,
+        "lastRemaining": 1.1018866624484271,
+        "lastProgress": 4.223092173016541,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.22,
+          "median": 0.48,
+          "p90": 1.05,
+          "max": 1.06
+        },
+        "submitted": {
+          "min": 0.22,
+          "median": 0.48,
+          "p90": 1.05,
+          "max": 1.06
+        }
+      },
+      {
+        "start": "20:58:19.032",
+        "end": "20:58:33.545",
+        "startDistance": 37.467967484842085,
+        "endDistance": 27.425490748949773,
+        "planned": 10.467967484842085,
+        "lastRemaining": 1.0036798211978333,
+        "lastProgress": 9.464287663644251,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.47,
+          "p90": 1.93,
+          "max": 2.08
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.47,
+          "p90": 1.93,
+          "max": 2.08
+        }
+      },
+      {
+        "start": "20:58:53.852",
+        "end": "20:59:01.528",
+        "startDistance": 32.72590520856614,
+        "endDistance": 33.86412755273143,
+        "planned": 5.7259052085661395,
+        "lastRemaining": 1.0297471596969139,
+        "lastProgress": 4.696158048869226,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.21,
+          "median": 0.55,
+          "p90": 1.14,
+          "max": 1.15
+        },
+        "submitted": {
+          "min": 0.21,
+          "median": 0.55,
+          "p90": 1.14,
+          "max": 1.15
+        }
+      },
+      {
+        "start": "20:59:01.631",
+        "end": "20:59:13.091",
+        "startDistance": 33.86412755273143,
+        "endDistance": 42.93214500303843,
+        "planned": 6.864127552731432,
+        "lastRemaining": 1.0776111397548611,
+        "lastProgress": 5.786516412976571,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.44,
+          "p90": 1.24,
+          "max": 1.36
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.44,
+          "p90": 1.24,
+          "max": 1.36
+        }
+      },
+      {
+        "start": "20:59:13.194",
+        "end": "20:59:28.372",
+        "startDistance": 42.93214500303843,
+        "endDistance": 25.74466364080814,
+        "planned": 15.932145003038428,
+        "lastRemaining": 1.116601563157591,
+        "lastProgress": 14.815543439880837,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.71,
+          "p90": 2.72,
+          "max": 3.17
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.71,
+          "p90": 2.72,
+          "max": 3.17
+        }
+      }
+    ],
+    "rides": [],
+    "rejectedSpeedJumps": 0,
+    "gimbalCommands": [
+      {
+        "timestamp": "2026-10-02T20:54:30.874+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": 0.0,
+        "distanceM": 22.12827505129864,
+        "trigger": "startup_band"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:46.871+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.772467496851696,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:55:51.331+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -34.9,
+        "distanceM": 25.936882104364102,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:11.511+10:00",
+        "targetPitchDeg": -16.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 46.28016159198894,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:19.913+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -15.9,
+        "distanceM": 39.55401382891203,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:56:26.255+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -19.0,
+        "distanceM": 29.709916526912043,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:01.836+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 35.19037796809391,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:21.429+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -18.900000000000002,
+        "distanceM": 28.629555524101608,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:57:52.887+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.3520437614423,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:05.437+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -34.9,
+        "distanceM": 25.236375946825067,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:15.865+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -24.900000000000002,
+        "distanceM": 35.57063642710839,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:27.858+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -18.900000000000002,
+        "distanceM": 29.76722370695411,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:39.359+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -24.900000000000002,
+        "distanceM": 17.86223169432703,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:58:47.367+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -34.9,
+        "distanceM": 25.18502490839652,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:01.843+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -24.900000000000002,
+        "distanceM": 35.335242179502075,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:23.110+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -19.0,
+        "distanceM": 29.663073178240385,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:33.419+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.415818311253002,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T20:59:41.422+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -35.0,
+        "distanceM": 25.375223399380403,
+        "trigger": "distance_increased"
+      }
+    ],
+    "gimbalReached": 18,
+    "gimbalReachMs": {
+      "min": 2000,
+      "median": 2263.0,
+      "p90": 2515,
+      "max": 2533
+    },
+    "gimbalResults": [
+      {
+        "record": 3376,
+        "timestamp": "2026-10-02T20:54:30.893+10:00",
+        "epochMs": 1790938470893,
+        "monoMs": 37012916,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 1,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 7687,
+        "timestamp": "2026-10-02T20:55:46.879+10:00",
+        "epochMs": 1790938546879,
+        "monoMs": 37088902,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 2,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 7951,
+        "timestamp": "2026-10-02T20:55:51.342+10:00",
+        "epochMs": 1790938551342,
+        "monoMs": 37093364,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 3,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 9016,
+        "timestamp": "2026-10-02T20:56:11.520+10:00",
+        "epochMs": 1790938571520,
+        "monoMs": 37113543,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 4,
+        "targetPitchDeg": -16.0,
+        "result": "accepted"
+      },
+      {
+        "record": 9508,
+        "timestamp": "2026-10-02T20:56:19.922+10:00",
+        "epochMs": 1790938579922,
+        "monoMs": 37121944,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 5,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 9875,
+        "timestamp": "2026-10-02T20:56:26.267+10:00",
+        "epochMs": 1790938586267,
+        "monoMs": 37128290,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 6,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 11929,
+        "timestamp": "2026-10-02T20:57:01.851+10:00",
+        "epochMs": 1790938621851,
+        "monoMs": 37163873,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 7,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 13061,
+        "timestamp": "2026-10-02T20:57:21.442+10:00",
+        "epochMs": 1790938641442,
+        "monoMs": 37183464,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 8,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 14876,
+        "timestamp": "2026-10-02T20:57:52.900+10:00",
+        "epochMs": 1790938672900,
+        "monoMs": 37214922,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 9,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 15607,
+        "timestamp": "2026-10-02T20:58:05.449+10:00",
+        "epochMs": 1790938685449,
+        "monoMs": 37227471,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 10,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 16213,
+        "timestamp": "2026-10-02T20:58:15.882+10:00",
+        "epochMs": 1790938695882,
+        "monoMs": 37237905,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 11,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 16909,
+        "timestamp": "2026-10-02T20:58:27.864+10:00",
+        "epochMs": 1790938707864,
+        "monoMs": 37249886,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 12,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 17577,
+        "timestamp": "2026-10-02T20:58:39.374+10:00",
+        "epochMs": 1790938719374,
+        "monoMs": 37261397,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 13,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 18047,
+        "timestamp": "2026-10-02T20:58:47.380+10:00",
+        "epochMs": 1790938727380,
+        "monoMs": 37269403,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 14,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 18890,
+        "timestamp": "2026-10-02T20:59:01.854+10:00",
+        "epochMs": 1790938741854,
+        "monoMs": 37283876,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 15,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 20119,
+        "timestamp": "2026-10-02T20:59:23.120+10:00",
+        "epochMs": 1790938763120,
+        "monoMs": 37305143,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 16,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 20722,
+        "timestamp": "2026-10-02T20:59:33.445+10:00",
+        "epochMs": 1790938773445,
+        "monoMs": 37315467,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 17,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 21191,
+        "timestamp": "2026-10-02T20:59:41.435+10:00",
+        "epochMs": 1790938781435,
+        "monoMs": 37323458,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 18,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      }
+    ],
+    "packetCount": 732,
+    "acceptedPackets": 732,
+    "packetGaps": {
+      "min": 453,
+      "median": 500,
+      "p90": 519,
+      "max": 1003
+    },
+    "gaps": [
+      {
+        "record": 4337,
+        "timestamp": "2026-10-02T20:54:47.823+10:00",
+        "epochMs": 1790938487823,
+        "monoMs": 37029845,
+        "event": "lora_gap",
+        "detail": "previous=1857 received=1859 missing=1 firstMissing=1858 lastMissing=1858"
+      },
+      {
+        "record": 5825,
+        "timestamp": "2026-10-02T20:55:13.819+10:00",
+        "epochMs": 1790938513819,
+        "monoMs": 37055842,
+        "event": "lora_gap",
+        "detail": "previous=1909 received=1911 missing=1 firstMissing=1910 lastMissing=1910"
+      },
+      {
+        "record": 5914,
+        "timestamp": "2026-10-02T20:55:15.319+10:00",
+        "epochMs": 1790938515319,
+        "monoMs": 37057341,
+        "event": "lora_gap",
+        "detail": "previous=1912 received=1914 missing=1 firstMissing=1913 lastMissing=1913"
+      },
+      {
+        "record": 8035,
+        "timestamp": "2026-10-02T20:55:52.820+10:00",
+        "epochMs": 1790938552820,
+        "monoMs": 37094842,
+        "event": "lora_gap",
+        "detail": "previous=1987 received=1989 missing=1 firstMissing=1988 lastMissing=1988"
+      },
+      {
+        "record": 12038,
+        "timestamp": "2026-10-02T20:57:03.820+10:00",
+        "epochMs": 1790938623820,
+        "monoMs": 37165843,
+        "event": "lora_gap",
+        "detail": "previous=2129 received=2131 missing=1 firstMissing=2130 lastMissing=2130"
+      },
+      {
+        "record": 18881,
+        "timestamp": "2026-10-02T20:59:01.826+10:00",
+        "epochMs": 1790938741826,
+        "monoMs": 37283849,
+        "event": "lora_gap",
+        "detail": "previous=2365 received=2367 missing=1 firstMissing=2366 lastMissing=2366"
+      }
+    ],
+    "nofix": 0,
+    "retainedAimingCycles": 0,
+    "speedKmh": {
+      "min": 0.0,
+      "median": 0.0,
+      "p90": 5.34,
+      "max": 16.4
+    },
+    "retreatIdleSettings": {
+      "enabled": true,
+      "minimumDistanceM": 20.0,
+      "durationMs": 3000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "worstYaw": [
+      {
+        "timestamp": "2026-10-02T20:54:31.286+10:00",
+        "relativeBearingDeg": 152.034031331626,
+        "distanceM": 22.115914782414187,
+        "requiredDirection": "right",
+        "permittedDirection": "right",
+        "reverseBlocked": false,
+        "submittedYawRate": 3.312,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T20:54:31.390+10:00",
+        "relativeBearingDeg": 152.034031331626,
+        "distanceM": 22.115914782414187,
+        "requiredDirection": "right",
+        "permittedDirection": "right",
+        "reverseBlocked": false,
+        "submittedYawRate": 4.136,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T20:54:31.500+10:00",
+        "relativeBearingDeg": 152.034031331626,
+        "distanceM": 22.115914782414187,
+        "requiredDirection": "right",
+        "permittedDirection": "right",
+        "reverseBlocked": false,
+        "submittedYawRate": 5.024,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T20:54:31.604+10:00",
+        "relativeBearingDeg": 152.034031331626,
+        "distanceM": 22.115914782414187,
+        "requiredDirection": "right",
+        "permittedDirection": "right",
+        "reverseBlocked": false,
+        "submittedYawRate": 5.856,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T20:54:31.713+10:00",
+        "relativeBearingDeg": 152.034031331626,
+        "distanceM": 22.115914782414187,
+        "requiredDirection": "right",
+        "permittedDirection": "right",
+        "reverseBlocked": false,
+        "submittedYawRate": 6.72,
+        "rotationCurve": "normal"
+      }
+    ]
+  },
+  {
+    "file": "C:/Users/gildo/temp\\cam3_full_2026-10-02_211226_570_a725bf69.jsonl",
+    "start": "21:13:48.289",
+    "stop": "21:18:09.781",
+    "end": "21:18:20.995",
+    "started": true,
+    "settings": {
+      "enabled": true,
+      "filmingDistanceM": 27.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 4.0,
+      "movementAccelerationMps2": null,
+      "movementAccelerationRampEnabled": false,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 1200000,
+      "qualificationRequiredMs": 0
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "configs": [
+      {
+        "record": 4470,
+        "timestamp": "2026-10-02T21:13:48.474+10:00",
+        "epochMs": 1790939628474,
+        "monoMs": 37857349,
+        "event": "rotation_speed_config",
+        "nextSession": 1,
+        "source": "shared_folder",
+        "configPath": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2Fvtconf",
+        "fileContents": "{\r\n  \"version\": 1,\r\n  \"normal\": [\r\n    {\r\n      \"headingErrorDeg\": 0,\r\n      \"speedDegPerSec\": 0\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 3,\r\n      \"speedDegPerSec\": 0\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 5,\r\n      \"speedDegPerSec\": 2\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 10,\r\n      \"speedDegPerSec\": 3.5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 20,\r\n      \"speedDegPerSec\": 8.5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 33,\r\n      \"speedDegPerSec\": 15\r\n    }\r\n  ],\r\n  \"riding\": [\r\n    {\r\n      \"headingErrorDeg\": 0,\r\n      \"speedDegPerSec\": 0\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 3,\r\n      \"speedDegPerSec\": 1.5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 5,\r\n      \"speedDegPerSec\": 5\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 10,\r\n      \"speedDegPerSec\": 10\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 20,\r\n      \"speedDegPerSec\": 20\r\n    },\r\n    {\r\n      \"headingErrorDeg\": 30,\r\n      \"speedDegPerSec\": 30\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "maxYawRate": 15.0,
+        "acceleration": 8.0
+      },
+      {
+        "record": 4476,
+        "timestamp": "2026-10-02T21:13:48.502+10:00",
+        "epochMs": 1790939628502,
+        "monoMs": 37857376,
+        "event": "gimbal_band_config",
+        "session": 1,
+        "configPath": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2Fvtconf/vt_gimbal_bands.json",
+        "source": "shared_folder",
+        "fileContents": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -56\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "effectiveJson": "{\r\n  \"bufferMetres\": 5,\r\n  \"bands\": [\r\n  {\r\n      \"maxDistanceMetres\": 10,\r\n      \"pitchDegrees\": -56\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 20,\r\n      \"pitchDegrees\": -35\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 30,\r\n      \"pitchDegrees\": -25\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 40,\r\n      \"pitchDegrees\": -19\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": 50,\r\n      \"pitchDegrees\": -16\r\n    },\r\n    {\r\n      \"maxDistanceMetres\": null,\r\n      \"pitchDegrees\": -12\r\n    }\r\n  ]\r\n}\r\n",
+        "validationError": "none",
+        "bufferMetres": 5.0
+      }
+    ],
+    "retreatSettings": [
+      {
+        "minimumDistanceM": 20.0,
+        "durationMs": 3000,
+        "speedMps": 3.0,
+        "cooldownMs": 5000
+      }
+    ],
+    "events": [
+      {
+        "timestamp": "2026-10-02T21:16:37.782+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=connection"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:37.883+10:00",
+        "event": "pause",
+        "detail": "session=1 cause=telemetry"
+      },
+      {
+        "timestamp": "2026-10-02T21:18:09.780+10:00",
+        "event": "recovery_cancelled",
+        "detail": "session=1 reason=landing"
+      },
+      {
+        "timestamp": "2026-10-02T21:18:09.781+10:00",
+        "event": "stop",
+        "detail": "session=1 reason=landing"
+      }
+    ],
+    "states": {
+      "STARTING": 2,
+      "AIMING": 1589,
+      "PAUSED": 879
+    },
+    "phaseCounts": {
+      "WAITING": 388,
+      "APPROACHING": 1691,
+      "HOLDING": 391
+    },
+    "stateSeconds": {
+      "STARTING": 0.209,
+      "AIMING": 169.07100000000048,
+      "PAUSED": 91.93899999999977
+    },
+    "activeStats": {
+      "distanceM": {
+        "min": 15.53,
+        "median": 29.75,
+        "p90": 46.2,
+        "max": 48.84
+      },
+      "relativeBearingDeg": {
+        "min": 0.02,
+        "median": 3.06,
+        "p90": 12.21,
+        "max": 172.13
+      },
+      "horizontalSpeedMps": {
+        "min": 0.0,
+        "median": 0.1,
+        "p90": 2.6,
+        "max": 3.83
+      },
+      "targetAgeMs": {
+        "min": 4,
+        "median": 255,
+        "p90": 455,
+        "max": 902
+      },
+      "desiredYawRate": {
+        "min": -4.07,
+        "median": 0.0,
+        "p90": 2.31,
+        "max": 15.0
+      },
+      "requestedYawRate": {
+        "min": -3.93,
+        "median": 0.0,
+        "p90": 2.29,
+        "max": 15.0
+      },
+      "submittedYawRate": {
+        "min": -3.93,
+        "median": 0.0,
+        "p90": 2.29,
+        "max": 15.0
+      }
+    },
+    "height": {
+      "min": 9.3,
+      "median": 9.4,
+      "p90": 9.4,
+      "max": 9.4
+    },
+    "yawGroups": {
+      "approach": {
+        "count": 812,
+        "error": {
+          "min": 0.1,
+          "median": 4.28,
+          "p90": 62.55,
+          "max": 172.13
+        },
+        "reverseBlocked": 0,
+        "over15": 120
+      },
+      "surfer": {
+        "count": 777,
+        "error": {
+          "min": 0.02,
+          "median": 2.74,
+          "p90": 6.87,
+          "max": 15.15
+        },
+        "reverseBlocked": 0,
+        "over15": 1
+      }
+    },
+    "rotationSources": {
+      "json": 1589
+    },
+    "curves": {
+      "normal": 1589
+    },
+    "retreats": [
+      {
+        "start": "21:14:48.938",
+        "end": "21:14:51.945",
+        "seconds": 3.007,
+        "periods": 1,
+        "startDistance": 19.640318423377252,
+        "endDistance": 25.328251459419636,
+        "minDistance": 19.640318423377252,
+        "droneDisplacement": 6.427226707470051,
+        "targetDisplacement": 1.1119492667985353,
+        "speed": {
+          "min": 0.0,
+          "median": 2.76,
+          "p90": 2.9,
+          "max": 2.9
+        },
+        "submitted": {
+          "-3.0": 28
+        },
+        "retained": 0,
+        "repeats": []
+      },
+      {
+        "start": "21:15:00.373",
+        "end": "21:15:03.459",
+        "seconds": 3.087,
+        "periods": 1,
+        "startDistance": 19.77665150673588,
+        "endDistance": 25.563193951809264,
+        "minDistance": 19.77665150673588,
+        "droneDisplacement": 5.797431337338271,
+        "targetDisplacement": 0.0,
+        "speed": {
+          "min": 0.0,
+          "median": 2.55,
+          "p90": 2.91,
+          "max": 2.91
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "repeats": []
+      },
+      {
+        "start": "21:15:41.429",
+        "end": "21:15:47.587",
+        "seconds": 6.158,
+        "periods": 2,
+        "startDistance": 19.658308952742132,
+        "endDistance": 25.923537582515664,
+        "minDistance": 15.529272264794457,
+        "droneDisplacement": 14.954869840624315,
+        "targetDisplacement": 8.94952113864842,
+        "speed": {
+          "min": 0.85,
+          "median": 2.97,
+          "p90": 2.97,
+          "max": 2.97
+        },
+        "submitted": {
+          "-3.0": 58
+        },
+        "retained": 0,
+        "repeats": [
+          {
+            "time": "21:15:44.511",
+            "distance": 17.19919638207311
+          }
+        ]
+      },
+      {
+        "start": "21:16:17.393",
+        "end": "21:16:20.489",
+        "seconds": 3.095,
+        "periods": 1,
+        "startDistance": 19.303456701900085,
+        "endDistance": 20.259800267005456,
+        "minDistance": 17.908473432570833,
+        "droneDisplacement": 5.814849001695226,
+        "targetDisplacement": 4.861299555324527,
+        "speed": {
+          "min": 0.0,
+          "median": 2.53,
+          "p90": 2.97,
+          "max": 2.97
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "repeats": []
+      },
+      {
+        "start": "21:16:22.921",
+        "end": "21:16:26.005",
+        "seconds": 3.084,
+        "periods": 1,
+        "startDistance": 19.10997244320803,
+        "endDistance": 28.811887285973636,
+        "minDistance": 19.096202639415868,
+        "droneDisplacement": 6.5919257496408665,
+        "targetDisplacement": 3.335847799210475,
+        "speed": {
+          "min": 0.0,
+          "median": 2.79,
+          "p90": 2.97,
+          "max": 2.97
+        },
+        "submitted": {
+          "-3.0": 29
+        },
+        "retained": 0,
+        "repeats": []
+      }
+    ],
+    "transitions": [
+      {
+        "timestamp": "2026-10-02T21:13:48.709+10:00",
+        "detail": "session=1 WAITING:capture_central -> APPROACHING:approach_alignment event=central_captured centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:03.801+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:17.831+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:17.940+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:48.939+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:49.054+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:57.007+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:00.373+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:00.483+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:08.531+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:10.433+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:11.923+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:18.878+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:18.986+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:23.031+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:34.285+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:34.395+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:approach_alignment event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:36.968+10:00",
+        "detail": "session=1 APPROACHING:approach_alignment -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:41.429+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:41.539+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:52.592+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:00.804+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:00.909+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> APPROACHING:moving_forward event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:12.534+10:00",
+        "detail": "session=1 APPROACHING:moving_forward -> HOLDING:approach_arrival_tolerance event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:12.638+10:00",
+        "detail": "session=1 HOLDING:approach_arrival_tolerance -> HOLDING:within_reapproach_margin event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:17.394+10:00",
+        "detail": "session=1 HOLDING:within_reapproach_margin -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:17.499+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:22.921+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> WAITING:retreat event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:23.024+10:00",
+        "detail": "session=1 WAITING:retreat -> WAITING:retreat_or_cooldown event=none centralGeneration=1"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:31.010+10:00",
+        "detail": "session=1 WAITING:retreat_or_cooldown -> APPROACHING:moving_forward event=none centralGeneration=1"
+      }
+    ],
+    "approaches": [
+      {
+        "start": "21:13:48.711",
+        "end": "21:14:17.838",
+        "startDistance": 48.73680750985986,
+        "endDistance": 27.92049413924487,
+        "planned": 21.736807509859858,
+        "lastRemaining": 1.044988572966787,
+        "lastProgress": 20.69181893689307,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 2.86,
+          "max": 4.0
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 2.86,
+          "max": 4.0
+        }
+      },
+      {
+        "start": "21:15:10.443",
+        "end": "21:15:18.880",
+        "startDistance": 32.52004843467916,
+        "endDistance": 39.50767731412764,
+        "planned": 5.520048434679161,
+        "lastRemaining": 1.1524656971543568,
+        "lastProgress": 4.367582737524804,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.46,
+          "p90": 1.1,
+          "max": 1.11
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.46,
+          "p90": 1.1,
+          "max": 1.11
+        }
+      },
+      {
+        "start": "21:15:18.987",
+        "end": "21:15:34.288",
+        "startDistance": 39.50767731412764,
+        "endDistance": 37.066330856284694,
+        "planned": 12.50767731412764,
+        "lastRemaining": 1.125122384299548,
+        "lastProgress": 11.382554929828093,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.0,
+          "median": 0.47,
+          "p90": 2.24,
+          "max": 2.44
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 0.47,
+          "p90": 2.24,
+          "max": 2.44
+        }
+      },
+      {
+        "start": "21:15:34.402",
+        "end": "21:15:41.438",
+        "startDistance": 37.066330856284694,
+        "endDistance": 19.658308952742132,
+        "planned": 10.066330856284694,
+        "lastRemaining": 4.148200515611423,
+        "lastProgress": 5.918130340673271,
+        "reason": "retreat",
+        "phase": "WAITING",
+        "requested": {
+          "min": 0.0,
+          "median": 1.11,
+          "p90": 1.99,
+          "max": 2.0
+        },
+        "submitted": {
+          "min": 0.0,
+          "median": 1.11,
+          "p90": 1.99,
+          "max": 2.0
+        }
+      },
+      {
+        "start": "21:15:52.593",
+        "end": "21:16:00.806",
+        "startDistance": 33.165372036169174,
+        "endDistance": 37.661927063826965,
+        "planned": 6.165372036169174,
+        "lastRemaining": 1.0876167694204462,
+        "lastProgress": 5.077755266748728,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.22,
+          "median": 0.51,
+          "p90": 1.16,
+          "max": 1.23
+        },
+        "submitted": {
+          "min": 0.22,
+          "median": 0.51,
+          "p90": 1.16,
+          "max": 1.23
+        }
+      },
+      {
+        "start": "21:16:00.915",
+        "end": "21:16:12.535",
+        "startDistance": 38.71663741115458,
+        "endDistance": 28.217982427339336,
+        "planned": 11.71663741115458,
+        "lastRemaining": 1.0112214393908339,
+        "lastProgress": 10.705415971763745,
+        "reason": "approach_arrival_tolerance",
+        "phase": "HOLDING",
+        "requested": {
+          "min": 0.2,
+          "median": 0.67,
+          "p90": 2.18,
+          "max": 2.34
+        },
+        "submitted": {
+          "min": 0.2,
+          "median": 0.67,
+          "p90": 2.18,
+          "max": 2.34
+        }
+      },
+      {
+        "start": "21:16:31.013",
+        "end": null,
+        "observedUntil": "21:18:09.722",
+        "startDistance": 37.857988443869715,
+        "lastDistance": 29.71425549371237,
+        "planned": 10.857988443869715,
+        "lastRemaining": 3.4551331673623853,
+        "paused": true,
+        "outcome": "unfinished_before_stop"
+      }
+    ],
+    "rides": [],
+    "rejectedSpeedJumps": 0,
+    "gimbalCommands": [
+      {
+        "timestamp": "2026-10-02T21:13:48.710+10:00",
+        "targetPitchDeg": -16.0,
+        "actualPitchDeg": -7.300000000000001,
+        "distanceM": 48.73680750985986,
+        "trigger": "startup_band"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:06.938+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -15.9,
+        "distanceM": 39.30223227875603,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:11.887+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -18.900000000000002,
+        "distanceM": 29.806039811856486,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:48.944+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.640318423377252,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:14:51.947+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -35.0,
+        "distanceM": 25.328251459419636,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:00.374+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.77665150673588,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:03.460+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -35.0,
+        "distanceM": 25.563193951809264,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:13.915+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -24.900000000000002,
+        "distanceM": 35.313043514861306,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:22.917+10:00",
+        "targetPitchDeg": -16.0,
+        "actualPitchDeg": -19.0,
+        "distanceM": 45.11838460598026,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:29.937+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -16.0,
+        "distanceM": 39.68075884739042,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:38.570+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -18.900000000000002,
+        "distanceM": 29.665461912567004,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:41.648+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.658308952742132,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:47.485+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -34.9,
+        "distanceM": 25.923537582515664,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:15:53.882+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 35.20759057959467,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:09.877+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -19.0,
+        "distanceM": 29.981542931294875,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:17.395+10:00",
+        "targetPitchDeg": -35.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 19.303456701900085,
+        "trigger": "distance_decreased"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:25.370+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -35.0,
+        "distanceM": 27.00354662962764,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:28.458+10:00",
+        "targetPitchDeg": -19.0,
+        "actualPitchDeg": -25.0,
+        "distanceM": 35.77061452163894,
+        "trigger": "distance_increased"
+      },
+      {
+        "timestamp": "2026-10-02T21:16:36.532+10:00",
+        "targetPitchDeg": -25.0,
+        "actualPitchDeg": -18.900000000000002,
+        "distanceM": 29.71425549371237,
+        "trigger": "distance_decreased"
+      }
+    ],
+    "gimbalReached": 18,
+    "gimbalReachMs": {
+      "min": 2007,
+      "median": 2196.0,
+      "p90": 2343,
+      "max": 2471
+    },
+    "gimbalResults": [
+      {
+        "record": 4508,
+        "timestamp": "2026-10-02T21:13:48.727+10:00",
+        "epochMs": 1790939628727,
+        "monoMs": 37857601,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 1,
+        "targetPitchDeg": -16.0,
+        "result": "accepted"
+      },
+      {
+        "record": 5550,
+        "timestamp": "2026-10-02T21:14:06.947+10:00",
+        "epochMs": 1790939646947,
+        "monoMs": 37875822,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 2,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 5834,
+        "timestamp": "2026-10-02T21:14:11.902+10:00",
+        "epochMs": 1790939651902,
+        "monoMs": 37880776,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 3,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 7941,
+        "timestamp": "2026-10-02T21:14:48.961+10:00",
+        "epochMs": 1790939688961,
+        "monoMs": 37917835,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 4,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 8120,
+        "timestamp": "2026-10-02T21:14:51.954+10:00",
+        "epochMs": 1790939691954,
+        "monoMs": 37920829,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 5,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 8614,
+        "timestamp": "2026-10-02T21:15:00.387+10:00",
+        "epochMs": 1790939700387,
+        "monoMs": 37929261,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 6,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 8799,
+        "timestamp": "2026-10-02T21:15:03.479+10:00",
+        "epochMs": 1790939703479,
+        "monoMs": 37932354,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 7,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 9408,
+        "timestamp": "2026-10-02T21:15:13.928+10:00",
+        "epochMs": 1790939713928,
+        "monoMs": 37942803,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 8,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 9929,
+        "timestamp": "2026-10-02T21:15:22.926+10:00",
+        "epochMs": 1790939722926,
+        "monoMs": 37951801,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 9,
+        "targetPitchDeg": -16.0,
+        "result": "accepted"
+      },
+      {
+        "record": 10335,
+        "timestamp": "2026-10-02T21:15:29.947+10:00",
+        "epochMs": 1790939729947,
+        "monoMs": 37958822,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 10,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 10832,
+        "timestamp": "2026-10-02T21:15:38.578+10:00",
+        "epochMs": 1790939738578,
+        "monoMs": 37967453,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 11,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 11018,
+        "timestamp": "2026-10-02T21:15:41.655+10:00",
+        "epochMs": 1790939741655,
+        "monoMs": 37970530,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 12,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 11357,
+        "timestamp": "2026-10-02T21:15:47.495+10:00",
+        "epochMs": 1790939747495,
+        "monoMs": 37976370,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 13,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 11730,
+        "timestamp": "2026-10-02T21:15:53.909+10:00",
+        "epochMs": 1790939753909,
+        "monoMs": 37982783,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 14,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 12645,
+        "timestamp": "2026-10-02T21:16:09.887+10:00",
+        "epochMs": 1790939769887,
+        "monoMs": 37998761,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 15,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 13084,
+        "timestamp": "2026-10-02T21:16:17.418+10:00",
+        "epochMs": 1790939777418,
+        "monoMs": 38006292,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 16,
+        "targetPitchDeg": -35.0,
+        "result": "accepted"
+      },
+      {
+        "record": 13550,
+        "timestamp": "2026-10-02T21:16:25.379+10:00",
+        "epochMs": 1790939785379,
+        "monoMs": 38014253,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 17,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      },
+      {
+        "record": 13734,
+        "timestamp": "2026-10-02T21:16:28.470+10:00",
+        "epochMs": 1790939788470,
+        "monoMs": 38017344,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 18,
+        "targetPitchDeg": -19.0,
+        "result": "accepted"
+      },
+      {
+        "record": 14200,
+        "timestamp": "2026-10-02T21:16:36.548+10:00",
+        "epochMs": 1790939796548,
+        "monoMs": 38025423,
+        "event": "gimbal_pitch_result",
+        "session": 1,
+        "commandId": 19,
+        "targetPitchDeg": -25.0,
+        "result": "accepted"
+      }
+    ],
+    "packetCount": 521,
+    "acceptedPackets": 521,
+    "packetGaps": {
+      "min": 357,
+      "median": 500.0,
+      "p90": 520,
+      "max": 1001
+    },
+    "gaps": [
+      {
+        "record": 11310,
+        "timestamp": "2026-10-02T21:15:46.837+10:00",
+        "epochMs": 1790939746837,
+        "monoMs": 37975711,
+        "event": "lora_gap",
+        "detail": "previous=4375 received=4377 missing=1 firstMissing=4376 lastMissing=4376"
+      },
+      {
+        "record": 15095,
+        "timestamp": "2026-10-02T21:16:44.838+10:00",
+        "epochMs": 1790939804838,
+        "monoMs": 38033712,
+        "event": "lora_gap",
+        "detail": "previous=4491 received=4493 missing=1 firstMissing=4492 lastMissing=4492"
+      }
+    ],
+    "nofix": 0,
+    "retainedAimingCycles": 0,
+    "speedKmh": {
+      "min": 0.0,
+      "median": 3.53,
+      "p90": 8.01,
+      "max": 12.52
+    },
+    "retreatIdleSettings": {
+      "enabled": true,
+      "minimumDistanceM": 20.0,
+      "durationMs": 3000,
+      "speedMps": 3.0,
+      "cooldownMs": 5000
+    },
+    "worstYaw": [
+      {
+        "timestamp": "2026-10-02T21:13:48.711+10:00",
+        "relativeBearingDeg": 172.12702307818506,
+        "distanceM": 48.73680750985986,
+        "requiredDirection": "none",
+        "permittedDirection": "none",
+        "reverseBlocked": false,
+        "submittedYawRate": 0.008,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T21:13:48.819+10:00",
+        "relativeBearingDeg": 172.12427809028566,
+        "distanceM": 48.75232317415837,
+        "requiredDirection": "none",
+        "permittedDirection": "none",
+        "reverseBlocked": false,
+        "submittedYawRate": 0.88,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T21:13:48.927+10:00",
+        "relativeBearingDeg": 172.12427809028566,
+        "distanceM": 48.75232317415837,
+        "requiredDirection": "none",
+        "permittedDirection": "none",
+        "reverseBlocked": false,
+        "submittedYawRate": 1.728,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T21:13:49.029+10:00",
+        "relativeBearingDeg": 172.12427809028566,
+        "distanceM": 48.75232317415837,
+        "requiredDirection": "none",
+        "permittedDirection": "none",
+        "reverseBlocked": false,
+        "submittedYawRate": 2.56,
+        "rotationCurve": "normal"
+      },
+      {
+        "timestamp": "2026-10-02T21:13:49.132+10:00",
+        "relativeBearingDeg": 172.12427809028566,
+        "distanceM": 48.75232317415837,
+        "requiredDirection": "none",
+        "permittedDirection": "none",
+        "reverseBlocked": false,
+        "submittedYawRate": 3.384,
+        "rotationCurve": "normal"
+      }
+    ]
+  },
+  {
+    "file": "C:/Users/gildo/temp\\cam3_full_2026-10-02_213145_721_d296fa02.jsonl",
+    "start": "21:31:45.831",
+    "stop": "21:32:13.078",
+    "end": "21:32:13.081",
+    "started": false,
+    "settings": {
+      "enabled": true,
+      "filmingDistanceM": 70.0,
+      "reapproachMarginM": 5.0,
+      "maxMovementSpeedMps": 4.0,
+      "movementAccelerationMps2": null,
+      "movementAccelerationRampEnabled": false,
+      "lineupWidthM": 50.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 90000,
+      "noRideTimeoutMs": 900000,
+      "qualificationRequiredMs": 0
+    },
+    "yawSettings": [
+      [
+        15.0,
+        8.0
+      ]
+    ],
+    "configs": [],
+    "retreatSettings": [],
+    "events": [
+      {
+        "timestamp": "2026-10-02T21:32:13.078+10:00",
+        "event": "stop",
+        "detail": "session=0 reason=screen_closed"
+      }
+    ],
+    "states": {
+      "OFF": 258
+    },
+    "phaseCounts": {
+      "OFF": 258
+    },
+    "stateSeconds": {
+      "OFF": 27.19300000000004
+    },
+    "activeStats": {
+      "distanceM": {},
+      "relativeBearingDeg": {},
+      "horizontalSpeedMps": {},
+      "targetAgeMs": {},
+      "desiredYawRate": {},
+      "requestedYawRate": {},
+      "submittedYawRate": {}
+    },
+    "height": {},
+    "yawGroups": {
+      "surfer": {
+        "count": 0,
+        "error": {},
+        "reverseBlocked": 0,
+        "over15": 0
+      }
+    },
+    "rotationSources": {},
+    "curves": {},
+    "retreats": [],
+    "transitions": [],
+    "approaches": [],
+    "rides": [],
+    "rejectedSpeedJumps": 0,
+    "gimbalCommands": [],
+    "gimbalReached": 0,
+    "gimbalReachMs": {},
+    "gimbalResults": [],
+    "packetCount": 0,
+    "acceptedPackets": 0,
+    "packetGaps": {},
+    "gaps": [],
+    "nofix": 0,
+    "retainedAimingCycles": 0,
+    "speedKmh": {},
+    "retreatIdleSettings": {
+      "enabled": false,
+      "minimumDistanceM": 23.0,
+      "durationMs": 3000,
+      "speedMps": 5.0,
+      "cooldownMs": 5000
+    },
+    "worstYaw": []
+  }
+]

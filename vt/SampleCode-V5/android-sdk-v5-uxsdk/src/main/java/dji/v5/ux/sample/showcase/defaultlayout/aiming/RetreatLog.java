@@ -9,11 +9,15 @@ public final class RetreatLog {
         AimingSession.Inputs in=session.cycleInputs;
         AimingSession.Fix fix=in==null ? null : in.target;
         log.record(event,"session",session.sessionId(),"cycleId",session.cycleId,"reason",reason,
+            // VT 3.8: Count/status evidence on every transition and cycle.
+            "gpsFresh",r.gpsFresh,"maxStartsWithoutFreshGps",c.maxStartsWithoutFreshGps,
+            "startsWithoutFreshGps",r.startsWithoutFreshGps,"previousStartsWithoutFreshGps",r.previousStartsWithoutFreshGps,
+            "staleLimitBlocked",r.staleLimitBlocked,
             "enabled",c.enabled,"active",r.active,"minimumDistanceM",c.minimumDistance,
             "durationMs",c.durationMs,"speedMps",c.speed,"speedKmh",c.speed*3.6,"maximumSpeedMps",RetreatSettings.MAX_SPEED,"cooldownMs",c.cooldownMs,
             "startedAtMs",r.startedAt,"periodStartedAtMs",r.periodStartedAt,"period",r.period,
             "elapsedMs",r.startedAt<0 ? 0 : Math.max(0,now-r.startedAt),"remainingMs",r.remaining(now),
-            "cooldownRemainingMs",r.cooldownRemaining(now),"startDistanceM",r.startDistance,"distanceM",r.distance,
+            "cooldownRemainingMs",r.cooldownRemaining(now),"startDistanceM",r.startDistance,"distanceM",fix==null ? null : YawAimingMath.distance(in.lat,in.lon,fix.lat,fix.lon),
             "targetLatitude",fix==null ? null : fix.lat,"targetLongitude",fix==null ? null : fix.lon,
             "targetSequence",fix==null ? null : fix.sequence,"gpsAgeMs",fix==null ? null : now-fix.time,
             "retainedTarget",session.cycleRetainedTarget,

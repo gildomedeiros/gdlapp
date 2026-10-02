@@ -61,18 +61,8 @@ public final class YawAimingController implements AimingSession.Port {
     private volatile ComeToMeSettings movementConfig=ComeToMeSettings.defaults();
     // VT 3.5: Separate persisted retreat controls; existing movement preferences are untouched.
     private volatile RetreatSettings retreatConfig=RetreatSettings.defaults();
+    private String movementConfigError;
     @Override public RetreatSettings retreatSettings() { return retreatConfig; }
-    public void setRetreatSettings(RetreatSettings config) {
-        executor.execute(() -> {
-            if(!canSelectGpsSource()) return;
-            retreatConfig=config;
-            appContext.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit()
-                .putFloat("retreatDistance",(float)config.minimumDistance).putFloat("retreatSpeed",(float)config.speed)
-                .putLong("retreatDurationMs",config.durationMs).putLong("retreatCooldownMs",config.cooldownMs).apply();
-            diagnostic("retreat_settings_saved","distance="+config.minimumDistance+" speed="+config.speed
-                +" durationMs="+config.durationMs+" cooldownMs="+config.cooldownMs);
-        });
-    }
     @Override public void retreatEvent(String event,String reason) {
         RetreatLog.record(fullLog,session,now(),event,reason,submittedCycle,lastSubmittedForward);
         // One structured full-log event, plus coordinate-free minimal diagnostics (no duplicate full event).
@@ -89,7 +79,7 @@ public final class YawAimingController implements AimingSession.Port {
     public void setMovementSettings(ComeToMeSettings config) {
         executor.execute(() -> {
             if(!canSelectGpsSource()) return;
-            movementConfig=config;
+            movementConfig=config;movementConfigError=null; // VT 3.8: A valid explicit save clears the blocking preference error.
             appContext.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit()
                     .putBoolean("comeToMe",config.enabled).putFloat("filming",(float)config.filmingDistance)
                     .putFloat("reapproachMargin",(float)config.reapproachMargin).putFloat("width",(float)config.lineupWidth).putFloat("rideStart",(float)config.rideStartKmh)
@@ -212,17 +202,14 @@ public final class YawAimingController implements AimingSession.Port {
         session = new AimingSession(this);
         android.content.SharedPreferences prefs=context.getSharedPreferences("vt28",Context.MODE_PRIVATE);
         try {
-            movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),Math.max(10,prefs.getFloat("filming",70)),
+            movementConfig=new ComeToMeSettings(prefs.getBoolean("comeToMe",true),prefs.getFloat("filming",70),
                     prefs.getFloat("width",50),prefs.getFloat("rideStart",18),0.1,1000,
                     prefs.getLong("inactivityMs",900000),prefs.getFloat("reapproachMargin",(float)ComeToMeSettings.DEFAULT_APPROACH_MARGIN),
                     prefs.getLong("rideDurationMs",90000),prefs.getFloat("closeRangePitchDeg",-25),prefs.getFloat("longRangePitchDeg",-10),
                     prefs.getFloat("maxYawRate",15),prefs.getFloat("yawAcceleration",8),
                     prefs.getFloat("maxMovementSpeed",(float)ComeToMeSettings.DEFAULT_MAX_SPEED));
-        } catch(IllegalArgumentException invalid) { movementConfig=ComeToMeSettings.defaults(); }
-        try {
-            retreatConfig=new RetreatSettings(true,prefs.getFloat("retreatDistance",(float)RetreatSettings.DEFAULT_DISTANCE),prefs.getLong("retreatDurationMs",RetreatSettings.DEFAULT_DURATION_MS),
-                prefs.getFloat("retreatSpeed",(float)RetreatSettings.MAX_SPEED),prefs.getLong("retreatCooldownMs",RetreatSettings.DEFAULT_COOLDOWN_MS));
-        } catch(IllegalArgumentException invalid) { retreatConfig=RetreatSettings.defaults(); }
+        } catch(RuntimeException invalid) { movementConfigError="Saved movement settings: "+invalid.getMessage()+". Correct and save VT settings before Start."; }
+        // VT 3.8: Ignore legacy retreat preferences; JSON is authoritative at Start.
         executor.scheduleWithFixedDelay(this::tick, 0, 100, TimeUnit.MILLISECONDS);
     }
     public void resume(Observer callback) {
@@ -273,21 +260,36 @@ public final class YawAimingController implements AimingSession.Port {
             final String message=result;main.post(()->feedback.accept(message));
         });
     }
-    public void startAiming() {
+    public void startAiming() { startAiming(message->main.post(()->android.widget.Toast.makeText(appContext,message,android.widget.Toast.LENGTH_LONG).show())); }
+    // VT 3.8: All JSON files load atomically before requesting aircraft control; errors block Start.
+    public void startAiming(java.util.function.Consumer<String> configurationError) {
         // CAM3 v2.1: Record explicit user intent, including attempts rejected by the prerequisites.
         diagnostic("user_start", "requested");
         long request = intent.incrementAndGet();
         executor.execute(() -> {
             if (foreground && listening && intent.get() == request) {
                 yielding = false;
-                // VT 3.7: Never reload a curve during active control or recovery.
                 if(canSelectGpsSource()) {
-                    RotationSpeedStorage.Loaded loaded=RotationSpeedStorage.load(appContext);
-                    session.rotationCurve=loaded.curve;
-                    fullLog.record("rotation_speed_config","nextSession",session.sessionId()+1,"source",loaded.source,
-                        "configPath",loaded.path,"fileContents",loaded.raw,"validationError",loaded.error,
-                        "maxYawRate",movementConfig.maxYawRate,"acceleration",movementConfig.yawAcceleration);
-                    diagnostic("rotation_speed_config",loaded.source+" error="+loaded.error);
+                    try {
+                        if(movementConfigError!=null)throw new IllegalArgumentException(movementConfigError);
+                        boolean created=SharedConfigStorage.ensureRetreat(appContext);
+                        if(created)diagnostic("retreat_config_created","Default vt_retreat_settings.json created; existing JSON files preserved");
+                        VtSessionConfig loaded=VtSessionConfig.load(name->SharedConfigStorage.read(appContext,name));
+                        // Disk access may take time; STOP/screen loss during it must still veto Start.
+                        if(!foreground||!listening||intent.get()!=request)return;
+                        retreatConfig=loaded.retreat;session.rotationCurve=loaded.rotation;
+                        camera.prepareConfiguration(loaded,SharedConfigStorage.folder(appContext));
+                        fullLog.record("retreat_settings_config","nextSession",session.sessionId()+1,"source","shared_folder",
+                            "configPath",SharedConfigStorage.folder(appContext),"effectiveJson",loaded.retreatJson);
+                        fullLog.record("rotation_speed_config","nextSession",session.sessionId()+1,"source","shared_folder",
+                            "configPath",SharedConfigStorage.folder(appContext),"fileContents",loaded.rotationJson,"validationError","none",
+                            "maxYawRate",movementConfig.maxYawRate,"acceleration",movementConfig.yawAcceleration);
+                    } catch(Exception invalid) {
+                        String detail=invalid.getMessage()==null?invalid.toString():invalid.getMessage();
+                        String message=detail.startsWith("Cannot start:")?detail:"Cannot start: "+detail;
+                        diagnostic("configuration_start_blocked",message);
+                        main.post(()->configurationError.accept(message));return;
+                    }
                 }
                 session.startAiming();
             }

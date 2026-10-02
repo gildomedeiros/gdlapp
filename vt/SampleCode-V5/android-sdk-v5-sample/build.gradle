@@ -27,8 +27,9 @@ android {
         // VT 3.5: Independent timed backward retreat, retained target and event logs.
         // VT 3.6: Immediate distance-limited movement, shared margin and faster configurable retreat.
         // VT 3.7: External rotation curves and shared configuration folder.
-        versionCode 21
-        versionName "3.7"
+        // VT 3.8: JSON retreat settings, bounded stale-GPS starts and blocking config errors.
+        versionCode 22
+        versionName "3.8"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN

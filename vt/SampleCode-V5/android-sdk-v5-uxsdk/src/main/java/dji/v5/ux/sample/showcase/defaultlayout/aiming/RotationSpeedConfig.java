@@ -14,11 +14,10 @@ public final class RotationSpeedConfig {
     }
     public static RotationSpeedCurve parse(String raw) {
         if(raw==null||raw.length()>65536)throw new IllegalArgumentException("Configuration exceeds 64 KiB");
-        try {
-            com.google.gson.stream.JsonReader r=new com.google.gson.stream.JsonReader(new java.io.StringReader(raw));r.setLenient(false);
-            JsonObject o=com.google.gson.internal.Streams.parse(r).getAsJsonObject();
-            if(r.peek()!=com.google.gson.stream.JsonToken.END_DOCUMENT||number(o.get("version"))!=1)throw new IllegalArgumentException("Unsupported rotation JSON");
+        {
+            JsonObject o=StrictConfigJson.object(raw);
+            if(number(o.get("version"))!=1)throw new IllegalArgumentException("version must be 1");
             return new RotationSpeedCurve(rows(o.getAsJsonArray("normal")),rows(o.getAsJsonArray("riding")));
-        }catch(java.io.IOException e){throw new IllegalArgumentException("Invalid rotation JSON",e);}
+        }
     }
 }

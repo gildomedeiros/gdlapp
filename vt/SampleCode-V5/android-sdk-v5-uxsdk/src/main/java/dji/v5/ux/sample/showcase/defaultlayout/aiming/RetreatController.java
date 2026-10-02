@@ -9,13 +9,35 @@ public final class RetreatController {
     public long startedAt=-1, periodStartedAt=-1, deadline=-1, cooldownUntil=-1, period;
     public double distance=Double.NaN, startDistance=Double.NaN;
     public String reason="idle";
+    // VT 3.8: Reset only for a new session or newly received valid fix, never on cooldown/pause.
+    public int startsWithoutFreshGps,previousStartsWithoutFreshGps;
+    public boolean gpsFresh,staleLimitBlocked;
+    public long lastFreshFixTime=-1;
     private final BiConsumer<String,String> events;
+    public void observeGps(boolean fresh,AimingSession.Fix fix) {
+        gpsFresh=fresh;
+        if(fresh && fix!=null && fix.time>lastFreshFixTime) {
+            lastFreshFixTime=fix.time;previousStartsWithoutFreshGps=startsWithoutFreshGps;
+            boolean restore=startsWithoutFreshGps>0||staleLimitBlocked;
+            startsWithoutFreshGps=0;staleLimitBlocked=false;
+            if(restore)emit("retreat_gps_allowance_reset","fresh_valid_fix");
+        }
+    }
+    private boolean allowStart() {
+        if(gpsFresh)return true;
+        if(startsWithoutFreshGps>=settings.maxStartsWithoutFreshGps) {
+            if(!staleLimitBlocked){staleLimitBlocked=true;emit("retreat_start_blocked","stale_gps_retreat_limit");}
+            return false;
+        }
+        startsWithoutFreshGps++;return true;
+    }
     public RetreatController(BiConsumer<String,String> events) { this.events=events; }
     private void emit(String event,String why) {
         reason=why;
         try { events.accept(event,why); } catch(RuntimeException ignored) { /* Logging never controls flight. */ }
     }
     public void start(RetreatSettings config) {
+        startsWithoutFreshGps=previousStartsWithoutFreshGps=0;gpsFresh=staleLimitBlocked=false;lastFreshFixTime=-1;
         settings=config;active=false;startedAt=periodStartedAt=deadline=cooldownUntil=-1;period=0;
         distance=startDistance=Double.NaN;reason="idle";
     }
@@ -48,6 +70,9 @@ public final class RetreatController {
         }
         if(active && now>=deadline) {
             if(close(in)) {
+                if(!allowStart()) {
+                    active=false;deadline=-1;emit("retreat_finished","stale_gps_retreat_limit");beginCooldown(now);return;
+                }
                 period++;periodStartedAt=now;deadline=now+settings.durationMs;
                 emit("retreat_repeated","still_close");
             } else {
@@ -56,6 +81,7 @@ public final class RetreatController {
             }
         }
         if(!active && close(in)) {
+            if(!allowStart())return;
             if(cooldownUntil>=0) { cooldownUntil=-1;emit("retreat_cooldown_ended","new_retreat"); }
             active=true;startedAt=periodStartedAt=now;deadline=now+settings.durationMs;period=1;startDistance=distance;
             if(m.approaching()) emit("retreat_approach_replaced","too_close");
@@ -82,6 +108,6 @@ public final class RetreatController {
     public String summary(long now) {
         return active ? String.format(java.util.Locale.US,"Retreat: %.1f m/s backward · %.1f s left · separation %.1f m",
                 settings.speed,remaining(now)/1000.0,distance)
-                : cooling(now) ? String.format(java.util.Locale.US,"Come to me cooldown: %.1f s",cooldownRemaining(now)/1000.0) : "";
+                : cooling(now) ? String.format(java.util.Locale.US,"Come to me cooldown: %.1f s",cooldownRemaining(now)/1000.0) : staleLimitBlocked ? "Retreat blocked: fresh surfer GPS required (allowance used)" : "";
     }
 }

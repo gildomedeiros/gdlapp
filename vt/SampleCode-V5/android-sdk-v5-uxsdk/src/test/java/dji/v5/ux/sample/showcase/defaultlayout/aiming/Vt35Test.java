@@ -9,7 +9,7 @@ public final class Vt35Test {
     static AimingSessionTest.Fake start(double distance,double rideThreshold) {
         AimingSessionTest.Fake f=new AimingSessionTest.Fake();
         f.movement=new ComeToMeSettings(true,10,100,rideThreshold,8,30000,1200000,5);
-        f.retreat=new RetreatSettings(true,25,10000,3,5000);f.aiming();step(f,0,distance,20,false);return f;
+        f.retreat=new RetreatSettings(true,25,10000,3,5000,100);f.aiming();step(f,0,distance,20,false);return f;
     }
     static void step(AimingSessionTest.Fake f,double drone,double target,double heading,boolean nofix) {
         f.time+=100;
