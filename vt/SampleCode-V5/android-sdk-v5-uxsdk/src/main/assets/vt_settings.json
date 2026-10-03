@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "enabled": true,
+  "filmingSeparationMetres": 28,
+  "reapproachMarginMetres": 5,
+  "maxMovementSpeedMetresPerSecond": 4,
+  "lineupWidthMetres": 50,
+  "rideStartKmh": 18,
+  "rideDurationSeconds": 90,
+  "noRideTimeoutSeconds": 900,
+  "maxYawRateDegreesPerSecond": 15,
+  "yawAccelerationDegreesPerSecondSquared": 8,
+  "mode": "front",
+  "shorelineId": "",
+  "sidewaysSide": "left",
+  "alignmentToleranceMetres": 3
+}

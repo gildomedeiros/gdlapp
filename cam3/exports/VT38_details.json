@@ -1,0 +1,1348 @@
+[
+  {
+    "file": "cam3_full_2026-10-03_084631_323_e332f36b.jsonl",
+    "activeStart": "08:48:16.537",
+    "activeEnd": "08:51:19.334",
+    "settings": {
+      "filmingDistanceM": 27.0,
+      "maxMovementSpeedMps": 4.0,
+      "reapproachMarginM": 5.0,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 600000
+    },
+    "configs": {
+      "retreat_settings_config": {
+        "version": 1,
+        "enabled": true,
+        "minimumDistanceMetres": 23,
+        "durationSeconds": 3,
+        "speedMetresPerSecond": 5,
+        "comeToMeCooldownSeconds": 5,
+        "maxStartsWithoutFreshGps": 1
+      },
+      "rotation_speed_config": {
+        "version": 1,
+        "normal": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 2
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 3.5
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 8.5
+          },
+          {
+            "headingErrorDeg": 33,
+            "speedDegPerSec": 15
+          }
+        ],
+        "riding": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 1.5
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 5
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 10
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 20
+          },
+          {
+            "headingErrorDeg": 30,
+            "speedDegPerSec": 30
+          }
+        ]
+      },
+      "gimbal_band_config": {
+        "bufferMetres": 5,
+        "bands": [
+          {
+            "maxDistanceMetres": 10,
+            "pitchDegrees": -56
+          },
+          {
+            "maxDistanceMetres": 20,
+            "pitchDegrees": -35
+          },
+          {
+            "maxDistanceMetres": 30,
+            "pitchDegrees": -25
+          },
+          {
+            "maxDistanceMetres": 40,
+            "pitchDegrees": -19
+          },
+          {
+            "maxDistanceMetres": 50,
+            "pitchDegrees": -16
+          },
+          {
+            "maxDistanceMetres": null,
+            "pitchDegrees": -12
+          }
+        ]
+      }
+    },
+    "gapsOver3s": [],
+    "activePacketGapsMs": {
+      "min": 467,
+      "median": 500.0,
+      "p90": 522,
+      "max": 1022
+    },
+    "surferYaw": {
+      "count": 563,
+      "error": {
+        "min": 0.34,
+        "median": 2.96,
+        "p90": 5.25,
+        "max": 20.52
+      },
+      "blocked": 0
+    },
+    "retainedSeconds": 0,
+    "gimbal": {
+      "commands": 12,
+      "reached": 12,
+      "results": {
+        "accepted": 12
+      },
+      "reachMs": {
+        "min": 2015,
+        "median": 2089.5,
+        "p90": 2223,
+        "max": 2233
+      }
+    },
+    "rides": {},
+    "navOutcomes": {
+      "retreat": 3,
+      "approach_arrival_tolerance": 6
+    },
+    "returns": []
+  },
+  {
+    "file": "cam3_full_2026-10-03_085135_954_5ec0e1d7.jsonl",
+    "activeStart": "08:52:08.369",
+    "activeEnd": "09:17:51.307",
+    "settings": {
+      "filmingDistanceM": 27.0,
+      "maxMovementSpeedMps": 4.0,
+      "reapproachMarginM": 5.0,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 600000
+    },
+    "configs": {
+      "retreat_settings_config": {
+        "version": 1,
+        "enabled": true,
+        "minimumDistanceMetres": 23,
+        "durationSeconds": 3,
+        "speedMetresPerSecond": 5,
+        "comeToMeCooldownSeconds": 5,
+        "maxStartsWithoutFreshGps": 1
+      },
+      "rotation_speed_config": {
+        "version": 1,
+        "normal": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 2
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 3.5
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 8.5
+          },
+          {
+            "headingErrorDeg": 33,
+            "speedDegPerSec": 15
+          }
+        ],
+        "riding": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 1.5
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 5
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 10
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 20
+          },
+          {
+            "headingErrorDeg": 30,
+            "speedDegPerSec": 30
+          }
+        ]
+      },
+      "gimbal_band_config": {
+        "bufferMetres": 5,
+        "bands": [
+          {
+            "maxDistanceMetres": 10,
+            "pitchDegrees": -56
+          },
+          {
+            "maxDistanceMetres": 20,
+            "pitchDegrees": -35
+          },
+          {
+            "maxDistanceMetres": 30,
+            "pitchDegrees": -25
+          },
+          {
+            "maxDistanceMetres": 40,
+            "pitchDegrees": -19
+          },
+          {
+            "maxDistanceMetres": 50,
+            "pitchDegrees": -16
+          },
+          {
+            "maxDistanceMetres": null,
+            "pitchDegrees": -12
+          }
+        ]
+      }
+    },
+    "gapsOver3s": [
+      {
+        "start": "08:58:02.403",
+        "end": "08:58:06.403",
+        "seconds": 4.0
+      },
+      {
+        "start": "09:06:23.407",
+        "end": "09:06:27.916",
+        "seconds": 4.509
+      },
+      {
+        "start": "09:09:00.911",
+        "end": "09:09:05.919",
+        "seconds": 5.008
+      },
+      {
+        "start": "09:12:09.909",
+        "end": "09:12:13.918",
+        "seconds": 4.008
+      }
+    ],
+    "activePacketGapsMs": {
+      "min": 464,
+      "median": 500,
+      "p90": 527,
+      "max": 5008
+    },
+    "surferYaw": {
+      "count": 7846,
+      "error": {
+        "min": 0.0,
+        "median": 3.01,
+        "p90": 8.45,
+        "max": 138.7
+      },
+      "blocked": 311
+    },
+    "retainedSeconds": 5.529,
+    "gimbal": {
+      "commands": 79,
+      "reached": 79,
+      "results": {
+        "accepted": 79
+      },
+      "reachMs": {
+        "min": 2008,
+        "median": 2146,
+        "p90": 2257,
+        "max": 2572
+      }
+    },
+    "rides": {
+      "ride_started": 8,
+      "ride_expired": 8
+    },
+    "navOutcomes": {
+      "retreat": 5,
+      "approach_arrival_tolerance": 46,
+      "ride_detected": 1
+    },
+    "returns": []
+  },
+  {
+    "file": "cam3_full_2026-10-03_092718_407_9e91c5b5.jsonl",
+    "activeStart": "09:27:29.305",
+    "activeEnd": "09:38:44.983",
+    "settings": {
+      "filmingDistanceM": 23.0,
+      "maxMovementSpeedMps": 4.0,
+      "reapproachMarginM": 5.0,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 300000
+    },
+    "configs": {
+      "retreat_settings_config": {
+        "version": 1,
+        "enabled": true,
+        "minimumDistanceMetres": 18,
+        "durationSeconds": 2,
+        "speedMetresPerSecond": 4,
+        "comeToMeCooldownSeconds": 5,
+        "maxStartsWithoutFreshGps": 1
+      },
+      "rotation_speed_config": {
+        "version": 1,
+        "normal": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 2
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 3.5
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 8.5
+          },
+          {
+            "headingErrorDeg": 33,
+            "speedDegPerSec": 15
+          }
+        ],
+        "riding": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 1.5
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 5
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 10
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 20
+          },
+          {
+            "headingErrorDeg": 30,
+            "speedDegPerSec": 30
+          }
+        ]
+      },
+      "gimbal_band_config": {
+        "bufferMetres": 5,
+        "bands": [
+          {
+            "maxDistanceMetres": 10,
+            "pitchDegrees": -56
+          },
+          {
+            "maxDistanceMetres": 20,
+            "pitchDegrees": -35
+          },
+          {
+            "maxDistanceMetres": 30,
+            "pitchDegrees": -25
+          },
+          {
+            "maxDistanceMetres": 40,
+            "pitchDegrees": -19
+          },
+          {
+            "maxDistanceMetres": 50,
+            "pitchDegrees": -16
+          },
+          {
+            "maxDistanceMetres": null,
+            "pitchDegrees": -12
+          }
+        ]
+      }
+    },
+    "gapsOver3s": [
+      {
+        "start": "09:31:31.416",
+        "end": "09:31:35.451",
+        "seconds": 4.034
+      },
+      {
+        "start": "09:32:51.919",
+        "end": "09:32:54.922",
+        "seconds": 3.003
+      },
+      {
+        "start": "09:33:23.417",
+        "end": "09:33:26.923",
+        "seconds": 3.505
+      },
+      {
+        "start": "09:35:26.919",
+        "end": "09:35:31.419",
+        "seconds": 4.499
+      },
+      {
+        "start": "09:36:14.419",
+        "end": "09:36:17.420",
+        "seconds": 3.001
+      },
+      {
+        "start": "09:36:45.449",
+        "end": "09:36:51.926",
+        "seconds": 6.478
+      }
+    ],
+    "activePacketGapsMs": {
+      "min": 466,
+      "median": 501.0,
+      "p90": 1000,
+      "max": 6478
+    },
+    "surferYaw": {
+      "count": 3575,
+      "error": {
+        "min": 0.01,
+        "median": 4.17,
+        "p90": 12.44,
+        "max": 121.82
+      },
+      "blocked": 149
+    },
+    "retainedSeconds": 6.653,
+    "gimbal": {
+      "commands": 30,
+      "reached": 30,
+      "results": {
+        "accepted": 30
+      },
+      "reachMs": {
+        "min": 2000,
+        "median": 2235.0,
+        "p90": 2470,
+        "max": 2565
+      }
+    },
+    "rides": {
+      "ride_started": 2,
+      "ride_expired": 2
+    },
+    "navOutcomes": {
+      "retreat": 2,
+      "approach_arrival_tolerance": 20,
+      "off": 1
+    },
+    "returns": []
+  },
+  {
+    "file": "cam3_full_2026-10-03_094458_725_8c2c3251.jsonl",
+    "activeStart": "09:46:02.179",
+    "activeEnd": "10:17:01.292",
+    "settings": {
+      "filmingDistanceM": 23.0,
+      "maxMovementSpeedMps": 4.0,
+      "reapproachMarginM": 5.0,
+      "lineupWidthM": 100.0,
+      "rideStartKmh": 18.0,
+      "rideDurationMs": 20000,
+      "noRideTimeoutMs": 300000
+    },
+    "configs": {
+      "retreat_settings_config": {
+        "version": 1,
+        "enabled": true,
+        "minimumDistanceMetres": 18,
+        "durationSeconds": 2,
+        "speedMetresPerSecond": 4,
+        "comeToMeCooldownSeconds": 5,
+        "maxStartsWithoutFreshGps": 1
+      },
+      "rotation_speed_config": {
+        "version": 1,
+        "normal": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 2
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 3.5
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 8.5
+          },
+          {
+            "headingErrorDeg": 33,
+            "speedDegPerSec": 15
+          }
+        ],
+        "riding": [
+          {
+            "headingErrorDeg": 0,
+            "speedDegPerSec": 0
+          },
+          {
+            "headingErrorDeg": 3,
+            "speedDegPerSec": 1.5
+          },
+          {
+            "headingErrorDeg": 5,
+            "speedDegPerSec": 5
+          },
+          {
+            "headingErrorDeg": 10,
+            "speedDegPerSec": 10
+          },
+          {
+            "headingErrorDeg": 20,
+            "speedDegPerSec": 20
+          },
+          {
+            "headingErrorDeg": 30,
+            "speedDegPerSec": 30
+          }
+        ]
+      },
+      "gimbal_band_config": {
+        "bufferMetres": 5,
+        "bands": [
+          {
+            "maxDistanceMetres": 10,
+            "pitchDegrees": -56
+          },
+          {
+            "maxDistanceMetres": 20,
+            "pitchDegrees": -35
+          },
+          {
+            "maxDistanceMetres": 30,
+            "pitchDegrees": -25
+          },
+          {
+            "maxDistanceMetres": 40,
+            "pitchDegrees": -19
+          },
+          {
+            "maxDistanceMetres": 50,
+            "pitchDegrees": -16
+          },
+          {
+            "maxDistanceMetres": null,
+            "pitchDegrees": -12
+          }
+        ]
+      }
+    },
+    "gapsOver3s": [
+      {
+        "start": "09:54:59.932",
+        "end": "09:55:03.937",
+        "seconds": 4.005
+      },
+      {
+        "start": "09:56:06.432",
+        "end": "09:56:09.434",
+        "seconds": 3.002
+      },
+      {
+        "start": "09:57:14.434",
+        "end": "09:57:18.441",
+        "seconds": 4.007
+      },
+      {
+        "start": "09:57:20.930",
+        "end": "09:57:24.940",
+        "seconds": 4.01
+      },
+      {
+        "start": "09:57:29.431",
+        "end": "09:57:32.434",
+        "seconds": 3.003
+      },
+      {
+        "start": "09:58:36.929",
+        "end": "09:58:40.455",
+        "seconds": 3.527
+      },
+      {
+        "start": "10:03:28.933",
+        "end": "10:03:31.938",
+        "seconds": 3.005
+      },
+      {
+        "start": "10:06:48.937",
+        "end": "10:06:51.938",
+        "seconds": 3.001
+      },
+      {
+        "start": "10:09:58.438",
+        "end": "10:10:01.939",
+        "seconds": 3.501
+      },
+      {
+        "start": "10:10:01.939",
+        "end": "10:10:07.948",
+        "seconds": 6.009
+      },
+      {
+        "start": "10:11:24.936",
+        "end": "10:11:27.937",
+        "seconds": 3.001
+      },
+      {
+        "start": "10:12:20.940",
+        "end": "10:12:24.441",
+        "seconds": 3.501
+      }
+    ],
+    "activePacketGapsMs": {
+      "min": 463,
+      "median": 500.0,
+      "p90": 1002,
+      "max": 6009
+    },
+    "surferYaw": {
+      "count": 10630,
+      "error": {
+        "min": 0.0,
+        "median": 2.98,
+        "p90": 7.35,
+        "max": 81.34
+      },
+      "blocked": 310
+    },
+    "retainedSeconds": 7.498,
+    "gimbal": {
+      "commands": 95,
+      "reached": 95,
+      "results": {
+        "accepted": 95
+      },
+      "reachMs": {
+        "min": 2006,
+        "median": 2219,
+        "p90": 2523,
+        "max": 2659
+      }
+    },
+    "rides": {
+      "ride_started": 7,
+      "ride_expired": 7
+    },
+    "navOutcomes": {
+      "retreat": 5,
+      "approach_arrival_tolerance": 45,
+      "return_arrival_tolerance": 2,
+      "return_alignment": 1,
+      "off": 1
+    },
+    "returns": [
+      {
+        "start": {
+          "record": 68079,
+          "timestamp": "2026-10-03T10:04:30.846+10:00",
+          "epochMs": 1790985870846,
+          "monoMs": 56362194,
+          "event": "movement_cycle",
+          "session": 1,
+          "cycleId": 11382,
+          "translationPurpose": "return",
+          "retreatActive": false,
+          "retreatCooldownRemainingMs": 0,
+          "maxMovementSpeedMps": 4.0,
+          "maxMovementSpeedKmh": 14.4,
+          "movementAccelerationMps2": null,
+          "movementAccelerationRampEnabled": false,
+          "movementSpeedPolicy": "distance_limited_immediate",
+          "firstApproachUsesSameMargin": true,
+          "movementSlowdownDistanceM": 20.0,
+          "arrivalSpeedPerMetre": 0.2,
+          "qualificationWaitEnabled": false,
+          "rideEndTriggersReturn": false,
+          "qualificationRequiredMs": 0,
+          "qualificationStatus": "waiting",
+          "qualificationEvent": "reset_band_created",
+          "gpsMovementPaused": false,
+          "waitingForFreshApproachFix": false,
+          "savedNavigationWithOldGps": false,
+          "maxExcursionM": 250.0,
+          "completionToleranceM": 1.0,
+          "excursionStopDistanceM": 249.0,
+          "approachRemainingM": null,
+          "returnRemainingM": 106.93557965403632,
+          "excursionRemainingM": 139.0644203459637,
+          "reapproachMarginM": 5.0,
+          "hasFilmed": true,
+          "approachStartThresholdM": 28.0,
+          "enabled": true,
+          "filmingDistanceM": 23.0,
+          "lineupWidthM": 100.0,
+          "rideStartKmh": 18.0,
+          "rideDurationMs": 20000,
+          "rideStartedAtMs": 94861096,
+          "rideExpiresAtMs": 94881096,
+          "rideRemainingMs": 0,
+          "ridePolicy": "fixed_duration",
+          "noRideTimeoutMs": 300000,
+          "phase": "RETURNING",
+          "reason": "return_alignment",
+          "plannerEvent": "none",
+          "returnReason": "no_ride_timeout",
+          "paused": false,
+          "centralGeneration": 1,
+          "centralLatitude": -27.952082358149237,
+          "centralLongitude": 153.4294561351856,
+          "bandLatitude": -27.95221,
+          "bandLongitude": 153.43039,
+          "bandBearingDeg": 314.309676338973,
+          "sidewaysM": 0.0,
+          "insideBand": true,
+          "qualifiedMs": 0,
+          "surferDistanceM": 20.25347854525157,
+          "centralDistanceM": 109.93557965403632,
+          "speedKmh": 3.5360208159337425,
+          "riding": false,
+          "rideAccepted": false,
+          "speedAssessmentActive": true,
+          "fastWindowMs": 1000,
+          "rideConfirmationRequired": false,
+          "fastSpanMs": 1000,
+          "rideEvent": "none",
+          "speedEvidence": "valid",
+          "newRidePacket": false,
+          "repeatedCoordinates": true,
+          "jumpSpeedKmh": 3.5360208159337425,
+          "jumpSpanMs": 1000,
+          "jumpLimitKmh": 40.0,
+          "noRideTimerEvent": "cancelled_return_no_ride_timeout",
+          "inactivityElapsedMs": 0,
+          "attemptElapsedMs": 0,
+          "headingErrorDeg": 151.5390545607795,
+          "returnHeadingDeg": 104.93905456077948,
+          "returnStartLatitude": -27.952337234182263,
+          "returnStartLongitude": 153.4305375510594,
+          "returnBearingDeg": 284.9390545607795,
+          "returnPlannedTravelM": 106.93557965403632,
+          "backwardProgressM": 0.0,
+          "returnAligned": false,
+          "returnCompletionCentralDistanceM": null,
+          "approachStartLatitude": null,
+          "approachStartLongitude": null,
+          "approachTargetLatitude": null,
+          "approachTargetLongitude": null,
+          "approachHeadingDeg": null,
+          "plannedTravelM": null,
+          "forwardProgressM": null,
+          "approachAligned": false,
+          "noRideTimerActive": false,
+          "speedJumpRejected": false,
+          "rejectedSpeedJumps": 0,
+          "yawPurpose": "return",
+          "requestedForwardMps": 0.0,
+          "submittedForwardMps": 0.0
+        },
+        "end": {
+          "record": 70983,
+          "timestamp": "2026-10-03T10:05:20.336+10:00",
+          "epochMs": 1790985920336,
+          "monoMs": 56411685,
+          "event": "movement_cycle",
+          "session": 1,
+          "cycleId": 11860,
+          "translationPurpose": "none",
+          "retreatActive": false,
+          "retreatCooldownRemainingMs": 0,
+          "maxMovementSpeedMps": 4.0,
+          "maxMovementSpeedKmh": 14.4,
+          "movementAccelerationMps2": null,
+          "movementAccelerationRampEnabled": false,
+          "movementSpeedPolicy": "distance_limited_immediate",
+          "firstApproachUsesSameMargin": true,
+          "movementSlowdownDistanceM": 20.0,
+          "arrivalSpeedPerMetre": 0.2,
+          "qualificationWaitEnabled": false,
+          "rideEndTriggersReturn": false,
+          "qualificationRequiredMs": 0,
+          "qualificationStatus": "qualified",
+          "qualificationEvent": "none",
+          "gpsMovementPaused": false,
+          "waitingForFreshApproachFix": false,
+          "savedNavigationWithOldGps": false,
+          "maxExcursionM": 250.0,
+          "completionToleranceM": 1.0,
+          "excursionStopDistanceM": 249.0,
+          "approachRemainingM": null,
+          "returnRemainingM": 0.9192240473302462,
+          "excursionRemainingM": 243.15120042343113,
+          "reapproachMarginM": 5.0,
+          "hasFilmed": true,
+          "approachStartThresholdM": 28.0,
+          "enabled": true,
+          "filmingDistanceM": 23.0,
+          "lineupWidthM": 100.0,
+          "rideStartKmh": 18.0,
+          "rideDurationMs": 20000,
+          "rideStartedAtMs": 94861096,
+          "rideExpiresAtMs": 94881096,
+          "rideRemainingMs": 0,
+          "ridePolicy": "fixed_duration",
+          "noRideTimeoutMs": 300000,
+          "phase": "WAITING",
+          "reason": "return_arrival_tolerance",
+          "plannerEvent": "return_arrival_tolerance",
+          "returnReason": "no_ride_timeout",
+          "paused": false,
+          "centralGeneration": 1,
+          "centralLatitude": -27.952082358149237,
+          "centralLongitude": 153.4294561351856,
+          "bandLatitude": -27.95221,
+          "bandLongitude": 153.43039,
+          "bandBearingDeg": 314.309676338973,
+          "sidewaysM": -0.138316371081614,
+          "insideBand": true,
+          "qualifiedMs": 0,
+          "surferDistanceM": 83.23670135756791,
+          "centralDistanceM": 5.848799576568873,
+          "speedKmh": 0.0,
+          "riding": false,
+          "rideAccepted": false,
+          "speedAssessmentActive": true,
+          "fastWindowMs": 1000,
+          "rideConfirmationRequired": false,
+          "fastSpanMs": 1000,
+          "rideEvent": "none",
+          "speedEvidence": "valid",
+          "newRidePacket": false,
+          "repeatedCoordinates": true,
+          "jumpSpeedKmh": 0.0,
+          "jumpSpanMs": 1000,
+          "jumpLimitKmh": 40.0,
+          "noRideTimerEvent": "none",
+          "inactivityElapsedMs": 0,
+          "attemptElapsedMs": 49491,
+          "headingErrorDeg": 1.939054560779482,
+          "returnHeadingDeg": 104.93905456077948,
+          "returnStartLatitude": -27.952337234182263,
+          "returnStartLongitude": 153.4305375510594,
+          "returnBearingDeg": 284.9390545607795,
+          "returnPlannedTravelM": 106.93557965403632,
+          "backwardProgressM": 106.01635560670607,
+          "returnAligned": false,
+          "returnCompletionCentralDistanceM": 5.848799576568873,
+          "approachStartLatitude": null,
+          "approachStartLongitude": null,
+          "approachTargetLatitude": null,
+          "approachTargetLongitude": null,
+          "approachHeadingDeg": null,
+          "plannedTravelM": null,
+          "forwardProgressM": null,
+          "approachAligned": false,
+          "noRideTimerActive": false,
+          "speedJumpRejected": false,
+          "rejectedSpeedJumps": 0,
+          "yawPurpose": "surfer",
+          "requestedForwardMps": 0.0,
+          "submittedForwardMps": 0.0
+        },
+        "last": {
+          "record": 70974,
+          "timestamp": "2026-10-03T10:05:20.218+10:00",
+          "epochMs": 1790985920218,
+          "monoMs": 56411566,
+          "event": "movement_cycle",
+          "session": 1,
+          "cycleId": 11859,
+          "translationPurpose": "return",
+          "retreatActive": false,
+          "retreatCooldownRemainingMs": 0,
+          "maxMovementSpeedMps": 4.0,
+          "maxMovementSpeedKmh": 14.4,
+          "movementAccelerationMps2": null,
+          "movementAccelerationRampEnabled": false,
+          "movementSpeedPolicy": "distance_limited_immediate",
+          "firstApproachUsesSameMargin": true,
+          "movementSlowdownDistanceM": 20.0,
+          "arrivalSpeedPerMetre": 0.2,
+          "qualificationWaitEnabled": false,
+          "rideEndTriggersReturn": false,
+          "qualificationRequiredMs": 0,
+          "qualificationStatus": "qualified",
+          "qualificationEvent": "none",
+          "gpsMovementPaused": false,
+          "waitingForFreshApproachFix": false,
+          "savedNavigationWithOldGps": false,
+          "maxExcursionM": 250.0,
+          "completionToleranceM": 1.0,
+          "excursionStopDistanceM": 249.0,
+          "approachRemainingM": null,
+          "returnRemainingM": 1.044482832632312,
+          "excursionRemainingM": 243.04976756703522,
+          "reapproachMarginM": 5.0,
+          "hasFilmed": true,
+          "approachStartThresholdM": 28.0,
+          "enabled": true,
+          "filmingDistanceM": 23.0,
+          "lineupWidthM": 100.0,
+          "rideStartKmh": 18.0,
+          "rideDurationMs": 20000,
+          "rideStartedAtMs": 94861096,
+          "rideExpiresAtMs": 94881096,
+          "rideRemainingMs": 0,
+          "ridePolicy": "fixed_duration",
+          "noRideTimeoutMs": 300000,
+          "phase": "RETURNING",
+          "reason": "moving_backward",
+          "plannerEvent": "none",
+          "returnReason": "no_ride_timeout",
+          "paused": false,
+          "centralGeneration": 1,
+          "centralLatitude": -27.952082358149237,
+          "centralLongitude": 153.4294561351856,
+          "bandLatitude": -27.95221,
+          "bandLongitude": 153.43039,
+          "bandBearingDeg": 314.309676338973,
+          "sidewaysM": -0.138316371081614,
+          "insideBand": true,
+          "qualifiedMs": 0,
+          "surferDistanceM": 83.11944916448213,
+          "centralDistanceM": 5.950232432964777,
+          "speedKmh": 0.0,
+          "riding": false,
+          "rideAccepted": false,
+          "speedAssessmentActive": true,
+          "fastWindowMs": 1000,
+          "rideConfirmationRequired": false,
+          "fastSpanMs": 1000,
+          "rideEvent": "none",
+          "speedEvidence": "valid",
+          "newRidePacket": false,
+          "repeatedCoordinates": true,
+          "jumpSpeedKmh": 0.0,
+          "jumpSpanMs": 1000,
+          "jumpLimitKmh": 40.0,
+          "noRideTimerEvent": "none",
+          "inactivityElapsedMs": 0,
+          "attemptElapsedMs": 49372,
+          "headingErrorDeg": 1.939054560779482,
+          "returnHeadingDeg": 104.93905456077948,
+          "returnStartLatitude": -27.952337234182263,
+          "returnStartLongitude": 153.4305375510594,
+          "returnBearingDeg": 284.9390545607795,
+          "returnPlannedTravelM": 106.93557965403632,
+          "backwardProgressM": 105.891096821404,
+          "returnAligned": true,
+          "returnCompletionCentralDistanceM": null,
+          "approachStartLatitude": null,
+          "approachStartLongitude": null,
+          "approachTargetLatitude": null,
+          "approachTargetLongitude": null,
+          "approachHeadingDeg": null,
+          "plannedTravelM": null,
+          "forwardProgressM": null,
+          "approachAligned": false,
+          "noRideTimerActive": false,
+          "speedJumpRejected": false,
+          "rejectedSpeedJumps": 0,
+          "yawPurpose": "return",
+          "requestedForwardMps": -0.20889656652646238,
+          "submittedForwardMps": -0.20889656652646238
+        },
+        "submitted": {
+          "min": -4.0,
+          "median": -2.59,
+          "p90": 0.0,
+          "max": 0.0
+        }
+      },
+      {
+        "start": {
+          "record": 97286,
+          "timestamp": "2026-10-03T10:12:58.103+10:00",
+          "epochMs": 1790986378103,
+          "monoMs": 56869452,
+          "event": "movement_cycle",
+          "session": 1,
+          "cycleId": 16218,
+          "translationPurpose": "return",
+          "retreatActive": false,
+          "retreatCooldownRemainingMs": 0,
+          "maxMovementSpeedMps": 4.0,
+          "maxMovementSpeedKmh": 14.4,
+          "movementAccelerationMps2": null,
+          "movementAccelerationRampEnabled": false,
+          "movementSpeedPolicy": "distance_limited_immediate",
+          "firstApproachUsesSameMargin": true,
+          "movementSlowdownDistanceM": 20.0,
+          "arrivalSpeedPerMetre": 0.2,
+          "qualificationWaitEnabled": false,
+          "rideEndTriggersReturn": false,
+          "qualificationRequiredMs": 0,
+          "qualificationStatus": "waiting",
+          "qualificationEvent": "reset_band_created",
+          "gpsMovementPaused": false,
+          "waitingForFreshApproachFix": false,
+          "savedNavigationWithOldGps": false,
+          "maxExcursionM": 250.0,
+          "completionToleranceM": 1.0,
+          "excursionStopDistanceM": 249.0,
+          "approachRemainingM": null,
+          "returnRemainingM": 67.59644854164188,
+          "excursionRemainingM": 178.40355145835812,
+          "reapproachMarginM": 5.0,
+          "hasFilmed": true,
+          "approachStartThresholdM": 28.0,
+          "enabled": true,
+          "filmingDistanceM": 23.0,
+          "lineupWidthM": 100.0,
+          "rideStartKmh": 18.0,
+          "rideDurationMs": 20000,
+          "rideStartedAtMs": 95367061,
+          "rideExpiresAtMs": 95387061,
+          "rideRemainingMs": 0,
+          "ridePolicy": "fixed_duration",
+          "noRideTimeoutMs": 300000,
+          "phase": "RETURNING",
+          "reason": "return_alignment",
+          "plannerEvent": "none",
+          "returnReason": "no_ride_timeout",
+          "paused": false,
+          "centralGeneration": 1,
+          "centralLatitude": -27.952082358149237,
+          "centralLongitude": 153.4294561351856,
+          "bandLatitude": -27.95213,
+          "bandLongitude": 153.43044,
+          "bandBearingDeg": 65.28539225547661,
+          "sidewaysM": 0.0,
+          "insideBand": true,
+          "qualifiedMs": 0,
+          "surferDistanceM": 31.35569285673265,
+          "centralDistanceM": 70.59644854164188,
+          "speedKmh": 8.1263762270599,
+          "riding": false,
+          "rideAccepted": false,
+          "speedAssessmentActive": true,
+          "fastWindowMs": 1000,
+          "rideConfirmationRequired": false,
+          "fastSpanMs": 1000,
+          "rideEvent": "none",
+          "speedEvidence": "valid",
+          "newRidePacket": false,
+          "repeatedCoordinates": false,
+          "jumpSpeedKmh": 8.1263762270599,
+          "jumpSpanMs": 1000,
+          "jumpLimitKmh": 40.0,
+          "noRideTimerEvent": "cancelled_return_no_ride_timeout",
+          "inactivityElapsedMs": 0,
+          "attemptElapsedMs": 2630,
+          "headingErrorDeg": 41.71383145221262,
+          "returnHeadingDeg": 105.11383145221265,
+          "returnStartLatitude": -27.952247899334136,
+          "returnStartLongitude": 153.4301500109077,
+          "returnBearingDeg": 285.11383145221265,
+          "returnPlannedTravelM": 67.59644854164188,
+          "backwardProgressM": 0.0,
+          "returnAligned": false,
+          "returnCompletionCentralDistanceM": null,
+          "approachStartLatitude": null,
+          "approachStartLongitude": null,
+          "approachTargetLatitude": null,
+          "approachTargetLongitude": null,
+          "approachHeadingDeg": null,
+          "plannedTravelM": null,
+          "forwardProgressM": null,
+          "approachAligned": false,
+          "noRideTimerActive": false,
+          "speedJumpRejected": false,
+          "rejectedSpeedJumps": 0,
+          "yawPurpose": "return",
+          "requestedForwardMps": 0.0,
+          "submittedForwardMps": 0.0
+        },
+        "end": {
+          "record": 99175,
+          "timestamp": "2026-10-03T10:13:30.851+10:00",
+          "epochMs": 1790986410851,
+          "monoMs": 56902199,
+          "event": "movement_cycle",
+          "session": 1,
+          "cycleId": 16530,
+          "translationPurpose": "none",
+          "retreatActive": false,
+          "retreatCooldownRemainingMs": 0,
+          "maxMovementSpeedMps": 4.0,
+          "maxMovementSpeedKmh": 14.4,
+          "movementAccelerationMps2": null,
+          "movementAccelerationRampEnabled": false,
+          "movementSpeedPolicy": "distance_limited_immediate",
+          "firstApproachUsesSameMargin": true,
+          "movementSlowdownDistanceM": 20.0,
+          "arrivalSpeedPerMetre": 0.2,
+          "qualificationWaitEnabled": false,
+          "rideEndTriggersReturn": false,
+          "qualificationRequiredMs": 0,
+          "qualificationStatus": "qualified",
+          "qualificationEvent": "none",
+          "gpsMovementPaused": false,
+          "waitingForFreshApproachFix": false,
+          "savedNavigationWithOldGps": false,
+          "maxExcursionM": 250.0,
+          "completionToleranceM": 1.0,
+          "excursionStopDistanceM": 249.0,
+          "approachRemainingM": null,
+          "returnRemainingM": 0.936742980086251,
+          "excursionRemainingM": 244.55402149153196,
+          "reapproachMarginM": 5.0,
+          "hasFilmed": true,
+          "approachStartThresholdM": 28.0,
+          "enabled": true,
+          "filmingDistanceM": 23.0,
+          "lineupWidthM": 100.0,
+          "rideStartKmh": 18.0,
+          "rideDurationMs": 20000,
+          "rideStartedAtMs": 95367061,
+          "rideExpiresAtMs": 95387061,
+          "rideRemainingMs": 0,
+          "ridePolicy": "fixed_duration",
+          "noRideTimeoutMs": 300000,
+          "phase": "WAITING",
+          "reason": "return_arrival_tolerance",
+          "plannerEvent": "return_arrival_tolerance",
+          "returnReason": "no_ride_timeout",
+          "paused": false,
+          "centralGeneration": 1,
+          "centralLatitude": -27.952082358149237,
+          "centralLongitude": 153.4294561351856,
+          "bandLatitude": -27.95213,
+          "bandLongitude": 153.43044,
+          "bandBearingDeg": 65.28539225547661,
+          "sidewaysM": -0.2550588415699253,
+          "insideBand": true,
+          "qualifiedMs": 0,
+          "surferDistanceM": 85.70235969415533,
+          "centralDistanceM": 4.445978508468051,
+          "speedKmh": 0.0,
+          "riding": false,
+          "rideAccepted": false,
+          "speedAssessmentActive": true,
+          "fastWindowMs": 1000,
+          "rideConfirmationRequired": false,
+          "fastSpanMs": 1000,
+          "rideEvent": "none",
+          "speedEvidence": "valid",
+          "newRidePacket": false,
+          "repeatedCoordinates": true,
+          "jumpSpeedKmh": 0.0,
+          "jumpSpanMs": 1000,
+          "jumpLimitKmh": 40.0,
+          "noRideTimerEvent": "none",
+          "inactivityElapsedMs": 0,
+          "attemptElapsedMs": 32749,
+          "headingErrorDeg": 1.2138314522126166,
+          "returnHeadingDeg": 105.11383145221265,
+          "returnStartLatitude": -27.952247899334136,
+          "returnStartLongitude": 153.4301500109077,
+          "returnBearingDeg": 285.11383145221265,
+          "returnPlannedTravelM": 67.59644854164188,
+          "backwardProgressM": 66.65970556155563,
+          "returnAligned": false,
+          "returnCompletionCentralDistanceM": 4.445978508468051,
+          "approachStartLatitude": null,
+          "approachStartLongitude": null,
+          "approachTargetLatitude": null,
+          "approachTargetLongitude": null,
+          "approachHeadingDeg": null,
+          "plannedTravelM": null,
+          "forwardProgressM": null,
+          "approachAligned": false,
+          "noRideTimerActive": false,
+          "speedJumpRejected": false,
+          "rejectedSpeedJumps": 0,
+          "yawPurpose": "surfer",
+          "requestedForwardMps": 0.0,
+          "submittedForwardMps": 0.0
+        },
+        "last": {
+          "record": 99166,
+          "timestamp": "2026-10-03T10:13:30.746+10:00",
+          "epochMs": 1790986410746,
+          "monoMs": 56902094,
+          "event": "movement_cycle",
+          "session": 1,
+          "cycleId": 16529,
+          "translationPurpose": "return",
+          "retreatActive": false,
+          "retreatCooldownRemainingMs": 0,
+          "maxMovementSpeedMps": 4.0,
+          "maxMovementSpeedKmh": 14.4,
+          "movementAccelerationMps2": null,
+          "movementAccelerationRampEnabled": false,
+          "movementSpeedPolicy": "distance_limited_immediate",
+          "firstApproachUsesSameMargin": true,
+          "movementSlowdownDistanceM": 20.0,
+          "arrivalSpeedPerMetre": 0.2,
+          "qualificationWaitEnabled": false,
+          "rideEndTriggersReturn": false,
+          "qualificationRequiredMs": 0,
+          "qualificationStatus": "qualified",
+          "qualificationEvent": "none",
+          "gpsMovementPaused": false,
+          "waitingForFreshApproachFix": false,
+          "savedNavigationWithOldGps": false,
+          "maxExcursionM": 250.0,
+          "completionToleranceM": 1.0,
+          "excursionStopDistanceM": 249.0,
+          "approachRemainingM": null,
+          "returnRemainingM": 1.0443413142050275,
+          "excursionRemainingM": 244.4533334566747,
+          "reapproachMarginM": 5.0,
+          "hasFilmed": true,
+          "approachStartThresholdM": 28.0,
+          "enabled": true,
+          "filmingDistanceM": 23.0,
+          "lineupWidthM": 100.0,
+          "rideStartKmh": 18.0,
+          "rideDurationMs": 20000,
+          "rideStartedAtMs": 95367061,
+          "rideExpiresAtMs": 95387061,
+          "rideRemainingMs": 0,
+          "ridePolicy": "fixed_duration",
+          "noRideTimeoutMs": 300000,
+          "phase": "RETURNING",
+          "reason": "moving_backward",
+          "plannerEvent": "none",
+          "returnReason": "no_ride_timeout",
+          "paused": false,
+          "centralGeneration": 1,
+          "centralLatitude": -27.952082358149237,
+          "centralLongitude": 153.4294561351856,
+          "bandLatitude": -27.95213,
+          "bandLongitude": 153.43044,
+          "bandBearingDeg": 65.28539225547661,
+          "sidewaysM": -0.2550588415699253,
+          "insideBand": true,
+          "qualifiedMs": 0,
+          "surferDistanceM": 85.59909505489406,
+          "centralDistanceM": 4.546666543325294,
+          "speedKmh": 0.0,
+          "riding": false,
+          "rideAccepted": false,
+          "speedAssessmentActive": true,
+          "fastWindowMs": 1000,
+          "rideConfirmationRequired": false,
+          "fastSpanMs": 1000,
+          "rideEvent": "none",
+          "speedEvidence": "valid",
+          "newRidePacket": false,
+          "repeatedCoordinates": true,
+          "jumpSpeedKmh": 0.0,
+          "jumpSpanMs": 1000,
+          "jumpLimitKmh": 40.0,
+          "noRideTimerEvent": "none",
+          "inactivityElapsedMs": 0,
+          "attemptElapsedMs": 32644,
+          "headingErrorDeg": 1.2138314522126166,
+          "returnHeadingDeg": 105.11383145221265,
+          "returnStartLatitude": -27.952247899334136,
+          "returnStartLongitude": 153.4301500109077,
+          "returnBearingDeg": 285.11383145221265,
+          "returnPlannedTravelM": 67.59644854164188,
+          "backwardProgressM": 66.55210722743685,
+          "returnAligned": true,
+          "returnCompletionCentralDistanceM": null,
+          "approachStartLatitude": null,
+          "approachStartLongitude": null,
+          "approachTargetLatitude": null,
+          "approachTargetLongitude": null,
+          "approachHeadingDeg": null,
+          "plannedTravelM": null,
+          "forwardProgressM": null,
+          "approachAligned": false,
+          "noRideTimerActive": false,
+          "speedJumpRejected": false,
+          "rejectedSpeedJumps": 0,
+          "yawPurpose": "return",
+          "requestedForwardMps": -0.20886826284100551,
+          "submittedForwardMps": -0.20886826284100551
+        },
+        "submitted": {
+          "min": -4.0,
+          "median": -1.87,
+          "p90": 0.0,
+          "max": 0.0
+        }
+      }
+    ]
+  }
+]

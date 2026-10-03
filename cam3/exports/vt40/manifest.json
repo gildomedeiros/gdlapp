@@ -1,0 +1,12 @@
+[
+  {
+    "path": "detailed_design.md",
+    "originalSha256": "90c98c7448ab327ffad9ba405c0c3709317468c58656dd90d8c03173e01af582",
+    "stagedSha256": "4016307d8167f95e832a123158000897cf24bf326c84695ae698b6f738c2dc83"
+  },
+  {
+    "path": "ENHANCEMENTS.md",
+    "originalSha256": "988dd9a36d257d2d90f2a1712495bafaf25000f5961eb499b5a2ae3416dabbc5",
+    "stagedSha256": "b1ae97279901e70160f5f94773625f3dc20482ddba2900f7391ba887067a6b22"
+  }
+]

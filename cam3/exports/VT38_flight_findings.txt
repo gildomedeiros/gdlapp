@@ -1,0 +1,84 @@
+VT 3.8 flight-log analysis — 3 October 2026, Brisbane time (UTC+10)
+
+Scope and evidence
+Nine JSONL files were found in C:/Users/gildo/temp/3.8. Every session_start header identifies version 3.8 and 3 October 2026. Four contain AIMING sessions, totalling approximately 71 minutes. The other five are brief screen/release/setup captures, including one unsuccessful Start. No older run was substituted. Authoritative documentation read: Docs/VT_3.8.md and detailed_design/detailed_design_v3.8.md in C:/Users/gildo/.codex/worktrees/vt-28/gdlapp/vt. Current sample/build.gradle identifies versionName 3.8 and versionCode 22. RetreatController, AimingSession, ComeToMeController and VtCameraControl were inspected read-only. The log version and current source metadata agree; log headers alone cannot prove the exact installed APK binary.
+
+Application code, configuration JSONs, original logs and release files were not edited. New analysis outputs and scripts were added under cam3/exports. All times below are local UTC+10 from log contents. Cycle IDs resolve command/event boundaries where different rows share the same millisecond.
+
+Actual sessions and settings
+File suffix e332f36b: logged 08:46:31–08:51:19; active 08:48:16–08:51:19. Filming distance 27 m, approach margin 5 m, maximum approach/return speed 4 m/s, no-ride timeout 10 minutes. Retreat: enabled, threshold 23 m, duration 3 s, speed 5 m/s, cooldown 5 s, stale-start allowance 1. Five retreat episodes, six periods.
+File suffix 5ec0e1d7: logged 08:51:35–09:21:05; active 08:52:08–09:17:51. Same movement and retreat settings. Twenty retreat episodes, 25 periods.
+File suffix 9e91c5b5: logged 09:27:18–09:42:06; active 09:27:29–09:38:45. Filming distance 23 m, margin 5 m, maximum approach/return speed 4 m/s, no-ride timeout 5 minutes. Retreat: threshold 18 m, duration 2 s, speed 4 m/s, cooldown 5 s, allowance 1. Eleven episodes, 14 periods.
+File suffix 8c2c3251: logged 09:44:58–10:18:58; active 09:46:02–10:17:01. Same later settings. Thirty episodes, 46 periods.
+All four active sessions used lineup width 100 m, ride threshold 18 km/h and a fixed 20-second ride timer. Loaded configurations came from Download/vtconf, not the normally suggested Download/VT folder. All four shared the same rotation and gimbal JSON contents; successful validation was logged. No retreat_config_created event appears in these captures, so initial seeding cannot be assessed here.
+
+Loaded rotation normal (heading error degrees, speed degrees/second): (0,0), (3,0), (5,2), (10,3.5), (20,8.5), (33,15). The 5-degree value was 2, rather than the bundled default 1. Riding: (0,0), (3,1.5), (5,5), (10,10), (20,20), (30,30). Effective yaw cap 15 deg/s and acceleration 8 deg/s²: riding curve values above 15 are capped. Gimbal distance bands: up to 10/20/30/40/50 m use -56/-35/-25/-19/-16 degrees; above 50 m use -12 degrees. Buffer 5 m.
+
+Retreat allowance and actual movement
+Across all four sessions: 66 episodes, 91 periods, 25 repeat events, 66 finishes, no retreat cancellation and no stale_gps_retreat_limit block. Two periods began without fresh GPS; both recorded count 1/maximum 1. No cycle counter exceeded the maximum. Fresh fixes restored both counts. These flights show allowance consumption/reset, but do not exercise an exhausted allowance while still close. The synthetic 90-second outage described in documentation is not a flight observation.
+
+09:06:27.155: a new 3-second retreat began using a 3,748 ms old target, at retained-position separation 22.89 m. It spent allowance 1. At 09:06:27.974 a newly received fresh valid fix reset the count from 1 to 0 while the period continued. At 09:06:30.229 separation was 13.24 m and a fresh-GPS repeat began. The first period lasted 3.075 s, with net aircraft displacement 10.96 m; backward submissions were -5 m/s. That repeat is permitted because fresh GPS had restored allowance.
+
+10:10:01.947: retreat began at separation 6.39 m with fresh GPS (age 10 ms). At 10:10:04.044 a second period began while the fix was still fresh by the existing 3-second rule (age 2,107 ms). At 10:10:06.049 a third period began with stale GPS (age 4,112 ms), spending allowance 1. GPS returned at 10:10:08.047, resetting 1 to 0. The retreat finished at 10:10:08.048 because the refreshed separation was 34.84 m. Period net aircraft displacements were 5.71, 6.43 and 7.87 m; submissions were -4 m/s. This approximately 6.1-second episode is consistent with the limit: two fresh starts plus one stale start. A period started fresh is not counted retroactively when its target becomes stale.
+
+The longest later repeat sequence was 10:16:02.017–10:16:12.306: five roughly 2-second periods, all starting fresh (ages 78, 1,576, 169, 269 and 276 ms). Separation at period boundaries was 14.40, 15.99, 11.14, 12.53, 16.88 and finally 24.85 m. The allowance limits stale starts, not the total number of fresh-GPS repeats. Fresh-GPS operation can therefore produce a long backward retreat.
+
+Recorded periods lasted approximately 2.00–2.10 s for the later settings and 3.06–3.10 s for the earlier settings. Submitted backward speeds in active period cycles were their configured -4 or -5 m/s, with one boundary exception: 10:06:23.533 submitted zero forward motion with retreat active and remainingMs=0; a permitted repeat began at 10:06:23.636 and -4 m/s resumed at 10:06:23.638. This is an approximately 105 ms neutral-command interval between permitted repeats, contrary to the nominal gap-free repeat behavior. The source's final permission check rejects motion at/after the deadline; the observed timing is consistent with that deadline being reached between arbitration and submission, but the exact internal timing cause is an inference. It does not prove the aircraft physically stopped. No fix was made. Net aircraft displacement across individual periods ranged 1.34–16.81 m, median 6.80 m; this uses aircraft coordinate endpoints and is not integrated path length or separation gained. Moving targets, changing yaw, telemetry sampling and coordinate error prevent simple speed × duration equivalence. Full period-by-period evidence is in VT38_retreat_periods.csv, including every trigger/repeat, freshness, count, finish reason, submitted values, duration and endpoint displacement.
+
+GPS/LoRa evidence
+Active-session maximum intervals between accepted GPS packets were 1.022, 5.008, 6.478 and 6.009 seconds respectively. There were 0/4/6/12 gaps over 3 seconds, respectively, totalling 22. Packet median interval was approximately 0.5 seconds; the later sessions' 90th percentile was approximately 1 second. The most significant gap was 09:36:45.449–09:36:51.926 (6.478 seconds). The 10:10 retreat overlapped 10:10:01.939–10:10:07.948 (6.009 seconds).
+No raw datagram containing NOFIX was found. Received lora_packet records were accepted. This does not count transmissions lost before reception, and packet intervals alone do not establish whether missing GPS updates were caused by radio propagation, the sender or the Wi-Fi bridge. Retained-target AIMING appeared for approximately 5.53/6.65/7.50 seconds in the three long sessions. Such aiming tracks old coordinates with live aircraft heading. It cannot locate a surfer who moved during the gap; retained-position separation is not obstacle clearance or guaranteed actual surfer separation.
+
+Approaches, rides and Return to central
+Movement uses saved destinations and the configured immediate min(4 m/s, 0.2 × remaining metres) profile. The logs report no software acceleration ramp. The 5 m margin gives approach thresholds of 32 m initially and 28 m later. Remaining travel refers to the saved plan, not current surfer distance.
+Example: 09:47:25.456–09:47:38.241 planned 5.10 m of travel. It finished on the 1 m saved-travel tolerance while surfer separation remained approximately 28.13 m. A new approach began at 09:47:38.347. That is consistent with a moving target crossing the approach threshold again, not proof that arrival should equal filming distance. In the final session, 45 approaches ended on arrival tolerance and five were replaced by retreat; another approach was replaced by a timed return and one ended when RTH stopped control. Repeated short approaches and yaw ownership changes are therefore a practical filming concern.
+Detected ride starts/expiries: 0/0, 8/8, 2/2 and 7/7 respectively. These are GPS speed detections, not independently verified waves. Ride expiry did not itself trigger Return to central.
+Two Return-to-central movements occurred in the final session, both with reason no_ride_timeout: 10:04:30.846–10:05:20.336 and 10:12:58.103–10:13:30.851. Planned return travel was 106.94 and 67.60 m; saved remaining travel at completion was 0.919 and 0.937 m. Measured central separation at completion was 5.85 and 4.45 m. The planned 3 m stand-off plus projected travel tolerance is not a radial guarantee of exactly 3–4 m from central, because sideways drift is excluded from projected progress.
+New approaches began at 10:05:20.442 and 10:13:30.958, approximately 0.106/0.107 seconds after return completion, with new planned travel 60.24/62.70 m. This is current behavior: there is no dedicated post-return cooldown, and fresh eligible movement may start immediately. Both approaches subsequently met the retreat threshold and were replaced. Return was not interrupted by retreat while already running.
+
+Yaw and framing
+For cycles where surfer yaw owned aiming, median absolute computed error was 2.96/3.01/4.17/2.98 degrees; the final session's 90th percentile was 7.35 degrees. Navigation-owned errors refer to saved headings and must not be treated as surfer framing errors. Near-180-degree extremes at startup were approach heading acquisition, e.g. 09:46:02.719 (-179.40 degrees).
+The three long sessions had 311/149/310 reversal-blocked cycles, approximately 4.0%/4.2%/2.9% of surfer-owned cycles. At 10:06:21.535 a fresh coordinate update changed computed separation from about 24.99 m to 12.72 m and demanded approximately -49.59 degrees of correction. The reversal block had 741 ms remaining and submitted zero yaw while backward translation was -4 m/s. This establishes a real response delay in that event; it does not establish whether the coordinate change was physical surfer movement or GPS error. Small computed errors cannot establish good framing without video and reliable target coordinates.
+
+Gimbal and interruptions
+Gimbal commands/reached events: 12/12, 79/79, 30/30 and 95/95. All 216 command results were accepted. Logged reach times were approximately 2.00–2.66 seconds. Source requests a 2-second rotation and does not emit reached before 2 seconds; these values are observation times with a deliberate floor, not pure measured actuator latency. Retained-position gimbal bands during retreat/cooldown also cannot verify framing during GPS loss.
+There were no PAUSED aiming cycles in the four active sessions. The short first active run ended on screen_closed. The three long runs stopped on returning_home at 09:17:51.346, 09:38:45.018 and 10:17:01.334. About 5 seconds later each entered RELEASE_UNCONFIRMED and remained there until screen close. Thus control commands stopped, but the logs do not confirm successful release of authority. Aircraft RTH is distinct from the app's Return-to-central planner. Manual-stick events and telemetry retry activity also occur outside active control; their presence alone does not establish a mid-session manual pause.
+At 09:26:31.223 Start was blocked: vt_retreat_settings.json had an unterminated object at line 5 column 4, path $.minimumDistanceMetres. State remained OFF and there was no control acquisition or fallback. The next successful session at 09:27:29 loaded the later 18 m/2 s/4 m/s JSON.
+
+Practical proposals only
+1. Prioritize explaining and diagnosing lost GPS updates. Distinguish radio/sender gaps from Wi-Fi bridging and inspect antenna/orientation/placement against synchronized surf observations. The present captures show meaningful gaps but do not establish their hardware cause or bound future outages.
+2. If backward travel during an outage is the concern, consider maxStartsWithoutFreshGps=0. It prevents new stale-GPS periods; an already running fresh-GPS period still finishes its timer. This does not stop fresh-GPS repeats or solve old-coordinate aiming. No setting was changed.
+3. If Return to central should provide a resting position, consider an explicit post-return hold/rearm condition. These logs show immediate departure after both returns. For constant chasing, consider whether a larger approach margin or simpler movement policy better matches the intended shot; test one change at a time against video.
+4. Review the two-second surfer reversal block using synchronized video, especially close passes and GPS reacquisition. There is concrete zero-yaw evidence at a 49.59-degree computed error; wholesale increases in yaw speed are not the first conclusion.
+5. Investigate RELEASE_UNCONFIRMED after RTH separately from flight movement tuning. Capture authority/disable callbacks through a complete RTH/landing cycle to establish why release is unconfirmed.
+
+No code, settings or release changes are proposed as already implemented. No flight was performed by this analysis.
+
+Detected wave-ride timeline (added from logged ride events)
+All 17 entries are app-detected ride windows on 3 October 2026, UTC+10. Start requires the configured GPS speed detector; the end shown is expiry of the fixed 20-second timer, not observed physical wave end. Trigger speed is the logged detection speed, not maximum speed over the ride. No video confirmation was available.
+
+Start         Timer expiry  Trigger km/h  Retreat overlap  Packet gap >3 s
+08:57:27.453  08:57:47.488    21.37        3.697 s         0.000 s
+09:03:46.939  09:04:06.960    19.41        5.655 s         0.000 s
+09:04:35.485  09:04:55.494    21.59        3.082 s         0.000 s
+09:06:29.002  09:06:49.015    29.48        7.386 s         0.000 s
+09:09:06.981  09:09:26.997    21.37        3.083 s         0.000 s
+09:10:29.932  09:10:50.032    19.41        0.000 s         0.000 s
+09:12:42.931  09:13:03.030    18.13        3.080 s         0.000 s
+09:14:12.954  09:14:33.046    18.55        4.710 s         0.000 s
+09:32:48.513  09:33:08.527    24.38        0.966 s         3.003 s
+09:36:52.978  09:37:13.057    19.41        0.000 s         0.000 s
+09:50:10.979  09:50:31.024    18.13        7.200 s         0.000 s
+09:54:57.496  09:55:17.596    21.37       11.272 s         4.005 s
+09:57:13.530  09:57:33.624    21.37        5.636 s         4.010 s
+09:59:01.997  09:59:22.001    21.37        0.000 s         0.000 s
+10:06:22.488  10:06:42.530    29.17        3.155 s         0.000 s
+10:07:27.964  10:07:48.043    29.17        0.000 s         0.000 s
+10:16:02.019  10:16:22.059    21.59       10.287 s         0.000 s
+
+Counts by active session: 08:48 session 0; 08:52 session 8; 09:27 session 2; 09:46 session 7.
+13 of 17 detected ride windows overlapped retreat commands. 3 overlapped a packet gap longer than three seconds. Gap duration is the full interval between received packets, including portions outside the ride window. Retreat overlap is the overlap of logged period intervals, not integrated physical motion.
+09:06:29.002 ride detection occurred during retreat after GPS freshness returned at 09:06:27.974. 09:36:52.978 detection followed the 6.478-second packet gap ending 09:36:51.926. These sequences do not prove the GPS gap caused detection or identify the physical wave start.
+10:06:22.488 and 10:16:02.019 show that ride detection and retreat can coexist. Current code preserves ride yaw while retreat owns backward translation.
+The final session returns at 10:04:30.846 and 10:12:58.103 occurred about five minutes after the preceding ride timer expiries (09:59:22.001 and 10:07:48.043); their logged cause was no_ride_timeout.
+Complete event record references and overlap values are in VT38_wave_rides.csv.
