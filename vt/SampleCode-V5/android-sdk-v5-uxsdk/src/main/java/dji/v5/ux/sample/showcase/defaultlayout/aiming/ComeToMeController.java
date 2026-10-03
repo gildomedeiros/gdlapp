@@ -71,6 +71,12 @@ public final class ComeToMeController {
     public ShorelinePositioning positioning;
     public double right,projectedSeparation=Double.NaN,alignmentError=Double.NaN;
     public String journeyKind="none";
+    public double initialCentralLat=Double.NaN,initialCentralLon=Double.NaN;
+    public String pathCheckStatus="not_checked",pathBlockReason="none";
+    public String filmingSideStatus() {
+        return positioning==null || !Double.isFinite(projectedSeparation) ? "unavailable"
+            : projectedSeparation>0 ? "correct_side" : "wrong_side";
+    }
     public long destinationFixTime=-1;
     public boolean presetApproach() {return positioning!=null;}
     private ComeToMeSettings settings=ComeToMeSettings.defaults();
@@ -87,6 +93,8 @@ public final class ComeToMeController {
         gpsPaused=false; hasFilmed=false; qualificationStatus="idle"; qualificationEvent="none";
         phase=Phase.OFF; reason="off"; returnReason="none"; runEnabled=false; captureRequired=true;
         centralLat=centralLon=bandLat=bandLon=bandBearing=Double.NaN;
+        initialCentralLat=initialCentralLon=projectedSeparation=alignmentError=Double.NaN;
+        pathCheckStatus="not_checked";pathBlockReason="none";
         distance=centralDistance=sideways=headingError=returnHeading=Double.NaN;
         clearApproach(); clearReturn(); speedJumpRejected=false; rejectedSpeedJumps=0;
         forward=right=0; riding=false; insideBand=false; qualifiedMs=slowMs=inactiveMs=attemptElapsedMs=0;
@@ -177,6 +185,7 @@ public final class ComeToMeController {
         qualificationEvent="none";
         if(gpsPaused) { gpsPaused=false; qualificationEvent="resumed_fresh_gps"; }
         event="none"; noRideTimerEvent="none"; speedJumpRejected=false; forward=right=0;
+        pathCheckStatus="not_checked";pathBlockReason="none";
         ride.event="none"; ride.newPacket=false; ride.rejected=false;
         advanceRideClock(now);
         boolean timedOut=expireAttempt(now); // Observation may continue; an expired move cannot be revived by a fast detection.
@@ -191,6 +200,7 @@ public final class ComeToMeController {
         if(captureRequired) {
             if(!in.steadyHover()) { reason="waiting_for_hover"; return; }
             centralLat=in.lat; centralLon=in.lon; centralGeneration++; captureRequired=false;
+            if(!Double.isFinite(initialCentralLat)) {initialCentralLat=in.lat;initialCentralLon=in.lon;}
             createBand(in,now); inactiveSince=-1; event="central_captured"; reason="lineup_qualification";
         }
         distance=YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon);
@@ -296,7 +306,9 @@ public final class ComeToMeController {
             if(!close&&!align) {if(!hasFilmed)enterFilmingHold(now);else {phase=Phase.HOLDING;reason="within_projected_margin";}return;}
             double separation=close?settings.filmingDistance:projectedSeparation;
             double[] target=positioning.destination(in,separation);
-            if(!positioning.safePath(in,target[0],target[1],centralLat,centralLon)) {reason="alignment_path_or_destination_blocked";return;}
+            pathBlockReason=positioning.pathBlockReason(in,target[0],target[1],centralLat,centralLon);
+            pathCheckStatus=pathBlockReason.equals("none")?"allowed":"blocked";
+            if(!pathBlockReason.equals("none")) {reason="alignment_path_or_destination_blocked";return;}
             approachStartLat=in.lat;approachStartLon=in.lon;approachTargetLat=target[0];approachTargetLon=target[1];
             approachHeading=YawAimingMath.bearingToTarget(in.lat,in.lon,target[0],target[1]);
             approachDistance=YawAimingMath.distance(in.lat,in.lon,target[0],target[1]);approachProgress=0;

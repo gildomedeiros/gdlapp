@@ -132,5 +132,34 @@ public final class Vt40Test {
         p.foregroundEntered();check(!p.shouldOpen(false,true,false,false),"background does not open");
         check(p.shouldOpen(true,true,false,false),"next foreground opens");
     }
-    public static void main(String[] args)throws Exception {fullLogReopen();geometry();fixedPlans();capture();config(args[0]);session(args[1]);System.out.println("PASS: VT 4.0 "+checks+" checks");}
+    static void retreatBoundary() {
+        for(String mode:new String[]{"front","sideways"}) {
+            ComeToMeController m=planner(mode,"left",0,0,40,0);
+            RetreatController r=new RetreatController((e,w)->{});r.start(new RetreatSettings(true,18,2000,4,5000));
+            r.active=true;r.deadline=10000;
+            near(-4,r.command(m,ComeToMeTest.in(2000,10,0,20,0,0)),"full retreat outside boundary "+mode);
+            near(-.5,r.command(m,ComeToMeTest.in(2000,1,0,10,0,0)),"shoreward braking near boundary "+mode);
+            check(!r.permits(m,ComeToMeTest.in(2000,1,0,10,0,0),2000,-4),"final snapshot vetoes full inward speed");
+            near(0,r.command(m,ComeToMeTest.in(2000,0,0,10,0,0)),"at boundary blocked");
+            check(r.boundaryBlocked,"blocked flag");
+            near(-4,r.command(m,ComeToMeTest.in(2000,0,0,-10,0,180)),"surfer shoreward permits seaward retreat");
+            near(-4,r.command(m,ComeToMeTest.in(2000,-2,0,-10,0,180)),"already shoreward permits recovery");
+            near(0,r.command(m,ComeToMeTest.in(2000,-2,0,10,0,0)),"already shoreward blocks further inward retreat");
+            near(-4,r.command(m,ComeToMeTest.in(2000,0,0,0,10,90)),"parallel retreat allowed");
+            m.pause(true,2100);m.update_state_machine(ComeToMeTest.in(2200,-20,0,40,0,0),2200,.1);
+            near(0,m.initialCentralLat,"manual reposition preserves original boundary");near(-20,m.centralLat/DEG,"return central recaptured");
+            m.start(settings(),2300);m.positioning=preset(mode,"left");m.update_state_machine(ComeToMeTest.in(2400,10,0,40,0,0),2400,.1);
+            near(10,m.initialCentralLat/DEG,"new Start resets boundary");
+        }
+        ComeToMeController m=planner("front","left",40,0,20,0);
+        check(m.filmingSideStatus().equals("wrong_side")&&m.pathCheckStatus.equals("not_checked"),"wrong side distinct from path checks");
+        m=planner("front","left",0,15,15,0);
+        check(m.filmingSideStatus().equals("correct_side")&&m.pathBlockReason.equals("retreat_clearance"),"retreat clearance logged distinctly");
+        m=planner("front","left",0,0,300,0);check(m.pathBlockReason.equals("excursion_limit"),"excursion reason distinct");
+        Port p=new Port();p.start();p.tick(100,0,15,10,15,0);
+        check(p.core.retreat.active && p.forward==0 && p.right==0,"real session blocks boundary retreat");
+        check(p.core.cycleDecision.equals("aligned_zero")||p.core.cycleDecision.equals("surfer_correction"),"surfer yaw remains owner when blocked");
+        p.tick(100,0,15,-10,15,180);check(p.forward==-3,"real session permits seaward retreat after crossing");
+    }
+    public static void main(String[] args)throws Exception {retreatBoundary();fullLogReopen();geometry();fixedPlans();capture();config(args[0]);session(args[1]);System.out.println("PASS: VT 4.0 "+checks+" checks");}
 }

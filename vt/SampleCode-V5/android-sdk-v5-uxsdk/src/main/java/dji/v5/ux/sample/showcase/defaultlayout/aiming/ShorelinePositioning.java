@@ -23,10 +23,13 @@ public final class ShorelinePositioning {
         return shore.point(in.target.lat,in.target.lon,axisNorth*separation,axisEast*separation);
     }
     public boolean safePath(AimingSession.Inputs in,double lat,double lon,double centralLat,double centralLon) {
+        return pathBlockReason(in,lat,lon,centralLat,centralLon).equals("none");
+    }
+    public String pathBlockReason(AimingSession.Inputs in,double lat,double lon,double centralLat,double centralLon) {
         if(YawAimingMath.distance(lat,lon,centralLat,centralLon)>ComeToMeSettings.EXCURSION_STOP ||
-                YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon)>=ComeToMeSettings.EXCURSION_STOP)return false;
+                YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon)>=ComeToMeSettings.EXCURSION_STOP)return "excursion_limit";
         double[] start=shore.offset(in.lat,in.lon,in.target.lat,in.target.lon),end=shore.offset(lat,lon,in.target.lat,in.target.lon);
-        return ShorelineGeometry.segmentDistance(start[0],start[1],end[0],end[1])>=retreatRadius;
+        return ShorelineGeometry.segmentDistance(start[0],start[1],end[0],end[1])>=retreatRadius ? "none" : "retreat_clearance";
     }
     public double[] velocity(AimingSession.Inputs in,double lat,double lon,double speed) {
         double b=Math.toRadians(YawAimingMath.bearingToTarget(in.lat,in.lon,lat,lon)-in.heading);

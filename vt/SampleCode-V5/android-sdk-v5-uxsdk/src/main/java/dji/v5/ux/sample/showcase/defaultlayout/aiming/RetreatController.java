@@ -6,6 +6,42 @@ import java.util.function.BiConsumer;
 public final class RetreatController {
     public RetreatSettings settings=RetreatSettings.disabled();
     public boolean active;
+    // Keep a half-metre command reserve and reduce inward speed over a one-second horizon.
+    public static final double BOUNDARY_RESERVE_METRES=.5,BOUNDARY_LOOKAHEAD_SECONDS=1;
+    public boolean boundaryBlocked;
+    public double boundarySeawardDistance=Double.NaN;
+    public String boundaryStatus="inactive";
+    private double boundaryCommand(ComeToMeController m,AimingSession.Inputs in) {
+        if(m.positioning==null)return -settings.speed; // Legacy sessions have no shoreline.
+        if(!Double.isFinite(m.initialCentralLat))return 0;
+        ShorelineGeometry g=m.positioning.shore;
+        double[] offset=g.offset(in.lat,in.lon,m.initialCentralLat,m.initialCentralLon);
+        double distance=offset[0]*g.seaNorth+offset[1]*g.seaEast;
+        double heading=Math.toRadians(in.heading);
+        double backwardNormal=-Math.cos(heading)*g.seaNorth-Math.sin(heading)*g.seaEast;
+        if(backwardNormal>=-1e-6)return -settings.speed; // Parallel or seaward is permitted.
+        return -Math.min(settings.speed,Math.max(0,distance-BOUNDARY_RESERVE_METRES)/
+            (-backwardNormal*BOUNDARY_LOOKAHEAD_SECONDS));
+    }
+    public double command(ComeToMeController m,AimingSession.Inputs in) {
+        double value=active?boundaryCommand(m,in):0;
+        boundarySeawardDistance=Double.NaN;
+        if(m.positioning!=null && Double.isFinite(m.initialCentralLat)) {
+            ShorelineGeometry g=m.positioning.shore;
+            double[] offset=g.offset(in.lat,in.lon,m.initialCentralLat,m.initialCentralLon);
+            boundarySeawardDistance=offset[0]*g.seaNorth+offset[1]*g.seaEast;
+        }
+        boolean blocked=active && m.positioning!=null && value==0;
+        boundaryStatus=!active?"inactive":m.positioning==null?"not_applicable":
+            !Double.isFinite(m.initialCentralLat)?"anchor_unavailable":blocked?"blocked":
+            Math.abs(value)<settings.speed?"slowing":"allowed";
+        if(blocked!=boundaryBlocked) {
+            boundaryBlocked=blocked;
+            emit(blocked?"retreat_boundary_blocked":"retreat_boundary_allowed",
+                blocked?"central_boundary":"boundary_released");
+        }
+        return value;
+    }
     public long startedAt=-1, periodStartedAt=-1, deadline=-1, cooldownUntil=-1, period;
     public double distance=Double.NaN, startDistance=Double.NaN;
     public String reason="idle";
@@ -38,6 +74,7 @@ public final class RetreatController {
     }
     public void start(RetreatSettings config) {
         startsWithoutFreshGps=previousStartsWithoutFreshGps=0;gpsFresh=staleLimitBlocked=false;lastFreshFixTime=-1;
+        boundaryBlocked=false;boundarySeawardDistance=Double.NaN;boundaryStatus="inactive";
         settings=config;active=false;startedAt=periodStartedAt=deadline=cooldownUntil=-1;period=0;
         distance=startDistance=Double.NaN;reason="idle";
     }
@@ -102,11 +139,12 @@ public final class RetreatController {
     }
     public boolean permits(ComeToMeController m,AimingSession.Inputs in,long now,double forward) {
         return active && now<deadline && eligible(m) && in.validate(now,true)==null
-                && forward==-settings.speed
+                && forward<0 && Math.abs(forward)<=settings.speed
+                && forward>=boundaryCommand(m,in)-.000001
                 && YawAimingMath.distance(in.lat,in.lon,m.centralLat,m.centralLon)<ComeToMeSettings.EXCURSION_STOP;
     }
     public String summary(long now) {
-        return active ? String.format(java.util.Locale.US,"Retreat: %.1f m/s backward · %.1f s left · separation %.1f m",
+        return boundaryBlocked ? "Retreat blocked by central boundary" : active ? String.format(java.util.Locale.US,"Retreat: %.1f m/s backward · %.1f s left · separation %.1f m",
                 settings.speed,remaining(now)/1000.0,distance)
                 : cooling(now) ? String.format(java.util.Locale.US,"Come to me cooldown: %.1f s",cooldownRemaining(now)/1000.0) : staleLimitBlocked ? "Retreat blocked: fresh surfer GPS required (allowance used)" : "";
     }

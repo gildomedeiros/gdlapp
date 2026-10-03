@@ -1,0 +1,7 @@
+# VT 4.0.3
+
+Retreat alone observes a boundary parallel to the selected shoreline through the first central capture of the explicit Start session. Manual reposition can recapture the return central but cannot move this boundary. Front and Sideways use the same boundary. No JSON schema changes.
+
+Backward shoreward commands slow over a one-second projection horizon with a 0.5 m command reserve; at or beyond this reserve, further shoreward retreat is neutral. Parallel/seaward retreat remains permitted. Final submission independently rechecks the permitted speed against the latest aircraft position and heading. This is a GPS command boundary, not an obstacle sensor or guarantee against physical drift/GPS error. Retreat distance, period/cooldown timing and yaw ownership remain unchanged; a blocked period still runs and may repeat. Direct separation can remain below the retreat threshold. Come-to-me, alignment and no-ride return do not use this boundary.
+
+UI status: Retreat blocked by central boundary. Full logs add boundary anchor, signed seaward distance, status, reserve and horizon, plus blocked/released transitions. Movement logs distinguish filmingSideStatus, pathCheckStatus and pathBlockReason (retreat_clearance/excursion_limit), configured shoreline sea side and seaward bearing. shorelineOrientationVerified=false indicates VT does not independently verify the configured direction against physical sea/land. Path checks are reported for the planning cycle; other cycles show not_checked.

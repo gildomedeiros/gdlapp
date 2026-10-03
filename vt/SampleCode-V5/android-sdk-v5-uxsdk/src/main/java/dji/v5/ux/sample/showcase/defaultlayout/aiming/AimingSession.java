@@ -428,7 +428,8 @@ public final class AimingSession {
                     || oldGeneration!=movement.centralGeneration || !movement.event.equals("none"))
                 diagnostic("movement_transition",oldMovement+" -> "+movement.phase+":"+movement.reason
                         +" event="+movement.event+" centralGeneration="+movement.centralGeneration);
-            cycleRequestedForward=retreat.active ? -retreat.settings.speed : movement.forward;
+            double retreatForward=retreat.command(movement,in);
+            cycleRequestedForward=retreat.active ? retreatForward : movement.forward;
             cycleRequestedRight=retreat.active?0:movement.right;
             cycleRequestedYaw=rate;
             // Fresh read immediately before sending; a pause must not revive a previously calculated command.
