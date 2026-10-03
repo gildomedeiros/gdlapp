@@ -1,0 +1,57 @@
+[
+  {
+    "path": "Docs/VT_4.0.1.md",
+    "originalSha256": null,
+    "stagedSha256": "abb9f980a3895a2d2583e7b78fcfbce717a23ee9bc69c2a22bb7939bc663505d"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-sample/build.gradle",
+    "originalSha256": "948182e17ce773b33f391eb44f1fa05a1dcbfce553cf12dc782edd37b458f378",
+    "stagedSha256": "49692905389477ecc495938f33a1da8e5aa9a91c9ccb2f143dc704221003efc0"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/DefaultLayoutActivity.java",
+    "originalSha256": "77ba3e62d64940c0d15a0219e9362884a4704cca7f7698ab1a6fa48275fbbd03",
+    "stagedSha256": "aab6dfe84f7b8b5dbe507d2b82da79936330b396c0edb13e0c04d2d105083ffb"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/FullLogOpenPolicy.java",
+    "originalSha256": null,
+    "stagedSha256": "bcbfb79401382eb36fc4cf8595d49dd0f11a8e8af5a5eb65aa26e776c99ec57b"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/FullSessionLog.java",
+    "originalSha256": "480d7c90b0d05bd90e6a6c2dc6ece5d0b3b7a7635c5e8260e09b3574554b75c8",
+    "stagedSha256": "0a143d64413a76a9d996ce925e7924a04817bb24bac3e797ced821b008ceb745"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/ShorelineSetupUi.java",
+    "originalSha256": "d2e419f8a800e0b36cfd63e14ff35e581d8fa5745fc0c6aff89270e8e988a829",
+    "stagedSha256": "a3cac2ee3a87fd1c8f1a93c91436bef6256fb140c8a70e7c39596a2a3ea492e2"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/VtSessionConfig.java",
+    "originalSha256": "c2ae580bc644eac57ecfa12436f46f411b10f4801e51d3c39efe664be0fb5b0b",
+    "stagedSha256": "2aa420bda8b268c18ad1ef380076a828ccb2611d61e0470296d096d3f3721b47"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/YawAimingController.java",
+    "originalSha256": "7b8a9921d317842dfeed36d31a22976fefc90f2774301932f046e61cc688995a",
+    "stagedSha256": "2dc770d723c63c84bfaf68f1d011bd0e6d4e2e304bc695fc67534e6abaa2cca5"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/MovementLogTest.java",
+    "originalSha256": "9b4b9ae88088841c73f6be5456b102bcac5aab261b1c81ca370d299d479278c2",
+    "stagedSha256": "5f9a02f48a0b52ba398b56f8269b2cbce274fb0b112cc22978c3d23c09c0f4c7"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/Vt40Test.java",
+    "originalSha256": "e28e42dd10347fcab9c5135a62ab10a086df4a720b9501ed451e49805eeed1cd",
+    "stagedSha256": "58760017c0d5e55c07b34c9028e574337910d719bd2d4d6ecadf03c95ca4fe98"
+  },
+  {
+    "path": "tools/test-aiming.ps1",
+    "originalSha256": "89a7a9bf3e39e888d2320ca62c84617304ace35550ad96d15f60d8c3b2572137",
+    "stagedSha256": "f20261f7daca3f7d37ac89c3301a40fed18b3729b60a0afad9cc6665946d43ef"
+  }
+]
