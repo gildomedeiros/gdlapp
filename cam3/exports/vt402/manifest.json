@@ -1,0 +1,32 @@
+[
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/SharedConfigStorage.java",
+    "originalSha256": "e73692cdda568ed911f649b1ece5bc819d397846ee528d34d6b3ae1b8b51bb7b",
+    "stagedSha256": "9360e94a3edbbe53542aa08497a90531defb1565149d445348ae14ad70e81649"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/ShorelineSetupUi.java",
+    "originalSha256": "a3cac2ee3a87fd1c8f1a93c91436bef6256fb140c8a70e7c39596a2a3ea492e2",
+    "stagedSha256": "ca48e2c2b412a23765be976491cb9b07033eff8efeb745ab0b34272c3e7c384f"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-sample/build.gradle",
+    "originalSha256": "49692905389477ecc495938f33a1da8e5aa9a91c9ccb2f143dc704221003efc0",
+    "stagedSha256": "92dc1dac47c74609e6ff49db22e55500ca040e1d10902a931f92765d3005eda4"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/main/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/FullSessionLog.java",
+    "originalSha256": "0a143d64413a76a9d996ce925e7924a04817bb24bac3e797ced821b008ceb745",
+    "stagedSha256": "aeec7517c4ce993d3f0e4106162b1c86ab7310352d24d17a6b934d77f272bf7f"
+  },
+  {
+    "path": "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java/dji/v5/ux/sample/showcase/defaultlayout/aiming/MovementLogTest.java",
+    "originalSha256": "5f9a02f48a0b52ba398b56f8269b2cbce274fb0b112cc22978c3d23c09c0f4c7",
+    "stagedSha256": "f9b4dcb16beb234e312fc4cd03a26c5af4868e6a40baaf23b175e9655ef50d9f"
+  },
+  {
+    "path": "Docs/VT_4.0.2.md",
+    "originalSha256": null,
+    "stagedSha256": "26e30616d0d67aa1480bc8a6f6cde02533614a82822c8435e424c7d619070863"
+  }
+]
