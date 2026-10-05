@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "shorelines": [
+    {
+      "id": "da762579-43cb-4105-8c81-e3d7581ddff2",
+      "name": "h",
+      "pointA": {
+        "latitude": -28.07904,
+        "longitude": 153.40098999999998
+      },
+      "pointB": {
+        "latitude": -28.079427,
+        "longitude": 153.40134999999998
+      },
+      "seaSide": "leftOfAToB",
+      "captureMethod": "lora",
+      "capturedAt": "2026-10-03T19:26:00+10:00",
+      "quality": {
+        "pointAFixes": 10,
+        "pointBFixes": 10,
+        "pointAScatterMetres": 2.788373909426762E-9,
+        "pointBScatterMetres": 0.7783644865219485
+      }
+    },
+    {
+      "id": "36dae417-b3b6-497d-959b-6e8d658f4e65",
+      "name": "h2",
+      "pointA": {
+        "latitude": -28.079439999999998,
+        "longitude": 153.40136499999994
+      },
+      "pointB": {
+        "latitude": -28.079066,
+        "longitude": 153.40103
+      },
+      "seaSide": "leftOfAToB",
+      "captureMethod": "lora",
+      "capturedAt": "2026-10-03T19:28:19+10:00",
+      "quality": {
+        "pointAFixes": 10,
+        "pointBFixes": 10,
+        "pointAScatterMetres": 0.4905341031371907,
+        "pointBScatterMetres": 0.6671695601581299
+      }
+    },
+    {
+      "id": "c33dc463-0f03-4608-9b2f-7a45154b7da3",
+      "name": "vc",
+      "pointA": {
+        "latitude": -28.088990000000003,
+        "longitude": 153.40805999999998
+      },
+      "pointB": {
+        "latitude": -28.088280000000005,
+        "longitude": 153.40785000000005
+      },
+      "seaSide": "leftOfAToB",
+      "captureMethod": "lora",
+      "capturedAt": "2026-10-03T20:42:06+10:00",
+      "quality": {
+        "pointAFixes": 10,
+        "pointBFixes": 10,
+        "pointAScatterMetres": 2.8159630360820435E-9,
+        "pointBScatterMetres": 5.590243635636741E-9
+      }
+    },
+    {
+      "id": "440a9ebc-758b-494a-b581-debb49ae0a53",
+      "name": "mainb",
+      "pointA": {
+        "latitude": -27.952459999999995,
+        "longitude": 153.42908999999997
+      },
+      "pointB": {
+        "latitude": -27.9531,
+        "longitude": 153.42911000000004
+      },
+      "seaSide": "leftOfAToB",
+      "captureMethod": "lora",
+      "capturedAt": "2026-10-04T08:39:54+10:00",
+      "quality": {
+        "pointAFixes": 10,
+        "pointBFixes": 10,
+        "pointAScatterMetres": 2.8194659895388014E-9,
+        "pointBScatterMetres": 2.7916368896296775E-9
+      }
+    }
+  ]
+}

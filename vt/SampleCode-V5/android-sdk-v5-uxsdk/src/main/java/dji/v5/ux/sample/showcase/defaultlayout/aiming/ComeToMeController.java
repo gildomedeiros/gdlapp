@@ -80,6 +80,23 @@ public final class ComeToMeController {
     public long destinationFixTime=-1;
     public AngleRoutePlanner.Plan route;
     public int routeIndex;
+    public long recoveryAttempts,lastRecoveryAt=-1,journeyId;
+    public String recoveryStatus="none",lastJourneyBlock="none";
+    private boolean journeyOpen;
+    public java.util.function.Consumer<JourneyOutcome> outcomeListener=o->{};
+    public static final class JourneyOutcome {
+        public final long id,elapsedMs;public final String outcome,cause,lastBlock;
+        public final double surferLat,surferLon,targetLat,targetLon;
+        JourneyOutcome(ComeToMeController m,String outcome,String cause){id=m.journeyId;elapsedMs=m.attemptElapsedMs;
+            this.outcome=outcome;this.cause=cause;lastBlock=m.lastJourneyBlock;
+            surferLat=m.routeSurferLat;surferLon=m.routeSurferLon;targetLat=m.approachTargetLat;targetLon=m.approachTargetLon;}
+    }
+    private void openJourney(){journeyId++;journeyOpen=true;lastJourneyBlock="none";recoveryAttempts=0;lastRecoveryAt=-1;recoveryStatus="none";}
+    private void finishJourney(String outcome,String cause){
+        if(!journeyOpen)return;journeyOpen=false;
+        try{outcomeListener.accept(new JourneyOutcome(this,outcome,cause));}catch(RuntimeException ignored){}
+    }
+    public void cancel(String cause){finishJourney("cancelled",cause);cancel();}
     public double routeSurferLat=Double.NaN,routeSurferLon=Double.NaN,angleErrorDegrees=Double.NaN;
     public String routeStatus="none",clockwiseFailure="none",anticlockwiseFailure="none";
     public double[] clockwiseFailureValues,anticlockwiseFailureValues;
@@ -101,6 +118,7 @@ public final class ComeToMeController {
 
     /** Invalidate the whole plan on Stop/control loss; no implicit flight back. */
     public void cancel() {
+        finishJourney("cancelled","session_reset");
         gpsPaused=false; hasFilmed=false; qualificationStatus="idle"; qualificationEvent="none";
         phase=Phase.OFF; reason="off"; returnReason="none"; runEnabled=false; captureRequired=true;
         centralLat=centralLon=bandLat=bandLon=bandBearing=Double.NaN;
@@ -117,6 +135,7 @@ public final class ComeToMeController {
         gpsPaused=false; forward=right=0; resetQualification(manual ? "manual" : "other_pause"); slowMs=0; ride.clearEvidence("pause"); speedKmh=Double.NaN;
         approachAligned=false; returnAligned=false;
         if(manual) {
+            finishJourney("cancelled","pilot_intervention");
             hasFilmed=false;
             clearApproach(); clearReturn();
             captureRequired=true; ride.reset(); riding=false; phase=runEnabled ? Phase.WAITING : Phase.OFF; attemptSince=-1;
@@ -129,6 +148,7 @@ public final class ComeToMeController {
     private boolean expireAttempt(long now) {
         attemptElapsedMs=attemptSince<0 ? 0 : Math.max(0,now-attemptSince);
         if((phase==Phase.APPROACHING || phase==Phase.RETURNING) && attemptElapsedMs>=ComeToMeSettings.ATTEMPT_MS) {
+            finishJourney("timed_out","movement_timeout");
             phase=Phase.STOPPED; reason="movement_timeout"; forward=right=0; return true;
         }
         return phase==Phase.STOPPED;
@@ -156,6 +176,7 @@ public final class ComeToMeController {
         event=ride.event;
         if(!runEnabled || phase==Phase.STOPPED) return;
         if(!wasRiding && riding) {
+            finishJourney("cancelled","ride_detected");
             clearApproach(); freezeQualification("ride");
             if(phase!=Phase.RETURNING) { phase=Phase.WAITING; attemptSince=-1; reason="ride_detected"; }
         }
@@ -166,6 +187,7 @@ public final class ComeToMeController {
 
     private void beginReturn(String cause,AimingSession.Inputs in,long now) {
         if(phase==Phase.RETURNING || phase==Phase.STOPPED) return;
+        finishJourney("cancelled",cause);
         clearApproach(); clearReturn(); createBand(in,now); returnReason=cause; forward=right=0; inactiveSince=-1;
         noRideTimerEvent="cancelled_return_"+cause;
         // Every return starts from the current aircraft position, never from the prior excursion.
@@ -216,7 +238,10 @@ public final class ComeToMeController {
         }
         distance=YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon);
         centralDistance=YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon);
-        if(positioning!=null) {double[] measures=positioning.measures(in);projectedSeparation=measures[0];alignmentError=measures[1];}
+        if(positioning!=null) {
+            if(angleApproach()){projectedSeparation=alignmentError=Double.NaN;}
+            else {double[] measures=positioning.measures(in);projectedSeparation=measures[0];alignmentError=measures[1];}
+        }
         inactiveMs=inactiveSince<0 ? 0 : Math.max(0,now-inactiveSince);
         if(timedOut) return;
         if(newFix) {
@@ -273,7 +298,7 @@ public final class ComeToMeController {
                 else { phase=Phase.HOLDING; reason="within_reapproach_margin"; }
                 return;
             }
-            phase=Phase.APPROACHING; attemptSince=now;
+            openJourney();phase=Phase.APPROACHING; attemptSince=now;
             approachStartLat=in.lat; approachStartLon=in.lon;
             approachTargetLat=in.target.lat; approachTargetLon=in.target.lon;
             approachHeading=YawAimingMath.bearingToTarget(in.lat,in.lon,in.target.lat,in.target.lon);
@@ -292,7 +317,7 @@ public final class ComeToMeController {
         }
         // VT 3.2: Stop 1 m inside the hard 250 m boundary instead of crawling toward it.
         if(centralDistance>=settings.excursionStop()) {
-            phase=Phase.HOLDING; reason="excursion_limit"; attemptSince=-1; return;
+            finishJourney("cancelled","excursion_limit");phase=Phase.HOLDING; reason="excursion_limit"; attemptSince=-1; return;
         }
         // Align once (and again after a safety pause); heading corrections continue during travel.
         if(!approachAligned) {
@@ -325,22 +350,24 @@ public final class ComeToMeController {
             approachHeading=YawAimingMath.bearingToTarget(in.lat,in.lon,target[0],target[1]);
             approachDistance=YawAimingMath.distance(in.lat,in.lon,target[0],target[1]);approachProgress=0;
             destinationFixTime=in.target.time;journeyKind=close?"projected_reapproach":"alignment_only_preserve_projection";
-            approachAligned=true;phase=Phase.APPROACHING;attemptSince=now;event="fixed_destination_planned";
+            openJourney();approachAligned=true;phase=Phase.APPROACHING;attemptSince=now;event="fixed_destination_planned";
             reason=journeyKind;return; // Neutral transition; yaw continues aiming at the surfer.
         }
         double remaining=YawAimingMath.distance(in.lat,in.lon,approachTargetLat,approachTargetLon);
         approachProgress=approachDistance-remaining;
         if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE) {enterFilmingHold(now);reason="fixed_destination_arrived";return;}
-        if(centralDistance>=settings.excursionStop()) {phase=Phase.HOLDING;reason="excursion_limit";attemptSince=-1;return;}
+        if(centralDistance>=settings.excursionStop()) {finishJourney("cancelled","excursion_limit");phase=Phase.HOLDING;reason="excursion_limit";attemptSince=-1;return;}
         double[] v=positioning.velocity(in,approachTargetLat,approachTargetLon,arrivalSpeed(Math.min(remaining,settings.maxExcursionMetres-centralDistance)));
         forward=v[0];right=v[1];reason="moving_to_fixed_destination_aiming_surfer";
     }
     private boolean angleLegAllowed(AimingSession.Inputs in) {
-        AngleRoutePlanner.Check c=AngleRoutePlanner.check(positioning,in.lat,in.lon,waypointLat(),waypointLon(),
+        AngleRoutePlanner.Check c=route!=null&&route.escapeFirst&&routeIndex==0?
+            AngleRoutePlanner.escapeCheck(positioning,in.lat,in.lon,waypointLat(),waypointLon(),routeSurferLat,routeSurferLon,initialCentralLat,initialCentralLon,centralLat,centralLon):
+            AngleRoutePlanner.check(positioning,in.lat,in.lon,waypointLat(),waypointLon(),
             routeSurferLat,routeSurferLon,initialCentralLat,initialCentralLon,centralLat,centralLon);
-        if(!c.reason.equals("none")){pathBlockReason=c.reason;failedSegment=routeIndex;
+        if(!c.reason.equals("none")){pathCheckStatus="blocked";pathBlockReason=c.reason;lastJourneyBlock=c.reason;failedSegment=routeIndex;
             failedClearance=c.clearance;failedBoundary=c.boundary;failedExcursion=c.excursion;return false;}
-        return true;
+        pathCheckStatus="allowed";pathBlockReason="none";return true;
     }
     private void updateAngle(AimingSession.Inputs in,long now,boolean freshSurfer) {
         projectedSeparation=Double.NaN;alignmentError=Double.NaN;
@@ -365,15 +392,35 @@ public final class ComeToMeController {
             approachHeading=YawAimingMath.bearingToTarget(in.lat,in.lon,target[0],target[1]);
             approachDistance=p.length;approachProgress=0;destinationFixTime=in.target.time;
             journeyKind=close?"direct_distance_reapproach":"angle_alignment_preserve_direct_distance";
-            routeStatus="planned";approachAligned=true;phase=Phase.APPROACHING;attemptSince=now;event="fixed_route_planned";reason=journeyKind;return;
+            openJourney();routeStatus="planned";approachAligned=true;phase=Phase.APPROACHING;attemptSince=now;event="fixed_route_planned";reason=journeyKind;return;
         }
         double remaining=YawAimingMath.distance(in.lat,in.lon,waypointLat(),waypointLon());
         if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE){
             if(routeIndex==route.points.length-1){routeStatus="arrived";enterFilmingHold(now);reason="fixed_destination_arrived";return;}
             routeIndex++;routeStatus="waypoint_transition";reason="waypoint_transition";return;
         }
-        if(centralDistance>=settings.excursionStop()){phase=Phase.HOLDING;reason="excursion_limit";routeStatus="blocked";attemptSince=-1;return;}
-        if(!angleLegAllowed(in)){reason=pathBlockReason;routeStatus="blocked";return;}
+        if(centralDistance>=settings.excursionStop()){finishJourney("cancelled","excursion_limit");phase=Phase.HOLDING;reason="excursion_limit";routeStatus="blocked";attemptSince=-1;return;}
+        if(!angleLegAllowed(in)){
+            reason=pathBlockReason;routeStatus="blocked";
+            if(lastRecoveryAt<0||now-lastRecoveryAt>=1000){
+                lastRecoveryAt=now;recoveryAttempts++;
+                AngleRoutePlanner.Plan replacement=AngleRoutePlanner.recover(positioning,in,
+                    new double[]{approachTargetLat,approachTargetLon},routeSurferLat,routeSurferLon,destinationFixTime,
+                    initialCentralLat,initialCentralLon,centralLat,centralLon);
+                clockwiseFailure=replacement.clockwiseFailure;anticlockwiseFailure=replacement.anticlockwiseFailure;
+                clockwiseFailureValues=replacement.clockwiseFailureValues;anticlockwiseFailureValues=replacement.anticlockwiseFailureValues;
+                if(replacement.reason.equals("none")){
+                    route=replacement;routeIndex=0;approachDistance=replacement.length;approachProgress=0;
+                    routeStatus="replanned";recoveryStatus=replacement.escapeFirst?"outward_escape_planned":"route_replanned";
+                    reason=recoveryStatus;event="fixed_route_replanned";pathCheckStatus="allowed";pathBlockReason="none";
+                }else{
+                    recoveryStatus=replacement.reason;reason=replacement.reason;pathBlockReason=replacement.reason;
+                    failedSegment=replacement.failedSegment;failedClearance=replacement.failedClearance;
+                    failedBoundary=replacement.failedBoundary;failedExcursion=replacement.failedExcursion;
+                }
+            }
+            return; // Stop before executing any replacement; preserve the original attempt clock.
+        }
         double total=remaining;for(int i=routeIndex+1;i<route.points.length;i++)total+=YawAimingMath.distance(route.points[i-1][0],route.points[i-1][1],route.points[i][0],route.points[i][1]);
         approachProgress=approachDistance-total;routeStatus="traveling";
         double[] v=positioning.velocity(in,waypointLat(),waypointLon(),arrivalSpeed(Math.min(remaining,settings.maxExcursionMetres-centralDistance)));
@@ -386,6 +433,7 @@ public final class ComeToMeController {
     /** Record arrival once. Subsequent band exits and arrivals cannot erase an active countdown. */
 
     private void enterFilmingHold(long now) {
+        finishJourney("arrived","fixed_destination_arrived");
         hasFilmed=true;
         phase=Phase.HOLDING; reason="filming_distance_reached"; attemptSince=-1; forward=right=0;
         if(inactiveSince<0) { inactiveSince=now; noRideTimerEvent="started_filming_hold"; }
@@ -429,6 +477,7 @@ public final class ComeToMeController {
 
     // VT 3.5: Cancel only the approach, preserving central, ride and no-ride bookkeeping.
     public void replaceApproachForRetreat() {
+        finishJourney("cancelled","retreat");
         clearApproach();attemptSince=-1;forward=right=0;
         phase=Phase.WAITING;reason="retreat";
     }

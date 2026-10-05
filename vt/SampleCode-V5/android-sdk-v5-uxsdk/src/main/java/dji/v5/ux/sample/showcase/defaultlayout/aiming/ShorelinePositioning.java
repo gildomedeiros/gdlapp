@@ -13,7 +13,7 @@ public final class ShorelinePositioning {
         if(!Double.isFinite(angle)||angle< -90||angle>90||!Double.isFinite(angleTolerance)||angleTolerance<.1||angleTolerance>45||
                 !Double.isFinite(extra)||extra<0||extra>50||!Double.isFinite(excursionStop)||excursionStop<9||excursionStop>999)
             throw new IllegalArgumentException("Invalid angle positioning settings");
-        angleDegrees=angle;this.angleTolerance=angleTolerance;extraClearance=extra;this.excursionStop=excursionStop;
+        angleDegrees=angle;this.angleTolerance=angleTolerance;extraClearance=mode.equals("diagonal")?0:extra;this.excursionStop=excursionStop;
         if(!"front".equals(mode)&&!"sideways".equals(mode)&&!"diagonal".equals(mode))throw new IllegalArgumentException("mode must be front, sideways or diagonal");
         if(!"left".equals(side)&&!"right".equals(side))throw new IllegalArgumentException("sidewaysSide must be left or right looking seaward");
         if(!Double.isFinite(tolerance)||tolerance<1||tolerance>20)throw new IllegalArgumentException("alignmentToleranceMetres 1–20");

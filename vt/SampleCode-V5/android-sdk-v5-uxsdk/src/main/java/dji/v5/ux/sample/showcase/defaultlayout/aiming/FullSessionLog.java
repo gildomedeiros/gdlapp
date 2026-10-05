@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 public final class FullSessionLog {
     public interface Destination { OutputStream open(String name) throws IOException; }
     private final Destination destination;
+    private String appVersion="unknown";
+    public FullSessionLog(Destination destination, Consumer<String> error,String version){this(destination,error);appVersion=version;}
     private final Consumer<String> error;
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "cam3-full-log"); t.setDaemon(true); return t;
@@ -46,7 +48,7 @@ public final class FullSessionLog {
             try {
                 s.writer = new BufferedWriter(new OutputStreamWriter(destination.open(name), StandardCharsets.UTF_8));
                 write(s, "session_start", System.currentTimeMillis(), System.nanoTime()/1000000,
-                        new Object[]{"version", "4.0.3", "format", 1});
+                        new Object[]{"version", appVersion, "format", 1});
                 status = "Full Log ON: Downloads/CAM3/" + name;
             } catch (Exception ex) { fail(s, ex); }
             finally { synchronized (FullSessionLog.this) { controlsPending--; } }

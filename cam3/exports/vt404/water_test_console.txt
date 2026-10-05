@@ -1,0 +1,297 @@
+rows 120608 checks {'valid_json': 120608, 'active_retreat_command': 2282, 'excursion_config': 17073, 'distance_label': 17073, 'positioning_command_cap': 13197, 'blocked_positioning_zero': 7284, 'endpoint_radius': 17, 'endpoint_angle': 17, 'planning_trigger': 17, 'planned_segment_clearance': 126, 'planned_segment_boundary': 126, 'planned_segment_excursion': 126, 'snapshot_frozen': 9640, 'observed_active_segment_clearance': 3300, 'observed_active_boundary': 3300} failures 3572
+[
+  {
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "angle": 45,
+    "plans": 9,
+    "arrivals": 8,
+    "submitted_positioning_cycles": 1752,
+    "clearance_block_seconds": 9.7,
+    "boundary_block_seconds": 0,
+    "destination_block_seconds": 91.7,
+    "timeout_seconds": 0,
+    "minimum_planned_path_clearance": 27.113753940354567,
+    "minimum_planned_boundary_distance": 0.0003022124073766008,
+    "maximum_planned_excursion": 54.87365844205941,
+    "log_version": [
+      "4.0.3"
+    ]
+  },
+  {
+    "file": "cam3_full_2026-10-05_214433_239_a4ee1d16.jsonl",
+    "angle": -15,
+    "plans": 2,
+    "arrivals": 2,
+    "submitted_positioning_cycles": 337,
+    "clearance_block_seconds": 0,
+    "boundary_block_seconds": 0,
+    "destination_block_seconds": 84.3,
+    "timeout_seconds": 0,
+    "minimum_planned_path_clearance": 28.09999999988029,
+    "minimum_planned_boundary_distance": 0.43629706062138074,
+    "maximum_planned_excursion": 40.47755997277536,
+    "log_version": [
+      "4.0.3"
+    ]
+  },
+  {
+    "file": "cam3_full_2026-10-05_214841_088_ebd4710f.jsonl",
+    "angle": -75,
+    "plans": 1,
+    "arrivals": 0,
+    "submitted_positioning_cycles": 18,
+    "clearance_block_seconds": 254.9,
+    "boundary_block_seconds": 42.7,
+    "destination_block_seconds": 0,
+    "timeout_seconds": 25.2,
+    "minimum_planned_path_clearance": 27.096032578790897,
+    "minimum_planned_boundary_distance": -0.0,
+    "maximum_planned_excursion": 64.19870092145459,
+    "log_version": [
+      "4.0.3"
+    ]
+  },
+  {
+    "file": "cam3_full_2026-10-05_215551_904_791a03a2.jsonl",
+    "angle": -10,
+    "plans": 2,
+    "arrivals": 1,
+    "submitted_positioning_cycles": 578,
+    "clearance_block_seconds": 83.6,
+    "boundary_block_seconds": 0,
+    "destination_block_seconds": 43.1,
+    "timeout_seconds": 0,
+    "minimum_planned_path_clearance": 27.127088210016783,
+    "minimum_planned_boundary_distance": 0.4842870084222435,
+    "maximum_planned_excursion": 51.55538237833234,
+    "log_version": [
+      "4.0.3"
+    ]
+  },
+  {
+    "file": "cam3_full_2026-10-05_220208_476_1f1cb1c6.jsonl",
+    "angle": -30,
+    "plans": 1,
+    "arrivals": 0,
+    "submitted_positioning_cycles": 44,
+    "clearance_block_seconds": 92.7,
+    "boundary_block_seconds": 0,
+    "destination_block_seconds": 20.1,
+    "timeout_seconds": 0,
+    "minimum_planned_path_clearance": 27.168172313576456,
+    "minimum_planned_boundary_distance": 0.2798284206884549,
+    "maximum_planned_excursion": 49.44359135279363,
+    "log_version": [
+      "4.0.3"
+    ]
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "angle": 30,
+    "plans": 2,
+    "arrivals": 1,
+    "submitted_positioning_cycles": 571,
+    "clearance_block_seconds": 16.1,
+    "boundary_block_seconds": 0,
+    "destination_block_seconds": 43.3,
+    "timeout_seconds": 0,
+    "minimum_planned_path_clearance": 27.007909598562406,
+    "minimum_planned_boundary_distance": 3.3098301176932203,
+    "maximum_planned_excursion": 48.66643333331783,
+    "log_version": [
+      "4.0.3"
+    ]
+  }
+]
+failure samples [
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.212+10:00",
+    "cycle": 477
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.314+10:00",
+    "cycle": 478
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.416+10:00",
+    "cycle": 479
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.519+10:00",
+    "cycle": 480
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.630+10:00",
+    "cycle": 481
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.738+10:00",
+    "cycle": 482
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.841+10:00",
+    "cycle": 483
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:03.944+10:00",
+    "cycle": 484
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:04.049+10:00",
+    "cycle": 485
+  },
+  {
+    "check": "distance_label",
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:35:04.159+10:00",
+    "cycle": 486
+  }
+]
+blocks [
+  {
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:37:58.906+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 9,
+    "clearance": 26.993695892054085,
+    "boundary": 5.628679314674584,
+    "live_distance": 32.37791225738068,
+    "drone_distance_from_snapshot": 26.99370599275044
+  },
+  {
+    "file": "cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl",
+    "time": "2026-10-05T21:39:36.359+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.05393631137425,
+    "boundary": 4.272697798830851,
+    "live_distance": 26.053936309619328,
+    "drone_distance_from_snapshot": 28.37244246524431
+  },
+  {
+    "file": "cam3_full_2026-10-05_214841_088_ebd4710f.jsonl",
+    "time": "2026-10-05T21:48:46.623+10:00",
+    "reason": "route_central_boundary",
+    "leg": 0,
+    "clearance": 27.17384874200605,
+    "boundary": -0.04284380962444015,
+    "live_distance": 36.1093499411572,
+    "drone_distance_from_snapshot": 36.1093499399992
+  },
+  {
+    "file": "cam3_full_2026-10-05_214841_088_ebd4710f.jsonl",
+    "time": "2026-10-05T21:49:31.665+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.964296128297153,
+    "boundary": 5.746120836651899,
+    "live_distance": 32.44814614361258,
+    "drone_distance_from_snapshot": 32.033605027057476
+  },
+  {
+    "file": "cam3_full_2026-10-05_215551_904_791a03a2.jsonl",
+    "time": "2026-10-05T21:56:44.495+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.919648611403314,
+    "boundary": 3.501643309116475,
+    "live_distance": 28.826734431434264,
+    "drone_distance_from_snapshot": 26.95823032850854
+  },
+  {
+    "file": "cam3_full_2026-10-05_215551_904_791a03a2.jsonl",
+    "time": "2026-10-05T21:57:17.502+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 4,
+    "clearance": 26.967383286143182,
+    "boundary": 0.4842870138178248,
+    "live_distance": 31.06084144883234,
+    "drone_distance_from_snapshot": 26.993686069572373
+  },
+  {
+    "file": "cam3_full_2026-10-05_220208_476_1f1cb1c6.jsonl",
+    "time": "2026-10-05T22:03:00.831+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.954804488611018,
+    "boundary": 4.217061732722537,
+    "live_distance": 30.583567259095368,
+    "drone_distance_from_snapshot": 27.162993944262524
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "time": "2026-10-05T22:07:49.854+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 25.157777777815312,
+    "boundary": 0.544410952746734,
+    "live_distance": 25.157777784539732
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "time": "2026-10-05T22:08:02.423+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.937312780032396,
+    "boundary": 33.70377519273054,
+    "live_distance": 25.640678118143075,
+    "drone_distance_from_snapshot": 26.940827625014315
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "time": "2026-10-05T22:08:24.131+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.987333972576568,
+    "boundary": 22.285061307535024,
+    "live_distance": 31.522696504372508,
+    "drone_distance_from_snapshot": 31.522696503849872
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "time": "2026-10-05T22:08:28.323+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 26.969210000715556,
+    "boundary": 22.285061307535024,
+    "live_distance": 27.91415254066553,
+    "drone_distance_from_snapshot": 27.2744309301782
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "time": "2026-10-05T22:09:44.369+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 6,
+    "clearance": 25.00947110016414,
+    "boundary": 15.084662885237552,
+    "live_distance": 25.009471103990915,
+    "drone_distance_from_snapshot": 31.303637590858692
+  },
+  {
+    "file": "cam3_full_2026-10-05_220638_442_05e26c81.jsonl",
+    "time": "2026-10-05T22:09:54.216+10:00",
+    "reason": "route_surfer_clearance",
+    "leg": 0,
+    "clearance": 25.520600301827997,
+    "boundary": 3.6392994377084564,
+    "live_distance": 25.52060029989025
+  }
+]

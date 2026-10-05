@@ -203,3 +203,14 @@ foreach($routeType in @('direct','around')) {
     if($angleRows.Count -ne 1 -or $row.routeKind -ne $routeType -or $row.distanceMeaning -ne 'direct_horizontal' -or $null -ne $row.projectedSeparationM -or $row.maxExcursionM -ne 300 -or $row.excursionStopDistanceM -ne 299 -or $row.routeWaypoints.Count -lt 1 -or $row.routeWaypoints[0].Count -ne 2 -or $row.fixedDestinationFixTime -le 0 -or $row.yawPurpose -ne 'surfer' -or $null -eq $row.submittedRightMps){throw 'VT404 independent route log verification failed'}
 }
 Write-Output 'PASS: independent JSON parser validates direct/around waypoint arrays, snapshot, distance meaning, excursion and actual BODY submission'
+
+# VT 4.0.5: production route recovery, frozen snapshots, timeout, escape and logging.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt405Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT405 compile failed' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt405Test' $output
+if ($LASTEXITCODE -ne 0) { throw 'VT405 tests failed' }
+$v405=@(Get-Content (Join-Path $output 'vt405-log.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$header405=@($v405 | Where-Object event -eq 'session_start')[0]
+$row405=@($v405 | Where-Object event -eq 'movement_cycle')[0]
+if($header405.version -ne '4.0.5-test' -or $null -ne $row405.projectedSeparationM -or $null -ne $row405.comeToMeAlignmentErrorM -or $row405.extraPathClearanceMetres -ne 0 -or $row405.requiredPathClearanceMetres -ne 18 -or $null -eq $row405.capturedSurferDirectDistanceM){throw 'VT405 independent log validation failed'}
+Write-Output 'PASS: VT405 independent JSON parser validates runtime version, zero buffer and explicit direct distance references'

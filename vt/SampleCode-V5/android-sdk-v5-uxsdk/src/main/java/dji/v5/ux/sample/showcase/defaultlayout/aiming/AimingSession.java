@@ -33,6 +33,7 @@ public final class AimingSession {
         void sendYaw(double rate);
         // CAM3 v2.1: Optional diagnostics port has no authority over flight state or command delivery.
         default void diagnostic(String event, String detail) { }
+        default void journeyOutcome(ComeToMeController.JourneyOutcome outcome) { }
         // CAM3 v2.2: A reason callback can announce takeover before the state callback arrives.
         default boolean controlLost() { return false; }
     }
@@ -209,7 +210,7 @@ public final class AimingSession {
         return !port.controlLost() && enableSucceeded && advancedRequested && a != beforeAdvanced && a.enabled && a.advanced
                 && (a.owner == Owner.MSDK || (a.owner == Owner.UNKNOWN && !observedMsdk));
     }
-    public AimingSession(Port port) { this.port = port; }
+    public AimingSession(Port port) { this.port = port; movement.outcomeListener=port::journeyOutcome; }
     public State state() { return state; }
     public String reason() { return reason; }
     // CAM3 v2.1: Expose session identity for correlating callbacks and readiness snapshots.
@@ -463,7 +464,7 @@ public final class AimingSession {
         // VT 3.5: Explicit stop/control loss cannot leave a live retreat or resume timer.
         retreat.stop(port.now(),why);
         lastFreshAimingTarget=null;
-        movement.cancel();
+        movement.cancel(why);
         surferYaw.reset(); // No direction commitment survives Stop.
         // CAM3 v2.1: Log stop reasons even if the state itself has not changed.
         diagnostic("stop", "reason=" + why);

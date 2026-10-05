@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "normal": [
+    {
+      "headingErrorDeg": 0,
+      "speedDegPerSec": 0
+    },
+    {
+      "headingErrorDeg": 3,
+      "speedDegPerSec": 0
+    },
+    {
+      "headingErrorDeg": 5,
+      "speedDegPerSec": 2
+    },
+    {
+      "headingErrorDeg": 10,
+      "speedDegPerSec": 3.5
+    },
+    {
+      "headingErrorDeg": 20,
+      "speedDegPerSec": 8.5
+    },
+    {
+      "headingErrorDeg": 33,
+      "speedDegPerSec": 15
+    }
+  ],
+  "riding": [
+    {
+      "headingErrorDeg": 0,
+      "speedDegPerSec": 0
+    },
+    {
+      "headingErrorDeg": 3,
+      "speedDegPerSec": 1.5
+    },
+    {
+      "headingErrorDeg": 5,
+      "speedDegPerSec": 5
+    },
+    {
+      "headingErrorDeg": 10,
+      "speedDegPerSec": 10
+    },
+    {
+      "headingErrorDeg": 20,
+      "speedDegPerSec": 20
+    },
+    {
+      "headingErrorDeg": 30,
+      "speedDegPerSec": 30
+    }
+  ]
+}

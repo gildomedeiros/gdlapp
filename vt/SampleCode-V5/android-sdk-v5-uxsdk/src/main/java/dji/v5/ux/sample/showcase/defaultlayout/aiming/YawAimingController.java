@@ -208,7 +208,7 @@ public final class YawAimingController implements AimingSession.Port {
         fullLog = new FullSessionLog(name -> FullLogStorage.open(appContext, name), error -> {
             logger.event("full_log_error", error);
             main.post(() -> android.widget.Toast.makeText(appContext, error, android.widget.Toast.LENGTH_LONG).show());
-        });
+        }, installedVersion(appContext));
         phone = new PhoneTargetLocationSource(context, fullLog, this::diagnostic);
         lora = new LoRaTargetLocationSource(context, this::diagnostic, fullLog);
         // CAM3 v2.1: Capture individual read failures/recovery, in addition to periodic field snapshots.
@@ -525,6 +525,16 @@ public final class YawAimingController implements AimingSession.Port {
     public void exportLog(Uri destination, AimingDiagnosticLogger.Result result) {
         // CAM3 v2.1: ContentResolver access and copying run on the logger worker, never on the UI/control thread.
         logger.export(() -> appContext.getContentResolver().openOutputStream(destination, "wt"), result);
+    }
+    private static String installedVersion(android.content.Context context) {
+        try{return context.getPackageManager().getPackageInfo(context.getPackageName(),0).versionName;}
+        catch(android.content.pm.PackageManager.NameNotFoundException e){return "unknown";}
+    }
+    @Override public void journeyOutcome(ComeToMeController.JourneyOutcome o) {
+        fullLog.record("journey_outcome","session",session.sessionId(),"journeyId",o.id,
+            "outcome",o.outcome,"reason",o.cause,"lastBlockReason",o.lastBlock,"elapsedMs",o.elapsedMs,
+            "capturedSurferLatitude",o.surferLat,"capturedSurferLongitude",o.surferLon,
+            "destinationLatitude",o.targetLat,"destinationLongitude",o.targetLon);
     }
     @Override public void sendYaw(double rate) { sendMotion(rate,0); }
     @Override public void sendMotion(double rate,double forward) {sendMotion(rate,forward,0);}

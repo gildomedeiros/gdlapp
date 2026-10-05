@@ -16,7 +16,7 @@ public final class VtSettingsConfig {
         JsonObject o=StrictConfigJson.object(raw);
         double angle=optional(o,"positioningAngleDegrees",45,-90,90);
         double angleTolerance=optional(o,"positioningAngleToleranceDegrees",5,.1,45);
-        double extra=optional(o,"extraPathClearanceMetres",2,0,50);
+        double extra=optional(o,"extraPathClearanceMetres",0,0,50);
         double excursion=optional(o,"maxExcursionMetres",300,10,1000);
         JsonObject required=o.deepCopy();
         for(String k:new String[]{"positioningAngleDegrees","positioningAngleToleranceDegrees","extraPathClearanceMetres","maxExcursionMetres"})required.remove(k);

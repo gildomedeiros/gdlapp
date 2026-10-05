@@ -1,0 +1,46 @@
+VT 4.0.4 device-log test — 5 October 2026 (Australia/Brisbane)
+Archive: C:/Users/gildo/temp/vt404test/cam3_full_2026-10-05_220638_442_05e26c81.zip
+
+RESULT: mixed. Snapshot/route planning checks passed; runtime around-route stalling and two logging defects were found. No APK/source changes were made during this analysis.
+
+Scope
+11 JSONL files; 120,608 records parsed without JSON errors. Six explicit diagonal-mode sessions, angles +45, -15, -75, -10, -30 and +30 degrees. All used filming31 m, margin5 m, angular tolerance5 degrees, extra direct-path clearance2 m, max excursion300 m. Retreat ON: threshold25 m, speed2 m/s, period4 s, cooldown5 s, stale-start allowance1. Thus positioning paths required27 m from the captured surfer position.
+
+Angle / routes planned / arrivals / observed clearance-block time
++45 / 9 / 8 / 9.7 s
+-15 / 2 / 2 / 0 s
+-75 / 1 / 0 / 254.9 s (also42.7 s boundary block; then300 s movement timeout)
+-10 / 2 / 1 / 83.6 s
+-30 / 1 / 0 / 92.7 s
++30 / 2 / 1 / 16.1 s
+Totals17 plans,12 arrival events. Non-arrivals include retreat/manual/control interruption as well as the stalled/timeout cases; do not label every non-arrival a planner failure. Block durations integrate consecutive logged cycles with <=1 s gaps, not inferred unlogged time.
+
+Independent checks passed
+- All17 endpoint angles, endpoint radii and distance-reapproach versus preserved-radius alignment decisions.
+- All126 original planned segments: minimum direct horizontal path separation >=27 m, boundary side permitted and excursion <=299 m.
+- 9,640 comparisons found saved surfer snapshot/destination/waypoints unchanged for a given route.
+- All7,284 checked blocked-positioning cycles had zero/no submitted positioning translation (retreat evaluated separately).
+- 13,197 checked non-retreat command cycles respected the4 m/s combined cap.
+- All3,300 nonzero positioning cycles passed the independently recomputed active leg clearance/boundary checks using the logged calculation aircraft snapshot, allowing2 cm comparison tolerance. Logs do not contain final aircraft coordinates, so this is not independent reconstruction of the last SDK snapshot or proof of physical aircraft motion.
+- 2,282 submitted active-retreat cycles respected their2 m/s backward envelope and did not submit nonzero retreat when logged boundary-blocked.
+- Configured300/derived299 excursion values present in all17,073 diagonal cycles. Largest planned excursion was64.2 m: this archive does not exercise the actual299 m limit.
+
+Runtime issue: fragile saved-leg clearance and boundary recovery
+-75 degrees: route planned21:48:46.521; next cycle21:48:46.623 logged aircraft4.28 cm beachward of original boundary and correctly neutralized positioning. Later21:49:31.665 next saved leg's minimum separation was26.9643 m versus required27 m; live surfer distance32.4481 m. The stored route stayed blocked for long periods and reached the300 s movement timeout. No arrival.
+-30 degrees:22:03:00.831 next saved leg minimum separation26.9548 m versus27 m. Live surfer distance30.5836 m, drone distance from frozen snapshot27.1630 m. About92.7 s of clearance-block cycles, then user/flight return interrupted the session. No arrival.
+Other sessions similarly blocked for millimetre/centimetre shortfalls. Example+45 at21:37:58.906:26.9937 m versus27 m. Some later resumed and arrived.
+Interpretation: original routes were valid, but changed aircraft position can invalidate the connection to the next fixed waypoint. The controller correctly withholds translation yet does not plan another valid connector/around path to the SAME snapshot and endpoint. It waits for the old leg to become valid again or for interruption/timeout. This is an operability problem, not evidence that blocked commands crossed the line. Recorded position changes cannot be uniquely assigned to GPS noise, drift, inertia or pilot action without additional evidence.
+A possible correction should retain the agreed frozen surfer/destination, clearance and boundary limits; do not silently convert to following a moving surfer or weaken checks. No correction is implemented here.
+
+Logging defects
+1. All session_start headers identify version4.0.3. Source FullSessionLog.java hardcodes4.0.3 even though the4.0.4 APK manifest was previously verified and these records contain diagonal-route fields.
+2. projectedSeparationM is incorrectly non-null in3,572 diagonal cycles:25 retreat cycles,3,311 retreat/cooldown cycles and236 movement-timeout cycles. Those cycles should report it not applicable. Cause in source: general state update computes projections before branches that skip updateAngle's nulling. distanceMeaning remains direct_horizontal. Do not interpret these stray projected values as the new-mode distance setting.
+
+Coverage limitations
+No accepted ride-start event was observed. Retreat OFF was not exercised. Excursion-limit flight behavior and video framing were not established. This is a recorded-command/geometry audit, not aircraft-axis, obstacle or drift certification.
+
+Evidence files
+water_test_results.json — machine-readable assertions, sessions and block episodes.
+water_test_routes.csv — all17 routes and independent geometry measurements.
+water_test_blocks.csv — first record of each route-block episode.
+test_water_logs.py — reproducible independent log/geometry checks; no aircraft or configuration writes.

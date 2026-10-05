@@ -64,7 +64,7 @@ public final class Vt404Test {
         check(plan.reason.equals("none")&&plan.kind.equals("around"),"safe endpoints unsafe chord goes around");
         double a=in.lat,b=in.lon;
         for(double[] point:plan.points){AngleRoutePlanner.Check c=AngleRoutePlanner.check(p,a,b,point[0],point[1],40*DEG,0,0,0,0,0);
-            check(c.reason.equals("none")&&c.clearance>=20-1e-6,"whole polygon segment20m clearance");a=point[0];b=point[1];}
+            check(c.reason.equals("none")&&c.clearance>=18-1e-6,"whole polygon segment18m clearance (VT405 zero extra buffer)");a=point[0];b=point[1];}
         p=preset(45,0);in=ComeToMeTest.in(1000,14,-25,40,0,0);end=p.destination(in,28);
         plan=AngleRoutePlanner.plan(p,in,end,0,0,0,0);check(plan.reason.equals("none")&&plan.kind.equals("around"),"OFF geometric around route");
         check(p.clearance()==0,"OFF no retreat circle");

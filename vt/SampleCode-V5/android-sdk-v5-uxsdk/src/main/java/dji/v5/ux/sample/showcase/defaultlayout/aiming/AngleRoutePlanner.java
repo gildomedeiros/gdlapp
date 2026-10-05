@@ -12,6 +12,7 @@ public final class AngleRoutePlanner {
     public static final class Plan {
         public double[][] points=new double[0][];
         public String reason="none",kind="direct",direction="none",clockwiseFailure="none",anticlockwiseFailure="none";
+        public boolean escapeFirst;
         public double length,failedClearance=Double.NaN,failedBoundary=Double.NaN,failedExcursion=Double.NaN;
         public int failedSegment=-1;
         public double[] clockwiseFailureValues,anticlockwiseFailureValues;
@@ -98,4 +99,44 @@ public final class AngleRoutePlanner {
         best.clockwiseFailureValues=result.clockwiseFailureValues;best.anticlockwiseFailureValues=result.anticlockwiseFailureValues;
         return best;
     }
+    /** Recovery keeps the captured surfer and destination; only aircraft origin is updated. */
+    public static Plan recover(ShorelinePositioning p,AimingSession.Inputs live,double[] end,
+            double sl,double so,long fixTime,double anchorLat,double anchorLon,double centralLat,double centralLon) {
+        AimingSession.Inputs frozen=new AimingSession.Inputs(new AimingSession.Fix(sl,so,0,fixTime),
+                live.lat,live.lon,live.heading,live.aircraftTime,live.problem,live.safeToNeutral);
+        Plan ordinary=plan(p,frozen,end,anchorLat,anchorLon,centralLat,centralLon);
+        if(!ordinary.reason.equals("start_inside_routing_clearance"))return ordinary;
+        double[] start=p.shore.offset(live.lat,live.lon,sl,so);
+        double radius=(p.clearance()+1.1)/Math.cos(Math.PI/N);
+        double initial=Math.atan2(start[1],start[0]);Plan best=null;
+        // Radial escape is tried first; other outward directions permit escape beside a boundary.
+        for(int i=0;i<N;i++) {
+            double a=initial+2*Math.PI*i/N;
+            double[] out=p.shore.point(sl,so,radius*Math.cos(a),radius*Math.sin(a));
+            Check check=escapeCheck(p,live.lat,live.lon,out[0],out[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
+            if(!check.reason.equals("none"))continue;
+            AimingSession.Inputs from=new AimingSession.Inputs(frozen.target,out[0],out[1],live.heading,live.aircraftTime,null,true);
+            Plan tail=plan(p,from,end,anchorLat,anchorLon,centralLat,centralLon);
+            if(!tail.reason.equals("none"))continue;
+            double length=YawAimingMath.distance(live.lat,live.lon,out[0],out[1])+tail.length;
+            if(best!=null&&length>=best.length)continue;
+            best=tail;double[][] points=new double[tail.points.length+1][];points[0]=out;
+            System.arraycopy(tail.points,0,points,1,tail.points.length);best.points=points;best.length=length;
+            best.escapeFirst=true;best.kind="escape_then_"+tail.kind;
+        }
+        if(best!=null)return best;
+        ordinary.reason="no_permitted_outward_escape";return ordinary;
+    }
+    /** An escape may start inside the circle, but can never reduce separation along its leg. */
+    public static Check escapeCheck(ShorelinePositioning p,double aLat,double aLon,double bLat,double bLon,
+            double sl,double so,double anchorLat,double anchorLon,double centralLat,double centralLon) {
+        Check c=check(p,aLat,aLon,bLat,bLon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
+        if(!c.reason.equals("none")&&!c.reason.equals("route_surfer_clearance"))return c;
+        double[] a=p.shore.offset(aLat,aLon,sl,so),b=p.shore.offset(bLat,bLon,sl,so);
+        double dot=a[0]*(b[0]-a[0])+a[1]*(b[1]-a[1]);
+        c.reason=dot< -1e-6||Math.hypot(b[0],b[1])<=Math.hypot(a[0],a[1])+1e-6?
+                "escape_not_outward":"none";
+        return c;
+    }
+
 }

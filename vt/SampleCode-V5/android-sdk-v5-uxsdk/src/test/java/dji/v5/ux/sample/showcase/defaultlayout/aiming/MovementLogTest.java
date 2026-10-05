@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 public final class MovementLogTest {
     public static void main(String[] args) throws Exception {
         Path output=Paths.get(args[0],"movement-cycle-test.jsonl");
-        FullSessionLog log=new FullSessionLog(name->Files.newOutputStream(output),error->{throw new AssertionError(error);});
+        FullSessionLog log=new FullSessionLog(name->Files.newOutputStream(output),error->{throw new AssertionError(error);},"test-version");
         log.enable();
         AimingSessionTest.Fake f=new AimingSessionTest.Fake();
         f.movement=ComeToMeSettings.defaults(); f.aiming();
@@ -23,9 +23,9 @@ public final class MovementLogTest {
         if(log.busy()) throw new AssertionError("writer close timeout");
         String text=new String(Files.readAllBytes(output),StandardCharsets.UTF_8);
         if(!text.contains("\"submittedForwardMps\":null") || !text.contains("\"filmingDistanceM\":70.0")
-                || !text.contains("\"version\":\"4.0.3\"")) throw new AssertionError("movement log metadata");
+                || !text.contains("\"version\":\"test-version\"")) throw new AssertionError("movement log metadata");
         Path returnOutput=Paths.get(args[0],"return-cycle-test.jsonl");
-        FullSessionLog returnLog=new FullSessionLog(name->Files.newOutputStream(returnOutput),error->{throw new AssertionError(error);});
+        FullSessionLog returnLog=new FullSessionLog(name->Files.newOutputStream(returnOutput),error->{throw new AssertionError(error);},"test-version");
         returnLog.enable();
         ComeToMeTest.beginTestReturn(f.core.movement,30,0);
         MovementCycleLog.record(returnLog,f.core,147000,-1,0);
