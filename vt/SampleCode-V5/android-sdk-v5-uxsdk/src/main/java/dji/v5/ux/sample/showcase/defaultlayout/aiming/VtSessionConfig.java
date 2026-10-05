@@ -35,7 +35,7 @@ public final class VtSessionConfig {
                 if(c.shorelineId.trim().isEmpty())throw new ShorelineSetupRequired("No shoreline selected. Open Shorelines and tap a saved shoreline to select it.");
                 ShorelineLibrary.Profile p;
                 try{p=l.find(c.shorelineId);}catch(IllegalArgumentException missing){throw new ShorelineSetupRequired("The selected shoreline is no longer available. Open Shorelines and select a saved shoreline.");}
-                positioning=new ShorelinePositioning(p.geometry,p.id,c.mode,c.sidewaysSide,c.alignmentTolerance,result.retreat.enabled?result.retreat.minimumDistance:0);
+                positioning=new ShorelinePositioning(p.geometry,p.id,c.mode,c.sidewaysSide,c.alignmentTolerance,result.retreat.enabled?result.retreat.minimumDistance:0,c.angle,c.angleTolerance,c.extraClearance,c.movement.excursionStop());
             }
             return new VtSessionConfig(result.retreatJson,result.rotationJson,result.gimbalJson,result.retreat,result.rotation,result.gimbal,c.movement,positioning,settings,library);
         }catch(ShorelineSetupRequired e){throw e;}catch(Exception e){throw new IllegalArgumentException("Cannot start: "+file+" — "+e.getMessage()+". Correct configuration or capture/select a shoreline, then press Start.",e);}

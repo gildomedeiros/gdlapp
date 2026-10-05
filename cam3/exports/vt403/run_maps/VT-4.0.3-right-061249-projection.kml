@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>06:12:49.824 — Sideways-right blocked geometry</name>
+    <description>Requested frame 2026-10-04 06:12:49.824 Brisbane. Nearest log snapshot 06:12:49.775 (49 ms earlier). Actual GPS positions; computed P is the proposed alignment-only destination, never commanded. No movement is simulated. Ground-clamped geometry; altitude excluded.</description>
+    <Style id="direct">
+      <LineStyle>
+        <color>ffff6600</color>
+        <width>3</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffff6600</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="projected">
+      <LineStyle>
+        <color>ff00ffff</color>
+        <width>5</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ffff</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="blocked">
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>5</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff0000ff</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="shore">
+      <LineStyle>
+        <color>ffffff00</color>
+        <width>3</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffffff00</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="boundary">
+      <LineStyle>
+        <color>ff0000aa</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff0000aa</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="axis">
+      <LineStyle>
+        <color>ffaaaaaa</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffaaaaaa</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="point">
+      <LineStyle>
+        <color>ffffffff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffffffff</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Style id="sea">
+      <LineStyle>
+        <color>ff00aa00</color>
+        <width>3</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00aa00</color>
+        <scale>1.1</scale>
+      </IconStyle>
+    </Style>
+    <Placemark>
+      <name>D — DRONE at this timestamp</name>
+      <description>Actual aircraft GPS. Automatic translation zero; aiming active.</description>
+      <styleUrl>#direct</styleUrl>
+      <Point>
+        <coordinates>153.40777311028285,-28.08869642071489,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>S — SURFER at this timestamp</name>
+      <description>Actual LoRa GPS; fresh.</description>
+      <styleUrl>#projected</styleUrl>
+      <Point>
+        <coordinates>153.4075,-28.08887,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>P — BLOCKED alignment destination</name>
+      <description>Computed destination: same perpendicular distance from shoreline as surfer, preserving current 11.91 m projected right-alongshore separation. Inside 18 m retreat radius. VT did not fly here.</description>
+      <styleUrl>#blocked</styleUrl>
+      <Point>
+        <coordinates>153.40746934268512,-28.088766349671214,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>D–S: DIRECT horizontal distance 33.02 m</name>
+      <description />
+      <styleUrl>#direct</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40777311028285,-28.08869642071489,0 153.4075,-28.08887,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>S–P: PROJECTED right-alongshore separation 11.91 m</name>
+      <description>Projection of the drone–surfer displacement onto the selected alongshore axis. P is the foot of that projection and the rejected alignment-only destination.</description>
+      <styleUrl>#projected</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.4075,-28.08887,0 153.40746934268512,-28.088766349671214,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>D–P: SHORE-NORMAL alignment correction 30.80 m — BLOCKED</name>
+      <description>Removing this offset would reduce direct separation from 33.02 m to 11.91 m, below 18 m retreat clearance.</description>
+      <styleUrl>#blocked</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40777311028285,-28.08869642071489,0 153.40746934268512,-28.088766349671214,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>11.91 m projected alongshore</name>
+      <description />
+      <styleUrl>#projected</styleUrl>
+      <Point>
+        <coordinates>153.40748467134256,-28.08881817483561,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>30.80 m alignment correction</name>
+      <description />
+      <styleUrl>#blocked</styleUrl>
+      <Point>
+        <coordinates>153.40762122648397,-28.08873138519305,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>33.02 m direct</name>
+      <description />
+      <styleUrl>#direct</styleUrl>
+      <Point>
+        <coordinates>153.40763655514144,-28.088783210357445,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>18 m retreat clearance around surfer</name>
+      <description>P lies inside this circle. The drone currently lies outside it.</description>
+      <styleUrl>#blocked</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.4075,-28.088708122110933,0 153.40751599217214,-28.088708738105176,0 153.40753186263422,-28.088710581399805,0 153.40754749060238,-28.088713637966247,0 153.40756275713838,-28.088717884542177,0 153.40757754605468,-28.08872328880859,0 153.40759174479868,-28.08872980963576,0 153.40760524530936,-28.088737397396248,0 153.4076179448397,-28.088745994342617,0 153.40762974673856,-28.088755535046918,0 153.40764056118644,-28.088765946898626,0 153.40765030587878,-28.088777150657265,0 153.40765890665264,-28.08878906105547,0 153.40766629805094,-28.088801587447907,0 153.40767242382063,-28.08881463450118,0 153.40767723734095,-28.08882810291933,0 153.40768070197808,-28.08884189019956,0 153.40768279136404,-28.088855891412344,0 153.40768348959736,-28.08887,0 153.40768279136404,-28.088884108587656,0 153.40768070197808,-28.08889810980044,0 153.40767723734095,-28.08891189708067,0 153.40767242382063,-28.08892536549882,0 153.40766629805094,-28.088938412552093,0 153.40765890665264,-28.08895093894453,0 153.40765030587878,-28.088962849342735,0 153.40764056118644,-28.088974053101374,0 153.40762974673856,-28.088984464953082,0 153.4076179448397,-28.088994005657383,0 153.40760524530936,-28.089002602603752,0 153.40759174479868,-28.08901019036424,0 153.40757754605468,-28.08901671119141,0 153.40756275713838,-28.089022115457823,0 153.40754749060238,-28.089026362033753,0 153.40753186263422,-28.089029418600195,0 153.40751599217214,-28.089031261894824,0 153.4075,-28.089031877889067,0 153.40748400782786,-28.089031261894824,0 153.40746813736578,-28.089029418600195,0 153.40745250939761,-28.089026362033753,0 153.40743724286162,-28.089022115457823,0 153.40742245394532,-28.08901671119141,0 153.40740825520132,-28.08901019036424,0 153.40739475469064,-28.089002602603752,0 153.4073820551603,-28.088994005657383,0 153.40737025326143,-28.088984464953082,0 153.40735943881356,-28.088974053101374,0 153.40734969412122,-28.088962849342735,0 153.40734109334736,-28.08895093894453,0 153.40733370194906,-28.088938412552093,0 153.40732757617937,-28.08892536549882,0 153.40732276265905,-28.08891189708067,0 153.40731929802192,-28.08889810980044,0 153.40731720863596,-28.088884108587656,0 153.40731651040264,-28.08887,0 153.40731720863596,-28.088855891412344,0 153.40731929802192,-28.08884189019956,0 153.40732276265905,-28.08882810291933,0 153.40732757617937,-28.08881463450118,0 153.40733370194906,-28.088801587447907,0 153.40734109334736,-28.08878906105547,0 153.40734969412122,-28.088777150657265,0 153.40735943881356,-28.088765946898626,0 153.40737025326143,-28.088755535046918,0 153.4073820551603,-28.088745994342617,0 153.40739475469064,-28.088737397396248,0 153.40740825520132,-28.08872980963576,0 153.40742245394532,-28.08872328880859,0 153.40743724286162,-28.088717884542177,0 153.40745250939761,-28.088713637966247,0 153.40746813736578,-28.088710581399805,0 153.40748400782786,-28.088708738105176,0 153.4075,-28.088708122110933,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Selected shoreline vc — extended straight line</name>
+      <description>Based on saved A/B; not a visually verified physical shore.</description>
+      <styleUrl>#shore</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40759671561668,-28.087423668272294,0 153.40852328438328,-28.09055633172771,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Captured A–B</name>
+      <description />
+      <styleUrl>#shore</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40805999999998,-28.088990000000003,0 153.40785000000005,-28.088280000000005,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Surfer: 49.79 m signed seaward from configured shoreline</name>
+      <description>This is distinct from projected alongshore separation. Positive = configured seaward.</description>
+      <styleUrl>#axis</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.4075,-28.08887,0 153.40799106961455,-28.08875695309872,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Drone: 18.99 m signed seaward from configured shoreline</name>
+      <description>This is distinct from projected alongshore separation. Positive = configured seaward.</description>
+      <styleUrl>#axis</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40777311028285,-28.08869642071489,0 153.40796041228265,-28.088653302704145,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Initial central retreat boundary — INACTIVE at this timestamp</name>
+      <description>This boundary was not the reason for the alignment block.</description>
+      <styleUrl>#boundary</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40751747553682,-28.087833810476504,0 153.40803223459133,-28.089574179062843,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Initial central</name>
+      <description />
+      <styleUrl>#boundary</styleUrl>
+      <Point>
+        <coordinates>153.40777485506408,-28.088703994769673,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Configured seaward direction</name>
+      <description />
+      <styleUrl>#sea</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>153.40805999999998,-28.088990000000003,0 153.40771477384993,-28.08906947285217,0</coordinates>
+      </LineString>
+    </Placemark>
+    <LookAt>
+      <longitude>153.40763655514144</longitude>
+      <latitude>-28.088783210357445</latitude>
+      <altitude>0</altitude>
+      <heading>0</heading>
+      <tilt>0</tilt>
+      <range>180</range>
+      <altitudeMode>clampToGround</altitudeMode>
+    </LookAt>
+  </Document>
+</kml>

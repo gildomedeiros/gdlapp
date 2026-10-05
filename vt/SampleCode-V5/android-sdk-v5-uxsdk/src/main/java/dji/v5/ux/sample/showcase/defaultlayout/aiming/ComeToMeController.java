@@ -78,6 +78,17 @@ public final class ComeToMeController {
             : projectedSeparation>0 ? "correct_side" : "wrong_side";
     }
     public long destinationFixTime=-1;
+    public AngleRoutePlanner.Plan route;
+    public int routeIndex;
+    public double routeSurferLat=Double.NaN,routeSurferLon=Double.NaN,angleErrorDegrees=Double.NaN;
+    public String routeStatus="none",clockwiseFailure="none",anticlockwiseFailure="none";
+    public double[] clockwiseFailureValues,anticlockwiseFailureValues;
+    public int failedSegment=-1;
+    public double failedClearance=Double.NaN,failedBoundary=Double.NaN,failedExcursion=Double.NaN;
+    public double waypointLat(){return route==null?approachTargetLat:route.points[routeIndex][0];}
+    public double waypointLon(){return route==null?approachTargetLon:route.points[routeIndex][1];}
+    public boolean angleApproach(){return positioning!=null&&positioning.diagonal();}
+
     public boolean presetApproach() {return positioning!=null;}
     private ComeToMeSettings settings=ComeToMeSettings.defaults();
 
@@ -280,7 +291,7 @@ public final class ComeToMeController {
             return;
         }
         // VT 3.2: Stop 1 m inside the hard 250 m boundary instead of crawling toward it.
-        if(centralDistance>=ComeToMeSettings.EXCURSION_STOP) {
+        if(centralDistance>=settings.excursionStop()) {
             phase=Phase.HOLDING; reason="excursion_limit"; attemptSince=-1; return;
         }
         // Align once (and again after a safety pause); heading corrections continue during travel.
@@ -290,12 +301,13 @@ public final class ComeToMeController {
         }
         reason="moving_forward";
         double remaining=Math.min(approachDistance-approachProgress,
-                ComeToMeSettings.MAX_EXCURSION-centralDistance);
+                settings.maxExcursionMetres-centralDistance);
         forward=arrivalSpeed(remaining);
     }
 
 
     private void updatePreset(AimingSession.Inputs in,long now,boolean freshSurfer) {
+        if(angleApproach()){updateAngle(in,now,freshSurfer);return;}
         double[] measures=positioning.measures(in);projectedSeparation=measures[0];alignmentError=measures[1];
         if(!approaching()) {
             if(phase!=Phase.WAITING&&phase!=Phase.HOLDING)return;
@@ -319,9 +331,57 @@ public final class ComeToMeController {
         double remaining=YawAimingMath.distance(in.lat,in.lon,approachTargetLat,approachTargetLon);
         approachProgress=approachDistance-remaining;
         if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE) {enterFilmingHold(now);reason="fixed_destination_arrived";return;}
-        if(centralDistance>=ComeToMeSettings.EXCURSION_STOP) {phase=Phase.HOLDING;reason="excursion_limit";attemptSince=-1;return;}
-        double[] v=positioning.velocity(in,approachTargetLat,approachTargetLon,arrivalSpeed(Math.min(remaining,ComeToMeSettings.MAX_EXCURSION-centralDistance)));
+        if(centralDistance>=settings.excursionStop()) {phase=Phase.HOLDING;reason="excursion_limit";attemptSince=-1;return;}
+        double[] v=positioning.velocity(in,approachTargetLat,approachTargetLon,arrivalSpeed(Math.min(remaining,settings.maxExcursionMetres-centralDistance)));
         forward=v[0];right=v[1];reason="moving_to_fixed_destination_aiming_surfer";
+    }
+    private boolean angleLegAllowed(AimingSession.Inputs in) {
+        AngleRoutePlanner.Check c=AngleRoutePlanner.check(positioning,in.lat,in.lon,waypointLat(),waypointLon(),
+            routeSurferLat,routeSurferLon,initialCentralLat,initialCentralLon,centralLat,centralLon);
+        if(!c.reason.equals("none")){pathBlockReason=c.reason;failedSegment=routeIndex;
+            failedClearance=c.clearance;failedBoundary=c.boundary;failedExcursion=c.excursion;return false;}
+        return true;
+    }
+    private void updateAngle(AimingSession.Inputs in,long now,boolean freshSurfer) {
+        projectedSeparation=Double.NaN;alignmentError=Double.NaN;
+        angleErrorDegrees=positioning.angleError(in);
+        if(!approaching()) {
+            if(phase!=Phase.WAITING&&phase!=Phase.HOLDING)return;
+            if(!freshSurfer){reason="waiting_fresh_planning_fix";return;}
+            if(distance<1e-6){reason="coincident_position_hold";return;}
+            boolean close=distance>approachStartThreshold()+.000001;
+            if(!close&&Math.abs(angleErrorDegrees)<=positioning.angleTolerance+.000001){
+                if(!hasFilmed)enterFilmingHold(now);else {phase=Phase.HOLDING;reason="within_distance_and_angle_tolerance";}return;}
+            double radius=close?settings.filmingDistance:distance;
+            double[] target=positioning.destination(in,radius);
+            AngleRoutePlanner.Plan p=AngleRoutePlanner.plan(positioning,in,target,initialCentralLat,initialCentralLon,centralLat,centralLon);
+            clockwiseFailure=p.clockwiseFailure;anticlockwiseFailure=p.anticlockwiseFailure;
+            clockwiseFailureValues=p.clockwiseFailureValues;anticlockwiseFailureValues=p.anticlockwiseFailureValues;
+            failedSegment=p.failedSegment;failedClearance=p.failedClearance;failedBoundary=p.failedBoundary;failedExcursion=p.failedExcursion;
+            pathCheckStatus=p.reason.equals("none")?"allowed":"blocked";pathBlockReason=p.reason;
+            if(!p.reason.equals("none")){reason=p.reason;routeStatus="blocked";return;}
+            route=p;routeIndex=0;routeSurferLat=in.target.lat;routeSurferLon=in.target.lon;
+            approachStartLat=in.lat;approachStartLon=in.lon;approachTargetLat=target[0];approachTargetLon=target[1];
+            approachHeading=YawAimingMath.bearingToTarget(in.lat,in.lon,target[0],target[1]);
+            approachDistance=p.length;approachProgress=0;destinationFixTime=in.target.time;
+            journeyKind=close?"direct_distance_reapproach":"angle_alignment_preserve_direct_distance";
+            routeStatus="planned";approachAligned=true;phase=Phase.APPROACHING;attemptSince=now;event="fixed_route_planned";reason=journeyKind;return;
+        }
+        double remaining=YawAimingMath.distance(in.lat,in.lon,waypointLat(),waypointLon());
+        if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE){
+            if(routeIndex==route.points.length-1){routeStatus="arrived";enterFilmingHold(now);reason="fixed_destination_arrived";return;}
+            routeIndex++;routeStatus="waypoint_transition";reason="waypoint_transition";return;
+        }
+        if(centralDistance>=settings.excursionStop()){phase=Phase.HOLDING;reason="excursion_limit";routeStatus="blocked";attemptSince=-1;return;}
+        if(!angleLegAllowed(in)){reason=pathBlockReason;routeStatus="blocked";return;}
+        double total=remaining;for(int i=routeIndex+1;i<route.points.length;i++)total+=YawAimingMath.distance(route.points[i-1][0],route.points[i-1][1],route.points[i][0],route.points[i][1]);
+        approachProgress=approachDistance-total;routeStatus="traveling";
+        double[] v=positioning.velocity(in,waypointLat(),waypointLon(),arrivalSpeed(Math.min(remaining,settings.maxExcursionMetres-centralDistance)));
+        // No positioning reserve/horizon: veto a shoreward command if already on the boundary line.
+        double normal=v[0]*(Math.cos(Math.toRadians(in.heading))*positioning.shore.seaNorth+Math.sin(Math.toRadians(in.heading))*positioning.shore.seaEast)
+            +v[1]*(-Math.sin(Math.toRadians(in.heading))*positioning.shore.seaNorth+Math.cos(Math.toRadians(in.heading))*positioning.shore.seaEast);
+        if(positioning.boundaryDistance(in.lat,in.lon,initialCentralLat,initialCentralLon)<=0&&normal< -1e-6){reason="route_central_boundary";return;}
+        forward=v[0];right=v[1];reason="moving_saved_route_aiming_surfer";
     }
     /** Record arrival once. Subsequent band exits and arrivals cannot erase an active countdown. */
 
@@ -332,6 +392,8 @@ public final class ComeToMeController {
     }
 
     private void clearApproach() {
+        route=null;routeIndex=0;routeStatus="none";routeSurferLat=routeSurferLon=angleErrorDegrees=Double.NaN;
+        clockwiseFailure=anticlockwiseFailure="none";clockwiseFailureValues=anticlockwiseFailureValues=null;failedSegment=-1;failedClearance=failedBoundary=failedExcursion=Double.NaN;
         approachTargetLat=approachTargetLon=Double.NaN;
         approachStartLat=approachStartLon=approachHeading=approachDistance=approachProgress=Double.NaN;
         approachAligned=false;right=0;journeyKind="none";destinationFixTime=-1;
@@ -396,7 +458,7 @@ public final class ComeToMeController {
         double central=YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon);
         if(requested>0) {
             return approaching() && approachAligned && !riding
-                    && central<ComeToMeSettings.EXCURSION_STOP
+                    && central<settings.excursionStop()
                     && approachDistance-projectedProgress(in)>ComeToMeSettings.COMPLETION_TOLERANCE;
         }
         // VT 3.2: Submission must use the same arrival boundary as the planner.
@@ -410,9 +472,16 @@ public final class ComeToMeController {
         if(!Double.isFinite(speed)||speed>settings.maxMovementSpeed+.000001||!runEnabled||captureRequired||!approaching()||riding||
                 in.validate(now,true)!=null||expireAttempt(now)||in.target.time!=lastFix)return false;
         double central=YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon);
-        double remaining=YawAimingMath.distance(in.lat,in.lon,approachTargetLat,approachTargetLon);
-        if(central>=ComeToMeSettings.EXCURSION_STOP||remaining<=ComeToMeSettings.COMPLETION_TOLERANCE)return false;
-        double[] v=positioning.velocity(in,approachTargetLat,approachTargetLon,arrivalSpeed(Math.min(remaining,ComeToMeSettings.MAX_EXCURSION-central)));
+        double remaining=YawAimingMath.distance(in.lat,in.lon,waypointLat(),waypointLon());
+        if(angleApproach()&&(route==null||!angleLegAllowed(in)))return false;
+        if(angleApproach()&&positioning.boundaryDistance(in.lat,in.lon,initialCentralLat,initialCentralLon)<=0){
+            double h=Math.toRadians(in.heading);
+            double normal=requestedForward*(Math.cos(h)*positioning.shore.seaNorth+Math.sin(h)*positioning.shore.seaEast)
+                +requestedRight*(-Math.sin(h)*positioning.shore.seaNorth+Math.cos(h)*positioning.shore.seaEast);
+            if(normal< -1e-6)return false;
+        }
+        if(central>=settings.excursionStop()||remaining<=ComeToMeSettings.COMPLETION_TOLERANCE)return false;
+        double[] v=positioning.velocity(in,waypointLat(),waypointLon(),arrivalSpeed(Math.min(remaining,settings.maxExcursionMetres-central)));
         // A changed heading/position must not rotate an already calculated body command toward another point.
         return Math.abs(v[0]-requestedForward)<=.01&&Math.abs(v[1]-requestedRight)<=.01;
     }
@@ -420,6 +489,9 @@ public final class ComeToMeController {
     public boolean returning() { return phase==Phase.RETURNING; }
     public String summary() {
         if(!runEnabled) return "Come to me: OFF";
+        if(angleApproach())return String.format(Locale.US,"Come to me angle %.1f° · %s · %s\nDirect horizontal %.1f m (filming %.1f m; approach > %.1f m) · angle error %.1f° (tolerance %.1f°)\nRoute %s / %s · waypoint %d/%d · excursion %.1f/%.1f m",
+            positioning.angleDegrees,phase,reason.replace('_',' '),distance,settings.filmingDistance,approachStartThreshold(),angleErrorDegrees,positioning.angleTolerance,
+            route==null?"none":route.kind,routeStatus,route==null?0:routeIndex+1,route==null?0:route.points.length,centralDistance,settings.maxExcursionMetres);
         if(positioning!=null)return String.format(Locale.US,
             "Come to me %s · %s · %s\nProjected %s separation %.1f m (setting %.1f m; start > %.1f m) · Come-to-me %s alignment error %.1f m\nDirect horizontal surfer distance %.1f m · central %.1f m · fixed destination remaining %.1f m\nRide %d/%d s · no ride %d/%d s",
             positioning.mode,phase,reason.replace('_',' '),positioning.mode.equals("front")?"shoreward":"alongshore",

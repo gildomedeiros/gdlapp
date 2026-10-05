@@ -8,7 +8,7 @@ $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 # CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
-& "$JavaHome/bin/javac.exe" -d $output "$source/RotationSpeedCurve.java" "$source/TranslationSpeedAllowance.java" "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/ShorelineGeometry.java" "$source/ShorelinePositioning.java" "$source/ShorelineCapture.java" "$source/FullLogOpenPolicy.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
+& "$JavaHome/bin/javac.exe" -d $output "$source/RotationSpeedCurve.java" "$source/TranslationSpeedAllowance.java" "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/AngleRoutePlanner.java" "$source/ShorelineGeometry.java" "$source/ShorelinePositioning.java" "$source/ShorelineCapture.java" "$source/FullLogOpenPolicy.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }
@@ -190,3 +190,16 @@ if ($LASTEXITCODE -ne 0) { throw 'VT 4.0 tests failed' }
 $v40=@(Get-Content (Join-Path $output 'vt40-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object event -eq 'movement_cycle')
 if($v40.Count -ne 1 -or $v40[0].positioningMode -ne 'front' -or $v40[0].yawPurpose -ne 'surfer' -or $v40[0].submittedRightMps -ge 0 -or $v40[0].fixedDestinationFixTime -le 0 -or $v40[0].shorelineId -ne 'beach'){throw 'VT40 independent log validation failed'}
 Write-Output 'PASS: VT 4.0 independent parser validates preset, fixed destination, lateral submission and surfer yaw'
+
+# VT4.0.4: signed-angle snapshot routing, boundaries and configurable excursion.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt404Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT4.0.4 tests did not compile' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt404Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
+if ($LASTEXITCODE -ne 0) { throw 'VT4.0.4 tests failed' }
+
+foreach($routeType in @('direct','around')) {
+    $angleRows=@(Get-Content (Join-Path $output "vt404-$routeType.jsonl") | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object event -eq 'movement_cycle')
+    $row=$angleRows[0]
+    if($angleRows.Count -ne 1 -or $row.routeKind -ne $routeType -or $row.distanceMeaning -ne 'direct_horizontal' -or $null -ne $row.projectedSeparationM -or $row.maxExcursionM -ne 300 -or $row.excursionStopDistanceM -ne 299 -or $row.routeWaypoints.Count -lt 1 -or $row.routeWaypoints[0].Count -ne 2 -or $row.fixedDestinationFixTime -le 0 -or $row.yawPurpose -ne 'surfer' -or $null -eq $row.submittedRightMps){throw 'VT404 independent route log verification failed'}
+}
+Write-Output 'PASS: independent JSON parser validates direct/around waypoint arrays, snapshot, distance meaning, excursion and actual BODY submission'

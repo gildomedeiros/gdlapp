@@ -16,6 +16,8 @@ public final class ComeToMeSettings {
     public final long rideDurationMs;
     public final double closeRangePitchDeg, longRangePitchDeg;
     public final double maxYawRate, yawAcceleration, maxMovementSpeed;
+    public final double maxExcursionMetres;
+    public double excursionStop() {return maxExcursionMetres-COMPLETION_TOLERANCE;}
 
     public ComeToMeSettings(boolean enabled, double filming, double width, double start,
                             double end, long endMs, long inactivityMs) {
@@ -45,6 +47,13 @@ public final class ComeToMeSettings {
     public ComeToMeSettings(boolean enabled,double filming,double width,double start,
             double end,long endMs,long inactivityMs,double margin,long durationMs,double closePitchDeg,double longPitchDeg,
             double maxYawRate,double yawAcceleration,double maxMovementSpeed) {
+        this(enabled,filming,width,start,end,endMs,inactivityMs,margin,durationMs,closePitchDeg,longPitchDeg,maxYawRate,yawAcceleration,maxMovementSpeed,250);
+    }
+    public ComeToMeSettings(boolean enabled,double filming,double width,double start,double end,long endMs,long inactivityMs,
+            double margin,long durationMs,double closePitchDeg,double longPitchDeg,double maxYawRate,double yawAcceleration,
+            double maxMovementSpeed,double maxExcursionMetres) {
+        if(!inRange(maxExcursionMetres,10,1000))throw new IllegalArgumentException("maxExcursionMetres must be 10..1000");
+        this.maxExcursionMetres=maxExcursionMetres;
         if(!inRange(maxMovementSpeed,0.1,HARD_MAX_SPEED)) throw new IllegalArgumentException("Movement maximum speed 0.1-5 m/s");
         this.maxMovementSpeed=maxMovementSpeed;
         YawAimingMath.validateLimits(maxYawRate,yawAcceleration);
@@ -65,7 +74,7 @@ public final class ComeToMeSettings {
     }
     public ComeToMeSettings withMaxMovementSpeed(double speed) {
         return new ComeToMeSettings(enabled,filmingDistance,lineupWidth,rideStartKmh,rideEndKmh,rideEndMs,inactivityMs,
-                reapproachMargin,rideDurationMs,closeRangePitchDeg,longRangePitchDeg,maxYawRate,yawAcceleration,speed);
+                reapproachMargin,rideDurationMs,closeRangePitchDeg,longRangePitchDeg,maxYawRate,yawAcceleration,speed,maxExcursionMetres);
     }
     public static ComeToMeSettings defaults() { return new ComeToMeSettings(true,70,50,18,8,30000,900000); }
     private static boolean inRange(double v,double lo,double hi) { return Double.isFinite(v)&&v>=lo&&v<=hi; }

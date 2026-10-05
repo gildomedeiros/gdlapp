@@ -1,0 +1,90 @@
+# Edit these, or override with command-line arguments. Example values only.
+PARAMETERS = {
+    'speed_kmh': 4.0,
+    'duration_s': 2.0,
+    'max_gap_s': 3.0,
+    'jump_limit_kmh': 40.0,
+}
+
+
+def main():
+    p = argparse.ArgumentParser(description='Find consecutive GPS steps above a shoreward speed for a minimum duration; no acceleration or ride detector.')
+    p.add_argument('--logs', default=r'C:\Users\gildo\temp\vt 4.03\logs')
+    p.add_argument('--videos', default=r'E:\DCIM\100MEDIA')
+    p.add_argument('--speed', type=float, default=PARAMETERS['speed_kmh'], help='Strictly above this shoreward speed, km/h')
+    p.add_argument('--duration', type=float, default=PARAMETERS['duration_s'], help='Minimum qualifying sender-clock duration, seconds')
+    p.add_argument('--max-gap', type=float, default=PARAMETERS['max_gap_s'], help='Larger sender or receipt gaps break an interval')
+    p.add_argument('--csv', help='Optional CSV output')
+    args = p.parse_args()
+    if args.speed < 0 or args.duration < 0 or args.max_gap <= 0:
+        p.error('speed and duration must be nonnegative; max-gap must be positive')
+    videos=[]
+    for path in sorted(Path(args.videos).rglob('*')):
+        if path.suffix.lower() != '.mp4' or '_review' in path.parts or path.name.startswith('review_'):continue
+        try:
+            start,duration=video_timing(path);videos.append((path.name,start,duration))
+        except (OSError,ValueError,struct.error,IndexError):pass
+    def media(epoch):
+        matches=[(name,epoch/1000-start) for name,start,duration in videos if start<=epoch/1000<start+duration]
+        if len(matches)!=1:return ('-' if not matches else 'AMBIGUOUS','-')
+        name,offset=matches[0];return name,f'{int(offset//60):02d}:{offset%60:06.3f}'
+    output=[]
+    for source,stream in sources(args.logs):
+        aim=None;session=None;sea_previous=None;previous=None;run=None
+        def finish():
+            if run and run['qualifies_at'] is not None:
+                mp4,offset=media(run['qualifies_epoch'])
+                output.append(dict(start=run['start'],qualified=run['qualifies_at'],end=run['end'],duration_s=round(run['duration'],3),minimum_shore_kmh=round(run['minimum'],2),maximum_shore_kmh=round(run['maximum'],2),mode=run['mode'],mp4=mp4,offset=offset,source=source,session=session))
+        for line in stream:
+            r=json.loads(line)
+            if r.get('event')=='aiming_cycle':aim=r;continue
+            if r.get('event')!='movement_cycle' or not aim or r.get('cycleId')!=aim.get('cycleId') or r.get('session')!=aim.get('session'):continue
+            sea=r.get('seawardBearingDeg')
+            if session!=r.get('session') or sea!=sea_previous:
+                finish();previous=None;run=None;session=r.get('session');sea_previous=sea
+            values=[aim.get(k) for k in ['targetLatitude','targetLongitude','targetFixMs','targetSenderMs','targetAgeMs']]
+            if sea is None or r.get('phase')=='OFF' or any(v is None for v in values) or values[-1]>args.max_gap*1000:
+                finish();previous=None;run=None;continue
+            fix=dict(lat=values[0],lon=values[1],receipt=values[2],sender=values[3],time=r['timestamp'],epoch=r['epochMs'])
+            if previous and fix['receipt']==previous['receipt']:continue
+            if previous:
+                dt=(fix['sender']-previous['sender'])/1000
+                receipt_dt=(fix['receipt']-previous['receipt'])/1000
+                if dt<=0 or receipt_dt<=0 or dt>args.max_gap or receipt_dt>args.max_gap:
+                    finish();run=None;previous=fix;continue
+                lat=math.radians((previous['lat']+fix['lat'])/2)
+                north=math.radians(fix['lat']-previous['lat'])*6371000
+                east=math.radians(fix['lon']-previous['lon'])*6371000*math.cos(lat)
+                total=math.hypot(north,east)/dt*3.6
+                shore=-(east*math.sin(math.radians(sea))+north*math.cos(math.radians(sea)))/dt*3.6
+                if total>PARAMETERS['jump_limit_kmh']:
+                    finish();run=None;previous=None;continue
+                if shore>args.speed and shore>0:
+                    if run is None:
+                        run=dict(start=previous['time'],start_sender=previous['sender'],end=fix['time'],duration=0,minimum=shore,maximum=shore,qualifies_at=None,qualifies_epoch=None,mode=r.get('positioningMode','-'))
+                    run.update(end=fix['time'],duration=(fix['sender']-run['start_sender'])/1000,minimum=min(run['minimum'],shore),maximum=max(run['maximum'],shore))
+                    if run['qualifies_at'] is None and run['duration']>=args.duration:
+                        run['qualifies_at']=fix['time'];run['qualifies_epoch']=fix['epoch']
+                else:
+                    finish();run=None
+            previous=fix
+        finish()
+    output.sort(key=lambda r:r['qualified'])
+    headers=['#','Interval start','Qualified at','Interval end','Duration s','Min km/h','Max km/h','Mode','MP4','Offset at qualification']
+    rows=[[str(i),r['start'][11:23],r['qualified'][11:23],r['end'][11:23],f"{r['duration_s']:.3f}",str(r['minimum_shore_kmh']),str(r['maximum_shore_kmh']),r['mode'],r['mp4'],r['offset']] for i,r in enumerate(output,1)]
+    widths=[max([len(h)]+[len(row[i]) for row in rows]) for i,h in enumerate(headers)]
+    print(' | '.join(h.ljust(w) for h,w in zip(headers,widths)));print('-+-'.join('-'*w for w in widths))
+    for row in rows:print(' | '.join(v.ljust(w) for v,w in zip(row,widths)))
+    print(f'\n{len(rows)} intervals: shoreward component > {args.speed:g} km/h for >= {args.duration:g} s.')
+    print('Speed uses each consecutive GPS pair and sender-clock dt; duration sums consecutive qualifying steps.')
+    print('Zero, seaward or below-threshold steps break the interval. Gaps, stale fixes, clock/session resets and >40 km/h total jumps also break it.')
+    print('Qualified at = when controller first had enough evidence. Duration is GPS-sampled evidence, not proof of continuous speed between fixes.')
+    print('MP4 offsets use movie creation time and remain provisional. No VT ride detection or acceleration requirement.')
+    if args.csv:
+        import csv
+        with Path(args.csv).open('w',newline='',encoding='utf-8') as f:
+            fields=list(output[0]) if output else ['start','qualified','end','duration_s','minimum_shore_kmh','maximum_shore_kmh','mode','mp4','offset','source','session']
+            w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(output)
+
+
+if __name__=='__main__':main()

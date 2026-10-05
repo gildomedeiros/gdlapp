@@ -1,0 +1,72 @@
+# Example filter values; change here or override with arguments.
+PARAMETERS = {
+    'separation_m': 28.0,
+    'separation_tolerance_m': 1.0,
+    'heading_error_deg': 5.0,
+    'max_gps_age_ms': 1000,
+}
+
+
+def main():
+    p=argparse.ArgumentParser(description='Find drone heading aligned to latest surfer GPS position at a direct horizontal separation.')
+    p.add_argument('--logs',default=r'C:\Users\gildo\temp\vt 4.03\logs')
+    p.add_argument('--videos',default=r'E:\DCIM\100MEDIA')
+    p.add_argument('--separation',type=float,default=PARAMETERS['separation_m'])
+    p.add_argument('--tolerance',type=float,default=PARAMETERS['separation_tolerance_m'])
+    p.add_argument('--error',type=float,default=PARAMETERS['heading_error_deg'])
+    p.add_argument('--max-gps-age',type=float,default=PARAMETERS['max_gps_age_ms'],help='Maximum surfer GPS age in milliseconds')
+    p.add_argument('--all',action='store_true',help='Print every matching control cycle instead of first cycle in each matching interval')
+    p.add_argument('--csv',help='Optional CSV output path')
+    args=p.parse_args()
+    if args.separation<=0 or args.tolerance<0 or not 0<=args.error<=180 or args.max_gps_age<0:
+        p.error('separation must be positive, tolerances/age nonnegative, heading error at most 180')
+    videos=[]
+    for path in sorted(Path(args.videos).rglob('*')):
+        if path.suffix.lower()!='.mp4' or path.name.startswith('review_'):continue
+        try:
+            start,duration=video_timing(path);videos.append((path.name,start,duration))
+        except (OSError,ValueError,struct.error,IndexError):pass
+    def media(epoch):
+        hits=[(name,epoch/1000-start) for name,start,duration in videos if start<=epoch/1000<start+duration]
+        if len(hits)!=1:return ('-' if not hits else 'AMBIGUOUS','-')
+        name,offset=hits[0];return name,f'{int(offset//60):02d}:{offset%60:06.3f}'
+    output=[]
+    for source,stream in sources(args.logs):
+        matching=False;session=None;last_epoch=None
+        for line in stream:
+            r=json.loads(line)
+            if r.get('event')!='aiming_cycle':continue
+            if session!=r.get('session') or (last_epoch is not None and (r['epochMs']<last_epoch or r['epochMs']-last_epoch>1000)):
+                matching=False
+            session=r.get('session');last_epoch=r['epochMs']
+            fields=[r.get(k) for k in ['aircraftLatitude','aircraftLongitude','aircraftHeadingDeg','targetLatitude','targetLongitude','targetAgeMs']]
+            if any(v is None for v in fields) or fields[-1]>args.max_gps_age or r.get('state')=='OFF':
+                matching=False;continue
+            lat1,lon1,heading,lat2,lon2,age=fields
+            a,b,c,d=map(math.radians,[lat1,lon1,lat2,lon2])
+            h=math.sin((c-a)/2)**2+math.cos(a)*math.cos(c)*math.sin((d-b)/2)**2
+            distance=6371000*2*math.asin(math.sqrt(max(0,min(1,h))))
+            bearing=math.degrees(math.atan2(math.sin(d-b)*math.cos(c),math.cos(a)*math.sin(c)-math.sin(a)*math.cos(c)*math.cos(d-b)))%360
+            error=(bearing-heading+180)%360-180
+            qualifies=distance>0 and abs(distance-args.separation)<=args.tolerance and abs(error)<=args.error
+            if qualifies and (args.all or not matching):
+                mp4,offset=media(r['epochMs'])
+                output.append(dict(timestamp=r['timestamp'],direct_m=round(distance,2),heading_deg=round(heading,2),surfer_bearing_deg=round(bearing,2),heading_error_deg=round(error,2),gps_age_ms=age,aircraft_age_ms=r.get('aircraftAgeMs'),mp4=mp4,offset=offset,source=source,session=session))
+            matching=qualifies
+    output.sort(key=lambda r:r['timestamp'])
+    headers=['#','Timestamp','Direct m','Heading deg','Surfer bearing','Error deg','GPS age ms','Drone age ms','MP4','Offset']
+    rows=[[str(i),r['timestamp'],str(r['direct_m']),str(r['heading_deg']),str(r['surfer_bearing_deg']),f"{r['heading_error_deg']:+.2f}",str(r['gps_age_ms']),str(r['aircraft_age_ms']),r['mp4'],r['offset']] for i,r in enumerate(output,1)]
+    widths=[max([len(h)]+[len(row[i]) for row in rows]) for i,h in enumerate(headers)]
+    print(' | '.join(h.ljust(w) for h,w in zip(headers,widths)));print('-+-'.join('-'*w for w in widths))
+    for row in rows:print(' | '.join(v.ljust(w) for v,w in zip(row,widths)))
+    print(f'\nMatches: {len(rows)}. Direct separation {args.separation:g} +/- {args.tolerance:g} m; absolute heading error <= {args.error:g} degrees; GPS age <= {args.max_gps_age:g} ms.')
+    print('Uses latest recorded surfer coordinates, not the saved come-to-me destination. GPS position is an estimate, not ground truth.')
+    print('Default: first matching cycle per interval; --all prints every matching cycle. MP4 clock alignment is provisional.')
+    if args.csv:
+        import csv
+        with Path(args.csv).open('w',newline='',encoding='utf-8') as f:
+            fields=list(output[0]) if output else ['timestamp','direct_m','heading_deg','surfer_bearing_deg','heading_error_deg','gps_age_ms','aircraft_age_ms','mp4','offset','source','session']
+            w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(output)
+
+
+if __name__=='__main__':main()

@@ -102,7 +102,7 @@ public final class RetreatController {
         }
         if(!eligible(m)) { cancel(now,"movement_unavailable"); return; }
         double central=YawAimingMath.distance(in.lat,in.lon,m.centralLat,m.centralLon);
-        if(central>=ComeToMeSettings.EXCURSION_STOP) {
+        if(central>=m.settings().excursionStop()) {
             cancel(now,"excursion_limit");return;
         }
         if(active && now>=deadline) {
@@ -141,7 +141,7 @@ public final class RetreatController {
         return active && now<deadline && eligible(m) && in.validate(now,true)==null
                 && forward<0 && Math.abs(forward)<=settings.speed
                 && forward>=boundaryCommand(m,in)-.000001
-                && YawAimingMath.distance(in.lat,in.lon,m.centralLat,m.centralLon)<ComeToMeSettings.EXCURSION_STOP;
+                && YawAimingMath.distance(in.lat,in.lon,m.centralLat,m.centralLon)<m.settings().excursionStop();
     }
     public String summary(long now) {
         return boundaryBlocked ? "Retreat blocked by central boundary" : active ? String.format(java.util.Locale.US,"Retreat: %.1f m/s backward · %.1f s left · separation %.1f m",

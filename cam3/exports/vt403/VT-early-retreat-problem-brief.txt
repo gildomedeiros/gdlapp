@@ -1,0 +1,97 @@
+VT SURFER TRACKING: EARLY RETREAT DETECTION PROBLEM
+Prepared for an independent review by Grok / Gemini
+Data: 4 October 2026 water tests, Australia/Brisbane (UTC+10).
+
+WHAT WE WANT
+Keep the drone as close to the surfer as practicable while maintaining safe separation and useful framing through wave rides. Roughly 80% acceptable ride coverage is the user's design target, not an achieved result. Missed rides are worse than occasional unnecessary retreats. Do not solve this by simply moving the drone very far away. Find useful patterns in the data rather than guessing thresholds.
+
+CURRENT FOCUS
+Front mode: detect shoreward paddling / acceleration early enough to start retreat before the surfer reaches the lower image edge or passes the drone. We need to reduce excessive false candidates without losing that early warning. Sideways / diagonal positioning is a separate discussion and has not been redesigned.
+
+GEOMETRY AND EXISTING CONTROL
+The selected shoreline is a fixed line A-B, with a configured seaward side. In these tests its seaward normal bearing is 88.4188 degrees.
+A: latitude -27.95246, longitude 153.42909
+B: latitude -27.95310, longitude 153.42911
+Seaward side: left of A-to-B.
+
+Direct separation: horizontal ground distance between drone GPS and surfer LoRa GPS. It excludes altitude.
+Front projected separation: signed shore-normal separation, positive when the drone is shoreward of the surfer. Positive ordering is shoreline -> drone -> surfer. Negative means the surfer is shoreward of the drone. Alongshore alignment error is a separate quantity.
+
+Come-to-me: projected filming setting 28 m, reapproach margin 5 m. Excessive projected separation above 33 m can initiate a journey toward a fixed destination calculated from the surfer position at planning time. It does not continuously maintain 28 m or retarget the destination as the surfer moves. Alignment-only movement preserves the current projected separation. Wrong-side and path guards apply.
+
+Retreat: direct horizontal separation below 18 m initiates timed body-backward movement, commanding 4 m/s for 2 seconds, with repeats if still too close. Cooldown is 5 seconds; close-distance triggering can override cooldown. Commanded speed is not instantaneous measured speed. Drone yaw aims at the GPS surfer, so body-backward direction depends on current heading.
+
+Retreat alone has a shoreward boundary: a line parallel to the shoreline through the initial drone central point, with a reserve / look-ahead guard. It can block retreat near shore. Come-to-me remains unchanged. The drone central point is NOT the surfer's starting point.
+
+Ride detection: reported surfer GPS speed >=18 km/h starts a fixed 20-second ride timer. Its expiry is not a measured physical ride end. This detector is often later than paddling / initial acceleration.
+
+Gimbal pitch is distance-banded with hysteresis; yaw is rate-limited. GPS packets can repeat coordinates, arrive late, or go missing. Both drone and surfer GPS have uncertainty. Fresh packet receipt does not necessarily mean the position changed recently. No measured accuracy distribution is available. There is no computer vision.
+
+IMPORTANT OBSERVATION: 09:38 WAVE
+Time             Direct distance   Surfer reported speed / event
+09:38:18.744      29.36 m           5.34 km/h
+09:38:19.258      28.19 m           8.13 km/h
+09:38:19.670      27.95 m           3.54 km/h
+09:38:20.187      27.81 m           0 km/h
+09:38:22.756      27.21 m           4.00 km/h
+09:38:23.783      25.99 m           5.34 km/h
+09:38:24.717      23.98 m           8.13 km/h
+09:38:25.742      21.19 m           11.34 km/h
+09:38:26.256      18.46 m           Ride detected, 19.41 km/h
+09:38:26.768      16.49 m           Retreat started, commanded 4 m/s
+09:38:28.001      12.01 m           Measured drone speed still building, 2.70 m/s
+09:38:28.820      15.79 m           Retreat repeated
+09:38:30.871      23.82 m reported  Retreat stopped using surfer coordinates about 3.2 seconds old
+09:38:31.178      --                Fresh GPS after 3.505-second gap, six missing packets
+09:38:31.277      1.44 m reported   Retreat restarted
+09:38:33.018      2.88 m            Surfer GPS bearing about 108 degrees left of drone heading
+
+Earlier retreat could plausibly help, but existing logs do not prove it would save the ride. Stale-position stopping and acceleration delay are additional failure mechanisms. A replay of trigger times alone does not simulate the changed drone trajectory.
+
+EARLY WARNING RULE TESTED
+Bare rule: process GPS positions during active aiming; project each surfer position change onto the fixed shoreline's seaward normal. Any shoreward movement starts a shoreward run; repeated coordinates retain it; any seaward movement resets it. Require the drone to be shoreward of the surfer when the warning fires. No minimum speed, meaningful displacement, or maximum gap requirement. Numerical tolerance only.
+
+Whole-day comparison used EVERY qualifying run start, not a retrospective selection of only the last run before each ride. An earlier analysis mistakenly used different operational filters between the ride table and whole-day count; the corrected baseline below uses a consistent scope.
+
+An alternative accumulates shoreward displacement within a run and fires once when a comparison threshold is crossed. Any seaward step resets accumulated progress; repeated coordinates retain it. This is vulnerable to noisy reversals and long gaps. Thresholds below are exploratory sweep points, NOT recommended settings.
+
+WHOLE-DAY RESULTS
+Rule                       Candidates   Unmatched candidates   Rides with warning in preceding 20 s
+Bare shoreward run         407          394                    Not separately tabulated
+Accumulate >=1 m           236          225                    7 of 8
+Accumulate >=2 m           134          126                    6 of 8
+Accumulate >=3 m           89           81                     6 of 8
+Accumulate >=5 m           31           25                     5 of 8
+
+Adding reported speed >=4 km/h to the bare initial warning still yielded 211 candidates, of which 202 were unmatched. Progress filtered better than that speed test in this dataset.
+
+Unmatched means no logged ride START in the next 20 seconds in the same log. It does NOT prove a false physical ride: no video ground truth has been labelled. Multiple warnings can precede one ride. These are candidate requests, NOT actual retreat starts. Some qualifying warnings occur after actual distance-triggered retreat has already started. Sideways warnings during return-to-central were included in the scope; they may not be executable under existing control priority.
+
+EIGHT LOGGED RIDES
+Mode          Ride detected
+Front         08:52:04.224
+Front         08:56:35.219
+Front         09:07:52.734
+Front         09:10:43.760
+Front         09:30:32.196
+Front         09:38:26.256
+Front         09:48:23.255
+Sideways left 10:11:08.262
+
+The 09:07 ride's earlier shoreward evidence was interrupted by a long GPS gap and reversal. Increasing displacement requirements also lost coverage of the sideways ride. Thus lower candidate counts can hide reduced recall or later triggering.
+
+QUESTIONS FOR REVIEW
+1. Which additional variables could distinguish ordinary paddling / GPS noise from an imminent framing-threatening shoreward ride, while prioritising recall?
+2. Consider surfer shoreward velocity and acceleration, trajectory persistence, direct closing rate, drone velocity, GPS packet age and coordinate age, gimbal actual versus commanded pitch, yaw error, and distance to the retreat boundary. Which combinations have a physical justification?
+3. How should direct closing caused by drone approach be distinguished from closing caused by the surfer? Can a prediction of time to a framing limit outperform a fixed distance trigger?
+4. How should warnings survive repeated coordinates, zero reported speed, missing packets, and small GPS reversals without staying latched indefinitely?
+5. How should uncertainty grow during a GPS gap? When should stale data prevent retreat from stopping? Avoid assuming a universal GPS error margin.
+6. How can we evaluate early detection consistently across all logs, counting unique warning episodes, executable retreat starts, lead time BEFORE actual retreat, ride coverage, and unmatched episodes separately?
+7. Without CV, how can we estimate framing risk from telemetry without falsely claiming we detected a missed frame? What camera geometry / calibration and video labels are needed?
+8. Propose an offline validation process that derives thresholds from data, tests on held-out rides / sessions, and acknowledges that counterfactual movement changes future separations. Do not claim an optimal or safe calibration from eight rides.
+
+Please separate observed evidence, hypotheses, and proposed changes. Prefer a concrete explainable detector and an evaluation plan over arbitrary constants or a complicated learning model with insufficient data. No app changes are authorised by this brief.
+
+SOURCE ARCHIVE TO PROVIDE ALONGSIDE THIS BRIEF
+cam3_full_2026-10-04_095812_811_bcc33e7d.zip
+Contains four JSONL logs, including the two Front sessions and Sideways sessions. Relevant events include aiming_cycle, movement_cycle, GPS events, flight telemetry, gimbal cycles, and configuration snapshots. The recipient needs the archive to independently verify counts and derive new patterns; this brief alone is not raw evidence.

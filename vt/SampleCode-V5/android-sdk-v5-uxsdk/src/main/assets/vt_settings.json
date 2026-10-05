@@ -13,5 +13,9 @@
   "mode": "front",
   "shorelineId": "",
   "sidewaysSide": "left",
-  "alignmentToleranceMetres": 3
+  "alignmentToleranceMetres": 3,
+  "positioningAngleDegrees": 45,
+  "positioningAngleToleranceDegrees": 5,
+  "extraPathClearanceMetres": 2,
+  "maxExcursionMetres": 300
 }

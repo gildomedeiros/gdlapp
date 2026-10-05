@@ -28,8 +28,8 @@ android {
         // VT 3.6: Immediate distance-limited movement, shared margin and faster configurable retreat.
         // VT 3.7: External rotation curves and shared configuration folder.
         // VT 3.8: JSON retreat settings, bounded stale-GPS starts and blocking config errors.
-        versionCode 26
-        versionName "4.0.3"
+        versionCode 27
+        versionName "4.0.4"
         manifestPlaceholders["API_KEY"] = localKeys.getProperty('AIRCRAFT_API_KEY') ?: project.AIRCRAFT_API_KEY
         manifestPlaceholders["GMAP_API_KEY"] = project.GMAP_API_KEY
         manifestPlaceholders["MAPLIBRE_TOKEN"] = project.MAPLIBRE_TOKEN

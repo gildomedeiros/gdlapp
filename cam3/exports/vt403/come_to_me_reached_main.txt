@@ -1,0 +1,41 @@
+def main():
+    p=argparse.ArgumentParser(description='Print completed come-to-me destinations from VT movement logs.')
+    p.add_argument('--logs',default=r'C:\Users\gildo\temp\vt 4.03\logs')
+    p.add_argument('--videos',default=r'E:\DCIM\100MEDIA')
+    args=p.parse_args()
+    videos=[]
+    for path in sorted(Path(args.videos).rglob('*')):
+        if path.suffix.lower()!='.mp4' or path.name.startswith('review_'):continue
+        try:
+            start,duration=video_timing(path);videos.append((path.name,start,duration))
+        except (OSError,ValueError,struct.error,IndexError):pass
+    def media(epoch):
+        hits=[(name,epoch/1000-start) for name,start,duration in videos if start<=epoch/1000<start+duration]
+        if len(hits)!=1:return ('-' if not hits else 'AMBIGUOUS','-')
+        name,offset=hits[0];return name,f'{int(offset//60):02d}:{offset%60:06.3f}'
+    found=[]
+    for source,stream in sources(args.logs):
+        seen=set();last_aim=None
+        for line in stream:
+            r=json.loads(line)
+            if r.get('event')=='aiming_cycle':last_aim=r;continue
+            if r.get('event')!='movement_cycle' or r.get('reason')!='fixed_destination_arrived':continue
+            key=(r.get('session'),r.get('centralGeneration'),r.get('approachStartLatitude'),r.get('approachStartLongitude'),r.get('approachTargetLatitude'),r.get('approachTargetLongitude'),r.get('fixedDestinationFixTime'))
+            if key in seen:continue
+            seen.add(key)
+            mp4,offset=media(r['epochMs'])
+            direct=last_aim.get('distanceM') if last_aim and last_aim.get('cycleId')==r.get('cycleId') and last_aim.get('session')==r.get('session') else None
+            found.append((r,mp4,offset,direct))
+    found.sort(key=lambda x:x[0]['epochMs'])
+    def number(value):return '-' if value is None else f'{value:.2f}'
+    headers=['#','Reached timestamp','Mode','Journey','MP4','Offset','Direct m','Projected m','Destination remaining m']
+    rows=[[str(i),r['timestamp'],str(r.get('positioningMode','-')),str(r.get('journeyKind','-')),mp4,offset,number(direct),number(r.get('projectedSeparationM')),number(r.get('approachRemainingM'))] for i,(r,mp4,offset,direct) in enumerate(found,1)]
+    widths=[max([len(h)]+[len(row[i]) for row in rows]) for i,h in enumerate(headers)]
+    print(' | '.join(h.ljust(w) for h,w in zip(headers,widths)));print('-+-'.join('-'*w for w in widths))
+    for row in rows:print(' | '.join(v.ljust(w) for v,w in zip(row,widths)))
+    print(f'\nCome-to-me destinations reached: {len(rows)}')
+    print('Uses fixed_destination_arrived; one row per saved journey. Excludes retreat and return-to-central completion.')
+    print('Reached means within configured arrival tolerance. MP4 offsets use movie creation time, provisionally.')
+
+
+if __name__=='__main__':main()

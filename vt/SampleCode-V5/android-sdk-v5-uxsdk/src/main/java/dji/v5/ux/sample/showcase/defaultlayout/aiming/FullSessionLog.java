@@ -105,6 +105,11 @@ public final class FullSessionLog {
         if (value == null) return "null";
         if (value instanceof Number) return Double.isFinite(((Number)value).doubleValue()) ? value.toString() : "null";
         if (value instanceof Boolean) return value.toString();
+        if(value.getClass().isArray()) {
+            StringBuilder array=new StringBuilder("[");int n=java.lang.reflect.Array.getLength(value);
+            for(int i=0;i<n;i++){if(i>0)array.append(',');array.append(json(java.lang.reflect.Array.get(value,i)));}
+            return array.append(']').toString();
+        }
         StringBuilder out = new StringBuilder("\"");
         for (char c : value.toString().toCharArray()) {
             if (c == '"' || c == '\\') out.append('\\').append(c);

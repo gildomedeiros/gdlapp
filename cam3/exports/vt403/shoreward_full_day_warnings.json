@@ -1,0 +1,4201 @@
+{
+  "summary": [
+    {
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rides": 4,
+      "rawWarnings": 150,
+      "eligible": 143,
+      "exclusions": {
+        "return_active": 7
+      },
+      "wrongSideWarnings": 10,
+      "matchedNext10s": 3,
+      "unmatchedNext10s": 140,
+      "matchedNext20s": 6,
+      "unmatchedNext20s": 137,
+      "matchedNext30s": 11,
+      "unmatchedNext30s": 132
+    },
+    {
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rides": 3,
+      "rawWarnings": 175,
+      "eligible": 162,
+      "exclusions": {
+        "return_active": 13
+      },
+      "wrongSideWarnings": 2,
+      "matchedNext10s": 3,
+      "unmatchedNext10s": 159,
+      "matchedNext20s": 6,
+      "unmatchedNext20s": 156,
+      "matchedNext30s": 8,
+      "unmatchedNext30s": 154
+    },
+    {
+      "log": "cam3_full_2026-10-04_095648_530_8795e12c.jsonl",
+      "rides": 0,
+      "rawWarnings": 0,
+      "eligible": 0,
+      "exclusions": {},
+      "wrongSideWarnings": 0,
+      "matchedNext10s": 0,
+      "unmatchedNext10s": 0,
+      "matchedNext20s": 0,
+      "unmatchedNext20s": 0,
+      "matchedNext30s": 0,
+      "unmatchedNext30s": 0
+    },
+    {
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rides": 1,
+      "rawWarnings": 82,
+      "eligible": 71,
+      "exclusions": {
+        "return_active": 9,
+        "retreat_already_active": 2
+      },
+      "wrongSideWarnings": 24,
+      "matchedNext10s": 0,
+      "unmatchedNext10s": 71,
+      "matchedNext20s": 1,
+      "unmatchedNext20s": 70,
+      "matchedNext30s": 1,
+      "unmatchedNext30s": 70
+    }
+  ],
+  "events": [
+    {
+      "epochMs": 1791067479200,
+      "time": "2026-10-04T08:44:39.200+10:00",
+      "mode": "front",
+      "distance": 25.764604149649337,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067480686,
+      "time": "2026-10-04T08:44:40.686+10:00",
+      "mode": "front",
+      "distance": 27.03993809574912,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067483745,
+      "time": "2026-10-04T08:44:43.745+10:00",
+      "mode": "front",
+      "distance": 29.654235109604503,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067485225,
+      "time": "2026-10-04T08:44:45.225+10:00",
+      "mode": "front",
+      "distance": 31.242533074388255,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067507723,
+      "time": "2026-10-04T08:45:07.723+10:00",
+      "mode": "front",
+      "distance": 36.023568675650004,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067521682,
+      "time": "2026-10-04T08:45:21.682+10:00",
+      "mode": "front",
+      "distance": 41.92825722867585,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067526663,
+      "time": "2026-10-04T08:45:26.663+10:00",
+      "mode": "front",
+      "distance": 39.73178047412394,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067553187,
+      "time": "2026-10-04T08:45:53.187+10:00",
+      "mode": "front",
+      "distance": 44.89234600751949,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067556153,
+      "time": "2026-10-04T08:45:56.153+10:00",
+      "mode": "front",
+      "distance": 37.754144840975364,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067561220,
+      "time": "2026-10-04T08:46:01.220+10:00",
+      "mode": "front",
+      "distance": 30.32938316297184,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067566746,
+      "time": "2026-10-04T08:46:06.746+10:00",
+      "mode": "front",
+      "distance": 34.028751840762844,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067583743,
+      "time": "2026-10-04T08:46:23.743+10:00",
+      "mode": "front",
+      "distance": 31.755561540282983,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067605204,
+      "time": "2026-10-04T08:46:45.204+10:00",
+      "mode": "front",
+      "distance": 32.16091578960632,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067611702,
+      "time": "2026-10-04T08:46:51.702+10:00",
+      "mode": "front",
+      "distance": 33.27462263478696,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067626732,
+      "time": "2026-10-04T08:47:06.732+10:00",
+      "mode": "front",
+      "distance": 37.66380972059368,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067634655,
+      "time": "2026-10-04T08:47:14.655+10:00",
+      "mode": "front",
+      "distance": 27.85277208353378,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067637228,
+      "time": "2026-10-04T08:47:17.228+10:00",
+      "mode": "front",
+      "distance": 28.041672349746865,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067651739,
+      "time": "2026-10-04T08:47:31.739+10:00",
+      "mode": "front",
+      "distance": 21.89952798974483,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067659654,
+      "time": "2026-10-04T08:47:39.654+10:00",
+      "mode": "front",
+      "distance": 19.057814361701507,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067670657,
+      "time": "2026-10-04T08:47:50.657+10:00",
+      "mode": "front",
+      "distance": 26.476211307639783,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067683718,
+      "time": "2026-10-04T08:48:03.718+10:00",
+      "mode": "front",
+      "distance": 29.255143335615056,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067694721,
+      "time": "2026-10-04T08:48:14.721+10:00",
+      "mode": "front",
+      "distance": 29.16661827570466,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067696675,
+      "time": "2026-10-04T08:48:16.675+10:00",
+      "mode": "front",
+      "distance": 26.679482160509078,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067706146,
+      "time": "2026-10-04T08:48:26.146+10:00",
+      "mode": "front",
+      "distance": 33.48661886386354,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067715207,
+      "time": "2026-10-04T08:48:35.207+10:00",
+      "mode": "front",
+      "distance": 33.767189518104935,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067724151,
+      "time": "2026-10-04T08:48:44.151+10:00",
+      "mode": "front",
+      "distance": 37.01382445524675,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067730724,
+      "time": "2026-10-04T08:48:50.724+10:00",
+      "mode": "front",
+      "distance": 38.18172956680364,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067737717,
+      "time": "2026-10-04T08:48:57.717+10:00",
+      "mode": "front",
+      "distance": 35.878079355107616,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067747685,
+      "time": "2026-10-04T08:49:07.685+10:00",
+      "mode": "front",
+      "distance": 23.58091194012743,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067758698,
+      "time": "2026-10-04T08:49:18.698+10:00",
+      "mode": "front",
+      "distance": 22.22940249928927,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067759718,
+      "time": "2026-10-04T08:49:19.718+10:00",
+      "mode": "front",
+      "distance": 23.25312922213745,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067764251,
+      "time": "2026-10-04T08:49:24.251+10:00",
+      "mode": "front",
+      "distance": 27.26244711150979,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067783693,
+      "time": "2026-10-04T08:49:43.693+10:00",
+      "mode": "front",
+      "distance": 32.23644309074774,
+      "excluded": [],
+      "cooldown": 572,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067788220,
+      "time": "2026-10-04T08:49:48.220+10:00",
+      "mode": "front",
+      "distance": 33.686709862304866,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067797682,
+      "time": "2026-10-04T08:49:57.682+10:00",
+      "mode": "front",
+      "distance": 33.32157456571121,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067810220,
+      "time": "2026-10-04T08:50:10.220+10:00",
+      "mode": "front",
+      "distance": 30.074726881182535,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067816696,
+      "time": "2026-10-04T08:50:16.696+10:00",
+      "mode": "front",
+      "distance": 47.83170488087593,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067829673,
+      "time": "2026-10-04T08:50:29.673+10:00",
+      "mode": "front",
+      "distance": 96.88472857969239,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067838215,
+      "time": "2026-10-04T08:50:38.215+10:00",
+      "mode": "front",
+      "distance": 121.01519924657103,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067846233,
+      "time": "2026-10-04T08:50:46.233+10:00",
+      "mode": "front",
+      "distance": 124.30899053248405,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067855174,
+      "time": "2026-10-04T08:50:55.174+10:00",
+      "mode": "front",
+      "distance": 88.9877957069361,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067880241,
+      "time": "2026-10-04T08:51:20.241+10:00",
+      "mode": "front",
+      "distance": 18.5828234699097,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067890195,
+      "time": "2026-10-04T08:51:30.195+10:00",
+      "mode": "front",
+      "distance": 26.66559933229072,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067897699,
+      "time": "2026-10-04T08:51:37.699+10:00",
+      "mode": "front",
+      "distance": 27.619527468476193,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067909207,
+      "time": "2026-10-04T08:51:49.207+10:00",
+      "mode": "front",
+      "distance": 29.94998622437695,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791067916199,
+      "time": "2026-10-04T08:51:56.199+10:00",
+      "mode": "front",
+      "distance": 29.81146078994926,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791067955673,
+      "time": "2026-10-04T08:52:35.673+10:00",
+      "mode": "front",
+      "distance": 40.912077983659394,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067956703,
+      "time": "2026-10-04T08:52:36.703+10:00",
+      "mode": "front",
+      "distance": 39.798569351041344,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067957732,
+      "time": "2026-10-04T08:52:37.732+10:00",
+      "mode": "front",
+      "distance": 39.082808165185725,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067962154,
+      "time": "2026-10-04T08:52:42.154+10:00",
+      "mode": "front",
+      "distance": 35.506436814000814,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067976749,
+      "time": "2026-10-04T08:52:56.749+10:00",
+      "mode": "front",
+      "distance": 38.10289990524962,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067986192,
+      "time": "2026-10-04T08:53:06.192+10:00",
+      "mode": "front",
+      "distance": 33.301491791805134,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067992153,
+      "time": "2026-10-04T08:53:12.153+10:00",
+      "mode": "front",
+      "distance": 29.812750192251336,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791067999248,
+      "time": "2026-10-04T08:53:19.248+10:00",
+      "mode": "front",
+      "distance": 27.011964077655765,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068006743,
+      "time": "2026-10-04T08:53:26.743+10:00",
+      "mode": "front",
+      "distance": 24.87682495696241,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068009723,
+      "time": "2026-10-04T08:53:29.723+10:00",
+      "mode": "front",
+      "distance": 24.7339616655145,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068027703,
+      "time": "2026-10-04T08:53:47.703+10:00",
+      "mode": "front",
+      "distance": 30.29587720127863,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068053689,
+      "time": "2026-10-04T08:54:13.689+10:00",
+      "mode": "front",
+      "distance": 30.88938555153008,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068062733,
+      "time": "2026-10-04T08:54:22.733+10:00",
+      "mode": "front",
+      "distance": 29.90155577575678,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068069716,
+      "time": "2026-10-04T08:54:29.716+10:00",
+      "mode": "front",
+      "distance": 30.084211829409874,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068097685,
+      "time": "2026-10-04T08:54:57.685+10:00",
+      "mode": "front",
+      "distance": 32.11485499954563,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068101183,
+      "time": "2026-10-04T08:55:01.183+10:00",
+      "mode": "front",
+      "distance": 32.55764127814633,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068112698,
+      "time": "2026-10-04T08:55:12.698+10:00",
+      "mode": "front",
+      "distance": 31.620983424927033,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068133755,
+      "time": "2026-10-04T08:55:33.755+10:00",
+      "mode": "front",
+      "distance": 23.798885386817137,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068137655,
+      "time": "2026-10-04T08:55:37.655+10:00",
+      "mode": "front",
+      "distance": 24.125683803796676,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068145676,
+      "time": "2026-10-04T08:55:45.676+10:00",
+      "mode": "front",
+      "distance": 22.960564533310762,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068153181,
+      "time": "2026-10-04T08:55:53.181+10:00",
+      "mode": "front",
+      "distance": 22.89700327015762,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068159235,
+      "time": "2026-10-04T08:55:59.235+10:00",
+      "mode": "front",
+      "distance": 24.818268430835346,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068168697,
+      "time": "2026-10-04T08:56:08.697+10:00",
+      "mode": "front",
+      "distance": 25.02075344645257,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068180740,
+      "time": "2026-10-04T08:56:20.740+10:00",
+      "mode": "front",
+      "distance": 24.953012453566238,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791068192755,
+      "time": "2026-10-04T08:56:32.755+10:00",
+      "mode": "front",
+      "distance": 27.032425868630074,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791068236731,
+      "time": "2026-10-04T08:57:16.731+10:00",
+      "mode": "front",
+      "distance": 28.383701340630292,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068242179,
+      "time": "2026-10-04T08:57:22.179+10:00",
+      "mode": "front",
+      "distance": 29.89926764728175,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068247213,
+      "time": "2026-10-04T08:57:27.213+10:00",
+      "mode": "front",
+      "distance": 34.07194475858832,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068250709,
+      "time": "2026-10-04T08:57:30.709+10:00",
+      "mode": "front",
+      "distance": 33.47083608467711,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068257188,
+      "time": "2026-10-04T08:57:37.188+10:00",
+      "mode": "front",
+      "distance": 34.14042272244638,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068266734,
+      "time": "2026-10-04T08:57:46.734+10:00",
+      "mode": "front",
+      "distance": 29.2033515690768,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068278759,
+      "time": "2026-10-04T08:57:58.759+10:00",
+      "mode": "front",
+      "distance": 29.009927869602663,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068288195,
+      "time": "2026-10-04T08:58:08.195+10:00",
+      "mode": "front",
+      "distance": 28.052090131393335,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068296198,
+      "time": "2026-10-04T08:58:16.198+10:00",
+      "mode": "front",
+      "distance": 28.030886817513547,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068315182,
+      "time": "2026-10-04T08:58:35.182+10:00",
+      "mode": "front",
+      "distance": 29.012398934386468,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068334688,
+      "time": "2026-10-04T08:58:54.688+10:00",
+      "mode": "front",
+      "distance": 32.13686979081655,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068336229,
+      "time": "2026-10-04T08:58:56.229+10:00",
+      "mode": "front",
+      "distance": 29.52211127509219,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068344243,
+      "time": "2026-10-04T08:59:04.243+10:00",
+      "mode": "front",
+      "distance": 27.9654813748549,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068357182,
+      "time": "2026-10-04T08:59:17.182+10:00",
+      "mode": "front",
+      "distance": 27.937170925731255,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068362729,
+      "time": "2026-10-04T08:59:22.729+10:00",
+      "mode": "front",
+      "distance": 27.92327024978381,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068363759,
+      "time": "2026-10-04T08:59:23.759+10:00",
+      "mode": "front",
+      "distance": 27.054191608156856,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068374660,
+      "time": "2026-10-04T08:59:34.660+10:00",
+      "mode": "front",
+      "distance": 24.340760372053648,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068382159,
+      "time": "2026-10-04T08:59:42.159+10:00",
+      "mode": "front",
+      "distance": 23.222161369112076,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068396221,
+      "time": "2026-10-04T08:59:56.221+10:00",
+      "mode": "front",
+      "distance": 21.203611089165506,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068402173,
+      "time": "2026-10-04T09:00:02.173+10:00",
+      "mode": "front",
+      "distance": 19.19657907822723,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068413169,
+      "time": "2026-10-04T09:00:13.169+10:00",
+      "mode": "front",
+      "distance": 23.750591469124153,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068420246,
+      "time": "2026-10-04T09:00:20.246+10:00",
+      "mode": "front",
+      "distance": 23.657642252269806,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068427745,
+      "time": "2026-10-04T09:00:27.745+10:00",
+      "mode": "front",
+      "distance": 24.569887189519477,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068435754,
+      "time": "2026-10-04T09:00:35.754+10:00",
+      "mode": "front",
+      "distance": 24.707549525829123,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068451661,
+      "time": "2026-10-04T09:00:51.661+10:00",
+      "mode": "front",
+      "distance": 23.825574057600562,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068463682,
+      "time": "2026-10-04T09:01:03.682+10:00",
+      "mode": "front",
+      "distance": 22.714221979572674,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068470154,
+      "time": "2026-10-04T09:01:10.154+10:00",
+      "mode": "front",
+      "distance": 23.67759772323811,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068482179,
+      "time": "2026-10-04T09:01:22.179+10:00",
+      "mode": "front",
+      "distance": 22.79719300320719,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068489157,
+      "time": "2026-10-04T09:01:29.157+10:00",
+      "mode": "front",
+      "distance": 22.701720449659838,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068499737,
+      "time": "2026-10-04T09:01:39.737+10:00",
+      "mode": "front",
+      "distance": 27.62412297453421,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068509197,
+      "time": "2026-10-04T09:01:49.197+10:00",
+      "mode": "front",
+      "distance": 26.674939364075552,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068518229,
+      "time": "2026-10-04T09:01:58.229+10:00",
+      "mode": "front",
+      "distance": 26.57937769563996,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068519665,
+      "time": "2026-10-04T09:01:59.665+10:00",
+      "mode": "front",
+      "distance": 25.642544215152284,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068539667,
+      "time": "2026-10-04T09:02:19.667+10:00",
+      "mode": "front",
+      "distance": 23.61673980293665,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068542236,
+      "time": "2026-10-04T09:02:22.236+10:00",
+      "mode": "front",
+      "distance": 22.60351060275265,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068546237,
+      "time": "2026-10-04T09:02:26.237+10:00",
+      "mode": "front",
+      "distance": 19.76300642169561,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068579203,
+      "time": "2026-10-04T09:02:59.203+10:00",
+      "mode": "front",
+      "distance": 100.79596356423016,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068583212,
+      "time": "2026-10-04T09:03:03.212+10:00",
+      "mode": "front",
+      "distance": 108.60092716162018,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068584749,
+      "time": "2026-10-04T09:03:04.749+10:00",
+      "mode": "front",
+      "distance": 110.62403231027047,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068593683,
+      "time": "2026-10-04T09:03:13.683+10:00",
+      "mode": "front",
+      "distance": 87.10071259837659,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068595229,
+      "time": "2026-10-04T09:03:15.229+10:00",
+      "mode": "front",
+      "distance": 78.56335394796032,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068602724,
+      "time": "2026-10-04T09:03:22.724+10:00",
+      "mode": "front",
+      "distance": 53.28390523906528,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068618721,
+      "time": "2026-10-04T09:03:38.721+10:00",
+      "mode": "front",
+      "distance": 47.00696443019512,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068619751,
+      "time": "2026-10-04T09:03:39.751+10:00",
+      "mode": "front",
+      "distance": 46.90652619933011,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068628687,
+      "time": "2026-10-04T09:03:48.687+10:00",
+      "mode": "front",
+      "distance": 37.791053872269835,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068637222,
+      "time": "2026-10-04T09:03:57.222+10:00",
+      "mode": "front",
+      "distance": 35.753629975433526,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068650173,
+      "time": "2026-10-04T09:04:10.173+10:00",
+      "mode": "front",
+      "distance": 28.161144864832377,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068659216,
+      "time": "2026-10-04T09:04:19.216+10:00",
+      "mode": "front",
+      "distance": 30.789616766757963,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068692243,
+      "time": "2026-10-04T09:04:52.243+10:00",
+      "mode": "front",
+      "distance": 28.739792658503436,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068703231,
+      "time": "2026-10-04T09:05:03.231+10:00",
+      "mode": "front",
+      "distance": 28.826909778448,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068706215,
+      "time": "2026-10-04T09:05:06.215+10:00",
+      "mode": "front",
+      "distance": 28.82970169511613,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068712257,
+      "time": "2026-10-04T09:05:12.257+10:00",
+      "mode": "front",
+      "distance": 27.842300495710194,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068721705,
+      "time": "2026-10-04T09:05:21.705+10:00",
+      "mode": "front",
+      "distance": 26.01956215725642,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068727245,
+      "time": "2026-10-04T09:05:27.245+10:00",
+      "mode": "front",
+      "distance": 26.096407997392856,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068729197,
+      "time": "2026-10-04T09:05:29.197+10:00",
+      "mode": "front",
+      "distance": 25.98115113382112,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068738227,
+      "time": "2026-10-04T09:05:38.227+10:00",
+      "mode": "front",
+      "distance": 25.07070220511023,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068750232,
+      "time": "2026-10-04T09:05:50.232+10:00",
+      "mode": "front",
+      "distance": 26.91450261672621,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068753730,
+      "time": "2026-10-04T09:05:53.730+10:00",
+      "mode": "front",
+      "distance": 27.895368523114218,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068762667,
+      "time": "2026-10-04T09:06:02.667+10:00",
+      "mode": "front",
+      "distance": 29.87287642868419,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068775210,
+      "time": "2026-10-04T09:06:15.210+10:00",
+      "mode": "front",
+      "distance": 30.819037399275544,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068789692,
+      "time": "2026-10-04T09:06:29.692+10:00",
+      "mode": "front",
+      "distance": 29.719660323271324,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068811252,
+      "time": "2026-10-04T09:06:51.252+10:00",
+      "mode": "front",
+      "distance": 25.841230020045238,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068820185,
+      "time": "2026-10-04T09:07:00.185+10:00",
+      "mode": "front",
+      "distance": 24.04320176521816,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068832724,
+      "time": "2026-10-04T09:07:12.724+10:00",
+      "mode": "front",
+      "distance": 22.967028013686438,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068845757,
+      "time": "2026-10-04T09:07:25.757+10:00",
+      "mode": "front",
+      "distance": 21.004534118948044,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068850256,
+      "time": "2026-10-04T09:07:30.256+10:00",
+      "mode": "front",
+      "distance": 22.942446800781397,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068905684,
+      "time": "2026-10-04T09:08:25.684+10:00",
+      "mode": "front",
+      "distance": 23.338655986460253,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068921699,
+      "time": "2026-10-04T09:08:41.699+10:00",
+      "mode": "front",
+      "distance": 25.092324279651884,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068932181,
+      "time": "2026-10-04T09:08:52.181+10:00",
+      "mode": "front",
+      "distance": 22.988121967886457,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068943773,
+      "time": "2026-10-04T09:09:03.773+10:00",
+      "mode": "front",
+      "distance": 25.791340764052187,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068951165,
+      "time": "2026-10-04T09:09:11.165+10:00",
+      "mode": "front",
+      "distance": 25.740960041087682,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068970166,
+      "time": "2026-10-04T09:09:30.166+10:00",
+      "mode": "front",
+      "distance": 28.029397283381424,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068975203,
+      "time": "2026-10-04T09:09:35.203+10:00",
+      "mode": "front",
+      "distance": 23.841932286263106,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068988741,
+      "time": "2026-10-04T09:09:48.741+10:00",
+      "mode": "front",
+      "distance": 25.91607476559436,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791068995197,
+      "time": "2026-10-04T09:09:55.197+10:00",
+      "mode": "front",
+      "distance": 27.969326847856586,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069006699,
+      "time": "2026-10-04T09:10:06.699+10:00",
+      "mode": "front",
+      "distance": 27.834257542851837,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069014188,
+      "time": "2026-10-04T09:10:14.188+10:00",
+      "mode": "front",
+      "distance": 28.882120987310614,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069024253,
+      "time": "2026-10-04T09:10:24.253+10:00",
+      "mode": "front",
+      "distance": 27.905494069817458,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791069039244,
+      "time": "2026-10-04T09:10:39.244+10:00",
+      "mode": "front",
+      "distance": 25.05713569196409,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_083821_554_1a3054b0.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791069711230,
+      "time": "2026-10-04T09:21:51.230+10:00",
+      "mode": "front",
+      "distance": 27.381581265617644,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069715684,
+      "time": "2026-10-04T09:21:55.684+10:00",
+      "mode": "front",
+      "distance": 29.117768273625316,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069719715,
+      "time": "2026-10-04T09:21:59.715+10:00",
+      "mode": "front",
+      "distance": 34.36253712331446,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069759713,
+      "time": "2026-10-04T09:22:39.713+10:00",
+      "mode": "front",
+      "distance": 41.213528121808395,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069764246,
+      "time": "2026-10-04T09:22:44.246+10:00",
+      "mode": "front",
+      "distance": 39.349949099300545,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069770746,
+      "time": "2026-10-04T09:22:50.746+10:00",
+      "mode": "front",
+      "distance": 38.87280817511867,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069776211,
+      "time": "2026-10-04T09:22:56.211+10:00",
+      "mode": "front",
+      "distance": 32.42234157307836,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069783728,
+      "time": "2026-10-04T09:23:03.728+10:00",
+      "mode": "front",
+      "distance": 34.50964322886616,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069793717,
+      "time": "2026-10-04T09:23:13.717+10:00",
+      "mode": "front",
+      "distance": 35.644438574749856,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069803747,
+      "time": "2026-10-04T09:23:23.747+10:00",
+      "mode": "front",
+      "distance": 35.36262694330471,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069815712,
+      "time": "2026-10-04T09:23:35.712+10:00",
+      "mode": "front",
+      "distance": 39.85774191235306,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069824181,
+      "time": "2026-10-04T09:23:44.181+10:00",
+      "mode": "front",
+      "distance": 35.26096312587495,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069829219,
+      "time": "2026-10-04T09:23:49.219+10:00",
+      "mode": "front",
+      "distance": 34.92360511650161,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069834695,
+      "time": "2026-10-04T09:23:54.695+10:00",
+      "mode": "front",
+      "distance": 27.985563458190107,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069840763,
+      "time": "2026-10-04T09:24:00.763+10:00",
+      "mode": "front",
+      "distance": 31.05850860526802,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069858784,
+      "time": "2026-10-04T09:24:18.784+10:00",
+      "mode": "front",
+      "distance": 26.368990239886443,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069864669,
+      "time": "2026-10-04T09:24:24.669+10:00",
+      "mode": "front",
+      "distance": 26.32856219390169,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069870743,
+      "time": "2026-10-04T09:24:30.743+10:00",
+      "mode": "front",
+      "distance": 28.32017766614399,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069875162,
+      "time": "2026-10-04T09:24:35.162+10:00",
+      "mode": "front",
+      "distance": 30.33049905641546,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069893257,
+      "time": "2026-10-04T09:24:53.257+10:00",
+      "mode": "front",
+      "distance": 32.13339060976943,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069908198,
+      "time": "2026-10-04T09:25:08.198+10:00",
+      "mode": "front",
+      "distance": 30.746242033304267,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069914172,
+      "time": "2026-10-04T09:25:14.172+10:00",
+      "mode": "front",
+      "distance": 30.038042711874734,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069919207,
+      "time": "2026-10-04T09:25:19.207+10:00",
+      "mode": "front",
+      "distance": 27.182555253218094,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069930742,
+      "time": "2026-10-04T09:25:30.742+10:00",
+      "mode": "front",
+      "distance": 24.32081075937342,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069949253,
+      "time": "2026-10-04T09:25:49.253+10:00",
+      "mode": "front",
+      "distance": 22.976372888704123,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069957691,
+      "time": "2026-10-04T09:25:57.691+10:00",
+      "mode": "front",
+      "distance": 23.957088751044715,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069969717,
+      "time": "2026-10-04T09:26:09.717+10:00",
+      "mode": "front",
+      "distance": 23.856070241836694,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069977218,
+      "time": "2026-10-04T09:26:17.218+10:00",
+      "mode": "front",
+      "distance": 20.917229080629493,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791069985666,
+      "time": "2026-10-04T09:26:25.666+10:00",
+      "mode": "front",
+      "distance": 26.861245019071138,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070007251,
+      "time": "2026-10-04T09:26:47.251+10:00",
+      "mode": "front",
+      "distance": 26.822024772370774,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070016708,
+      "time": "2026-10-04T09:26:56.708+10:00",
+      "mode": "front",
+      "distance": 35.97192755386544,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070027212,
+      "time": "2026-10-04T09:27:07.212+10:00",
+      "mode": "front",
+      "distance": 31.32561245113813,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070034723,
+      "time": "2026-10-04T09:27:14.723+10:00",
+      "mode": "front",
+      "distance": 49.53795968645254,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070050254,
+      "time": "2026-10-04T09:27:30.254+10:00",
+      "mode": "front",
+      "distance": 103.61707046042685,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070054256,
+      "time": "2026-10-04T09:27:34.256+10:00",
+      "mode": "front",
+      "distance": 108.09909403436208,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070065196,
+      "time": "2026-10-04T09:27:45.196+10:00",
+      "mode": "front",
+      "distance": 89.85755182744639,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070076220,
+      "time": "2026-10-04T09:27:56.220+10:00",
+      "mode": "front",
+      "distance": 44.430248948171275,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070095252,
+      "time": "2026-10-04T09:28:15.252+10:00",
+      "mode": "front",
+      "distance": 31.67962759780824,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070105241,
+      "time": "2026-10-04T09:28:25.241+10:00",
+      "mode": "front",
+      "distance": 32.220157857719826,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070112747,
+      "time": "2026-10-04T09:28:32.747+10:00",
+      "mode": "front",
+      "distance": 33.0980543980085,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070116754,
+      "time": "2026-10-04T09:28:36.754+10:00",
+      "mode": "front",
+      "distance": 30.06711180854961,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070144722,
+      "time": "2026-10-04T09:29:04.722+10:00",
+      "mode": "front",
+      "distance": 28.909873657342988,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070154179,
+      "time": "2026-10-04T09:29:14.179+10:00",
+      "mode": "front",
+      "distance": 33.480220124608095,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070160763,
+      "time": "2026-10-04T09:29:20.763+10:00",
+      "mode": "front",
+      "distance": 31.211845947926264,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070173199,
+      "time": "2026-10-04T09:29:33.199+10:00",
+      "mode": "front",
+      "distance": 25.770276480164032,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070185225,
+      "time": "2026-10-04T09:29:45.225+10:00",
+      "mode": "front",
+      "distance": 23.745553495303096,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070188717,
+      "time": "2026-10-04T09:29:48.717+10:00",
+      "mode": "front",
+      "distance": 25.791673830224923,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070192207,
+      "time": "2026-10-04T09:29:52.207+10:00",
+      "mode": "front",
+      "distance": 25.780183417382432,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070218725,
+      "time": "2026-10-04T09:30:18.725+10:00",
+      "mode": "front",
+      "distance": 26.16497349505751,
+      "excluded": [],
+      "cooldown": 588,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791070259765,
+      "time": "2026-10-04T09:30:59.765+10:00",
+      "mode": "front",
+      "distance": 26.489773660929586,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070286727,
+      "time": "2026-10-04T09:31:26.727+10:00",
+      "mode": "front",
+      "distance": 36.62817357569844,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070293207,
+      "time": "2026-10-04T09:31:33.207+10:00",
+      "mode": "front",
+      "distance": 31.5301139560551,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070303192,
+      "time": "2026-10-04T09:31:43.192+10:00",
+      "mode": "front",
+      "distance": 31.019412826452935,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070311716,
+      "time": "2026-10-04T09:31:51.716+10:00",
+      "mode": "front",
+      "distance": 29.246432776409694,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070326225,
+      "time": "2026-10-04T09:32:06.225+10:00",
+      "mode": "front",
+      "distance": 26.487292734895515,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070338251,
+      "time": "2026-10-04T09:32:18.251+10:00",
+      "mode": "front",
+      "distance": 31.207999867406578,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070344211,
+      "time": "2026-10-04T09:32:24.211+10:00",
+      "mode": "front",
+      "distance": 30.188778786559748,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070355733,
+      "time": "2026-10-04T09:32:35.733+10:00",
+      "mode": "front",
+      "distance": 29.532886190534917,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070361180,
+      "time": "2026-10-04T09:32:41.180+10:00",
+      "mode": "front",
+      "distance": 31.29414153584051,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070372696,
+      "time": "2026-10-04T09:32:52.696+10:00",
+      "mode": "front",
+      "distance": 29.841906385340845,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070377730,
+      "time": "2026-10-04T09:32:57.730+10:00",
+      "mode": "front",
+      "distance": 28.918528693542854,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070385245,
+      "time": "2026-10-04T09:33:05.245+10:00",
+      "mode": "front",
+      "distance": 27.2277733905995,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070390174,
+      "time": "2026-10-04T09:33:10.174+10:00",
+      "mode": "front",
+      "distance": 26.575358792746563,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070396236,
+      "time": "2026-10-04T09:33:16.236+10:00",
+      "mode": "front",
+      "distance": 26.51698449370166,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070410747,
+      "time": "2026-10-04T09:33:30.747+10:00",
+      "mode": "front",
+      "distance": 30.79954182593415,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070420716,
+      "time": "2026-10-04T09:33:40.716+10:00",
+      "mode": "front",
+      "distance": 29.618662867824195,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070430679,
+      "time": "2026-10-04T09:33:50.679+10:00",
+      "mode": "front",
+      "distance": 35.74141792909413,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070436230,
+      "time": "2026-10-04T09:33:56.230+10:00",
+      "mode": "front",
+      "distance": 32.17786763753405,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070465732,
+      "time": "2026-10-04T09:34:25.732+10:00",
+      "mode": "front",
+      "distance": 30.701771530733172,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070473740,
+      "time": "2026-10-04T09:34:33.740+10:00",
+      "mode": "front",
+      "distance": 28.056701031135116,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070489260,
+      "time": "2026-10-04T09:34:49.260+10:00",
+      "mode": "front",
+      "distance": 27.773135442101626,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070497179,
+      "time": "2026-10-04T09:34:57.179+10:00",
+      "mode": "front",
+      "distance": 26.764856968549836,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070501697,
+      "time": "2026-10-04T09:35:01.697+10:00",
+      "mode": "front",
+      "distance": 26.85930656092109,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070511763,
+      "time": "2026-10-04T09:35:11.763+10:00",
+      "mode": "front",
+      "distance": 24.77507846636697,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070521211,
+      "time": "2026-10-04T09:35:21.211+10:00",
+      "mode": "front",
+      "distance": 25.834054770664853,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070525729,
+      "time": "2026-10-04T09:35:25.729+10:00",
+      "mode": "front",
+      "distance": 24.88677121926253,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070526751,
+      "time": "2026-10-04T09:35:26.751+10:00",
+      "mode": "front",
+      "distance": 23.998151570435894,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070535705,
+      "time": "2026-10-04T09:35:35.705+10:00",
+      "mode": "front",
+      "distance": 24.261309642173266,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070549763,
+      "time": "2026-10-04T09:35:49.763+10:00",
+      "mode": "front",
+      "distance": 28.346363982383206,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070558276,
+      "time": "2026-10-04T09:35:58.276+10:00",
+      "mode": "front",
+      "distance": 32.11858313816507,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070561765,
+      "time": "2026-10-04T09:36:01.765+10:00",
+      "mode": "front",
+      "distance": 32.760941358712266,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070581181,
+      "time": "2026-10-04T09:36:21.181+10:00",
+      "mode": "front",
+      "distance": 62.51096869778473,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070603270,
+      "time": "2026-10-04T09:36:43.270+10:00",
+      "mode": "front",
+      "distance": 109.47546908419456,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070611700,
+      "time": "2026-10-04T09:36:51.700+10:00",
+      "mode": "front",
+      "distance": 81.59859527730221,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070613756,
+      "time": "2026-10-04T09:36:53.756+10:00",
+      "mode": "front",
+      "distance": 73.83240038359676,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070622695,
+      "time": "2026-10-04T09:37:02.695+10:00",
+      "mode": "front",
+      "distance": 41.34824147560644,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070633703,
+      "time": "2026-10-04T09:37:13.703+10:00",
+      "mode": "front",
+      "distance": 26.860330439184875,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070644184,
+      "time": "2026-10-04T09:37:24.184+10:00",
+      "mode": "front",
+      "distance": 31.095820883099588,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070650245,
+      "time": "2026-10-04T09:37:30.245+10:00",
+      "mode": "front",
+      "distance": 32.09340785939603,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070652198,
+      "time": "2026-10-04T09:37:32.198+10:00",
+      "mode": "front",
+      "distance": 32.03581876366841,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070665254,
+      "time": "2026-10-04T09:37:45.254+10:00",
+      "mode": "front",
+      "distance": 31.165420254783896,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070680747,
+      "time": "2026-10-04T09:38:00.747+10:00",
+      "mode": "front",
+      "distance": 29.482495336372573,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070687745,
+      "time": "2026-10-04T09:38:07.745+10:00",
+      "mode": "front",
+      "distance": 30.351853297263123,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791070698744,
+      "time": "2026-10-04T09:38:18.744+10:00",
+      "mode": "front",
+      "distance": 29.358138371807346,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791070745208,
+      "time": "2026-10-04T09:39:05.208+10:00",
+      "mode": "front",
+      "distance": 47.492194403445176,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070746245,
+      "time": "2026-10-04T09:39:06.245+10:00",
+      "mode": "front",
+      "distance": 45.608052943939626,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070751775,
+      "time": "2026-10-04T09:39:11.775+10:00",
+      "mode": "front",
+      "distance": 45.173256416732904,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070755264,
+      "time": "2026-10-04T09:39:15.264+10:00",
+      "mode": "front",
+      "distance": 46.54018243612535,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070770263,
+      "time": "2026-10-04T09:39:30.263+10:00",
+      "mode": "front",
+      "distance": 31.962510722590117,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070775704,
+      "time": "2026-10-04T09:39:35.704+10:00",
+      "mode": "front",
+      "distance": 27.96638730203453,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070782181,
+      "time": "2026-10-04T09:39:42.181+10:00",
+      "mode": "front",
+      "distance": 28.120513628570098,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070805711,
+      "time": "2026-10-04T09:40:05.711+10:00",
+      "mode": "front",
+      "distance": 32.11635642573475,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070813206,
+      "time": "2026-10-04T09:40:13.206+10:00",
+      "mode": "front",
+      "distance": 32.152581482112545,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070818745,
+      "time": "2026-10-04T09:40:18.745+10:00",
+      "mode": "front",
+      "distance": 29.39105962783599,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070822242,
+      "time": "2026-10-04T09:40:22.242+10:00",
+      "mode": "front",
+      "distance": 29.29054774837984,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070841240,
+      "time": "2026-10-04T09:40:41.240+10:00",
+      "mode": "front",
+      "distance": 31.70814681984546,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070856246,
+      "time": "2026-10-04T09:40:56.246+10:00",
+      "mode": "front",
+      "distance": 32.2097700735185,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070861273,
+      "time": "2026-10-04T09:41:01.273+10:00",
+      "mode": "front",
+      "distance": 30.5875760492285,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070864768,
+      "time": "2026-10-04T09:41:04.768+10:00",
+      "mode": "front",
+      "distance": 31.985613663440777,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070872677,
+      "time": "2026-10-04T09:41:12.677+10:00",
+      "mode": "front",
+      "distance": 31.98864525489209,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070877709,
+      "time": "2026-10-04T09:41:17.709+10:00",
+      "mode": "front",
+      "distance": 30.887186351040068,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070888265,
+      "time": "2026-10-04T09:41:28.265+10:00",
+      "mode": "front",
+      "distance": 31.71532207947565,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070893715,
+      "time": "2026-10-04T09:41:33.715+10:00",
+      "mode": "front",
+      "distance": 28.875600366578496,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070903262,
+      "time": "2026-10-04T09:41:43.262+10:00",
+      "mode": "front",
+      "distance": 28.75267216186336,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070912210,
+      "time": "2026-10-04T09:41:52.210+10:00",
+      "mode": "front",
+      "distance": 30.70802750939358,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070921751,
+      "time": "2026-10-04T09:42:01.751+10:00",
+      "mode": "front",
+      "distance": 30.740463715474544,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070927189,
+      "time": "2026-10-04T09:42:07.189+10:00",
+      "mode": "front",
+      "distance": 28.8165422006894,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070951746,
+      "time": "2026-10-04T09:42:31.746+10:00",
+      "mode": "front",
+      "distance": 27.96656314089694,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070963752,
+      "time": "2026-10-04T09:42:43.752+10:00",
+      "mode": "front",
+      "distance": 26.02486114456521,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070970739,
+      "time": "2026-10-04T09:42:50.739+10:00",
+      "mode": "front",
+      "distance": 22.963411660313035,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070971756,
+      "time": "2026-10-04T09:42:51.756+10:00",
+      "mode": "front",
+      "distance": 22.11333027279238,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070980685,
+      "time": "2026-10-04T09:43:00.685+10:00",
+      "mode": "front",
+      "distance": 20.013712577770242,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070983248,
+      "time": "2026-10-04T09:43:03.248+10:00",
+      "mode": "front",
+      "distance": 19.167224920476674,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791070990741,
+      "time": "2026-10-04T09:43:10.741+10:00",
+      "mode": "front",
+      "distance": 25.751098536858624,
+      "excluded": [],
+      "cooldown": 591,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071010766,
+      "time": "2026-10-04T09:43:30.766+10:00",
+      "mode": "front",
+      "distance": 30.025302008561795,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071013743,
+      "time": "2026-10-04T09:43:33.743+10:00",
+      "mode": "front",
+      "distance": 28.643353345064043,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071026772,
+      "time": "2026-10-04T09:43:46.772+10:00",
+      "mode": "front",
+      "distance": 28.937582735782055,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071042188,
+      "time": "2026-10-04T09:44:02.188+10:00",
+      "mode": "front",
+      "distance": 32.18079058876044,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071056756,
+      "time": "2026-10-04T09:44:16.756+10:00",
+      "mode": "front",
+      "distance": 63.808962193355136,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071064248,
+      "time": "2026-10-04T09:44:24.248+10:00",
+      "mode": "front",
+      "distance": 95.90187246573521,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071066198,
+      "time": "2026-10-04T09:44:26.198+10:00",
+      "mode": "front",
+      "distance": 103.86287661497578,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071067749,
+      "time": "2026-10-04T09:44:27.749+10:00",
+      "mode": "front",
+      "distance": 110.23116645987128,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071073189,
+      "time": "2026-10-04T09:44:33.189+10:00",
+      "mode": "front",
+      "distance": 126.47593224689898,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071075251,
+      "time": "2026-10-04T09:44:35.251+10:00",
+      "mode": "front",
+      "distance": 128.78086609415234,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071094189,
+      "time": "2026-10-04T09:44:54.189+10:00",
+      "mode": "front",
+      "distance": 82.06980566030477,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071096248,
+      "time": "2026-10-04T09:44:56.248+10:00",
+      "mode": "front",
+      "distance": 72.74576537353484,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071098198,
+      "time": "2026-10-04T09:44:58.198+10:00",
+      "mode": "front",
+      "distance": 63.07062643559161,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071099228,
+      "time": "2026-10-04T09:44:59.228+10:00",
+      "mode": "front",
+      "distance": 57.31635480336361,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071102212,
+      "time": "2026-10-04T09:45:02.212+10:00",
+      "mode": "front",
+      "distance": 44.89146010323847,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071103754,
+      "time": "2026-10-04T09:45:03.754+10:00",
+      "mode": "front",
+      "distance": 38.236603758334944,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071110224,
+      "time": "2026-10-04T09:45:10.224+10:00",
+      "mode": "front",
+      "distance": 26.26987259154194,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071119774,
+      "time": "2026-10-04T09:45:19.774+10:00",
+      "mode": "front",
+      "distance": 23.883051355148194,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071128708,
+      "time": "2026-10-04T09:45:28.708+10:00",
+      "mode": "front",
+      "distance": 22.483607392613234,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071143720,
+      "time": "2026-10-04T09:45:43.720+10:00",
+      "mode": "front",
+      "distance": 26.23817973808294,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071149681,
+      "time": "2026-10-04T09:45:49.681+10:00",
+      "mode": "front",
+      "distance": 26.03569379568728,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071186755,
+      "time": "2026-10-04T09:46:26.755+10:00",
+      "mode": "front",
+      "distance": 29.880460389871892,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071197197,
+      "time": "2026-10-04T09:46:37.197+10:00",
+      "mode": "front",
+      "distance": 29.02690763223629,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071202753,
+      "time": "2026-10-04T09:46:42.753+10:00",
+      "mode": "front",
+      "distance": 28.30523880393214,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071216716,
+      "time": "2026-10-04T09:46:56.716+10:00",
+      "mode": "front",
+      "distance": 29.323933710851097,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071236729,
+      "time": "2026-10-04T09:47:16.729+10:00",
+      "mode": "front",
+      "distance": 29.30782501555511,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071248754,
+      "time": "2026-10-04T09:47:28.754+10:00",
+      "mode": "front",
+      "distance": 30.649349479065357,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071259225,
+      "time": "2026-10-04T09:47:39.225+10:00",
+      "mode": "front",
+      "distance": 32.68058254373977,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071262710,
+      "time": "2026-10-04T09:47:42.710+10:00",
+      "mode": "front",
+      "distance": 31.92044202461329,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071276256,
+      "time": "2026-10-04T09:47:56.256+10:00",
+      "mode": "front",
+      "distance": 28.76809685862082,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071286724,
+      "time": "2026-10-04T09:48:06.724+10:00",
+      "mode": "front",
+      "distance": 28.78949367329664,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791071296266,
+      "time": "2026-10-04T09:48:16.266+10:00",
+      "mode": "front",
+      "distance": 20.348731567587016,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791071297195,
+      "time": "2026-10-04T09:48:17.195+10:00",
+      "mode": "front",
+      "distance": 19.5486105609151,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791071327203,
+      "time": "2026-10-04T09:48:47.203+10:00",
+      "mode": "front",
+      "distance": 22.461979515113075,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071332231,
+      "time": "2026-10-04T09:48:52.231+10:00",
+      "mode": "front",
+      "distance": 27.1736278561793,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071339724,
+      "time": "2026-10-04T09:48:59.724+10:00",
+      "mode": "front",
+      "distance": 37.55153325121521,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071342708,
+      "time": "2026-10-04T09:49:02.708+10:00",
+      "mode": "front",
+      "distance": 38.38367098283134,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071346213,
+      "time": "2026-10-04T09:49:06.213+10:00",
+      "mode": "front",
+      "distance": 40.960368929212756,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071355766,
+      "time": "2026-10-04T09:49:15.766+10:00",
+      "mode": "front",
+      "distance": 32.0427888451397,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071358232,
+      "time": "2026-10-04T09:49:18.232+10:00",
+      "mode": "front",
+      "distance": 31.519843978054347,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071366771,
+      "time": "2026-10-04T09:49:26.771+10:00",
+      "mode": "front",
+      "distance": 30.032678658145773,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071368206,
+      "time": "2026-10-04T09:49:28.206+10:00",
+      "mode": "front",
+      "distance": 30.01914495856658,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071370257,
+      "time": "2026-10-04T09:49:30.257+10:00",
+      "mode": "front",
+      "distance": 29.991546463346957,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071379193,
+      "time": "2026-10-04T09:49:39.193+10:00",
+      "mode": "front",
+      "distance": 27.949563732707304,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071382279,
+      "time": "2026-10-04T09:49:42.279+10:00",
+      "mode": "front",
+      "distance": 26.98568408945451,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071391209,
+      "time": "2026-10-04T09:49:51.209+10:00",
+      "mode": "front",
+      "distance": 24.110470865201346,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071399744,
+      "time": "2026-10-04T09:49:59.744+10:00",
+      "mode": "front",
+      "distance": 24.998805030691567,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071407248,
+      "time": "2026-10-04T09:50:07.248+10:00",
+      "mode": "front",
+      "distance": 25.11553507746697,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071418241,
+      "time": "2026-10-04T09:50:18.241+10:00",
+      "mode": "front",
+      "distance": 29.022586673580836,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071422763,
+      "time": "2026-10-04T09:50:22.763+10:00",
+      "mode": "front",
+      "distance": 30.001430689307554,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071426248,
+      "time": "2026-10-04T09:50:26.248+10:00",
+      "mode": "front",
+      "distance": 30.00861741305622,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_091937_120_b916420d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071981722,
+      "time": "2026-10-04T09:59:41.722+10:00",
+      "mode": "sideways",
+      "distance": 30.22841294109682,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071983268,
+      "time": "2026-10-04T09:59:43.268+10:00",
+      "mode": "sideways",
+      "distance": 29.89592340312828,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071985241,
+      "time": "2026-10-04T09:59:45.241+10:00",
+      "mode": "sideways",
+      "distance": 30.106576797899255,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791071987211,
+      "time": "2026-10-04T09:59:47.211+10:00",
+      "mode": "sideways",
+      "distance": 30.95071956494291,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072005260,
+      "time": "2026-10-04T10:00:05.260+10:00",
+      "mode": "sideways",
+      "distance": 31.063655153567414,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072010733,
+      "time": "2026-10-04T10:00:10.733+10:00",
+      "mode": "sideways",
+      "distance": 32.80700694990661,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072025247,
+      "time": "2026-10-04T10:00:25.247+10:00",
+      "mode": "sideways",
+      "distance": 38.21368036785442,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072026694,
+      "time": "2026-10-04T10:00:26.694+10:00",
+      "mode": "sideways",
+      "distance": 39.05258144495847,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072028756,
+      "time": "2026-10-04T10:00:28.756+10:00",
+      "mode": "sideways",
+      "distance": 40.32260613115372,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072046261,
+      "time": "2026-10-04T10:00:46.261+10:00",
+      "mode": "sideways",
+      "distance": 31.531541059546466,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072049242,
+      "time": "2026-10-04T10:00:49.242+10:00",
+      "mode": "sideways",
+      "distance": 29.35598208221135,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072057276,
+      "time": "2026-10-04T10:00:57.276+10:00",
+      "mode": "sideways",
+      "distance": 29.68881221443504,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072077226,
+      "time": "2026-10-04T10:01:17.226+10:00",
+      "mode": "sideways",
+      "distance": 27.703726108388626,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072084743,
+      "time": "2026-10-04T10:01:24.743+10:00",
+      "mode": "sideways",
+      "distance": 29.160136312293172,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072124235,
+      "time": "2026-10-04T10:02:04.235+10:00",
+      "mode": "sideways",
+      "distance": 32.59941638784835,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072131215,
+      "time": "2026-10-04T10:02:11.215+10:00",
+      "mode": "sideways",
+      "distance": 33.65590037447265,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072139746,
+      "time": "2026-10-04T10:02:19.746+10:00",
+      "mode": "sideways",
+      "distance": 29.108634219514983,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072151749,
+      "time": "2026-10-04T10:02:31.749+10:00",
+      "mode": "sideways",
+      "distance": 26.439050549378166,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072158728,
+      "time": "2026-10-04T10:02:38.728+10:00",
+      "mode": "sideways",
+      "distance": 21.92626079688413,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072169224,
+      "time": "2026-10-04T10:02:49.224+10:00",
+      "mode": "sideways",
+      "distance": 22.310067436157148,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072181781,
+      "time": "2026-10-04T10:03:01.781+10:00",
+      "mode": "sideways",
+      "distance": 20.884314756366965,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072191759,
+      "time": "2026-10-04T10:03:11.759+10:00",
+      "mode": "sideways",
+      "distance": 24.769604374852427,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072194743,
+      "time": "2026-10-04T10:03:14.743+10:00",
+      "mode": "sideways",
+      "distance": 25.178868197702545,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072201734,
+      "time": "2026-10-04T10:03:21.734+10:00",
+      "mode": "sideways",
+      "distance": 23.68067695153477,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072215721,
+      "time": "2026-10-04T10:03:35.721+10:00",
+      "mode": "sideways",
+      "distance": 24.78489428996412,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072219733,
+      "time": "2026-10-04T10:03:39.733+10:00",
+      "mode": "sideways",
+      "distance": 25.934410405538006,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072221691,
+      "time": "2026-10-04T10:03:41.691+10:00",
+      "mode": "sideways",
+      "distance": 27.443888266045374,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072224260,
+      "time": "2026-10-04T10:03:44.260+10:00",
+      "mode": "sideways",
+      "distance": 27.19461627762283,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072234737,
+      "time": "2026-10-04T10:03:54.737+10:00",
+      "mode": "sideways",
+      "distance": 31.79202973720012,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072242754,
+      "time": "2026-10-04T10:04:02.754+10:00",
+      "mode": "sideways",
+      "distance": 33.694145578264646,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072255231,
+      "time": "2026-10-04T10:04:15.231+10:00",
+      "mode": "sideways",
+      "distance": 33.46060388942555,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072261704,
+      "time": "2026-10-04T10:04:21.704+10:00",
+      "mode": "sideways",
+      "distance": 33.87777595436757,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072269726,
+      "time": "2026-10-04T10:04:29.726+10:00",
+      "mode": "sideways",
+      "distance": 44.19843336956348,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072273215,
+      "time": "2026-10-04T10:04:33.215+10:00",
+      "mode": "sideways",
+      "distance": 52.919597431562195,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072283211,
+      "time": "2026-10-04T10:04:43.211+10:00",
+      "mode": "sideways",
+      "distance": 84.644164503294,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072289705,
+      "time": "2026-10-04T10:04:49.705+10:00",
+      "mode": "sideways",
+      "distance": 103.99215905062034,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072300192,
+      "time": "2026-10-04T10:05:00.192+10:00",
+      "mode": "sideways",
+      "distance": 130.83919621823466,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072305242,
+      "time": "2026-10-04T10:05:05.242+10:00",
+      "mode": "sideways",
+      "distance": 134.88781074445725,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072307201,
+      "time": "2026-10-04T10:05:07.201+10:00",
+      "mode": "sideways",
+      "distance": 134.66732203891908,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072308745,
+      "time": "2026-10-04T10:05:08.745+10:00",
+      "mode": "sideways",
+      "distance": 133.52114132181606,
+      "excluded": [
+        "return_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072315221,
+      "time": "2026-10-04T10:05:15.221+10:00",
+      "mode": "sideways",
+      "distance": 117.50624219030138,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072316250,
+      "time": "2026-10-04T10:05:16.250+10:00",
+      "mode": "sideways",
+      "distance": 112.32421526113792,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072324704,
+      "time": "2026-10-04T10:05:24.704+10:00",
+      "mode": "sideways",
+      "distance": 81.99118478069123,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072332733,
+      "time": "2026-10-04T10:05:32.733+10:00",
+      "mode": "sideways",
+      "distance": 52.895458564967456,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072343232,
+      "time": "2026-10-04T10:05:43.232+10:00",
+      "mode": "sideways",
+      "distance": 25.077425245438555,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072344259,
+      "time": "2026-10-04T10:05:44.259+10:00",
+      "mode": "sideways",
+      "distance": 26.24432872634448,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072350737,
+      "time": "2026-10-04T10:05:50.737+10:00",
+      "mode": "sideways",
+      "distance": 26.891123059988953,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072364191,
+      "time": "2026-10-04T10:06:04.191+10:00",
+      "mode": "sideways",
+      "distance": 26.30805829482769,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072370267,
+      "time": "2026-10-04T10:06:10.267+10:00",
+      "mode": "sideways",
+      "distance": 27.15091936083077,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072387747,
+      "time": "2026-10-04T10:06:27.747+10:00",
+      "mode": "sideways",
+      "distance": 28.28331354821915,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072399250,
+      "time": "2026-10-04T10:06:39.250+10:00",
+      "mode": "sideways",
+      "distance": 29.295329285646865,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072450274,
+      "time": "2026-10-04T10:07:30.274+10:00",
+      "mode": "sideways",
+      "distance": 29.676059552916435,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072458714,
+      "time": "2026-10-04T10:07:38.714+10:00",
+      "mode": "sideways",
+      "distance": 27.403278039939092,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072499268,
+      "time": "2026-10-04T10:08:19.268+10:00",
+      "mode": "sideways",
+      "distance": 21.387030737252175,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072515706,
+      "time": "2026-10-04T10:08:35.706+10:00",
+      "mode": "sideways",
+      "distance": 19.640340387154428,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072556695,
+      "time": "2026-10-04T10:09:16.695+10:00",
+      "mode": "sideways",
+      "distance": 18.332750898933426,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072557720,
+      "time": "2026-10-04T10:09:17.720+10:00",
+      "mode": "sideways",
+      "distance": 16.789805464157627,
+      "excluded": [
+        "retreat_already_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072636694,
+      "time": "2026-10-04T10:10:36.694+10:00",
+      "mode": "sideways",
+      "distance": 19.843026190783018,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072639254,
+      "time": "2026-10-04T10:10:39.254+10:00",
+      "mode": "sideways",
+      "distance": 17.94428919303204,
+      "excluded": [
+        "retreat_already_active"
+      ],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072651291,
+      "time": "2026-10-04T10:10:51.291+10:00",
+      "mode": "sideways",
+      "distance": 20.2813573872477,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": true
+    },
+    {
+      "epochMs": 1791072708726,
+      "time": "2026-10-04T10:11:48.726+10:00",
+      "mode": "sideways",
+      "distance": 56.33785190528117,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072715203,
+      "time": "2026-10-04T10:11:55.203+10:00",
+      "mode": "sideways",
+      "distance": 38.36084069139696,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072727710,
+      "time": "2026-10-04T10:12:07.710+10:00",
+      "mode": "sideways",
+      "distance": 27.908286546808245,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072754732,
+      "time": "2026-10-04T10:12:34.732+10:00",
+      "mode": "sideways",
+      "distance": 20.335195873201073,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072760265,
+      "time": "2026-10-04T10:12:40.265+10:00",
+      "mode": "sideways",
+      "distance": 18.011770361338986,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072773735,
+      "time": "2026-10-04T10:12:53.735+10:00",
+      "mode": "sideways",
+      "distance": 24.997325650387626,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072781247,
+      "time": "2026-10-04T10:13:01.247+10:00",
+      "mode": "sideways",
+      "distance": 25.644001990678117,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072791722,
+      "time": "2026-10-04T10:13:11.722+10:00",
+      "mode": "sideways",
+      "distance": 34.75626129962841,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072805702,
+      "time": "2026-10-04T10:13:25.702+10:00",
+      "mode": "sideways",
+      "distance": 26.462228550129495,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072810748,
+      "time": "2026-10-04T10:13:30.748+10:00",
+      "mode": "sideways",
+      "distance": 28.33324250917562,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072814244,
+      "time": "2026-10-04T10:13:34.244+10:00",
+      "mode": "sideways",
+      "distance": 26.71809688772446,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072824288,
+      "time": "2026-10-04T10:13:44.288+10:00",
+      "mode": "sideways",
+      "distance": 28.123657341974695,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072830248,
+      "time": "2026-10-04T10:13:50.248+10:00",
+      "mode": "sideways",
+      "distance": 30.20212538188669,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072835277,
+      "time": "2026-10-04T10:13:55.277+10:00",
+      "mode": "sideways",
+      "distance": 31.414926112527787,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072861777,
+      "time": "2026-10-04T10:14:21.777+10:00",
+      "mode": "sideways",
+      "distance": 30.404593943400105,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072882731,
+      "time": "2026-10-04T10:14:42.731+10:00",
+      "mode": "sideways",
+      "distance": 31.38142368051191,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072889721,
+      "time": "2026-10-04T10:14:49.721+10:00",
+      "mode": "sideways",
+      "distance": 30.3310100362397,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072921242,
+      "time": "2026-10-04T10:15:21.242+10:00",
+      "mode": "sideways",
+      "distance": 30.527371587490528,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072929257,
+      "time": "2026-10-04T10:15:29.257+10:00",
+      "mode": "sideways",
+      "distance": 26.488273345841762,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072944271,
+      "time": "2026-10-04T10:15:44.271+10:00",
+      "mode": "sideways",
+      "distance": 29.582901752042,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072955248,
+      "time": "2026-10-04T10:15:55.248+10:00",
+      "mode": "sideways",
+      "distance": 25.155539645993123,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    },
+    {
+      "epochMs": 1791072991724,
+      "time": "2026-10-04T10:16:31.724+10:00",
+      "mode": "sideways",
+      "distance": 27.665156544876016,
+      "excluded": [],
+      "cooldown": 0,
+      "log": "cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl",
+      "rideWithin20s": false
+    }
+  ]
+}
