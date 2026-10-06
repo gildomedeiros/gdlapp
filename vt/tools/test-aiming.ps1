@@ -214,3 +214,13 @@ $header405=@($v405 | Where-Object event -eq 'session_start')[0]
 $row405=@($v405 | Where-Object event -eq 'movement_cycle')[0]
 if($header405.version -ne '4.0.5-test' -or $null -ne $row405.projectedSeparationM -or $null -ne $row405.comeToMeAlignmentErrorM -or $row405.extraPathClearanceMetres -ne 0 -or $row405.requiredPathClearanceMetres -ne 18 -or $null -eq $row405.capturedSurferDirectDistanceM){throw 'VT405 independent log validation failed'}
 Write-Output 'PASS: VT405 independent JSON parser validates runtime version, zero buffer and explicit direct distance references'
+
+# VT 4.0.6: distinct planning/stop clearances, whole-route allowance and recovery status.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt406Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT406 compile failed' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt406Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
+if ($LASTEXITCODE -ne 0) { throw 'VT406 tests failed' }
+$v406=@(Get-Content (Join-Path $output 'vt406-log.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$row406=@($v406 | Where-Object event -eq 'movement_cycle')[0]
+if($row406.requiredPathClearanceMetres -ne 18 -or $row406.requiredPlanningClearanceMetres -ne 20 -or $row406.routePlanningAllowanceMetres -ne 2 -or $row406.routeRecoveryStatus -ne 'none' -or $null -ne $row406.projectedSeparationM){throw 'VT406 independent planning/stop log validation failed'}
+Write-Output 'PASS: VT406 independent JSON parser verifies separate planning and execution limits'

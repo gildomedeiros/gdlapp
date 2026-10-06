@@ -81,7 +81,7 @@ public final class ComeToMeController {
     public AngleRoutePlanner.Plan route;
     public int routeIndex;
     public long recoveryAttempts,lastRecoveryAt=-1,journeyId;
-    public String recoveryStatus="none",lastRecoveryResult="none",lastJourneyBlock="none";
+    public String recoveryStatus="none",lastJourneyBlock="none";
     private boolean journeyOpen;
     public java.util.function.Consumer<JourneyOutcome> outcomeListener=o->{};
     public static final class JourneyOutcome {
@@ -91,7 +91,7 @@ public final class ComeToMeController {
             this.outcome=outcome;this.cause=cause;lastBlock=m.lastJourneyBlock;
             surferLat=m.routeSurferLat;surferLon=m.routeSurferLon;targetLat=m.approachTargetLat;targetLon=m.approachTargetLon;}
     }
-    private void openJourney(){journeyId++;journeyOpen=true;lastJourneyBlock="none";recoveryAttempts=0;lastRecoveryAt=-1;recoveryStatus=lastRecoveryResult="none";}
+    private void openJourney(){journeyId++;journeyOpen=true;lastJourneyBlock="none";recoveryAttempts=0;lastRecoveryAt=-1;recoveryStatus="none";}
     private void finishJourney(String outcome,String cause){
         if(!journeyOpen)return;journeyOpen=false;
         try{outcomeListener.accept(new JourneyOutcome(this,outcome,cause));}catch(RuntimeException ignored){}
@@ -418,7 +418,6 @@ public final class ComeToMeController {
                     failedSegment=replacement.failedSegment;failedClearance=replacement.failedClearance;
                     failedBoundary=replacement.failedBoundary;failedExcursion=replacement.failedExcursion;
                 }
-                lastRecoveryResult=recoveryStatus;
             }
             return; // Stop before executing any replacement; preserve the original attempt clock.
         }
@@ -429,7 +428,6 @@ public final class ComeToMeController {
         double normal=v[0]*(Math.cos(Math.toRadians(in.heading))*positioning.shore.seaNorth+Math.sin(Math.toRadians(in.heading))*positioning.shore.seaEast)
             +v[1]*(-Math.sin(Math.toRadians(in.heading))*positioning.shore.seaNorth+Math.cos(Math.toRadians(in.heading))*positioning.shore.seaEast);
         if(positioning.boundaryDistance(in.lat,in.lon,initialCentralLat,initialCentralLon)<=0&&normal< -1e-6){reason="route_central_boundary";return;}
-        recoveryStatus="none";failedSegment=-1;failedClearance=failedBoundary=failedExcursion=Double.NaN;
         forward=v[0];right=v[1];reason="moving_saved_route_aiming_surfer";
     }
     /** Record arrival once. Subsequent band exits and arrivals cannot erase an active countdown. */

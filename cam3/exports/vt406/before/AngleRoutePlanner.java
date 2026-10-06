@@ -30,42 +30,34 @@ public final class AngleRoutePlanner {
         else if(c.clearance+1e-6<p.clearance())c.reason="route_surfer_clearance";
         return c;
     }
-    public static Check planningCheck(ShorelinePositioning p,double aLat,double aLon,double bLat,double bLon,
-            double sl,double so,double anchorLat,double anchorLon,double centralLat,double centralLon) {
-        Check c=check(p,aLat,aLon,bLat,bLon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
-        if((c.reason.equals("none")||c.reason.equals("route_surfer_clearance"))&&c.clearance+1e-6<p.planningClearance())
-            c.reason="route_planning_clearance";
-        return c;
-    }
     public static Plan plan(ShorelinePositioning p,AimingSession.Inputs in,double[] end,
             double anchorLat,double anchorLon,double centralLat,double centralLon) {
         Plan result=new Plan();double sl=in.target.lat,so=in.target.lon;
-        Check destination=planningCheck(p,end[0],end[1],end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
+        Check destination=check(p,end[0],end[1],end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
         if(!destination.reason.equals("none")){
             if(destination.reason.equals("route_central_boundary"))destination.reason="destination_central_boundary";
-            else if(destination.reason.equals("route_planning_clearance"))destination.reason="destination_inside_planning_clearance";
             else if(destination.reason.equals("route_excursion_limit"))destination.reason="destination_excursion_limit";
             result.failure(destination,-1);return result;
         }
-        Check start=planningCheck(p,in.lat,in.lon,in.lat,in.lon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
+        Check start=check(p,in.lat,in.lon,in.lat,in.lon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
         if(!start.reason.equals("none")){
             if(start.reason.equals("route_central_boundary"))start.reason="start_beachward_of_boundary";
-            else if(start.reason.equals("route_planning_clearance")||start.reason.equals("route_surfer_clearance"))start.reason="start_inside_planning_clearance";
+            else if(start.reason.equals("route_surfer_clearance"))start.reason="start_inside_routing_clearance";
             result.failure(start,0);return result;
         }
-        Check direct=planningCheck(p,in.lat,in.lon,end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
+        Check direct=check(p,in.lat,in.lon,end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
         if(p.correctQuadrant(in)&&direct.reason.equals("none")){
             result.points=new double[][]{end};result.length=YawAimingMath.distance(in.lat,in.lon,end[0],end[1]);return result;
         }
         double startRadius=YawAimingMath.distance(in.lat,in.lon,sl,so),endRadius=YawAimingMath.distance(end[0],end[1],sl,so);
         // OFF: geometric radius only, no retreat-circle exclusion. ON: exterior polygon
         // accounts for the one-metre waypoint completion envelope as well as chord sag.
-        double radius=p.clearance()>0?(p.planningClearance()+1.1)/Math.cos(Math.PI/N):Math.min(startRadius,endRadius)/Math.cos(Math.PI/N);
+        double radius=p.clearance()>0?(p.clearance()+1.1)/Math.cos(Math.PI/N):Math.min(startRadius,endRadius)/Math.cos(Math.PI/N);
         double[][] ring=new double[N][];Check[] entry=new Check[N],exit=new Check[N];
         for(int i=0;i<N;i++){
             double a=2*Math.PI*i/N;ring[i]=p.shore.point(sl,so,radius*Math.cos(a),radius*Math.sin(a));
-            entry[i]=planningCheck(p,in.lat,in.lon,ring[i][0],ring[i][1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
-            exit[i]=planningCheck(p,ring[i][0],ring[i][1],end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
+            entry[i]=check(p,in.lat,in.lon,ring[i][0],ring[i][1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
+            exit[i]=check(p,ring[i][0],ring[i][1],end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
             if(p.clearance()==0){
                 double geometric=Math.min(startRadius,endRadius);
                 if(entry[i].reason.equals("none")&&entry[i].clearance+1e-6<geometric)entry[i].reason="around_geometry";
@@ -82,7 +74,7 @@ public final class AngleRoutePlanner {
                 double length=YawAimingMath.distance(in.lat,in.lon,ring[i][0],ring[i][1]);int current=i;
                 for(int step=1;step<N;step++){
                     int next=(current+direction+N)%N;
-                    Check edge=planningCheck(p,ring[current][0],ring[current][1],ring[next][0],ring[next][1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
+                    Check edge=check(p,ring[current][0],ring[current][1],ring[next][0],ring[next][1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
                     if(!edge.reason.equals("none")){if(firstFailure==null){firstFailure=edge;failureIndex=step;}break;}
                     length+=YawAimingMath.distance(ring[current][0],ring[current][1],ring[next][0],ring[next][1]);
                     points.add(ring[next]);current=next;
@@ -113,9 +105,9 @@ public final class AngleRoutePlanner {
         AimingSession.Inputs frozen=new AimingSession.Inputs(new AimingSession.Fix(sl,so,0,fixTime),
                 live.lat,live.lon,live.heading,live.aircraftTime,live.problem,live.safeToNeutral);
         Plan ordinary=plan(p,frozen,end,anchorLat,anchorLon,centralLat,centralLon);
-        if(!ordinary.reason.equals("start_inside_planning_clearance"))return ordinary;
+        if(!ordinary.reason.equals("start_inside_routing_clearance"))return ordinary;
         double[] start=p.shore.offset(live.lat,live.lon,sl,so);
-        double radius=(p.planningClearance()+1.1)/Math.cos(Math.PI/N);
+        double radius=(p.clearance()+1.1)/Math.cos(Math.PI/N);
         double initial=Math.atan2(start[1],start[0]);Plan best=null;
         // Radial escape is tried first; other outward directions permit escape beside a boundary.
         for(int i=0;i<N;i++) {

@@ -17,6 +17,5 @@
   "positioningAngleDegrees": 45,
   "positioningAngleToleranceDegrees": 5,
   "extraPathClearanceMetres": 0,
-  "routePlanningAllowanceMetres": 2,
   "maxExcursionMetres": 300
 }

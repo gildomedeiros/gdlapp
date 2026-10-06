@@ -4,19 +4,12 @@ package dji.v5.ux.sample.showcase.defaultlayout.aiming;
 public final class ShorelinePositioning {
     public final ShorelineGeometry shore;
     public final String mode,side,shorelineId;
-    public final double axisNorth,axisEast,otherNorth,otherEast,tolerance,retreatRadius,angleDegrees,angleTolerance,extraClearance,excursionStop,planningAllowance;
+    public final double axisNorth,axisEast,otherNorth,otherEast,tolerance,retreatRadius,angleDegrees,angleTolerance,extraClearance,excursionStop;
     public ShorelinePositioning(ShorelineGeometry shore,String id,String mode,String side,double tolerance,double retreatRadius) {
         this(shore,id,mode,side,tolerance,retreatRadius,45,5,2,249);
     }
     public ShorelinePositioning(ShorelineGeometry shore,String id,String mode,String side,double tolerance,double retreatRadius,
             double angle,double angleTolerance,double extra,double excursionStop) {
-        this(shore,id,mode,side,tolerance,retreatRadius,angle,angleTolerance,extra,excursionStop,2);
-    }
-    public ShorelinePositioning(ShorelineGeometry shore,String id,String mode,String side,double tolerance,double retreatRadius,
-            double angle,double angleTolerance,double extra,double excursionStop,double planningAllowance) {
-        if(!Double.isFinite(planningAllowance)||planningAllowance<0||planningAllowance>50)
-            throw new IllegalArgumentException("routePlanningAllowanceMetres must be 0–50");
-        this.planningAllowance=planningAllowance;
         if(!Double.isFinite(angle)||angle< -90||angle>90||!Double.isFinite(angleTolerance)||angleTolerance<.1||angleTolerance>45||
                 !Double.isFinite(extra)||extra<0||extra>50||!Double.isFinite(excursionStop)||excursionStop<9||excursionStop>999)
             throw new IllegalArgumentException("Invalid angle positioning settings");
@@ -33,7 +26,6 @@ public final class ShorelinePositioning {
         otherNorth=-axisEast;otherEast=axisNorth;
     }
     public boolean diagonal(){return mode.equals("diagonal");}
-    public double planningClearance(){return retreatRadius>0?clearance()+planningAllowance:0;}
     public double clearance(){return retreatRadius>0?retreatRadius+extraClearance:0;}
     public double currentAngle(AimingSession.Inputs in) {
         double[] d=shore.offset(in.lat,in.lon,in.target.lat,in.target.lon);

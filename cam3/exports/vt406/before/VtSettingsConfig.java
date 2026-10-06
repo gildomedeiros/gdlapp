@@ -5,9 +5,9 @@ import com.google.gson.*;
 public final class VtSettingsConfig {
     public final ComeToMeSettings movement;
     public final String mode,shorelineId,sidewaysSide;
-    public final double alignmentTolerance,angle,angleTolerance,extraClearance,planningAllowance;
-    private VtSettingsConfig(ComeToMeSettings movement,String mode,String id,String side,double tolerance,double angle,double angleTolerance,double extraClearance,double planningAllowance) {
-        this.movement=movement;this.mode=mode;shorelineId=id;sidewaysSide=side;alignmentTolerance=tolerance;this.angle=angle;this.angleTolerance=angleTolerance;this.extraClearance=extraClearance;this.planningAllowance=planningAllowance;
+    public final double alignmentTolerance,angle,angleTolerance,extraClearance;
+    private VtSettingsConfig(ComeToMeSettings movement,String mode,String id,String side,double tolerance,double angle,double angleTolerance,double extraClearance) {
+        this.movement=movement;this.mode=mode;shorelineId=id;sidewaysSide=side;alignmentTolerance=tolerance;this.angle=angle;this.angleTolerance=angleTolerance;this.extraClearance=extraClearance;
     }
     private static double optional(JsonObject o,String k,double value,double lo,double hi) {
         return o.has(k)?VtJsonFields.number(o,k,lo,hi):value;
@@ -17,10 +17,9 @@ public final class VtSettingsConfig {
         double angle=optional(o,"positioningAngleDegrees",45,-90,90);
         double angleTolerance=optional(o,"positioningAngleToleranceDegrees",5,.1,45);
         double extra=optional(o,"extraPathClearanceMetres",0,0,50);
-        double planningAllowance=optional(o,"routePlanningAllowanceMetres",2,0,50);
         double excursion=optional(o,"maxExcursionMetres",300,10,1000);
         JsonObject required=o.deepCopy();
-        for(String k:new String[]{"positioningAngleDegrees","positioningAngleToleranceDegrees","extraPathClearanceMetres","maxExcursionMetres","routePlanningAllowanceMetres"})required.remove(k);
+        for(String k:new String[]{"positioningAngleDegrees","positioningAngleToleranceDegrees","extraPathClearanceMetres","maxExcursionMetres"})required.remove(k);
         VtJsonFields.keys(required,"version","enabled","filmingSeparationMetres","reapproachMarginMetres","maxMovementSpeedMetresPerSecond",
             "lineupWidthMetres","rideStartKmh","rideDurationSeconds","noRideTimeoutSeconds","maxYawRateDegreesPerSecond",
             "yawAccelerationDegreesPerSecondSquared","mode","shorelineId","sidewaysSide","alignmentToleranceMetres");
@@ -36,6 +35,6 @@ public final class VtSettingsConfig {
             VtJsonFields.number(o,"maxMovementSpeedMetresPerSecond",.1,5),excursion);
         if(c.enabled&&retreat.enabled&&c.filmingDistance<retreat.minimumDistance+5)
             throw new IllegalArgumentException("filmingSeparationMetres must be >= retreat minimumDistanceMetres + 5 m for all modes; required "+(retreat.minimumDistance+5));
-        return new VtSettingsConfig(c,mode,id,side,VtJsonFields.number(o,"alignmentToleranceMetres",1,20),angle,angleTolerance,extra,planningAllowance);
+        return new VtSettingsConfig(c,mode,id,side,VtJsonFields.number(o,"alignmentToleranceMetres",1,20),angle,angleTolerance,extra);
     }
 }
