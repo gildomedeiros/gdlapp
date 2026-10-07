@@ -45,11 +45,13 @@ public final class Vt406Test {
  }
  static void status(String output)throws Exception{
   ComeToMeController m=Vt404Test.planner(36,-45,45);
+  double anchor=m.initialCentralLat;m.initialCentralLat=30*DEG;
   m.update_state_machine(ComeToMeTest.in(1100,14,0,40,0,0),1100,.1);
-  check(m.recoveryStatus.equals("start_beachward_of_boundary"),"recovery failure current status");
+  check(m.recoveryStatus.equals("destination_central_boundary"),"recovery failure current status");
+  m.initialCentralLat=anchor;
   m.update_state_machine(ComeToMeTest.in(1200,m.centralLat/DEG,m.centralLon/DEG,40,0,0),1200,.1);
   check(Math.hypot(m.forward,m.right)>0&&m.recoveryStatus.equals("none"),"continuation clears current failure");
-  check(m.lastRecoveryResult.equals("start_beachward_of_boundary")&&m.lastJourneyBlock.equals("route_central_boundary"),"history retained separately");
+  check(m.lastRecoveryResult.equals("destination_central_boundary")&&m.lastJourneyBlock.equals("route_central_boundary"),"history retained separately");
   check(m.failedSegment==-1&&Double.isNaN(m.failedBoundary),"old failure metrics cleared");
   Vt404Test.Port p=new Vt404Test.Port(-45);p.start();p.tick(100,0,15,40,0,0);
   FullSessionLog log=new FullSessionLog(n->Files.newOutputStream(Paths.get(output,"vt406-log.jsonl")),e->{throw new AssertionError(e);},"4.0.6-test");log.enable();

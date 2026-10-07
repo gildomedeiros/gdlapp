@@ -23,12 +23,19 @@ public final class AngleRoutePlanner {
         Check c=new Check();
         double[] a=p.shore.offset(aLat,aLon,surferLat,surferLon),b=p.shore.offset(bLat,bLon,surferLat,surferLon);
         c.clearance=WaveLineGeometry.segmentDistance(a[0],a[1],b[0],b[1]);
-        c.boundary=Math.min(p.boundaryDistance(aLat,aLon,anchorLat,anchorLon),p.boundaryDistance(bLat,bLon,anchorLat,anchorLon));
+        double startBoundary=p.boundaryDistance(aLat,aLon,anchorLat,anchorLon);
+        double endBoundary=p.boundaryDistance(bLat,bLon,anchorLat,anchorLon);
+        c.boundary=Math.min(startBoundary,endBoundary);
         c.excursion=Math.max(YawAimingMath.distance(aLat,aLon,centralLat,centralLon),YawAimingMath.distance(bLat,bLon,centralLat,centralLon));
-        if(!Double.isFinite(c.boundary)||c.boundary< -1e-6)c.reason="route_central_boundary";
+        if(!boundaryLegAllowed(startBoundary,endBoundary))c.reason="route_central_boundary";
         else if(c.excursion>p.excursionStop+1e-6)c.reason="route_excursion_limit";
         else if(c.clearance+1e-6<p.clearance())c.reason="route_surfer_clearance";
         return c;
+    }
+    /** All waypoint endpoints are permitted; a beachward origin may recover monotonically. */
+    public static boolean boundaryLegAllowed(double start,double end) {
+        return Double.isFinite(start)&&Double.isFinite(end)&&end>=-1e-6
+            &&(start>=-1e-6||end>start+1e-6);
     }
     public static Check planningCheck(WaveLinePositioning p,double aLat,double aLon,double bLat,double bLon,
             double sl,double so,double anchorLat,double anchorLon,double centralLat,double centralLon) {
@@ -48,11 +55,14 @@ public final class AngleRoutePlanner {
             result.failure(destination,-1);return result;
         }
         Check start=planningCheck(p,in.lat,in.lon,in.lat,in.lon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
-        if(!start.reason.equals("none")){
-            if(start.reason.equals("route_central_boundary"))start.reason="start_beachward_of_boundary";
-            else if(start.reason.equals("route_planning_clearance")||start.reason.equals("route_surfer_clearance"))start.reason="start_inside_planning_clearance";
-            result.failure(start,0);return result;
+        // A beachward origin is not a waypoint: validate its excursion and radius separately.
+        if(start.excursion>p.excursionStop+1e-6) {
+            start.reason="route_excursion_limit";result.failure(start,0);return result;
         }
+        if(start.clearance+1e-6<p.planningClearance()) {
+            start.reason="start_inside_planning_clearance";result.failure(start,0);return result;
+        }
+        if(!Double.isFinite(start.boundary)) {result.failure(start,0);return result;}
         Check direct=planningCheck(p,in.lat,in.lon,end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
         if(p.correctQuadrant(in)&&direct.reason.equals("none")){
             result.points=new double[][]{end};result.length=YawAimingMath.distance(in.lat,in.lon,end[0],end[1]);return result;

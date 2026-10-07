@@ -1,0 +1,338 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>VT 407 — journey 2 moved, then boundary lockout</name>
+    <description>Snapshot 2026-10-08 06:53:24.640 Australia/Brisbane. Initial hold is accepted by design and is not the issue illustrated here. Journey 2 was planned at 06:53:23.166. The reported drone position crossed the original central boundary; remaining leg and recovery were rejected despite saved destination remaining sea-side. No route is invented.</description>
+    <Style id="boundary">
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>4</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff0000ff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="wave">
+      <LineStyle>
+        <color>ffffff00</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffffff00</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="start">
+      <LineStyle>
+        <color>ff00ffff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ffff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="stop">
+      <LineStyle>
+        <color>ffff00ff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffff00ff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="target">
+      <LineStyle>
+        <color>ffff6600</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffff6600</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="s0">
+      <LineStyle>
+        <color>ff00aaff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00aaff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="s1">
+      <LineStyle>
+        <color>ff00ff00</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ff00</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="trace">
+      <LineStyle>
+        <color>ffffffff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffffffff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="execution">
+      <LineStyle>
+        <color>ff00aaff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00aaff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="planning">
+      <LineStyle>
+        <color>ff00ffff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ffff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="sea">
+      <LineStyle>
+        <color>ff00aa00</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00aa00</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Placemark>
+      <name>RED — original central boundary</name>
+      <description>Unmoved boundary, parallel to the saved Wave line. Positive distance is the permitted sea side. Satellite imagery does not define the side.</description>
+      <styleUrl>#boundary</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.390727491245,-28.080188069116,0 153.391985241601,-28.082246208461,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Original central / boundary anchor</name>
+      <description>Captured at 06:52:08; not the start of journey 2.</description>
+      <styleUrl>#boundary</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391356366423,-28.081217138789,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>CYAN — Wave line / shoreline reference, ovrob2</name>
+      <description>Actual selected A/B segment; sea side leftOfAToB. Not a physical beach outline.</description>
+      <styleUrl>#wave</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391000000000,-28.080930000000,0 153.391220000000,-28.081290000000,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Wave line A</name>
+      <description>Saved A</description>
+      <styleUrl>#wave</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391000000000,-28.080930000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Wave line B</name>
+      <description>Saved B</description>
+      <styleUrl>#wave</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391220000000,-28.081290000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>D0 — journey starts, +0.177 m sea-side</name>
+      <description>Reported aircraft at 06:53:23.166. Route passed planning. Direct surfer distance 50.386 m. A new direct positioning journey started here.</description>
+      <styleUrl>#start</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391029061047,-28.080678193130,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>D1 — STOPPED, 0.284 m beachward</name>
+      <description>Reported aircraft at 06:53:24.640. VT commands zero forward/right. Failed rule: route_central_boundary. Recovery result: start_beachward_of_boundary. GPS data alone cannot separate physical drift from positioning noise.</description>
+      <styleUrl>#stop</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391036678255,-28.080699384415,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>P3 — saved destination, +0.106 m sea-side</name>
+      <description>Same frozen destination planned at 06:53:23.166: 30 m from S0 at −45°. Destination is permitted by the actual boundary; the reported D1 starting position is what blocks the remaining leg.</description>
+      <styleUrl>#target</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391147054721,-28.080872616696,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>S0 — captured surfer for this journey</name>
+      <description>Frozen routing reference. Required execution clearance 19 m, new planning clearance 21 m. D1 distance from S0 is 48.396 m.</description>
+      <styleUrl>#s0</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391440000000,-28.080950000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>S1 — current surfer, 50.495 m from D1</name>
+      <description>Live surfer at 06:53:24.640. Retreat threshold 19 m, so retreat is not triggered. S1 does not replace S0/P3 of this active journey.</description>
+      <styleUrl>#s1</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391450000000,-28.080970000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>BLUE — original permitted planned leg D0 to P3</name>
+      <description>Initially accepted straight movement leg. The full leg was not completed.</description>
+      <styleUrl>#target</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391029061047,-28.080678193130,0 153.391147054721,-28.080872616696,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>WHITE — reported drone track before stop</name>
+      <description>Actual logged aircraft positions from route planning to first boundary stop; not a simulated trajectory.</description>
+      <styleUrl>#trace</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391029061047,-28.080678193130,0 153.391029061047,-28.080678193130,0 153.391029061047,-28.080678193130,0 153.391029061047,-28.080678193130,0 153.391029093400,-28.080678420358,0 153.391029093400,-28.080678420358,0 153.391029093400,-28.080678420358,0 153.391029093400,-28.080678420358,0 153.391029093400,-28.080678420358,0 153.391030024508,-28.080682839412,0 153.391030024508,-28.080682839412,0 153.391030024508,-28.080682839412,0 153.391030024508,-28.080682839412,0 153.391030024508,-28.080682839412,0 153.391036678255,-28.080699384415,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>MAGENTA — remaining D1 to P3, BLOCKED</name>
+      <description>Explanatory remaining leg; not flown after the stop. It points toward a permitted destination, but current implementation rejects a beachward start before permitting recovery.</description>
+      <styleUrl>#stop</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391036678255,-28.080699384415,0 153.391147054721,-28.080872616696,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>GREEN — current surfer separation 50.495 m</name>
+      <description>Measurement only, not a route. Shows current surfer is outside the 19 m retreat trigger.</description>
+      <styleUrl>#s1</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391036678255,-28.080699384415,0 153.391450000000,-28.080970000000,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>S0 routing execution clearance — 19 m</name>
+      <description>Circle around captured S0, not current S1. This is surfer clearance, not a reserve from the central boundary.</description>
+      <styleUrl>#execution</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391440000000,-28.080779128895,0 153.391450135862,-28.080779363068,0 153.391460243942,-28.080780064945,0 153.391470296534,-28.080781232602,0 153.391480266086,-28.080782862838,0 153.391490125272,-28.080784951187,0 153.391499847067,-28.080787491922,0 153.391509404826,-28.080790478081,0 153.391518772351,-28.080793901478,0 153.391527923967,-28.080797752731,0 153.391536834589,-28.080802021282,0 153.391545479794,-28.080806695433,0 153.391553835887,-28.080811762372,0 153.391561879963,-28.080817208211,0 153.391569589975,-28.080823018022,0 153.391576944789,-28.080829175883,0 153.391583924247,-28.080835664914,0 153.391590509220,-28.080842467329,0 153.391596681656,-28.080849564484,0 153.391602424640,-28.080856936926,0 153.391607722428,-28.080864564447,0 153.391612560501,-28.080872426142,0 153.391616925598,-28.080880500460,0 153.391620805754,-28.080888765272,0 153.391624190334,-28.080897197925,0 153.391627070061,-28.080905775304,0 153.391629437042,-28.080914473900,0 153.391631284789,-28.080923269870,0 153.391632608238,-28.080932139106,0 153.391633403761,-28.080941057297,0 153.391633669178,-28.080950000000,0 153.391633403761,-28.080958942703,0 153.391632608238,-28.080967860894,0 153.391631284789,-28.080976730130,0 153.391629437042,-28.080985526100,0 153.391627070061,-28.080994224696,0 153.391624190334,-28.081002802075,0 153.391620805754,-28.081011234728,0 153.391616925598,-28.081019499540,0 153.391612560501,-28.081027573858,0 153.391607722428,-28.081035435553,0 153.391602424640,-28.081043063074,0 153.391596681656,-28.081050435516,0 153.391590509220,-28.081057532671,0 153.391583924247,-28.081064335086,0 153.391576944789,-28.081070824117,0 153.391569589975,-28.081076981978,0 153.391561879963,-28.081082791789,0 153.391553835887,-28.081088237628,0 153.391545479794,-28.081093304567,0 153.391536834589,-28.081097978718,0 153.391527923967,-28.081102247269,0 153.391518772351,-28.081106098522,0 153.391509404826,-28.081109521919,0 153.391499847067,-28.081112508078,0 153.391490125272,-28.081115048813,0 153.391480266086,-28.081117137162,0 153.391470296534,-28.081118767398,0 153.391460243942,-28.081119935055,0 153.391450135862,-28.081120636932,0 153.391440000000,-28.081120871105,0 153.391429864138,-28.081120636932,0 153.391419756058,-28.081119935055,0 153.391409703466,-28.081118767398,0 153.391399733914,-28.081117137162,0 153.391389874728,-28.081115048813,0 153.391380152933,-28.081112508078,0 153.391370595174,-28.081109521919,0 153.391361227649,-28.081106098522,0 153.391352076033,-28.081102247269,0 153.391343165411,-28.081097978718,0 153.391334520206,-28.081093304567,0 153.391326164113,-28.081088237628,0 153.391318120037,-28.081082791789,0 153.391310410025,-28.081076981978,0 153.391303055211,-28.081070824117,0 153.391296075753,-28.081064335086,0 153.391289490780,-28.081057532671,0 153.391283318344,-28.081050435516,0 153.391277575360,-28.081043063074,0 153.391272277572,-28.081035435553,0 153.391267439499,-28.081027573858,0 153.391263074402,-28.081019499540,0 153.391259194246,-28.081011234728,0 153.391255809666,-28.081002802075,0 153.391252929939,-28.080994224696,0 153.391250562958,-28.080985526100,0 153.391248715211,-28.080976730130,0 153.391247391762,-28.080967860894,0 153.391246596239,-28.080958942703,0 153.391246330822,-28.080950000000,0 153.391246596239,-28.080941057297,0 153.391247391762,-28.080932139106,0 153.391248715211,-28.080923269870,0 153.391250562958,-28.080914473900,0 153.391252929939,-28.080905775304,0 153.391255809666,-28.080897197925,0 153.391259194246,-28.080888765272,0 153.391263074402,-28.080880500460,0 153.391267439499,-28.080872426142,0 153.391272277572,-28.080864564447,0 153.391277575360,-28.080856936926,0 153.391283318344,-28.080849564484,0 153.391289490780,-28.080842467329,0 153.391296075753,-28.080835664914,0 153.391303055211,-28.080829175883,0 153.391310410025,-28.080823018022,0 153.391318120037,-28.080817208211,0 153.391326164113,-28.080811762372,0 153.391334520206,-28.080806695433,0 153.391343165411,-28.080802021282,0 153.391352076033,-28.080797752731,0 153.391361227649,-28.080793901478,0 153.391370595174,-28.080790478081,0 153.391380152933,-28.080787491922,0 153.391389874728,-28.080784951187,0 153.391399733914,-28.080782862838,0 153.391409703466,-28.080781232602,0 153.391419756058,-28.080780064945,0 153.391429864138,-28.080779363068,0 153.391440000000,-28.080779128895,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>S0 routing planning clearance — 21 m</name>
+      <description>Circle around captured S0, not current S1. This is surfer clearance, not a reserve from the central boundary.</description>
+      <styleUrl>#planning</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391440000000,-28.080761142463,0 153.391451202794,-28.080761401285,0 153.391462374883,-28.080762177044,0 153.391473485643,-28.080763467612,0 153.391484504622,-28.080765269453,0 153.391495401616,-28.080767577627,0 153.391506146759,-28.080770385809,0 153.391516710597,-28.080773686300,0 153.391527064178,-28.080777470055,0 153.391537179121,-28.080781726702,0 153.391547027704,-28.080786444575,0 153.391556582930,-28.080791610742,0 153.391565818612,-28.080797211043,0 153.391574709433,-28.080803230128,0 153.391583231024,-28.080809651498,0 153.391591360030,-28.080816457555,0 153.391599074168,-28.080823629642,0 153.391606352295,-28.080831148101,0 153.391613174462,-28.080838992325,0 153.391619521970,-28.080847140813,0 153.391625377421,-28.080855571231,0 153.391630724764,-28.080864260472,0 153.391635549345,-28.080873184719,0 153.391639837938,-28.080882319512,0 153.391643578790,-28.080891639811,0 153.391646761646,-28.080901120073,0 153.391649377783,-28.080910734310,0 153.391651420030,-28.080920456172,0 153.391652882789,-28.080930259012,0 153.391653762052,-28.080940115960,0 153.391654055407,-28.080950000000,0 153.391653762052,-28.080959884040,0 153.391652882789,-28.080969740988,0 153.391651420030,-28.080979543828,0 153.391649377783,-28.080989265690,0 153.391646761646,-28.080998879927,0 153.391643578790,-28.081008360189,0 153.391639837938,-28.081017680488,0 153.391635549345,-28.081026815281,0 153.391630724764,-28.081035739528,0 153.391625377421,-28.081044428769,0 153.391619521970,-28.081052859187,0 153.391613174462,-28.081061007675,0 153.391606352295,-28.081068851899,0 153.391599074168,-28.081076370358,0 153.391591360030,-28.081083542445,0 153.391583231024,-28.081090348502,0 153.391574709433,-28.081096769872,0 153.391565818612,-28.081102788957,0 153.391556582930,-28.081108389258,0 153.391547027704,-28.081113555425,0 153.391537179121,-28.081118273298,0 153.391527064178,-28.081122529945,0 153.391516710597,-28.081126313700,0 153.391506146759,-28.081129614191,0 153.391495401616,-28.081132422373,0 153.391484504622,-28.081134730547,0 153.391473485643,-28.081136532388,0 153.391462374883,-28.081137822956,0 153.391451202794,-28.081138598715,0 153.391440000000,-28.081138857537,0 153.391428797206,-28.081138598715,0 153.391417625117,-28.081137822956,0 153.391406514357,-28.081136532388,0 153.391395495378,-28.081134730547,0 153.391384598384,-28.081132422373,0 153.391373853241,-28.081129614191,0 153.391363289403,-28.081126313700,0 153.391352935822,-28.081122529945,0 153.391342820879,-28.081118273298,0 153.391332972296,-28.081113555425,0 153.391323417070,-28.081108389258,0 153.391314181388,-28.081102788957,0 153.391305290567,-28.081096769872,0 153.391296768976,-28.081090348502,0 153.391288639970,-28.081083542445,0 153.391280925832,-28.081076370358,0 153.391273647705,-28.081068851899,0 153.391266825538,-28.081061007675,0 153.391260478030,-28.081052859187,0 153.391254622579,-28.081044428769,0 153.391249275236,-28.081035739528,0 153.391244450655,-28.081026815281,0 153.391240162062,-28.081017680488,0 153.391236421210,-28.081008360189,0 153.391233238354,-28.080998879927,0 153.391230622217,-28.080989265690,0 153.391228579970,-28.080979543828,0 153.391227117211,-28.080969740988,0 153.391226237948,-28.080959884040,0 153.391225944593,-28.080950000000,0 153.391226237948,-28.080940115960,0 153.391227117211,-28.080930259012,0 153.391228579970,-28.080920456172,0 153.391230622217,-28.080910734310,0 153.391233238354,-28.080901120073,0 153.391236421210,-28.080891639811,0 153.391240162062,-28.080882319512,0 153.391244450655,-28.080873184719,0 153.391249275236,-28.080864260472,0 153.391254622579,-28.080855571231,0 153.391260478030,-28.080847140813,0 153.391266825538,-28.080838992325,0 153.391273647705,-28.080831148101,0 153.391280925832,-28.080823629642,0 153.391288639970,-28.080816457555,0 153.391296768976,-28.080809651498,0 153.391305290567,-28.080803230128,0 153.391314181388,-28.080797211043,0 153.391323417070,-28.080791610742,0 153.391332972296,-28.080786444575,0 153.391342820879,-28.080781726702,0 153.391352935822,-28.080777470055,0 153.391363289403,-28.080773686300,0 153.391373853241,-28.080770385809,0 153.391384598384,-28.080767577627,0 153.391395495378,-28.080765269453,0 153.391406514357,-28.080763467612,0 153.391417625117,-28.080762177044,0 153.391428797206,-28.080761401285,0 153.391440000000,-28.080761142463,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>D1 boundary overrun — 0.284 m</name>
+      <description>Small perpendicular reported overrun. Drawn at true scale; labels explain it when too small to see.</description>
+      <styleUrl>#stop</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391036678255,-28.080699384415,0 153.391039221879,-28.080698174405,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Direction toward permitted sea side</name>
+      <description>Direction marker, not proposed or executed recovery movement.</description>
+      <styleUrl>#sea</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.390872616286,-28.080425546733,0 153.391096917279,-28.080318845817,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>SEA SIDE — permitted</name>
+      <description>Positive boundary side</description>
+      <styleUrl>#sea</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391096917279,-28.080318845817,0</coordinates>
+      </Point>
+    </Placemark>
+    <LookAt>
+      <latitude>-28.080955507734505</latitude>
+      <longitude>153.39127768155936</longitude>
+      <range>340</range>
+      <tilt>0</tilt>
+      <heading>0</heading>
+    </LookAt>
+  </Document>
+</kml>

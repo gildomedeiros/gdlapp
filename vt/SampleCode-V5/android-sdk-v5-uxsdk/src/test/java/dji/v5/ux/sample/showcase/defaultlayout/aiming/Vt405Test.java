@@ -67,7 +67,7 @@ public final class Vt405Test {
         for(double[] w:m.route.points)m.update_state_machine(ComeToMeTest.in(1100,w[0]/DEG,w[1]/DEG,40,0,0),1100,.1);
         check(outcomes.size()==1&&outcomes.get(0).outcome.equals("arrived"),"one arrival outcome");
         m=Vt404Test.planner(36,-45,45);m.update_state_machine(ComeToMeTest.in(1100,14,0,40,0,0),1100,.1);
-        check(m.routeStatus.equals("blocked")&&m.forward==0&&m.right==0,"no permitted boundary recovery holds");
+        check(m.routeStatus.equals("traveling")&&Math.hypot(m.forward,m.right)>0,"VT408 permitted sea-side boundary recovery moves");
         long count=m.recoveryAttempts;m.update_state_machine(ComeToMeTest.in(1200,14,0,40,0,0),1200,.1);
         check(m.recoveryAttempts==count,"failed replan throttled");
     }

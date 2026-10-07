@@ -42,7 +42,7 @@ public final class WaveLineSetupUi {
         button(box,"Open Google Maps",this::openMaps);
         button(box,"Refresh saved wave lines",this::show);
         ScrollView scroll=new ScrollView(activity);scroll.addView(box);
-        current=new AlertDialog.Builder(activity).setTitle("VT 4.0.7 · Wave lines").setView(scroll).setNegativeButton("Close",null).create();current.show();
+        current=new AlertDialog.Builder(activity).setTitle("VT 4.0.8 · Wave lines").setView(scroll).setNegativeButton("Close",null).create();current.show();
     }
     private void openMaps(){
         AimingSession.Fix f=controller.waveLineMapFix();

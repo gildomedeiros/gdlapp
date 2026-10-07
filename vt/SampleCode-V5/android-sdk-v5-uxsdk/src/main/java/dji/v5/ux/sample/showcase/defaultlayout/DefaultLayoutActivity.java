@@ -447,7 +447,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         configurationProblemDialog.show();
     }
     private void showMovementSettings() {
-        new android.app.AlertDialog.Builder(this).setTitle("VT 4.0.7 · JSON configuration")
+        new android.app.AlertDialog.Builder(this).setTitle("VT 4.0.8 · JSON configuration")
             .setMessage("Edit tuning in the selected folder:\nvt_settings.json — mode, filming separation, movement, ride, yaw limits\nvt_retreat_settings.json — direct-distance retreat\nvt_rotation_speeds.json — rotation curve\nvt_gimbal_bands.json — gimbal\nvt_wave_lines.json — saved wave line profiles\n\nAll modes require filming separation >= retreat threshold + 5 m when enabled. For mode diagonal, filming is direct horizontal distance; positioningAngleDegrees (-90 left, 0 shoreward, +90 right) and positioningAngleToleranceDegrees set the position. Diagonal execution uses the retreat threshold; routePlanningAllowanceMetres (default 2, range 0–50) adds clearance for planning every leg, not the execution stop limit; legacy extraPathClearanceMetres is ignored. Blocked legs replan around the saved surfer position and preserve the destination and timeout. maxExcursionMetres defaults to 300. Automatic no-ride return stops at a fixed target returnBoundaryStandOffMetres (default 10 m, range 1–100) sea-side of the original boundary; retreat can interrupt return. Use fresh Wave line configuration files. Angle routes respect the original-central boundary. Files are validated and frozen on Start. Capture/select a wave line using Wave lines.")
             .setPositiveButton(android.R.string.ok,null).show();
     }

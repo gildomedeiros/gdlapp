@@ -354,3 +354,8 @@ The regression suite includes separate 27 m planning/25 m execution checks, all-
 - Retreat interrupts return; pending reset resumes after cooldown with its original deadline.
 - Fresh Wave line UI/configuration/source/log naming (`waveLineId`, `vt_wave_lines.json`, `waveLines`), without migration.
 - Retain 2 m route planning allowance and existing execution clearance. See `Docs/VT_4.0.7.md`.
+
+
+## VT 4.0.8 — boundary recovery
+
+Diagonal Come-to-me plans from beachward origins and validates every recovery leg, preserving S0/P3, planning/execution clearances and deadline. Arrival and final BODY submission use the same boundary recovery rules. Automatic Return to central may recover directly toward its fixed stand-off target; a beachward start uses the nearest point on the stand-off line. Retreat priority is unchanged. New boundary-flow diagnostics and deterministic logged-geometry/controller/session regressions. See Docs/VT_4.0.8.md. No new JSON settings.

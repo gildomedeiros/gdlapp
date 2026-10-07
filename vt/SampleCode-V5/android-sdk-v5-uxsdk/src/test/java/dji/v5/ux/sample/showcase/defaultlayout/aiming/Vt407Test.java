@@ -39,13 +39,13 @@ public final class Vt407Test {
    check(!m.noRideTimerActive(),"skip consumes no-ride reset");
   }
   ComeToMeController m=start("front",10);trigger(m,-.02,0);
-  check(!m.returning()&&m.reason.equals("return_start_beachward_of_boundary")&&m.noRideTimerActive(),"beachward not valid restart");
-  m.update_state_machine(ComeToMeTest.in(61100,1,0,100,0,0),61100,.1);
-  check(m.reason.equals("return_already_in_restart_zone"),"retry once permitted");
+  check(m.returning(),"VT408 beachward start recovers to fixed stand-off");
+  m.update_state_machine(ComeToMeTest.in(61100,1,0,100,0,m.returnHeading),61100,.1);
+  check(m.returning()&&Math.hypot(m.forward,m.right)>0,"recovery keeps saved stand-off target");
   m=start("front",15);trigger(m,40,20);near(15,m.returnTargetLat/DEG,"configurable15m");near(7.5,m.returnTargetLon/DEG,"15m return intersection");
   m=start("front",10);trigger(m,40,0);m.update_state_machine(ComeToMeTest.in(61100,-1,0,100,0,0),61100,.1);
-  check(m.returning()&&m.reason.equals("return_beachward_of_boundary")&&m.forward==0,"overshoot cannot be counted as restart");
-  check(!m.permits(ComeToMeTest.in(61100,-1,0,100,0,0),61100,-1,0),"beachward submission veto");
+  check(m.returning()&&Math.hypot(m.forward,m.right)>0,"VT408 overshoot recovers rather than falsely completing");
+  check(m.permits(ComeToMeTest.in(61100,-1,0,100,0,0),61100,m.forward,m.right),"sea-side recovery submission permitted");
  }
  static void priority(){
   ComeToMeController m=start("front",10);trigger(m,40,0);

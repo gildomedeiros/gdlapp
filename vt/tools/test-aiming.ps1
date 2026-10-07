@@ -235,3 +235,14 @@ $v407=@(Get-Content (Join-Path $output 'vt407-log.jsonl') | ForEach-Object { $_ 
 $row407=@($v407 | Where-Object event -eq 'movement_cycle')[0]
 if($row407.returnBoundaryStandOffMetres -ne 10 -or $row407.returnPending -ne $true -or $row407.translationPurpose -ne 'retreat' -or $row407.waveLineId -ne 'wave' -or $null -eq $row407.returnTargetLatitude -or $null -eq $row407.returnBoundaryDistanceM -or $row407.submittedForwardMps -ne -3){throw 'VT407 independent return log validation failed'}
 Write-Output 'PASS: VT407 independent JSON parser verifies fixed return target, stand-off, pending reset and retreat submission'
+
+# VT 4.0.8: beachward route and direct soft-return recovery.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt408Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT408 compile failed' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt408Test' $output
+if ($LASTEXITCODE -ne 0) { throw 'VT408 tests failed' }
+
+$v408=@(Get-Content (Join-Path $output 'vt408-log.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$row408=@($v408 | Where-Object event -eq 'movement_cycle')[0]
+if($row408.boundaryRecoveryFlow -ne 'return_to_central' -or [Math]::Abs($row408.currentBoundaryDistanceM+1) -gt .02 -or $row408.returnBoundaryStandOffMetres -ne 10 -or $row408.submittedForwardMps -eq 0 -or $row408.returnTargetLatitude -le 0){throw 'VT408 boundary recovery log validation failed'}
+Write-Output 'PASS: independent JSON parser verifies VT408 boundary recovery flow, distance, fixed target and submitted command'

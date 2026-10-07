@@ -197,8 +197,7 @@ public final class ComeToMeController {
         if(phase==Phase.RETURNING || phase==Phase.STOPPED) return;
         if(softReturn()) {
             returnBoundaryDistance=boundaryAt(in);
-            if(returnBoundaryDistance< -1e-6) {reason="return_start_beachward_of_boundary";event=reason;return;}
-            if(returnBoundaryDistance<=settings.returnBoundaryStandOffMetres) {
+            if(returnBoundaryDistance>=-1e-6 && returnBoundaryDistance<=settings.returnBoundaryStandOffMetres) {
                 finishJourney("cancelled",cause);clearApproach();clearReturn();
                 returnBoundaryDistance=boundaryAt(in);returnReason=cause;finishReturn("return_already_in_restart_zone");return;
             }
@@ -215,9 +214,17 @@ public final class ComeToMeController {
         returnProgress=0;
         if(softReturn()) {
             returnBoundaryDistance=boundaryAt(in);
-            double fraction=1-settings.returnBoundaryStandOffMetres/returnBoundaryDistance;
-            double[] toCentral=positioning.shore.offset(initialCentralLat,initialCentralLon,in.lat,in.lon);
-            double[] target=positioning.shore.point(in.lat,in.lon,toCentral[0]*fraction,toCentral[1]*fraction);
+            double[] target;
+            if(returnBoundaryDistance<0) {
+                // Recovery starts outside the permitted half-plane: nearest point on stand-off line.
+                double recovery=settings.returnBoundaryStandOffMetres-returnBoundaryDistance;
+                target=positioning.shore.point(in.lat,in.lon,
+                    positioning.shore.seaNorth*recovery,positioning.shore.seaEast*recovery);
+            } else {
+                double fraction=1-settings.returnBoundaryStandOffMetres/returnBoundaryDistance;
+                double[] toCentral=positioning.shore.offset(initialCentralLat,initialCentralLon,in.lat,in.lon);
+                target=positioning.shore.point(in.lat,in.lon,toCentral[0]*fraction,toCentral[1]*fraction);
+            }
             returnTargetLat=target[0];returnTargetLon=target[1];
             returnDistance=returnTargetRemaining=YawAimingMath.distance(in.lat,in.lon,returnTargetLat,returnTargetLon);
             returnBearing=YawAimingMath.bearingToTarget(in.lat,in.lon,returnTargetLat,returnTargetLon);
@@ -309,11 +316,11 @@ public final class ComeToMeController {
                 returnBoundaryDistance=boundaryAt(in);
                 returnTargetRemaining=YawAimingMath.distance(in.lat,in.lon,returnTargetLat,returnTargetLon);
                 returnProgress=returnDistance-returnTargetRemaining;
-                if(returnBoundaryDistance< -1e-6) {reason="return_beachward_of_boundary";event=reason;return;}
+                if(!returnLegAllowed(in)) {reason="return_boundary_or_excursion_blocked";event=reason;return;}
             } else returnProgress=projectedReturnProgress(in);
             headingError=YawAimingMath.shortestHeadingError(returnHeading,in.heading);
             // VT 3.2: Release navigation ownership before the sub-metre crawl.
-            if(returnDistance-returnProgress<=ComeToMeSettings.COMPLETION_TOLERANCE) {
+            if(returnDistance-returnProgress<=ComeToMeSettings.COMPLETION_TOLERANCE && (!softReturn()||boundaryAt(in)>=-1e-6)) {
                 finishReturn(returnProgress>=returnDistance ? "return_travel_completed" : "return_arrival_tolerance"); return;
             }
             // Keep the transition neutral. Align once, then hold this saved heading during travel.
@@ -325,6 +332,7 @@ public final class ComeToMeController {
             reason="moving_backward";
             if(softReturn()) {
                 double[] v=positioning.velocity(in,returnTargetLat,returnTargetLon,arrivalSpeed(returnTargetRemaining));
+                if(!boundaryMotionAllowed(in,v[0],v[1])) {reason="return_central_boundary";return;}
                 forward=v[0];right=v[1];reason="moving_to_restart_target";
             } else forward=-arrivalSpeed(returnDistance-returnProgress);
             return;
@@ -427,7 +435,7 @@ public final class ComeToMeController {
                 if(!hasFilmed)enterFilmingHold(now);else {phase=Phase.HOLDING;reason="within_distance_and_angle_tolerance";}return;}
             double radius=close?settings.filmingDistance:distance;
             double[] target=positioning.destination(in,radius);
-            AngleRoutePlanner.Plan p=AngleRoutePlanner.plan(positioning,in,target,initialCentralLat,initialCentralLon,centralLat,centralLon);
+            AngleRoutePlanner.Plan p=AngleRoutePlanner.recover(positioning,in,target,in.target.lat,in.target.lon,in.target.time,initialCentralLat,initialCentralLon,centralLat,centralLon);
             clockwiseFailure=p.clockwiseFailure;anticlockwiseFailure=p.anticlockwiseFailure;
             clockwiseFailureValues=p.clockwiseFailureValues;anticlockwiseFailureValues=p.anticlockwiseFailureValues;
             failedSegment=p.failedSegment;failedClearance=p.failedClearance;failedBoundary=p.failedBoundary;failedExcursion=p.failedExcursion;
@@ -441,7 +449,7 @@ public final class ComeToMeController {
             openJourney();routeStatus="planned";approachAligned=true;phase=Phase.APPROACHING;attemptSince=now;event="fixed_route_planned";reason=journeyKind;return;
         }
         double remaining=YawAimingMath.distance(in.lat,in.lon,waypointLat(),waypointLon());
-        if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE){
+        if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE && boundaryAt(in)>=-1e-6 && angleLegAllowed(in)){
             if(routeIndex==route.points.length-1){routeStatus="arrived";enterFilmingHold(now);reason="fixed_destination_arrived";return;}
             routeIndex++;routeStatus="waypoint_transition";reason="waypoint_transition";return;
         }
@@ -565,16 +573,30 @@ public final class ComeToMeController {
         return returning() && returnAligned && returnDistance-projectedReturnProgress(in)>ComeToMeSettings.COMPLETION_TOLERANCE;
     }
 
+    private boolean boundaryMotionAllowed(AimingSession.Inputs in,double f,double r) {
+        double distance=boundaryAt(in);
+        if(distance>1e-6)return true;
+        double h=Math.toRadians(in.heading);
+        double normal=f*(Math.cos(h)*positioning.shore.seaNorth+Math.sin(h)*positioning.shore.seaEast)
+            +r*(-Math.sin(h)*positioning.shore.seaNorth+Math.cos(h)*positioning.shore.seaEast);
+        return Double.isFinite(normal)&&(distance< -1e-6?normal>0:normal>=-1e-6);
+    }
+    private boolean returnLegAllowed(AimingSession.Inputs in) {
+        return AngleRoutePlanner.boundaryLegAllowed(boundaryAt(in),
+            positioning.boundaryDistance(returnTargetLat,returnTargetLon,initialCentralLat,initialCentralLon))
+            && YawAimingMath.distance(in.lat,in.lon,centralLat,centralLon)<settings.excursionStop()
+            && YawAimingMath.distance(returnTargetLat,returnTargetLon,centralLat,centralLon)<settings.excursionStop();
+    }
     public boolean permits(AimingSession.Inputs in,long now,double requestedForward,double requestedRight) {
         if(requestedForward==0&&requestedRight==0)return true;
         if(returning()&&softReturn()) {
             double speed=Math.hypot(requestedForward,requestedRight);
             if(!Double.isFinite(speed)||speed>settings.maxMovementSpeed+.000001||!runEnabled||captureRequired||!returnAligned||
-                    in.validate(now,true)!=null||expireAttempt(now)||in.target.time!=lastFix||boundaryAt(in)< -1e-6)return false;
+                    in.validate(now,true)!=null||expireAttempt(now)||in.target.time!=lastFix||!returnLegAllowed(in))return false;
             double remaining=YawAimingMath.distance(in.lat,in.lon,returnTargetLat,returnTargetLon);
-            if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE)return false;
+            if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE && boundaryAt(in)>=-1e-6)return false;
             double[] v=positioning.velocity(in,returnTargetLat,returnTargetLon,arrivalSpeed(remaining));
-            return Math.abs(requestedForward-v[0])<.01&&Math.abs(requestedRight-v[1])<.01;
+            return boundaryMotionAllowed(in,requestedForward,requestedRight)&&Math.abs(requestedForward-v[0])<.01&&Math.abs(requestedRight-v[1])<.01;
         }
         if(!presetApproach()||returning())return requestedRight==0&&permits(in,now,requestedForward);
         double speed=Math.hypot(requestedForward,requestedRight);
@@ -589,10 +611,10 @@ public final class ComeToMeController {
                 +requestedRight*(-Math.sin(h)*positioning.shore.seaNorth+Math.cos(h)*positioning.shore.seaEast);
             if(normal< -1e-6)return false;
         }
-        if(central>=settings.excursionStop()||remaining<=ComeToMeSettings.COMPLETION_TOLERANCE)return false;
+        if(central>=settings.excursionStop()||(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE && (!angleApproach()||boundaryAt(in)>=-1e-6)))return false;
         double[] v=positioning.velocity(in,waypointLat(),waypointLon(),arrivalSpeed(Math.min(remaining,settings.maxExcursionMetres-central)));
         // A changed heading/position must not rotate an already calculated body command toward another point.
-        return Math.abs(v[0]-requestedForward)<=.01&&Math.abs(v[1]-requestedRight)<=.01;
+        return (!angleApproach()||boundaryMotionAllowed(in,requestedForward,requestedRight))&&Math.abs(v[0]-requestedForward)<=.01&&Math.abs(v[1]-requestedRight)<=.01;
     }
     public ComeToMeSettings settings() { return settings; }
     public boolean returning() { return phase==Phase.RETURNING; }

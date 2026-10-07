@@ -1,0 +1,229 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>VT 4.0.7 — initial hold 06:52:08</name>
+    <description>Measured snapshot at 2026-10-08 06:52:08.911 Australia/Brisbane. Boundary through original central, parallel to selected Wave line. Requested destination is blocked; connection lines are explanatory, not flown routes.</description>
+    <Style id="boundary">
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>4</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff0000ff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="wave">
+      <LineStyle>
+        <color>ffffff00</color>
+        <width>4</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffffff00</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="drone">
+      <LineStyle>
+        <color>ff00ffff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ffff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="surfer">
+      <LineStyle>
+        <color>ff00ff00</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ff00</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="target">
+      <LineStyle>
+        <color>ffff00ff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffff00ff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="measure">
+      <LineStyle>
+        <color>ffffffff</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ffffffff</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="sea">
+      <LineStyle>
+        <color>ff00aa00</color>
+        <width>2</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00aa00</color>
+        <scale>1.1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Placemark>
+      <name>Central boundary — red</name>
+      <description>Original central boundary. Permitted side is indicated by the green sea-side arrow. It is not the physical shoreline.</description>
+      <styleUrl>#boundary</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.390727491245,-28.080188069116,0 153.391985241601,-28.082246208461,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Wave line / shoreline reference — ovrob2</name>
+      <description>Actual configured A/B segment, not a surveyed beach edge. Selected seaSide: leftOfAToB.</description>
+      <styleUrl>#wave</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391000000000,-28.080930000000,0 153.391220000000,-28.081290000000,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Wave line A</name>
+      <description>Saved point A</description>
+      <styleUrl>#wave</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391000000000,-28.080930000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Wave line B</name>
+      <description>Saved point B</description>
+      <styleUrl>#wave</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391220000000,-28.081290000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Drone / original central — boundary 0 m</name>
+      <description>Actual reported drone position at initial hold. Central captured here; current surfer distance 61.00 m.</description>
+      <styleUrl>#drone</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391356366423,-28.081217138789,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Surfer — 17.43 m sea-side; 61.00 m from drone</name>
+      <description>Actual received surfer position at this snapshot. Along-boundary displacement from central is about 58.46 m.</description>
+      <styleUrl>#surfer</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391230000000,-28.080680000000,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Requested destination — BLOCKED, 3.78 m beachward</name>
+      <description>Calculated −45° / 30 m filming destination. Surfer 17.43 m sea-side minus 21.21 m shoreward component gives −3.78 m. This is a requested point, not a reached position.</description>
+      <styleUrl>#target</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.390937055458,-28.080602616696,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Drone to surfer — 61.00 m measurement</name>
+      <description>Distance reference only; not a planned or flown route.</description>
+      <styleUrl>#measure</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391356366423,-28.081217138789,0 153.391230000000,-28.080680000000,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Surfer to requested destination — 30 m at −45°</name>
+      <description>Configured filming offset; not a movement route.</description>
+      <styleUrl>#target</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391230000000,-28.080680000000,0 153.390937055458,-28.080602616696,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Surfer to boundary — 17.43 m</name>
+      <description>Perpendicular distance to original central boundary.</description>
+      <styleUrl>#surfer</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391230000000,-28.080680000000,0 153.391073586590,-28.080754406334,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Blocked destination to boundary — 3.78 m</name>
+      <description>Perpendicular beachward distance.</description>
+      <styleUrl>#target</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.390937055458,-28.080602616696,0 153.390970967043,-28.080586484841,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Permitted sea-side direction</name>
+      <description>Direction comes from saved Wave line orientation, independent of satellite imagery or actual water.</description>
+      <styleUrl>#sea</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.390920991299,-28.080504705939,0 153.391190152689,-28.080376664839,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>SEA SIDE — permitted</name>
+      <description>Positive boundary side</description>
+      <styleUrl>#sea</styleUrl>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391190152689,-28.080376664839,0</coordinates>
+      </Point>
+    </Placemark>
+    <LookAt>
+      <longitude>153.39135636642266</longitude>
+      <latitude>-28.081217138788812</latitude>
+      <range>350</range>
+      <tilt>0</tilt>
+      <heading>0</heading>
+    </LookAt>
+  </Document>
+</kml>

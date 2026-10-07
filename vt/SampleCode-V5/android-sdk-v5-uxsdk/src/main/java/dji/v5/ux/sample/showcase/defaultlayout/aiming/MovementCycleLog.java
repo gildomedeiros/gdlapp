@@ -75,6 +75,9 @@ public final class MovementCycleLog {
                 "positioningAngleToleranceDegrees",m.angleApproach()?m.positioning.angleTolerance:null,
                 "positioningAngleErrorDegrees",m.angleErrorDegrees,"distanceMeaning",m.angleApproach()?"direct_horizontal":"projected",
                 "extraPathClearanceMetres",m.angleApproach()?0:null,
+                "boundaryRecoveryFlow",m.positioning!=null&&session.cycleInputs!=null&&m.positioning.boundaryDistance(session.cycleInputs.lat,session.cycleInputs.lon,m.initialCentralLat,m.initialCentralLon)<-1e-6?
+                    (m.returning()?"return_to_central":m.angleApproach()&&m.approaching()?"diagonal_come_to_me":"none"):"none",
+                "currentBoundaryDistanceM",m.positioning!=null&&session.cycleInputs!=null?m.positioning.boundaryDistance(session.cycleInputs.lat,session.cycleInputs.lon,m.initialCentralLat,m.initialCentralLon):null,
                 "routeRecoveryAttempts",m.recoveryAttempts,"routeRecoveryStatus",m.recoveryStatus,
                 "lastRouteRecoveryResult",m.lastRecoveryResult,
                 "routePlanningAllowanceMetres",m.angleApproach()?m.positioning.planningAllowance:null,
