@@ -19,7 +19,7 @@ public final class AimingSession {
             if (forward != 0) throw new IllegalStateException("Translation port not implemented");
             sendYaw(yaw);
         }
-        default ShorelinePositioning positioningSettings() {return null;}
+        default WaveLinePositioning positioningSettings() {return null;}
         default void sendMotion(double yaw,double forward,double right) {
             if(right!=0)throw new IllegalStateException("Lateral translation port not implemented");sendMotion(yaw,forward);
         }
@@ -152,14 +152,14 @@ public final class AimingSession {
     public boolean permitsMotion(Inputs raw,long now,double forward) {
         Inputs in=controlInputs(raw,now);
         if(retreat.active) return forward==0 || retreat.permits(movement,in,now,forward);
-        if(forward>0 && retreat.blocksApproach(movement,in,now)) return false;
+        if(forward!=0 && retreat.blocksApproach(movement,in,now)) return false;
         return movement.permits(in,now,forward);
     }
 
     public boolean permitsMotion(Inputs raw,long now,double forward,double right) {
         Inputs in=controlInputs(raw,now);
         if(retreat.active)return right==0&&(forward==0||retreat.permits(movement,in,now,forward));
-        if((forward!=0||right!=0)&&movement.approaching()&&retreat.blocksApproach(movement,in,now))return false;
+        if((forward!=0||right!=0)&&(movement.approaching()||movement.returning())&&retreat.blocksApproach(movement,in,now))return false;
         return movement.permits(in,now,forward,right);
     }
     // CAM3 v2.3: Callback threads must latch loss during a previously activated pause, including UNKNOWN owner.

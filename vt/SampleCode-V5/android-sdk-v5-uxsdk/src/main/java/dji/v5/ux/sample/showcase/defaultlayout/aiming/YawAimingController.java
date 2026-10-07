@@ -58,8 +58,8 @@ public final class YawAimingController implements AimingSession.Port {
     private long lastRetreatTranslationAt=-1, lastRetreatSession=-1;
     private double lastRetreatSpeed;
     private double lastSubmittedForward,lastSubmittedRight;
-    private volatile ShorelinePositioning positioningConfig;
-    @Override public ShorelinePositioning positioningSettings(){return positioningConfig;}
+    private volatile WaveLinePositioning positioningConfig;
+    @Override public WaveLinePositioning positioningSettings(){return positioningConfig;}
     private volatile ComeToMeSettings movementConfig=ComeToMeSettings.defaults();
     // VT 3.5: Separate persisted retreat controls; existing movement preferences are untouched.
     private volatile RetreatSettings retreatConfig=RetreatSettings.defaults();
@@ -73,7 +73,7 @@ public final class YawAimingController implements AimingSession.Port {
     private final FullLogOpenPolicy fullLogOpening=new FullLogOpenPolicy();
     private volatile boolean fullLogWanted=true;
     public boolean fullLogRequested(){return fullLogWanted;}
-    public AimingSession.Fix shorelineMapFix(){return getTargetFix();}
+    public AimingSession.Fix waveLineMapFix(){return getTargetFix();}
     private volatile String heightScreen="Height: —";
     public String heightScreen() { return heightScreen; }
     public String movementScreen() { return movementScreen; }
@@ -81,22 +81,22 @@ public final class YawAimingController implements AimingSession.Port {
     public String aimingScreen() { return aimingScreen; }
     public ComeToMeSettings movementSettings() { return movementConfig; }
 
-    public void shorelineTask(java.util.concurrent.Callable<String> task,java.util.function.Consumer<String> success,java.util.function.Consumer<String> failure) {
+    public void waveLineTask(java.util.concurrent.Callable<String> task,java.util.function.Consumer<String> success,java.util.function.Consumer<String> failure) {
         executor.execute(()->{
-            try {if(!canSelectGpsSource())throw new IllegalStateException("Stop automatic control before shoreline setup");
+            try {if(!canSelectGpsSource())throw new IllegalStateException("Stop automatic control before wave line setup");
                 SharedConfigStorage.ensure40(appContext);String result=task.call();main.post(()->success.accept(result));
             }catch(Exception e){main.post(()->failure.accept(e.getMessage()==null?e.toString():e.getMessage()));}
         });
     }
-    public void captureShoreline(java.util.function.Consumer<String> progress,java.util.function.Consumer<ShorelineCapture.Point> done,
+    public void captureWaveLine(java.util.function.Consumer<String> progress,java.util.function.Consumer<WaveLineCapture.Point> done,
             java.util.function.Consumer<String> error,java.util.function.BooleanSupplier cancelled) {
         executor.execute(()->{
             if(!canSelectGpsSource()||!foreground||usePhone){main.post(()->error.accept("Capture requires stopped control, foreground screen, and LoRa GPS selected"));return;}
-            ShorelineCapture capture=new ShorelineCapture(now());
+            WaveLineCapture capture=new WaveLineCapture(now());
             Runnable poll=new Runnable(){public void run(){
                 if(cancelled.getAsBoolean())return;
                 if(!canSelectGpsSource()||!foreground||usePhone){main.post(()->error.accept("Capture cancelled: control/source/screen changed"));return;}
-                try {ShorelineCapture.Point point=capture.observe(lora.getLatestFix(),now());
+                try {WaveLineCapture.Point point=capture.observe(lora.getLatestFix(),now());
                     if(point!=null){main.post(()->done.accept(point));return;}
                     main.post(()->progress.accept(capture.status));executor.schedule(this,500,TimeUnit.MILLISECONDS);
                 }catch(Exception e){main.post(()->error.accept(e.getMessage()));}
@@ -285,7 +285,7 @@ public final class YawAimingController implements AimingSession.Port {
                         if(!foreground||!listening||intent.get()!=request)return;
                         retreatConfig=loaded.retreat;session.rotationCurve=loaded.rotation;
                         movementConfig=loaded.movement;positioningConfig=loaded.positioning;
-                        fullLog.record("vt40_configuration","nextSession",session.sessionId()+1,"effectiveSettingsJson",loaded.settingsJson,"effectiveShorelinesJson",loaded.shorelinesJson);
+                        fullLog.record("vt40_configuration","nextSession",session.sessionId()+1,"effectiveSettingsJson",loaded.settingsJson,"effectiveWaveLinesJson",loaded.waveLinesJson);
                         camera.prepareConfiguration(loaded,SharedConfigStorage.folder(appContext));
                         fullLog.record("retreat_settings_config","nextSession",session.sessionId()+1,"source","shared_folder",
                             "configPath",SharedConfigStorage.folder(appContext),"effectiveJson",loaded.retreatJson);
@@ -294,7 +294,7 @@ public final class YawAimingController implements AimingSession.Port {
                             "maxYawRate",movementConfig.maxYawRate,"acceleration",movementConfig.yawAcceleration);
                     } catch(Exception invalid) {
                         String detail=invalid.getMessage()==null?invalid.toString():invalid.getMessage();
-                        String message=(detail.startsWith("Cannot start:")||detail.startsWith("Shoreline setup required:"))?detail:"Cannot start: "+detail;
+                        String message=(detail.startsWith("Cannot start:")||detail.startsWith("Wave line setup required:"))?detail:"Cannot start: "+detail;
                         diagnostic("configuration_start_blocked",message);
                         main.post(()->configurationError.accept(message));return;
                     }

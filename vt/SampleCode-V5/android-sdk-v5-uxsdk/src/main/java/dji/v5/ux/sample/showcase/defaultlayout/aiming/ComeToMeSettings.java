@@ -16,7 +16,7 @@ public final class ComeToMeSettings {
     public final long rideDurationMs;
     public final double closeRangePitchDeg, longRangePitchDeg;
     public final double maxYawRate, yawAcceleration, maxMovementSpeed;
-    public final double maxExcursionMetres;
+    public final double maxExcursionMetres, returnBoundaryStandOffMetres;
     public double excursionStop() {return maxExcursionMetres-COMPLETION_TOLERANCE;}
 
     public ComeToMeSettings(boolean enabled, double filming, double width, double start,
@@ -52,6 +52,15 @@ public final class ComeToMeSettings {
     public ComeToMeSettings(boolean enabled,double filming,double width,double start,double end,long endMs,long inactivityMs,
             double margin,long durationMs,double closePitchDeg,double longPitchDeg,double maxYawRate,double yawAcceleration,
             double maxMovementSpeed,double maxExcursionMetres) {
+        this(enabled,filming,width,start,end,endMs,inactivityMs,margin,durationMs,closePitchDeg,longPitchDeg,
+                maxYawRate,yawAcceleration,maxMovementSpeed,maxExcursionMetres,10);
+    }
+    public ComeToMeSettings(boolean enabled,double filming,double width,double start,double end,long endMs,long inactivityMs,
+            double margin,long durationMs,double closePitchDeg,double longPitchDeg,double maxYawRate,double yawAcceleration,
+            double maxMovementSpeed,double maxExcursionMetres,double returnBoundaryStandOffMetres) {
+        if(!inRange(returnBoundaryStandOffMetres,1,100) || returnBoundaryStandOffMetres>=maxExcursionMetres-1)
+            throw new IllegalArgumentException("returnBoundaryStandOffMetres must be 1..100 and below maxExcursionMetres - 1");
+        this.returnBoundaryStandOffMetres=returnBoundaryStandOffMetres;
         if(!inRange(maxExcursionMetres,10,1000))throw new IllegalArgumentException("maxExcursionMetres must be 10..1000");
         this.maxExcursionMetres=maxExcursionMetres;
         if(!inRange(maxMovementSpeed,0.1,HARD_MAX_SPEED)) throw new IllegalArgumentException("Movement maximum speed 0.1-5 m/s");
@@ -74,7 +83,7 @@ public final class ComeToMeSettings {
     }
     public ComeToMeSettings withMaxMovementSpeed(double speed) {
         return new ComeToMeSettings(enabled,filmingDistance,lineupWidth,rideStartKmh,rideEndKmh,rideEndMs,inactivityMs,
-                reapproachMargin,rideDurationMs,closeRangePitchDeg,longRangePitchDeg,maxYawRate,yawAcceleration,speed,maxExcursionMetres);
+                reapproachMargin,rideDurationMs,closeRangePitchDeg,longRangePitchDeg,maxYawRate,yawAcceleration,speed,maxExcursionMetres,returnBoundaryStandOffMetres);
     }
     public static ComeToMeSettings defaults() { return new ComeToMeSettings(true,70,50,18,8,30000,900000); }
     private static boolean inRange(double v,double lo,double hi) { return Double.isFinite(v)&&v>=lo&&v<=hi; }

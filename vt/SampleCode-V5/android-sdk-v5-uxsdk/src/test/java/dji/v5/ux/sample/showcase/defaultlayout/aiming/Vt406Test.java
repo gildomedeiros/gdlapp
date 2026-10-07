@@ -4,9 +4,9 @@ public final class Vt406Test {
  static int checks;static final double DEG=ComeToMeTest.DEG;
  static void check(boolean b,String why){checks++;if(!b)throw new AssertionError(why);}
  static void near(double a,double b,String why){check(Math.abs(a-b)<.02,why+" actual="+b);}
- static ShorelinePositioning preset(double allowance,double threshold){return new ShorelinePositioning(new ShorelineGeometry(-50*DEG,0,50*DEG,0,"leftOfAToB"),"beach","diagonal","left",3,threshold,45,5,2,299,allowance);}
+ static WaveLinePositioning preset(double allowance,double threshold){return new WaveLinePositioning(new WaveLineGeometry(-50*DEG,0,50*DEG,0,"leftOfAToB"),"beach","diagonal","left",3,threshold,45,5,2,299,allowance);}
  static void geometry(){
-  ShorelinePositioning p=preset(2,25);near(25,p.clearance(),"execution25");near(27,p.planningClearance(),"planning27");
+  WaveLinePositioning p=preset(2,25);near(25,p.clearance(),"execution25");near(27,p.planningClearance(),"planning27");
   AngleRoutePlanner.Check c=AngleRoutePlanner.check(p,26*DEG,0,26*DEG,10*DEG,0,0,0,24*DEG,0,24*DEG);
   check(c.reason.equals("none"),"26m leg continues during execution");
   c=AngleRoutePlanner.planningCheck(p,26*DEG,0,26*DEG,10*DEG,0,0,0,24*DEG,0,24*DEG);

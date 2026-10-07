@@ -6,7 +6,7 @@ public final class Vt404Test {
     static void check(boolean ok,String why){checks++;if(!ok)throw new AssertionError(why);}
     static void near(double a,double b,String why){check(Math.abs(a-b)<.02,why+" actual="+b);}
     static ComeToMeSettings settings(){return new ComeToMeSettings(true,28,50,99,.1,1000,900000,5,90000,-25,-10,15,8,4,300);}
-    static ShorelinePositioning preset(double angle,double threshold){return new ShorelinePositioning(Vt40Test.shore(),"beach","diagonal","left",3,threshold,angle,5,2,299);}
+    static WaveLinePositioning preset(double angle,double threshold){return new WaveLinePositioning(Vt40Test.shore(),"beach","diagonal","left",3,threshold,angle,5,2,299);}
     static ComeToMeController planner(double radius,double angle,double desired){
         double n=40-radius*Math.cos(Math.toRadians(angle)),e=radius*Math.sin(Math.toRadians(angle));
         ComeToMeController m=new ComeToMeController();m.start(settings(),1000);m.positioning=preset(desired,18);
@@ -52,14 +52,14 @@ public final class Vt404Test {
     }
     static void geometry(){
         for(double angle:new double[]{-90,-45,-12.5,0,45,90}){
-            ShorelinePositioning p=preset(angle,18);near(1,Math.hypot(p.axisNorth,p.axisEast),"unit axis");
+            WaveLinePositioning p=preset(angle,18);near(1,Math.hypot(p.axisNorth,p.axisEast),"unit axis");
             double[] end=p.destination(ComeToMeTest.in(1000,0,0,40,0,0),28);
             near(28*Math.cos(Math.toRadians(angle)),40-end[0]/DEG,"shoreward offset");near(28*Math.sin(Math.toRadians(angle)),end[1]/DEG,"right offset");
         }
         ComeToMeController m=planner(21,89,1);
         // The initial boundary is too restrictive for E; separately test with central/anchor farther shoreward.
         AimingSession.Inputs in=ComeToMeTest.in(1000,40-21*Math.cos(Math.toRadians(89)),21*Math.sin(Math.toRadians(89)),40,0,0);
-        ShorelinePositioning p=preset(1,18);double[] end=p.destination(in,21);
+        WaveLinePositioning p=preset(1,18);double[] end=p.destination(in,21);
         AngleRoutePlanner.Plan plan=AngleRoutePlanner.plan(p,in,end,0,0,0,0);
         check(plan.reason.equals("none")&&plan.kind.equals("around"),"safe endpoints unsafe chord goes around");
         double a=in.lat,b=in.lon;
@@ -97,7 +97,7 @@ public final class Vt404Test {
         void tick(long delta,double dn,double de,double sn,double se,double heading){time+=delta;in=ComeToMeTest.in(time,dn,de,sn,se,heading);core.tick();}
         void start(){core.startAiming();enable.complete(true);a=new AimingSession.Authority(AimingSession.Owner.MSDK,true,false);core.tick();a=new AimingSession.Authority(AimingSession.Owner.MSDK,true,true);core.tick();tick(100,0,15,40,0,0);}
         public ComeToMeSettings movementSettings(){return settings();}
-        public ShorelinePositioning positioningSettings(){return preset(angle,18);}
+        public WaveLinePositioning positioningSettings(){return preset(angle,18);}
     }
     static void session(String output)throws Exception {
         for(double angle:new double[]{-45,45}) {

@@ -18,11 +18,11 @@ public final class AngleRoutePlanner {
         public double[] clockwiseFailureValues,anticlockwiseFailureValues;
         void failure(Check c,int index){reason=c.reason;failedSegment=index;failedClearance=c.clearance;failedBoundary=c.boundary;failedExcursion=c.excursion;}
     }
-    public static Check check(ShorelinePositioning p,double aLat,double aLon,double bLat,double bLon,
+    public static Check check(WaveLinePositioning p,double aLat,double aLon,double bLat,double bLon,
             double surferLat,double surferLon,double anchorLat,double anchorLon,double centralLat,double centralLon) {
         Check c=new Check();
         double[] a=p.shore.offset(aLat,aLon,surferLat,surferLon),b=p.shore.offset(bLat,bLon,surferLat,surferLon);
-        c.clearance=ShorelineGeometry.segmentDistance(a[0],a[1],b[0],b[1]);
+        c.clearance=WaveLineGeometry.segmentDistance(a[0],a[1],b[0],b[1]);
         c.boundary=Math.min(p.boundaryDistance(aLat,aLon,anchorLat,anchorLon),p.boundaryDistance(bLat,bLon,anchorLat,anchorLon));
         c.excursion=Math.max(YawAimingMath.distance(aLat,aLon,centralLat,centralLon),YawAimingMath.distance(bLat,bLon,centralLat,centralLon));
         if(!Double.isFinite(c.boundary)||c.boundary< -1e-6)c.reason="route_central_boundary";
@@ -30,14 +30,14 @@ public final class AngleRoutePlanner {
         else if(c.clearance+1e-6<p.clearance())c.reason="route_surfer_clearance";
         return c;
     }
-    public static Check planningCheck(ShorelinePositioning p,double aLat,double aLon,double bLat,double bLon,
+    public static Check planningCheck(WaveLinePositioning p,double aLat,double aLon,double bLat,double bLon,
             double sl,double so,double anchorLat,double anchorLon,double centralLat,double centralLon) {
         Check c=check(p,aLat,aLon,bLat,bLon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
         if((c.reason.equals("none")||c.reason.equals("route_surfer_clearance"))&&c.clearance+1e-6<p.planningClearance())
             c.reason="route_planning_clearance";
         return c;
     }
-    public static Plan plan(ShorelinePositioning p,AimingSession.Inputs in,double[] end,
+    public static Plan plan(WaveLinePositioning p,AimingSession.Inputs in,double[] end,
             double anchorLat,double anchorLon,double centralLat,double centralLon) {
         Plan result=new Plan();double sl=in.target.lat,so=in.target.lon;
         Check destination=planningCheck(p,end[0],end[1],end[0],end[1],sl,so,anchorLat,anchorLon,centralLat,centralLon);
@@ -108,7 +108,7 @@ public final class AngleRoutePlanner {
         return best;
     }
     /** Recovery keeps the captured surfer and destination; only aircraft origin is updated. */
-    public static Plan recover(ShorelinePositioning p,AimingSession.Inputs live,double[] end,
+    public static Plan recover(WaveLinePositioning p,AimingSession.Inputs live,double[] end,
             double sl,double so,long fixTime,double anchorLat,double anchorLon,double centralLat,double centralLon) {
         AimingSession.Inputs frozen=new AimingSession.Inputs(new AimingSession.Fix(sl,so,0,fixTime),
                 live.lat,live.lon,live.heading,live.aircraftTime,live.problem,live.safeToNeutral);
@@ -136,7 +136,7 @@ public final class AngleRoutePlanner {
         ordinary.reason="no_permitted_outward_escape";return ordinary;
     }
     /** An escape may start inside the circle, but can never reduce separation along its leg. */
-    public static Check escapeCheck(ShorelinePositioning p,double aLat,double aLon,double bLat,double bLon,
+    public static Check escapeCheck(WaveLinePositioning p,double aLat,double aLon,double bLat,double bLon,
             double sl,double so,double anchorLat,double anchorLon,double centralLat,double centralLon) {
         Check c=check(p,aLat,aLon,bLat,bLon,sl,so,anchorLat,anchorLon,centralLat,centralLon);
         if(!c.reason.equals("none")&&!c.reason.equals("route_surfer_clearance"))return c;

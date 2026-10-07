@@ -8,7 +8,7 @@ $test = Join-Path $projectRoot "SampleCode-V5/android-sdk-v5-uxsdk/src/test/java
 $output = Join-Path $projectRoot 'build/aiming-tests'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 # CAM3 v2.2: Exercise the shared flight-mode classification with the state-machine tests.
-& "$JavaHome/bin/javac.exe" -d $output "$source/RotationSpeedCurve.java" "$source/TranslationSpeedAllowance.java" "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/AngleRoutePlanner.java" "$source/ShorelineGeometry.java" "$source/ShorelinePositioning.java" "$source/ShorelineCapture.java" "$source/FullLogOpenPolicy.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
+& "$JavaHome/bin/javac.exe" -d $output "$source/RotationSpeedCurve.java" "$source/TranslationSpeedAllowance.java" "$source/RetreatSettings.java" "$source/RetreatController.java" "$source/ComeToMeSettings.java" "$source/ComeToMeController.java" "$source/AngleRoutePlanner.java" "$source/WaveLineGeometry.java" "$source/WaveLinePositioning.java" "$source/WaveLineCapture.java" "$source/FullLogOpenPolicy.java" "$source/YawAimingMath.java" "$source/AimingFlightModes.java" "$source/AimingSession.java" "$source/SurferYawController.java" "$source/RideDetector.java" "$source/LoRaTelemetry.java" (Join-Path (Split-Path $test) "LoRaTelemetryTest.java") $test
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp $output 'dji.v5.ux.sample.showcase.defaultlayout.aiming.AimingSessionTest'
 if ($LASTEXITCODE -ne 0) { throw 'Aiming tests failed' }
@@ -172,7 +172,7 @@ if($parsedRotation.riding[-1].speedDegPerSec -ne 30){throw 'VT 3.7 config snapsh
 Write-Output 'PASS: independent JSON parser verifies rotation config, selected curve, desired and submitted commands'
 
 # VT 3.8: Default stale-GPS limit and no-fallback preflight configuration transaction.
-& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/RetreatJsonConfig.java" "$source/VtJsonFields.java" "$source/VtSettingsConfig.java" "$source/ShorelineLibrary.java" "$source/VtSessionConfig.java" (Join-Path (Split-Path $test) 'Vt38Test.java')
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output "$source/RetreatJsonConfig.java" "$source/VtJsonFields.java" "$source/VtSettingsConfig.java" "$source/WaveLineLibrary.java" "$source/VtSessionConfig.java" (Join-Path (Split-Path $test) 'Vt38Test.java')
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.8 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt38Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
 if ($LASTEXITCODE -ne 0) { throw 'VT 3.8 tests failed' }
@@ -182,13 +182,13 @@ $reset38=@($v38 | Where-Object event -eq 'retreat_gps_allowance_reset')[0]
 if($blocked38.reason -ne 'stale_gps_retreat_limit' -or $blocked38.gpsFresh -ne $false -or $blocked38.maxStartsWithoutFreshGps -ne 1 -or $blocked38.startsWithoutFreshGps -ne 1 -or $blocked38.active -ne $false -or $reset38.gpsFresh -ne $true -or $reset38.startsWithoutFreshGps -ne 0 -or $reset38.previousStartsWithoutFreshGps -ne 1){throw 'VT 3.8 allowance log evidence mismatch'}
 Write-Output 'PASS: independent JSON parser verifies stale-GPS block and fresh-fix allowance reset'
 
-# VT 4.0: exercise production fixed shoreline destinations and both body velocity axes.
+# VT 4.0: exercise production fixed waveLine destinations and both body velocity axes.
 & "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt40Test.java')
 if ($LASTEXITCODE -ne 0) { throw 'VT 4.0 tests did not compile' }
 & "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt40Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
 if ($LASTEXITCODE -ne 0) { throw 'VT 4.0 tests failed' }
 $v40=@(Get-Content (Join-Path $output 'vt40-test.jsonl') | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object event -eq 'movement_cycle')
-if($v40.Count -ne 1 -or $v40[0].positioningMode -ne 'front' -or $v40[0].yawPurpose -ne 'surfer' -or $v40[0].submittedRightMps -ge 0 -or $v40[0].fixedDestinationFixTime -le 0 -or $v40[0].shorelineId -ne 'beach'){throw 'VT40 independent log validation failed'}
+if($v40.Count -ne 1 -or $v40[0].positioningMode -ne 'front' -or $v40[0].yawPurpose -ne 'surfer' -or $v40[0].submittedRightMps -ge 0 -or $v40[0].fixedDestinationFixTime -le 0 -or $v40[0].waveLineId -ne 'beach'){throw 'VT40 independent log validation failed'}
 Write-Output 'PASS: VT 4.0 independent parser validates preset, fixed destination, lateral submission and surfer yaw'
 
 # VT4.0.4: signed-angle snapshot routing, boundaries and configurable excursion.
@@ -224,3 +224,14 @@ $v406=@(Get-Content (Join-Path $output 'vt406-log.jsonl') | ForEach-Object { $_ 
 $row406=@($v406 | Where-Object event -eq 'movement_cycle')[0]
 if($row406.requiredPathClearanceMetres -ne 18 -or $row406.requiredPlanningClearanceMetres -ne 20 -or $row406.routePlanningAllowanceMetres -ne 2 -or $row406.routeRecoveryStatus -ne 'none' -or $null -ne $row406.projectedSeparationM){throw 'VT406 independent planning/stop log validation failed'}
 Write-Output 'PASS: VT406 independent JSON parser verifies separate planning and execution limits'
+
+# VT 4.0.7: boundary stand-off return, retreat interruption and fresh Wave line schema.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt407Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT407 compile failed' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt407Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
+if ($LASTEXITCODE -ne 0) { throw 'VT407 tests failed' }
+
+$v407=@(Get-Content (Join-Path $output 'vt407-log.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$row407=@($v407 | Where-Object event -eq 'movement_cycle')[0]
+if($row407.returnBoundaryStandOffMetres -ne 10 -or $row407.returnPending -ne $true -or $row407.translationPurpose -ne 'retreat' -or $row407.waveLineId -ne 'wave' -or $null -eq $row407.returnTargetLatitude -or $null -eq $row407.returnBoundaryDistanceM -or $row407.submittedForwardMps -ne -3){throw 'VT407 independent return log validation failed'}
+Write-Output 'PASS: VT407 independent JSON parser verifies fixed return target, stand-off, pending reset and retreat submission'

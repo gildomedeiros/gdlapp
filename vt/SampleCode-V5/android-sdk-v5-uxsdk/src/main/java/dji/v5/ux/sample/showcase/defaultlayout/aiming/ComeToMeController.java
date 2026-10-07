@@ -18,6 +18,14 @@ public final class ComeToMeController {
     // VT 3.1: qualifySince is the last credited monotonic timer tick.
     private long qualifySince=-1,inactiveSince=-1,attemptSince=-1,lastFix=-1;
     private boolean runEnabled;
+    public double returnTargetLat=Double.NaN,returnTargetLon=Double.NaN,returnTargetRemaining=Double.NaN;
+    public double returnBoundaryDistance=Double.NaN;
+    public boolean returnPending;
+    private long pendingReturnSince=-1;
+    private boolean softReturn(){return positioning!=null;}
+    private double boundaryAt(AimingSession.Inputs in){
+        return positioning.boundaryDistance(in.lat,in.lon,initialCentralLat,initialCentralLon);
+    }
     // VT 3.1: GPS gaps count toward qualification; rides and non-GPS pauses retain their existing rules.
     public String qualificationStatus="idle", qualificationEvent="none";
     public boolean gpsPaused, hasFilmed;
@@ -68,7 +76,7 @@ public final class ComeToMeController {
     public boolean approachAligned, speedJumpRejected;
     public long rejectedSpeedJumps;
     public final RideDetector ride=new RideDetector();
-    public ShorelinePositioning positioning;
+    public WaveLinePositioning positioning;
     public double right,projectedSeparation=Double.NaN,alignmentError=Double.NaN;
     public String journeyKind="none";
     public double initialCentralLat=Double.NaN,initialCentralLon=Double.NaN;
@@ -125,7 +133,7 @@ public final class ComeToMeController {
         initialCentralLat=initialCentralLon=projectedSeparation=alignmentError=Double.NaN;
         pathCheckStatus="not_checked";pathBlockReason="none";
         distance=centralDistance=sideways=headingError=returnHeading=Double.NaN;
-        clearApproach(); clearReturn(); speedJumpRejected=false; rejectedSpeedJumps=0;
+        clearApproach(); clearReturn(); returnPending=false;pendingReturnSince=-1; speedJumpRejected=false; rejectedSpeedJumps=0;
         forward=right=0; riding=false; insideBand=false; qualifiedMs=slowMs=inactiveMs=attemptElapsedMs=0;
         qualifySince=inactiveSince=attemptSince=lastFix=-1; ride.reset(); speedKmh=Double.NaN;
     }
@@ -137,7 +145,7 @@ public final class ComeToMeController {
         if(manual) {
             finishJourney("cancelled","pilot_intervention");
             hasFilmed=false;
-            clearApproach(); clearReturn();
+            clearApproach(); clearReturn();returnPending=false;pendingReturnSince=-1;
             captureRequired=true; ride.reset(); riding=false; phase=runEnabled ? Phase.WAITING : Phase.OFF; attemptSince=-1;
             reason="manual_reposition"; inactiveSince=-1; lastFix=-1;
         }
@@ -146,10 +154,10 @@ public final class ComeToMeController {
 
     /** Do not restart an expired attempt automatically, including after a GPS pause. */
     private boolean expireAttempt(long now) {
-        attemptElapsedMs=attemptSince<0 ? 0 : Math.max(0,now-attemptSince);
-        if((phase==Phase.APPROACHING || phase==Phase.RETURNING) && attemptElapsedMs>=ComeToMeSettings.ATTEMPT_MS) {
+        attemptElapsedMs=returnPending&&pendingReturnSince>=0 ? Math.max(0,now-pendingReturnSince) : attemptSince<0 ? 0 : Math.max(0,now-attemptSince);
+        if((phase==Phase.APPROACHING || phase==Phase.RETURNING || returnPending) && attemptElapsedMs>=ComeToMeSettings.ATTEMPT_MS) {
             finishJourney("timed_out","movement_timeout");
-            phase=Phase.STOPPED; reason="movement_timeout"; forward=right=0; return true;
+            phase=Phase.STOPPED; reason="movement_timeout";returnPending=false;pendingReturnSince=-1; forward=right=0; return true;
         }
         return phase==Phase.STOPPED;
     }
@@ -187,6 +195,15 @@ public final class ComeToMeController {
 
     private void beginReturn(String cause,AimingSession.Inputs in,long now) {
         if(phase==Phase.RETURNING || phase==Phase.STOPPED) return;
+        if(softReturn()) {
+            returnBoundaryDistance=boundaryAt(in);
+            if(returnBoundaryDistance< -1e-6) {reason="return_start_beachward_of_boundary";event=reason;return;}
+            if(returnBoundaryDistance<=settings.returnBoundaryStandOffMetres) {
+                finishJourney("cancelled",cause);clearApproach();clearReturn();
+                returnBoundaryDistance=boundaryAt(in);returnReason=cause;finishReturn("return_already_in_restart_zone");return;
+            }
+        }
+        long resumedSince=returnPending?pendingReturnSince:-1;
         finishJourney("cancelled",cause);
         clearApproach(); clearReturn(); createBand(in,now); returnReason=cause; forward=right=0; inactiveSince=-1;
         noRideTimerEvent="cancelled_return_"+cause;
@@ -196,9 +213,24 @@ public final class ComeToMeController {
         returnHeading=(returnBearing+180)%360;
         returnDistance=Math.max(0,centralDistance-ComeToMeSettings.ARRIVAL_RADIUS);
         returnProgress=0;
+        if(softReturn()) {
+            returnBoundaryDistance=boundaryAt(in);
+            double fraction=1-settings.returnBoundaryStandOffMetres/returnBoundaryDistance;
+            double[] toCentral=positioning.shore.offset(initialCentralLat,initialCentralLon,in.lat,in.lon);
+            double[] target=positioning.shore.point(in.lat,in.lon,toCentral[0]*fraction,toCentral[1]*fraction);
+            returnTargetLat=target[0];returnTargetLon=target[1];
+            returnDistance=returnTargetRemaining=YawAimingMath.distance(in.lat,in.lon,returnTargetLat,returnTargetLon);
+            returnBearing=YawAimingMath.bearingToTarget(in.lat,in.lon,returnTargetLat,returnTargetLon);
+            returnHeading=(returnBearing+180)%360;
+            if(YawAimingMath.distance(returnTargetLat,returnTargetLon,centralLat,centralLon)>=settings.excursionStop()) {
+                returnPending=true;pendingReturnSince=resumedSince>=0?resumedSince:now;
+                phase=Phase.WAITING;reason="return_target_excursion_limit";event=reason;return;
+            }
+        }
+        returnPending=false;pendingReturnSince=-1;
         if(returnDistance==0) {
             finishReturn("already_near_central");
-        } else { phase=Phase.RETURNING; reason=cause; attemptSince=now; }
+        } else { phase=Phase.RETURNING; reason=cause; attemptSince=resumedSince>=0?resumedSince:now; }
 
     }
 
@@ -263,11 +295,22 @@ public final class ComeToMeController {
         }
         advanceQualification(now);
         // Retreat/cooldown suppress new navigation without suppressing fresh ride evidence.
-        if(retreatBlocked && !returning()) { reason="retreat_or_cooldown"; return; }
-        if(!ride.confirmed && inactiveSince>=0 && now-inactiveSince>=settings.inactivityMs) beginReturn("no_ride_timeout",in,now);
+        if(retreatBlocked) {
+            if(returning())replaceApproachForRetreat();
+            reason="retreat_or_cooldown";return;
+        }
+        if(!ride.confirmed && (returnPending || inactiveSince>=0 && now-inactiveSince>=settings.inactivityMs)) {
+            beginReturn("no_ride_timeout",in,now);
+            if(!returning())return; // Keep completion/blocked restart neutral for this tick.
+        }
         inactiveMs=inactiveSince<0 ? 0 : Math.max(0,now-inactiveSince);
         if(phase==Phase.RETURNING) {
-            returnProgress=projectedReturnProgress(in);
+            if(softReturn()) {
+                returnBoundaryDistance=boundaryAt(in);
+                returnTargetRemaining=YawAimingMath.distance(in.lat,in.lon,returnTargetLat,returnTargetLon);
+                returnProgress=returnDistance-returnTargetRemaining;
+                if(returnBoundaryDistance< -1e-6) {reason="return_beachward_of_boundary";event=reason;return;}
+            } else returnProgress=projectedReturnProgress(in);
             headingError=YawAimingMath.shortestHeadingError(returnHeading,in.heading);
             // VT 3.2: Release navigation ownership before the sub-metre crawl.
             if(returnDistance-returnProgress<=ComeToMeSettings.COMPLETION_TOLERANCE) {
@@ -280,7 +323,10 @@ public final class ComeToMeController {
                 returnAligned=true;
             }
             reason="moving_backward";
-            forward=-arrivalSpeed(returnDistance-returnProgress);
+            if(softReturn()) {
+                double[] v=positioning.velocity(in,returnTargetLat,returnTargetLon,arrivalSpeed(returnTargetRemaining));
+                forward=v[0];right=v[1];reason="moving_to_restart_target";
+            } else forward=-arrivalSpeed(returnDistance-returnProgress);
             return;
         }
 
@@ -468,17 +514,19 @@ public final class ComeToMeController {
     /** Latch travel completion and preserve its actual GPS miss distance for later analysis. */
     private void finishReturn(String completion) {
         phase=Phase.WAITING; reason=completion; event=completion; forward=right=0;
-        attemptSince=-1; inactiveSince=-1; returnAligned=false;
+        attemptSince=-1; inactiveSince=-1; returnAligned=false;returnPending=false;pendingReturnSince=-1;
         returnCompletionCentralDistance=centralDistance;
     }
 
     private void clearReturn() {
         returnStartLat=returnStartLon=returnBearing=returnHeading=returnDistance=returnProgress=Double.NaN;
         returnCompletionCentralDistance=Double.NaN; returnAligned=false;
+        returnTargetLat=returnTargetLon=returnTargetRemaining=returnBoundaryDistance=Double.NaN;
     }
 
     // VT 3.5: Cancel only the approach, preserving central, ride and no-ride bookkeeping.
     public void replaceApproachForRetreat() {
+        if(returning()) {returnPending=true;pendingReturnSince=attemptSince;event="return_interrupted_retreat";}
         finishJourney("cancelled","retreat");
         clearApproach();attemptSince=-1;forward=right=0;
         phase=Phase.WAITING;reason="retreat";
@@ -501,6 +549,7 @@ public final class ComeToMeController {
     /** Revalidate translation against the last snapshot immediately before SDK submission. */
     public boolean permits(AimingSession.Inputs in,long now,double requested) {
         if(requested==0) return true;
+        if(returning()&&softReturn())return permits(in,now,requested,0);
         // VT 3.6: Enforce the configured approach/return cap independently of retreat speed.
         if(!Double.isFinite(requested) || Math.abs(requested)>settings.maxMovementSpeed) return false;
         if(!runEnabled || captureRequired || in.validate(now,approaching() || returning())!=null || expireAttempt(now)) return false;
@@ -518,6 +567,15 @@ public final class ComeToMeController {
 
     public boolean permits(AimingSession.Inputs in,long now,double requestedForward,double requestedRight) {
         if(requestedForward==0&&requestedRight==0)return true;
+        if(returning()&&softReturn()) {
+            double speed=Math.hypot(requestedForward,requestedRight);
+            if(!Double.isFinite(speed)||speed>settings.maxMovementSpeed+.000001||!runEnabled||captureRequired||!returnAligned||
+                    in.validate(now,true)!=null||expireAttempt(now)||in.target.time!=lastFix||boundaryAt(in)< -1e-6)return false;
+            double remaining=YawAimingMath.distance(in.lat,in.lon,returnTargetLat,returnTargetLon);
+            if(remaining<=ComeToMeSettings.COMPLETION_TOLERANCE)return false;
+            double[] v=positioning.velocity(in,returnTargetLat,returnTargetLon,arrivalSpeed(remaining));
+            return Math.abs(requestedForward-v[0])<.01&&Math.abs(requestedRight-v[1])<.01;
+        }
         if(!presetApproach()||returning())return requestedRight==0&&permits(in,now,requestedForward);
         double speed=Math.hypot(requestedForward,requestedRight);
         if(!Double.isFinite(speed)||speed>settings.maxMovementSpeed+.000001||!runEnabled||captureRequired||!approaching()||riding||

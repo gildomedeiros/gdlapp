@@ -7,20 +7,20 @@ public final class Vt40Test {
     static final double DEG=ComeToMeTest.DEG;
     static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
     static void near(double expected,double actual,String why){check(Math.abs(expected-actual)<.015,why+" actual="+actual);}
-    static ShorelineGeometry shore(){return new ShorelineGeometry(0,0,0,100*DEG,"leftOfAToB");}
-    static ShorelinePositioning preset(String mode,String side){return new ShorelinePositioning(shore(),"beach",mode,side,3,18);}
+    static WaveLineGeometry shore(){return new WaveLineGeometry(0,0,0,100*DEG,"leftOfAToB");}
+    static WaveLinePositioning preset(String mode,String side){return new WaveLinePositioning(shore(),"beach",mode,side,3,18);}
     static ComeToMeSettings settings(){return new ComeToMeSettings(true,23,100,99,.1,1000,900000,5,90000,-25,-10,15,8,4);}
     static ComeToMeController planner(String mode,String side,double dn,double de,double sn,double se){
         ComeToMeController m=new ComeToMeController();m.start(settings(),1000);m.positioning=preset(mode,side);
         m.update_state_machine(ComeToMeTest.in(1000,dn,de,sn,se,0),1000,.1);return m;
     }
     static void geometry(){
-        ShorelineGeometry g=shore();near(1,g.seaNorth,"east A/B left sea north");near(0,g.seaEast,"sea perpendicular");
-        ShorelineGeometry reverse=new ShorelineGeometry(0,100*DEG,0,0,"rightOfAToB");near(g.seaNorth,reverse.seaNorth,"reversed A/B + side preserves sea");
+        WaveLineGeometry g=shore();near(1,g.seaNorth,"east A/B left sea north");near(0,g.seaEast,"sea perpendicular");
+        WaveLineGeometry reverse=new WaveLineGeometry(0,100*DEG,0,0,"rightOfAToB");near(g.seaNorth,reverse.seaNorth,"reversed A/B + side preserves sea");
         double[] m=preset("front","left").measures(ComeToMeTest.in(1000,0,15,20,0,0));near(20,m[0],"front projected shoreward");near(-15,m[1],"front other axis alongshore");
         m=preset("sideways","left").measures(ComeToMeTest.in(1000,15,-20,0,0,0));near(20,m[0],"left looking sea west");near(15,m[1],"sideways other-axis shore distance");
         m=preset("sideways","right").measures(ComeToMeTest.in(1000,15,20,0,0,0));near(20,m[0],"right looking sea east");
-        near(0,ShorelineGeometry.segmentDistance(-30,0,30,0),"crossing route clearance zero");
+        near(0,WaveLineGeometry.segmentDistance(-30,0,30,0),"crossing route clearance zero");
         check(!preset("front","left").safePath(ComeToMeTest.in(1000,0,0,20,0,0),25*DEG,0,0,0),"route through surfer rejected");
     }
     static void fixedPlans(){
@@ -61,7 +61,7 @@ public final class Vt40Test {
         public void enable(AimingSession.Completion c){enable=c;}public void disable(AimingSession.Completion c){c.complete(true);}public void advanced(){}
         public void sendYaw(double v){yaw=v;forward=right=0;}
         public void sendMotion(double y,double f,double r){yaw=y;forward=f;right=r;}
-        public ComeToMeSettings movementSettings(){return settings();}public ShorelinePositioning positioningSettings(){return preset("front","left");}
+        public ComeToMeSettings movementSettings(){return settings();}public WaveLinePositioning positioningSettings(){return preset("front","left");}
         public RetreatSettings retreatSettings(){return new RetreatSettings(true,18,1000,3,1000);}
         void tick(long delta,double dn,double de,double sn,double se,double heading){time+=delta;in=ComeToMeTest.in(time,dn,de,sn,se,heading);core.tick();}
         void start(){core.startAiming();enable.complete(true);a=new AimingSession.Authority(AimingSession.Owner.MSDK,true,false);core.tick();a=new AimingSession.Authority(AimingSession.Owner.MSDK,true,true);core.tick();tick(100,0,15,40,0,0);}
@@ -88,13 +88,13 @@ public final class Vt40Test {
         p.core.stopAiming("test");check(p.core.movement.right==0,"stop neutralizes lateral");
     }
     static void capture(){
-        ShorelineCapture c=new ShorelineCapture(1000);ShorelineCapture.Point p=null;
+        WaveLineCapture c=new WaveLineCapture(1000);WaveLineCapture.Point p=null;
         for(int i=0;i<10;i++)p=c.observe(new AimingSession.Fix(0,0,0,1000+i*500),1000+i*500);
         check(p!=null&&p.fixes==10,"ten stationary fresh distinct fixes capture");
-        c=new ShorelineCapture(1000);for(int i=0;i<20;i++)check(c.observe(new AimingSession.Fix(0,0,0,1000),1000+i*50)==null,"duplicate fix cannot capture");
-        c=new ShorelineCapture(1000);for(int i=0;i<9;i++)c.observe(new AimingSession.Fix(0,0,0,1000+i*500),1000+i*500);
+        c=new WaveLineCapture(1000);for(int i=0;i<20;i++)check(c.observe(new AimingSession.Fix(0,0,0,1000),1000+i*50)==null,"duplicate fix cannot capture");
+        c=new WaveLineCapture(1000);for(int i=0;i<9;i++)c.observe(new AimingSession.Fix(0,0,0,1000+i*500),1000+i*500);
         check(c.observe(null,5500)==null,"NOFIX resets pending batch");p=c.observe(new AimingSession.Fix(0,0,0,6000),6000);check(p==null,"batch restarts after NOFIX");
-        c=new ShorelineCapture(1000);for(int i=0;i<10;i++)p=c.observe(new AimingSession.Fix(i%2*20*DEG,0,0,1000+i*500),1000+i*500);check(p==null&&c.status.contains("scatter"),"scattered positions rejected");
+        c=new WaveLineCapture(1000);for(int i=0;i<10;i++)p=c.observe(new AimingSession.Fix(i%2*20*DEG,0,0,1000+i*500),1000+i*500);check(p==null&&c.status.contains("scatter"),"scattered positions rejected");
         try{c.observe(null,121000);throw new AssertionError("timeout missing");}catch(IllegalArgumentException expected){checks++;}
     }
     static void fails(Runnable r,String why){try{r.run();throw new AssertionError(why);}catch(IllegalArgumentException expected){checks++;}}
@@ -105,21 +105,21 @@ public final class Vt40Test {
         fails(()->VtSettingsConfig.parse(settings.replace("\"front\"","\"other\""),retreat),"invalid mode rejected");
         fails(()->VtSettingsConfig.parse(settings.replace("\"enabled\": true","\"enabled\": \"true\""),retreat),"boolean string rejected");
         fails(()->VtSettingsConfig.parse(settings.replace("\"version\": 1","\"version\":1,\"version\":1"),retreat),"duplicate JSON key rejected");
-        List<ShorelineLibrary.Profile> list=new ArrayList<>();list.add(new ShorelineLibrary.Profile("beach","Beach",shore(),"manual","2026-10-03",0,0,0,0));
-        String library=new ShorelineLibrary(list).json();check(ShorelineLibrary.parse(library).find("beach").geometry.seaSide.equals("leftOfAToB"),"saved profile roundtrip");
-        fails(()->ShorelineLibrary.parse(library.replace("\"latitude\": 0.0","\"latitude\": 90.0")),"bad coordinates rejected");
-        String chosen=settings.replace("\"shorelineId\": \"\"","\"shorelineId\": \"beach\"");Map<String,String> files=new HashMap<>();
+        List<WaveLineLibrary.Profile> list=new ArrayList<>();list.add(new WaveLineLibrary.Profile("beach","Beach",shore(),"manual","2026-10-03",0,0,0,0));
+        String library=new WaveLineLibrary(list).json();check(WaveLineLibrary.parse(library).find("beach").geometry.seaSide.equals("leftOfAToB"),"saved profile roundtrip");
+        fails(()->WaveLineLibrary.parse(library.replace("\"latitude\": 0.0","\"latitude\": 90.0")),"bad coordinates rejected");
+        String chosen=settings.replace("\"waveLineId\": \"\"","\"waveLineId\": \"beach\"");Map<String,String> files=new HashMap<>();
         for(String n:new String[]{"vt_retreat_settings.json","vt_rotation_speeds.json","vt_gimbal_bands.json"})files.put(n,Files.readString(dir.resolve(n)));
-        files.put("vt_settings.json",chosen);files.put("vt_shorelines.json",library);
+        files.put("vt_settings.json",chosen);files.put("vt_wave_lines.json",library);
         files.put("vt_settings.json",settings);
-        try{VtSessionConfig.load40(files::get);throw new AssertionError("blank selection accepted");}catch(VtSessionConfig.ShorelineSetupRequired expected){check(expected.getMessage().contains("No shoreline selected"),"blank selection gives setup action");}
-        files.put("vt_shorelines.json","{\"version\":1,\"shorelines\":[]}");
-        try{VtSessionConfig.load40(files::get);throw new AssertionError("empty library accepted");}catch(VtSessionConfig.ShorelineSetupRequired expected){check(expected.getMessage().contains("No saved shorelines"),"empty library gives capture action");}
-        files.put("vt_settings.json",chosen);files.put("vt_shorelines.json",library);
+        try{VtSessionConfig.load40(files::get);throw new AssertionError("blank selection accepted");}catch(VtSessionConfig.WaveLineSetupRequired expected){check(expected.getMessage().contains("No wave line selected"),"blank selection gives setup action");}
+        files.put("vt_wave_lines.json","{\"version\":1,\"waveLines\":[]}");
+        try{VtSessionConfig.load40(files::get);throw new AssertionError("empty library accepted");}catch(VtSessionConfig.WaveLineSetupRequired expected){check(expected.getMessage().contains("No saved wave lines"),"empty library gives capture action");}
+        files.put("vt_settings.json",chosen);files.put("vt_wave_lines.json",library);
         VtSessionConfig snapshot=VtSessionConfig.load40(files::get);check(snapshot.positioning.mode.equals("front"),"all five configs validate preset");
         files.put("vt_settings.json",chosen.replace("\"front\"","\"sideways\""));check(snapshot.positioning.mode.equals("front"),"loaded session immutable after file edit");
         check(VtSessionConfig.load40(files::get).positioning.mode.equals("sideways"),"next load applies sideways");
-        files.remove("vt_shorelines.json");fails(()->VtSessionConfig.load40(files::get),"missing library blocks Start");
+        files.remove("vt_wave_lines.json");fails(()->VtSessionConfig.load40(files::get),"missing library blocks Start");
     }
     static void fullLogReopen(){
         FullLogOpenPolicy p=new FullLogOpenPolicy();check(p.wanted,"full logging requested by default");

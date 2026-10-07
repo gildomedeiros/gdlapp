@@ -11,7 +11,7 @@ public final class SharedConfigStorage {
     public static final String ROTATION="vt_rotation_speeds.json";
     // VT 3.8: A new file is seeded once per selected folder; deleted files subsequently block Start.
     public static final String RETREAT="vt_retreat_settings.json";
-    public static final String SETTINGS="vt_settings.json",SHORELINES="vt_shorelines.json";
+    public static final String SETTINGS="vt_settings.json",WAVE_LINES="vt_wave_lines.json";
     private static final String KEY="configurationTree";
     public static String folder(Context c){return c.getSharedPreferences("vt28",Context.MODE_PRIVATE).getString(KEY,null);}
     private static Uri find(Context c,Uri tree,String name)throws IOException {
@@ -64,9 +64,9 @@ public final class SharedConfigStorage {
     }
 
     public static void ensure40(Context c)throws IOException {
-        String selected=folder(c);if(selected==null)throw new IOException("Choose Configuration folder before shoreline setup or Start");
+        String selected=folder(c);if(selected==null)throw new IOException("Choose Configuration folder before wave line setup or Start");
         if(selected.equals(c.getSharedPreferences("vt28",Context.MODE_PRIVATE).getString("vt40SeededTree",null)))return;
-        for(String name:new String[]{SETTINGS,SHORELINES})ConfigFileMigration.ensure(files(c,Uri.parse(selected)),name,()->GimbalBandStorage.read(c.getAssets().open(name)));
+        for(String name:new String[]{SETTINGS,WAVE_LINES})ConfigFileMigration.ensure(files(c,Uri.parse(selected)),name,()->GimbalBandStorage.read(c.getAssets().open(name)));
         if(!c.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit().putString("vt40SeededTree",selected).commit())throw new IOException("Cannot save VT 4.0 setup state");
     }
     private static void overwrite(Context c,String name,String content)throws IOException {
@@ -78,7 +78,7 @@ public final class SharedConfigStorage {
     }
     /** Direct overwrite, then read-back verification. No backup or rollback file is created. */
     public static void writeVerified(Context c,String name,String content)throws IOException {
-        if(!SETTINGS.equals(name)&&!SHORELINES.equals(name))throw new IOException("Unsupported shoreline file");
+        if(!SETTINGS.equals(name)&&!WAVE_LINES.equals(name))throw new IOException("Unsupported wave line file");
         if(folder(c)==null)throw new IOException("Choose Configuration folder first");
         try {overwrite(c,name,content);}catch(Exception e) {
             throw new IOException("Save failed: "+name+" — "+e.getMessage(),e);
@@ -93,7 +93,7 @@ public final class SharedConfigStorage {
         });
         ConfigFileMigration.ensure(files,ROTATION,()->GimbalBandStorage.read(c.getAssets().open(ROTATION)));
         ConfigFileMigration.ensure(files,RETREAT,()->GimbalBandStorage.read(c.getAssets().open(RETREAT)));
-        for(String name:new String[]{SETTINGS,SHORELINES})ConfigFileMigration.ensure(files,name,()->GimbalBandStorage.read(c.getAssets().open(name)));
+        for(String name:new String[]{SETTINGS,WAVE_LINES})ConfigFileMigration.ensure(files,name,()->GimbalBandStorage.read(c.getAssets().open(name)));
         if(!c.getSharedPreferences("vt28",Context.MODE_PRIVATE).edit().putString("vt40SeededTree",tree.toString()).putString("retreatSeededTree",tree.toString()).putString(KEY,tree.toString()).commit())throw new IOException("Cannot save folder selection");
     }
 }

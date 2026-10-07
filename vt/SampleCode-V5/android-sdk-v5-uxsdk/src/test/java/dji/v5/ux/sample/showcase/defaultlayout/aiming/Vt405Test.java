@@ -5,7 +5,7 @@ public final class Vt405Test {
     static int checks;static final double DEG=ComeToMeTest.DEG;
     static void check(boolean ok,String why){checks++;if(!ok)throw new AssertionError(why);}
     static void near(double a,double b,String why){check(Math.abs(a-b)<.02,why+" actual="+b);}
-    static void path(ShorelinePositioning p,AngleRoutePlanner.Plan plan,AimingSession.Inputs in,double sl,double so,double al,double ao){
+    static void path(WaveLinePositioning p,AngleRoutePlanner.Plan plan,AimingSession.Inputs in,double sl,double so,double al,double ao){
         check(plan.reason.equals("none"),"permitted replacement "+plan.reason);double a=in.lat,b=in.lon;
         for(int i=0;i<plan.points.length;i++){
             double[] w=plan.points[i];AngleRoutePlanner.Check c=plan.escapeFirst&&i==0?
@@ -15,10 +15,10 @@ public final class Vt405Test {
         }
     }
     static void recovery(){
-        ShorelinePositioning p=Vt404Test.preset(45,25);near(25,p.clearance(),"legacy extra2 ignored");
+        WaveLinePositioning p=Vt404Test.preset(45,25);near(25,p.clearance(),"legacy extra2 ignored");
         // Sketch: east boundary overlaps circle; drone and target remain west. Sea points west.
-        ShorelineGeometry g=new ShorelineGeometry(-50*DEG,0,50*DEG,0,"leftOfAToB");
-        p=new ShorelinePositioning(g,"beach","diagonal","left",3,25,45,5,2,299);
+        WaveLineGeometry g=new WaveLineGeometry(-50*DEG,0,50*DEG,0,"leftOfAToB");
+        p=new WaveLinePositioning(g,"beach","diagonal","left",3,25,45,5,2,299);
         AimingSession.Inputs in=ComeToMeTest.in(1000,35,5,0,0,0);double[] end={-35*DEG,5*DEG};
         AngleRoutePlanner.Plan plan=AngleRoutePlanner.recover(p,in,end,0,0,1000,0,24*DEG,0,24*DEG);
         path(p,plan,in,0,0,0,24*DEG);check(plan.kind.equals("around"),"overlap routes around circle");
@@ -33,7 +33,7 @@ public final class Vt405Test {
         plan=AngleRoutePlanner.recover(p,in,new double[]{0,30*DEG},0,0,1000,0,24*DEG,0,24*DEG);
         check(plan.reason.equals("destination_central_boundary"),"unsafe saved destination not moved");
         // Retreat OFF keeps geometric around routing without adding a retreat circle.
-        p=new ShorelinePositioning(g,"beach","diagonal","left",3,0,45,5,2,299);
+        p=new WaveLinePositioning(g,"beach","diagonal","left",3,0,45,5,2,299);
         near(0,p.clearance(),"OFF clearance remains disabled");
         in=ComeToMeTest.in(1000,35,5,0,0,0);plan=AngleRoutePlanner.recover(p,in,end,0,0,1000,0,24*DEG,0,24*DEG);
         check(plan.reason.equals("none")&&!plan.escapeFirst,"OFF geometric route remains permitted without escape circle");

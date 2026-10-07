@@ -116,7 +116,7 @@ public final class Vt35Test {
         check(f.core.movement.riding && f.core.retreat.active && forward(f)==-3,"ride detection remains active and does not block retreat");
         f=start(100);
         ComeToMeTest.beginTestReturn(f.core.movement,30,0);
-        check(!f.core.retreat.eligible(f.core.movement),"existing saved return keeps navigation ownership");
+        check(f.core.retreat.eligible(f.core.movement),"retreat can interrupt a saved return");
         f.core.movement.phase=ComeToMeController.Phase.STOPPED;
         check(!f.core.retreat.eligible(f.core.movement),"movement timeout latch is respected");
         f.core.movement.cancel();

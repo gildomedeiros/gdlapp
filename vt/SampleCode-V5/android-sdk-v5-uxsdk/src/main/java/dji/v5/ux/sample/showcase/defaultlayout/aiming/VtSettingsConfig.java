@@ -4,10 +4,10 @@ import com.google.gson.*;
 /** VT 4.0: tuning is loaded from one JSON source, never preferences or a tuning form. */
 public final class VtSettingsConfig {
     public final ComeToMeSettings movement;
-    public final String mode,shorelineId,sidewaysSide;
+    public final String mode,waveLineId,sidewaysSide;
     public final double alignmentTolerance,angle,angleTolerance,extraClearance,planningAllowance;
     private VtSettingsConfig(ComeToMeSettings movement,String mode,String id,String side,double tolerance,double angle,double angleTolerance,double extraClearance,double planningAllowance) {
-        this.movement=movement;this.mode=mode;shorelineId=id;sidewaysSide=side;alignmentTolerance=tolerance;this.angle=angle;this.angleTolerance=angleTolerance;this.extraClearance=extraClearance;this.planningAllowance=planningAllowance;
+        this.movement=movement;this.mode=mode;waveLineId=id;sidewaysSide=side;alignmentTolerance=tolerance;this.angle=angle;this.angleTolerance=angleTolerance;this.extraClearance=extraClearance;this.planningAllowance=planningAllowance;
     }
     private static double optional(JsonObject o,String k,double value,double lo,double hi) {
         return o.has(k)?VtJsonFields.number(o,k,lo,hi):value;
@@ -19,13 +19,14 @@ public final class VtSettingsConfig {
         double extra=optional(o,"extraPathClearanceMetres",0,0,50);
         double planningAllowance=optional(o,"routePlanningAllowanceMetres",2,0,50);
         double excursion=optional(o,"maxExcursionMetres",300,10,1000);
+        double standOff=optional(o,"returnBoundaryStandOffMetres",10,1,100);
         JsonObject required=o.deepCopy();
-        for(String k:new String[]{"positioningAngleDegrees","positioningAngleToleranceDegrees","extraPathClearanceMetres","maxExcursionMetres","routePlanningAllowanceMetres"})required.remove(k);
+        for(String k:new String[]{"positioningAngleDegrees","positioningAngleToleranceDegrees","extraPathClearanceMetres","maxExcursionMetres","routePlanningAllowanceMetres","returnBoundaryStandOffMetres"})required.remove(k);
         VtJsonFields.keys(required,"version","enabled","filmingSeparationMetres","reapproachMarginMetres","maxMovementSpeedMetresPerSecond",
             "lineupWidthMetres","rideStartKmh","rideDurationSeconds","noRideTimeoutSeconds","maxYawRateDegreesPerSecond",
-            "yawAccelerationDegreesPerSecondSquared","mode","shorelineId","sidewaysSide","alignmentToleranceMetres");
+            "yawAccelerationDegreesPerSecondSquared","mode","waveLineId","sidewaysSide","alignmentToleranceMetres");
         VtJsonFields.number(o,"version",1,1);
-        String mode=VtJsonFields.string(o,"mode"),id=VtJsonFields.string(o,"shorelineId"),side=VtJsonFields.string(o,"sidewaysSide");
+        String mode=VtJsonFields.string(o,"mode"),id=VtJsonFields.string(o,"waveLineId"),side=VtJsonFields.string(o,"sidewaysSide");
         if(!mode.equals("front")&&!mode.equals("sideways")&&!mode.equals("diagonal"))throw new IllegalArgumentException("mode must be front, sideways or diagonal");
         if(!side.equals("left")&&!side.equals("right"))throw new IllegalArgumentException("sidewaysSide must be left or right, looking seaward");
         ComeToMeSettings c=new ComeToMeSettings(VtJsonFields.bool(o,"enabled"),VtJsonFields.number(o,"filmingSeparationMetres",10,200),
@@ -33,7 +34,7 @@ public final class VtSettingsConfig {
             Math.round(1000*VtJsonFields.number(o,"noRideTimeoutSeconds",60,7200)),VtJsonFields.number(o,"reapproachMarginMetres",0,200),
             Math.round(1000*VtJsonFields.number(o,"rideDurationSeconds",1,600)),-25,-10,
             VtJsonFields.number(o,"maxYawRateDegreesPerSecond",1,30),VtJsonFields.number(o,"yawAccelerationDegreesPerSecondSquared",.5,30),
-            VtJsonFields.number(o,"maxMovementSpeedMetresPerSecond",.1,5),excursion);
+            VtJsonFields.number(o,"maxMovementSpeedMetresPerSecond",.1,5),excursion,standOff);
         if(c.enabled&&retreat.enabled&&c.filmingDistance<retreat.minimumDistance+5)
             throw new IllegalArgumentException("filmingSeparationMetres must be >= retreat minimumDistanceMetres + 5 m for all modes; required "+(retreat.minimumDistance+5));
         return new VtSettingsConfig(c,mode,id,side,VtJsonFields.number(o,"alignmentToleranceMetres",1,20),angle,angleTolerance,extra,planningAllowance);

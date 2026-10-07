@@ -346,3 +346,11 @@ Captured S0, saved final destination, original 300-second journey deadline and e
 ## Validation
 
 The regression suite includes separate 27 m planning/25 m execution checks, all-leg clearance, alternate routing beside an overlapping boundary, outward bridging into the planning ring, fixed destination handling, retreat OFF, configuration defaults/validation and current-versus-historical recovery logs. Run `tools/test-aiming.ps1`. Build with the existing offline Gradle sample project. Aircraft testing remains separate from deterministic desktop checks.
+
+
+## VT 4.0.7
+
+- Soft no-ride return to a fixed target 10 m sea-side of the original boundary; configurable `returnBoundaryStandOffMetres`.
+- Retreat interrupts return; pending reset resumes after cooldown with its original deadline.
+- Fresh Wave line UI/configuration/source/log naming (`waveLineId`, `vt_wave_lines.json`, `waveLines`), without migration.
+- Retain 2 m route planning allowance and existing execution clearance. See `Docs/VT_4.0.7.md`.

@@ -12,9 +12,9 @@ public final class RetreatController {
     public double boundarySeawardDistance=Double.NaN;
     public String boundaryStatus="inactive";
     private double boundaryCommand(ComeToMeController m,AimingSession.Inputs in) {
-        if(m.positioning==null)return -settings.speed; // Legacy sessions have no shoreline.
+        if(m.positioning==null)return -settings.speed; // Legacy sessions have no waveLine.
         if(!Double.isFinite(m.initialCentralLat))return 0;
-        ShorelineGeometry g=m.positioning.shore;
+        WaveLineGeometry g=m.positioning.shore;
         double[] offset=g.offset(in.lat,in.lon,m.initialCentralLat,m.initialCentralLon);
         double distance=offset[0]*g.seaNorth+offset[1]*g.seaEast;
         double heading=Math.toRadians(in.heading);
@@ -27,7 +27,7 @@ public final class RetreatController {
         double value=active?boundaryCommand(m,in):0;
         boundarySeawardDistance=Double.NaN;
         if(m.positioning!=null && Double.isFinite(m.initialCentralLat)) {
-            ShorelineGeometry g=m.positioning.shore;
+            WaveLineGeometry g=m.positioning.shore;
             double[] offset=g.offset(in.lat,in.lon,m.initialCentralLat,m.initialCentralLon);
             boundarySeawardDistance=offset[0]*g.seaNorth+offset[1]*g.seaEast;
         }
@@ -83,7 +83,7 @@ public final class RetreatController {
     public long cooldownRemaining(long now) { return Math.max(0,cooldownUntil-now); }
     public boolean eligible(ComeToMeController m) {
         return settings.enabled && m.settings().enabled && !m.captureRequired
-                && !m.returning() && m.phase!=ComeToMeController.Phase.STOPPED
+                && m.phase!=ComeToMeController.Phase.STOPPED
                 && m.phase!=ComeToMeController.Phase.OFF;
     }
     public boolean close(AimingSession.Inputs in) {
@@ -93,7 +93,7 @@ public final class RetreatController {
         return eligible(m) && (active || cooling(now) || close(in));
     }
     public boolean blocksApproach(ComeToMeController m,AimingSession.Inputs in,long now) {
-        return settings.enabled && m.settings().enabled && (active || cooling(now) || (!m.returning() && close(in)));
+        return settings.enabled && m.settings().enabled && (active || cooling(now) || close(in));
     }
     public void update(ComeToMeController m,AimingSession.Inputs in,long now) {
         distance=in.target==null ? Double.NaN : YawAimingMath.distance(in.lat,in.lon,in.target.lat,in.target.lon);

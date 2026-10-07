@@ -1,0 +1,5 @@
+file,time,reason,journeyId,waypoint,attempt_ms,clearance,boundary,recovery,recoveryAttempts
+cam3_full_2026-10-07_080514_499_042b2a4f.jsonl,2026-10-07T08:05:21.283+10:00,start_beachward_of_boundary,1,1,311,47.06575786647905,-0.008669458841280148,start_beachward_of_boundary,1
+cam3_full_2026-10-07_080514_499_042b2a4f.jsonl,2026-10-07T08:05:21.386+10:00,route_central_boundary,1,1,415,29.999999997741828,-0.008669458841280148,start_beachward_of_boundary,1
+cam3_full_2026-10-07_080514_499_042b2a4f.jsonl,2026-10-07T08:06:59.726+10:00,destination_inside_planning_clearance,4,1,0,20.525846112567088,30.05837199294642,none,0
+cam3_full_2026-10-07_080514_499_042b2a4f.jsonl,2026-10-07T08:08:56.139+10:00,destination_inside_planning_clearance,11,1,0,20.110792699694493,21.601011063020085,none,0

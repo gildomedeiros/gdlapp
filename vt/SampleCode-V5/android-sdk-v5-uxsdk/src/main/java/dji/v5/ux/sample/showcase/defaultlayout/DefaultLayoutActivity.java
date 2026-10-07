@@ -121,7 +121,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private void chooseConfigurationFolder() {
         if(!yawAimingController.canSelectGpsSource())return;
         new android.app.AlertDialog.Builder(this).setTitle("Configuration folder")
-            .setMessage("Select or create VT inside Internal storage > Download, then tap Use this folder. All five JSON files will be kept there. Movement settings are in vt_settings.json; saved shoreline coordinates are in vt_shorelines.json. Retreat settings are in vt_retreat_settings.json. Existing files are never overwritten; your old gimbal file stays in place. Edit files while stopped, then Start to reload.")
+            .setMessage("Select or create VT inside Internal storage > Download, then tap Use this folder. All five JSON files will be kept there. Movement settings are in vt_settings.json; saved wave line coordinates are in vt_wave_lines.json. Retreat settings are in vt_retreat_settings.json. Existing files are never overwritten; your old gimbal file stays in place. Edit files while stopped, then Start to reload.")
             .setNegativeButton(android.R.string.cancel,null).setPositiveButton("Choose folder",(d,w)->{
                 android.net.Uri initial=null;
                 if(android.os.Build.VERSION.SDK_INT>=26)initial=android.net.Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload");
@@ -289,7 +289,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             menu.getMenu().add(0, 2, 1, R.string.uxsdk_enable_full_log).setCheckable(true)
                     .setChecked(yawAimingController.fullLogRequested()).setEnabled(!yawAimingController.fullLogBusy());
             menu.getMenu().add(0,5,4,"VT 4.0 configuration").setEnabled(yawAimingController.canSelectGpsSource());
-            menu.getMenu().add(0,8,7,"Shorelines").setEnabled(yawAimingController.canSelectGpsSource());
+            menu.getMenu().add(0,8,7,"Wave lines").setEnabled(yawAimingController.canSelectGpsSource());
             menu.getMenu().add(0,6,5,"Lock screen controls");
             // VT 3.7: Configuration folder is changed only while stopped.
             menu.getMenu().add(0,7,6,"Configuration folder").setEnabled(yawAimingController.canSelectGpsSource());
@@ -313,7 +313,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     }
                 }
                 if(item.getItemId()==5) showMovementSettings();
-                if(item.getItemId()==8) new dji.v5.ux.sample.showcase.defaultlayout.aiming.ShorelineSetupUi(this,yawAimingController).show();
+                if(item.getItemId()==8) new dji.v5.ux.sample.showcase.defaultlayout.aiming.WaveLineSetupUi(this,yawAimingController).show();
                 if(item.getItemId()==7) chooseConfigurationFolder();
                 return true;
             });
@@ -436,19 +436,19 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     /** Configuration edits are validated together and applied only while automatic control is stopped. */
     private void showConfigurationProblem(String message) {
         if(configurationProblemDialog!=null&&configurationProblemDialog.isShowing())return;
-        boolean setup=message.startsWith("Shoreline setup required:");
+        boolean setup=message.startsWith("Wave line setup required:");
         configurationProblemDialog=new android.app.AlertDialog.Builder(this)
-            .setTitle(setup?"Set up shoreline before Start":"Start blocked — configuration")
-            .setMessage(setup?message.substring("Shoreline setup required:".length()).trim():message)
-            .setPositiveButton("Open Shorelines",(d,w)->new dji.v5.ux.sample.showcase.defaultlayout.aiming.ShorelineSetupUi(this,yawAimingController).show())
+            .setTitle(setup?"Set up wave line before Start":"Start blocked — configuration")
+            .setMessage(setup?message.substring("Wave line setup required:".length()).trim():message)
+            .setPositiveButton("Open Wave lines",(d,w)->new dji.v5.ux.sample.showcase.defaultlayout.aiming.WaveLineSetupUi(this,yawAimingController).show())
             .setNeutralButton("Configuration folder",(d,w)->chooseConfigurationFolder())
             .setNegativeButton("Close",null).create();
         configurationProblemDialog.setOnDismissListener(d->configurationProblemDialog=null);
         configurationProblemDialog.show();
     }
     private void showMovementSettings() {
-        new android.app.AlertDialog.Builder(this).setTitle("VT 4.0.6 · JSON configuration")
-            .setMessage("Edit tuning in the selected folder:\nvt_settings.json — mode, filming separation, movement, ride, yaw limits\nvt_retreat_settings.json — direct-distance retreat\nvt_rotation_speeds.json — rotation curve\nvt_gimbal_bands.json — gimbal\nvt_shorelines.json — saved shoreline profiles\n\nAll modes require filming separation >= retreat threshold + 5 m when enabled. For mode diagonal, filming is direct horizontal distance; positioningAngleDegrees (-90 left, 0 shoreward, +90 right) and positioningAngleToleranceDegrees set the position. Diagonal execution uses the retreat threshold; routePlanningAllowanceMetres (default 2, range 0–50) adds clearance for planning every leg, not the execution stop limit; legacy extraPathClearanceMetres is ignored. Blocked legs replan around the saved surfer position and preserve the destination and timeout. maxExcursionMetres defaults to 300. Angle routes respect the original-central boundary. Files are validated and frozen on Start. Capture/select a shoreline using Shorelines.")
+        new android.app.AlertDialog.Builder(this).setTitle("VT 4.0.7 · JSON configuration")
+            .setMessage("Edit tuning in the selected folder:\nvt_settings.json — mode, filming separation, movement, ride, yaw limits\nvt_retreat_settings.json — direct-distance retreat\nvt_rotation_speeds.json — rotation curve\nvt_gimbal_bands.json — gimbal\nvt_wave_lines.json — saved wave line profiles\n\nAll modes require filming separation >= retreat threshold + 5 m when enabled. For mode diagonal, filming is direct horizontal distance; positioningAngleDegrees (-90 left, 0 shoreward, +90 right) and positioningAngleToleranceDegrees set the position. Diagonal execution uses the retreat threshold; routePlanningAllowanceMetres (default 2, range 0–50) adds clearance for planning every leg, not the execution stop limit; legacy extraPathClearanceMetres is ignored. Blocked legs replan around the saved surfer position and preserve the destination and timeout. maxExcursionMetres defaults to 300. Automatic no-ride return stops at a fixed target returnBoundaryStandOffMetres (default 10 m, range 1–100) sea-side of the original boundary; retreat can interrupt return. Use fresh Wave line configuration files. Angle routes respect the original-central boundary. Files are validated and frozen on Start. Capture/select a wave line using Wave lines.")
             .setPositiveButton(android.R.string.ok,null).show();
     }
 

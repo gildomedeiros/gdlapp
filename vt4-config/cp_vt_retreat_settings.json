@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "enabled": true,
+  "minimumDistanceMetres": 18,
+  "durationSeconds": 2,
+  "speedMetresPerSecond": 4,
+  "comeToMeCooldownSeconds": 5,
+  "maxStartsWithoutFreshGps": 1
+}
