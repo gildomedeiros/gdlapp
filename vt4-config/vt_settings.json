@@ -11,7 +11,6 @@
   "maxYawRateDegreesPerSecond": 15,
   "yawAccelerationDegreesPerSecondSquared": 8,
   "mode": "diagonal",
-  "shorelineId": "ae17dd18-ef49-44db-9ac6-d18692cd8c99",
   "sidewaysSide": "left",
   "alignmentToleranceMetres": 3,
   "positioningAngleDegrees": -45,
