@@ -1,0 +1,14 @@
+{
+  "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "startInclusive": "2026-10-30T14:16:00+10:00",
+  "endExclusive": "2026-10-30T14:18:00+10:00",
+  "surferPackets": 214,
+  "droneSnapshots": 1145,
+  "changedHeadingPositionSamples": 325,
+  "sequenceGapEvents": 3,
+  "firstSurferPacket": 4942,
+  "lastSurferPacket": 5170,
+  "kml": "C:\\Users\\gildo\\gdlapp\\cam3\\exports\\vt408\\surf20261030\\VT408-recorded-GPS-heading-141600-141800.kml",
+  "interpolatedPositions": 0,
+  "clockOffsetApplied": 0
+}

@@ -1,0 +1,75 @@
+{
+  "folder": "C:\\Users\\gildo\\temp\\311026",
+  "target": "2026-10-30T14:03:14.265000+10:00",
+  "utc_offset": "+10:00",
+  "seconds_before": 1.0,
+  "seconds_after": 1.0,
+  "window_inclusive": true,
+  "files_scanned": 11,
+  "lines_scanned": 314779,
+  "matching_records": 111,
+  "events": {
+    "yaw_command": 19,
+    "aiming_cycle": 19,
+    "movement_cycle": 19,
+    "retreat_cycle": 19,
+    "orientation_cycle": 19,
+    "gimbal_pitch_cycle": 4,
+    "readiness": 3,
+    "blockers": 3,
+    "lora_datagram": 3,
+    "lora_packet": 3
+  },
+  "invalid_json_records": 0,
+  "records_without_valid_timestamp": 0,
+  "unreadable_files": 0,
+  "problem_examples": [],
+  "report_fields": [
+    "windowSecond",
+    "droneKmlPoint",
+    "surferKmlPoint",
+    "timestamp",
+    "droneSurferDistanceM",
+    "cameraTiltDeg",
+    "surferGpsAgeMs",
+    "distanceFromStartM",
+    "retreatHappened",
+    "waveRiding",
+    "waitingArea",
+    "minimumDistanceMetres",
+    "filmingSeparationMetres"
+  ],
+  "kml_references": "D/S labels refer to plotted points in the same interval, not necessarily the exact CSV cycle timestamp. Blank means no point plotted in that interval. SX means rejected/unknown surfer packet.",
+  "combined_cycle_rows": 19,
+  "reported_rows": 2,
+  "granularity_seconds": 1.0,
+  "skip_unchanged": true,
+  "report_sampling": "Last control cycle per interval from window start, per source/session; then skip unchanged selected readings. GPS age counts; timestamps do not. Raw JSONL unsampled.",
+  "kml_sampling": "Same intervals as CSV; last actual logged position per subject/interval, then omit unchanged coordinates unless --keep-unchanged. No GPS forward fill. Point times remain actual logged times.",
+  "missing_readings": {
+    "timestamp": 0,
+    "droneSurferDistanceM": 0,
+    "cameraTiltDeg": 0,
+    "surferGpsAgeMs": 0,
+    "distanceFromStartM": 0,
+    "retreatHappened": 0,
+    "waveRiding": 0,
+    "waitingArea": 0,
+    "minimumDistanceMetres": 0,
+    "filmingSeparationMetres": 0
+  },
+  "raw_jsonl_contains_all_fields": true,
+  "kml_points": {
+    "surfer": 1,
+    "surfer_other": 0,
+    "drone": 2,
+    "invalid_coordinate_pairs": 0,
+    "direction_arrows": 1
+  },
+  "waiting_area_definition": "GPS estimate at last cycle: at least 5.0s, 6 accepted packets, cluster diameter <= 1.5m, gaps and latest GPS age <= 1.5s. Blank if insufficient/gapped GPS. False if VT riding during interval. Not verified body posture.",
+  "selection": "Top-level epochMs; fallback timestamp. No deduplication or event filtering."
+}
+
+windowSecond	droneKmlPoint	surferKmlPoint	timestamp	droneSurferDistanceM	cameraTiltDeg	surferGpsAgeMs	distanceFromStartM	retreatHappened	waveRiding	waitingArea	minimumDistanceMetres	filmingSeparationMetres
+0.0	D1	S1	14:03:14.247	31	-29.900000000000002	484	95	False	False	False	25.0	31.0
+1.0	D2		14:03:15.191	31	-29.900000000000002	60	95	False	False	True	25.0	31.0

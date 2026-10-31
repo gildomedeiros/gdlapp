@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Recorded surfer and drone GPS</name><description>Logged points within the requested window. Green: accepted surfer packets; orange: other/rejected surfer packets; blue: drone-position snapshots. Repeated snapshots are retained, not new independent GPS fixes. Click a point for timestamp, GPS age if logged, source and original record. Times are observation/receipt times. Ground-clamped display, not flight altitude. Short arrows show bearing from the previous logged coordinate of the same subject, not aircraft heading or an observed path. Arrow length is display-only. No arrow for unchanged positions or the first point. A gap label identifies intervals over 1.5s. No connecting tracks or saved targets used as GPS observations.</description><Style id="surfer"><IconStyle><color>ff00cc00</color><scale>0.65</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0.85</scale></LabelStyle><LineStyle><color>ff00cc00</color><width>2</width></LineStyle></Style><Style id="surfer_arrow"><LabelStyle><scale>0</scale></LabelStyle><LineStyle><color>ff00cc00</color><width>2</width></LineStyle></Style><Folder><name>Surfer — accepted packets</name><Placemark><name>S1</name><styleUrl>#surfer</styleUrl><description>Logged time: 0
+Source: test:1
+{
+  "event": "lora_packet",
+  "accepted": true,
+  "latitude": -27.0,
+  "longitude": 153
+}</description><ExtendedData><Data name="displaySequence"><value>S1</value></Data><Data name="loggedTimestamp"><value>0</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>1</value></Data><Data name="latitude"><value>-27.0</value></Data><Data name="longitude"><value>153</value></Data><Data name="travelDirectionStatus"><value>First coordinate in window</value></Data><Data name="event"><value>lora_packet</value></Data><Data name="accepted"><value>True</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>153,-27.0</coordinates></Point></Placemark><Placemark><name>S2</name><styleUrl>#surfer</styleUrl><description>Logged time: 1
+Source: test:3
+{
+  "event": "lora_packet",
+  "accepted": true,
+  "latitude": -26.999,
+  "longitude": 153
+}</description><ExtendedData><Data name="displaySequence"><value>S2</value></Data><Data name="loggedTimestamp"><value>1</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>3</value></Data><Data name="latitude"><value>-26.999</value></Data><Data name="longitude"><value>153</value></Data><Data name="travelBearingDegrees"><value>0.0</value></Data><Data name="previousCoordinateTimestamp"><value>0</value></Data><Data name="previousLatitude"><value>-27.0</value></Data><Data name="previousLongitude"><value>153</value></Data><Data name="secondsSincePreviousCoordinate"><value>1.0</value></Data><Data name="travelDirectionStatus"><value>Bearing between recorded coordinates; not aircraft heading</value></Data><Data name="event"><value>lora_packet</value></Data><Data name="accepted"><value>True</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>153,-26.999</coordinates></Point></Placemark><Placemark><name>S3</name><styleUrl>#surfer</styleUrl><description>Logged time: 2
+Source: test:5
+{
+  "event": "lora_packet",
+  "accepted": true,
+  "latitude": -26.998,
+  "longitude": 153
+}</description><ExtendedData><Data name="displaySequence"><value>S3</value></Data><Data name="loggedTimestamp"><value>2</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>5</value></Data><Data name="latitude"><value>-26.998</value></Data><Data name="longitude"><value>153</value></Data><Data name="travelBearingDegrees"><value>0.0</value></Data><Data name="previousCoordinateTimestamp"><value>1</value></Data><Data name="previousLatitude"><value>-26.999</value></Data><Data name="previousLongitude"><value>153</value></Data><Data name="secondsSincePreviousCoordinate"><value>1.0</value></Data><Data name="travelDirectionStatus"><value>Bearing between recorded coordinates; not aircraft heading</value></Data><Data name="event"><value>lora_packet</value></Data><Data name="accepted"><value>True</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>153,-26.998</coordinates></Point></Placemark></Folder><Style id="surfer_other"><IconStyle><color>ff0088ff</color><scale>0.65</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0.85</scale></LabelStyle><LineStyle><color>ff0088ff</color><width>2</width></LineStyle></Style><Style id="surfer_other_arrow"><LabelStyle><scale>0</scale></LabelStyle><LineStyle><color>ff0088ff</color><width>2</width></LineStyle></Style><Folder><name>Surfer — rejected or acceptance unknown</name></Folder><Style id="drone"><IconStyle><color>ffff8800</color><scale>0.65</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0.85</scale></LabelStyle><LineStyle><color>ffff8800</color><width>2</width></LineStyle></Style><Style id="drone_arrow"><LabelStyle><scale>0</scale></LabelStyle><LineStyle><color>ffff8800</color><width>2</width></LineStyle></Style><Folder><name>Drone — recorded position snapshots</name><Placemark><name>D1</name><styleUrl>#drone</styleUrl><description>Logged time: 0
+Source: test:2
+{
+  "event": "aiming_cycle",
+  "session": 1,
+  "aircraftLatitude": -27.0,
+  "aircraftLongitude": 153.001
+}</description><ExtendedData><Data name="displaySequence"><value>D1</value></Data><Data name="loggedTimestamp"><value>0</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>2</value></Data><Data name="latitude"><value>-27.0</value></Data><Data name="longitude"><value>153.001</value></Data><Data name="travelDirectionStatus"><value>First coordinate in window</value></Data><Data name="event"><value>aiming_cycle</value></Data><Data name="session"><value>1</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>153.001,-27.0</coordinates></Point></Placemark><Placemark><name>D2</name><styleUrl>#drone</styleUrl><description>Logged time: 1
+Source: test:4
+{
+  "event": "aiming_cycle",
+  "session": 1,
+  "aircraftLatitude": -26.999,
+  "aircraftLongitude": 153.001
+}</description><ExtendedData><Data name="displaySequence"><value>D2</value></Data><Data name="loggedTimestamp"><value>1</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>4</value></Data><Data name="latitude"><value>-26.999</value></Data><Data name="longitude"><value>153.001</value></Data><Data name="travelBearingDegrees"><value>0.0</value></Data><Data name="previousCoordinateTimestamp"><value>0</value></Data><Data name="previousLatitude"><value>-27.0</value></Data><Data name="previousLongitude"><value>153.001</value></Data><Data name="secondsSincePreviousCoordinate"><value>1.0</value></Data><Data name="travelDirectionStatus"><value>Bearing between recorded coordinates; not aircraft heading</value></Data><Data name="event"><value>aiming_cycle</value></Data><Data name="session"><value>1</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>153.001,-26.999</coordinates></Point></Placemark><Placemark><name>D3</name><styleUrl>#drone</styleUrl><description>Logged time: 2
+Source: test:6
+{
+  "event": "aiming_cycle",
+  "session": 1,
+  "aircraftLatitude": -26.998,
+  "aircraftLongitude": 153.001
+}</description><ExtendedData><Data name="displaySequence"><value>D3</value></Data><Data name="loggedTimestamp"><value>2</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>6</value></Data><Data name="latitude"><value>-26.998</value></Data><Data name="longitude"><value>153.001</value></Data><Data name="travelBearingDegrees"><value>0.0</value></Data><Data name="previousCoordinateTimestamp"><value>1</value></Data><Data name="previousLatitude"><value>-26.999</value></Data><Data name="previousLongitude"><value>153.001</value></Data><Data name="secondsSincePreviousCoordinate"><value>1.0</value></Data><Data name="travelDirectionStatus"><value>Bearing between recorded coordinates; not aircraft heading</value></Data><Data name="event"><value>aiming_cycle</value></Data><Data name="session"><value>1</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>153.001,-26.998</coordinates></Point></Placemark></Folder><Folder><name>Travel direction arrows (display only)</name><Placemark><name>S2 1 — 0.0 deg</name><styleUrl>#surfer_arrow</styleUrl><description>Previous coordinate: 0 (-27.0, 153)
+Current coordinate: 1 (-26.999, 153)
+Elapsed: 1.000s. Bearing: 0.00 degrees clockwise from north.
+3.0m display arrow, not measured speed/path or drone heading. GPS variation can produce apparent movement.
+Source: test:3</description><MultiGeometry><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153,-26.999 153.0,-26.99897302035182</coordinates></LineString><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153.00000529894623,-26.998981198122966 153.0,-26.99897302035182 152.99999470105377,-26.998981198122966</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>D2 1 — 0.0 deg</name><styleUrl>#drone_arrow</styleUrl><description>Previous coordinate: 0 (-27.0, 153.001)
+Current coordinate: 1 (-26.999, 153.001)
+Elapsed: 1.000s. Bearing: 0.00 degrees clockwise from north.
+3.0m display arrow, not measured speed/path or drone heading. GPS variation can produce apparent movement.
+Source: test:4</description><MultiGeometry><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153.001,-26.999 153.00099999999998,-26.99897302035182</coordinates></LineString><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153.0010052989462,-26.998981198122966 153.00099999999998,-26.99897302035182 153.00099470105374,-26.998981198122966</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S3 2 — 0.0 deg</name><styleUrl>#surfer_arrow</styleUrl><description>Previous coordinate: 1 (-26.999, 153)
+Current coordinate: 2 (-26.998, 153)
+Elapsed: 1.000s. Bearing: 0.00 degrees clockwise from north.
+3.0m display arrow, not measured speed/path or drone heading. GPS variation can produce apparent movement.
+Source: test:5</description><MultiGeometry><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153,-26.998 153.0,-26.99797302035182</coordinates></LineString><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153.0000052988991,-26.997981198122968 153.0,-26.99797302035182 152.9999947011009,-26.997981198122968</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>D3 2 — 0.0 deg</name><styleUrl>#drone_arrow</styleUrl><description>Previous coordinate: 1 (-26.999, 153.001)
+Current coordinate: 2 (-26.998, 153.001)
+Elapsed: 1.000s. Bearing: 0.00 degrees clockwise from north.
+3.0m display arrow, not measured speed/path or drone heading. GPS variation can produce apparent movement.
+Source: test:6</description><MultiGeometry><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153.001,-26.998 153.00099999999998,-26.99797302035182</coordinates></LineString><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>153.0010052988991,-26.997981198122968 153.00099999999998,-26.99797302035182 153.00099470110086,-26.997981198122968</coordinates></LineString></MultiGeometry></Placemark></Folder></Document></kml>

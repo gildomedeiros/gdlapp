@@ -1,0 +1,51 @@
+{
+  "folder": "C:\\Users\\gildo\\temp\\311026",
+  "target": "2026-10-30T14:50:57+10:00",
+  "utc_offset": "+10:00",
+  "seconds_before": 1.0,
+  "seconds_after": 1.0,
+  "window_inclusive": true,
+  "files_scanned": 11,
+  "lines_scanned": 314779,
+  "matching_records": 116,
+  "events": {
+    "yaw_command": 19,
+    "gimbal_pitch_cycle": 4,
+    "aiming_cycle": 19,
+    "movement_cycle": 19,
+    "retreat_cycle": 19,
+    "orientation_cycle": 19,
+    "lora_datagram": 5,
+    "lora_packet": 4,
+    "readiness": 4,
+    "blockers": 4
+  },
+  "invalid_json_records": 0,
+  "records_without_valid_timestamp": 0,
+  "unreadable_files": 0,
+  "problem_examples": [],
+  "report_fields": [
+    "timestamp",
+    "droneSurferDistanceM",
+    "cameraTiltDeg",
+    "surferGpsAgeMs",
+    "distanceFromStartM"
+  ],
+  "combined_cycle_rows": 19,
+  "missing_readings": {
+    "timestamp": 0,
+    "droneSurferDistanceM": 0,
+    "cameraTiltDeg": 0,
+    "surferGpsAgeMs": 0,
+    "distanceFromStartM": 0
+  },
+  "raw_jsonl_contains_all_fields": true,
+  "kml_points": {
+    "surfer": 4,
+    "surfer_other": 0,
+    "drone": 38,
+    "invalid_coordinate_pairs": 0,
+    "direction_arrows": 5
+  },
+  "selection": "Top-level epochMs; fallback timestamp. No deduplication or event filtering."
+}

@@ -1,0 +1,10 @@
+﻿windowSecond,droneKmlPoint,surferKmlPoint,timestamp,droneSurferDistanceM,cameraTiltDeg,surferGpsAgeMs,distanceFromStartM,retreatHappened,waveRiding,waitingArea
+0.0,D1,S1,14:03:14.247,31,-29.900000000000002,484,95,False,False,False
+1.0,D2,,14:03:15.191,31,-29.900000000000002,60,95,False,False,True
+2.0,D3,S2,14:03:16.235,31,-30.0,244,95,False,False,True
+3.0,D4,,14:03:17.181,31,-29.900000000000002,185,95,False,False,True
+4.0,D5,,14:03:18.230,31,-29.900000000000002,224,94,False,False,True
+5.0,D6,,14:03:19.176,31,-29.900000000000002,185,93,False,False,True
+6.0,D7,S3,14:03:20.231,30,-29.900000000000002,737,92,False,False,True
+7.0,D8,S4,14:03:21.175,29,-29.900000000000002,452,91,False,False,False
+8.0,D9,S5,14:03:22.236,24,-30.0,514,90,True,True,False

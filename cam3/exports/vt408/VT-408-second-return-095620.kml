@@ -1,0 +1,196 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>VT 4.0.8 — second soft return, 09:56:20–09:56:37</name>
+    <description>Three primary pins: saved central, last reported drone position before VT return, and reported drone position at completion. Coordinates are from supplied logs. This is VT soft return, not aircraft RTH. White line is reported GPS track; it includes drift/GPS variation during yaw alignment. Optional context shows original boundary, 10 m stand-off line and saved return target.</description>
+    <Style id="central">
+      <IconStyle>
+        <color>ff0000ff</color>
+        <scale>1.15</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="before">
+      <IconStyle>
+        <color>ff00ffff</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ff00ffff</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="after">
+      <IconStyle>
+        <color>ff00ff00</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ff00ff00</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="track">
+      <IconStyle>
+        <color>ffffffff</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ffffffff</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="target">
+      <IconStyle>
+        <color>ffff00ff</color>
+        <scale>0.8</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ffff00ff</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="boundary">
+      <IconStyle>
+        <color>ff0000ff</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="standOff">
+      <IconStyle>
+        <color>ffffff00</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href>
+        </Icon>
+      </IconStyle>
+      <LineStyle>
+        <color>ffffff00</color>
+        <width>3</width>
+      </LineStyle>
+      <LabelStyle>
+        <scale>0.85</scale>
+      </LabelStyle>
+    </Style>
+    <Placemark>
+      <name>CENTRAL — saved position</name>
+      <styleUrl>#central</styleUrl>
+      <description>Original central position and boundary anchor. Latitude -28.081175924544, longitude 153.391324829473. Return target is on the 10 m sea-side stand-off line, not at this pin.</description>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391324829473,-28.081175924544,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>BEFORE return — 09:56:20.073</name>
+      <styleUrl>#before</styleUrl>
+      <description>Last movement cycle before return begins (cycle 2339). Actual reported drone position. 28.895 m from central; 10.531 m sea-side of boundary. Latitude -28.080917979462, longitude 153.391289148225.</description>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391289148225,-28.080917979462,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>AFTER return complete — 09:56:37.540</name>
+      <styleUrl>#after</styleUrl>
+      <description>Completion cycle 2504: return_arrival_tolerance. Actual reported drone position, not target coordinates. 28.141 m from central; 10.493 m sea-side of boundary. 0.933 m from saved return target. Latitude -28.080924443602, longitude 153.391292663294.</description>
+      <Point>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391292663294,-28.080924443602,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Reported drone track during return</name>
+      <styleUrl>#track</styleUrl>
+      <description>Logged GPS positions, including initial yaw alignment. No route or position has been invented. Start and finish pins are only 0.797 m apart; zoom closely to separate them.</description>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>153.391289148225,-28.080917979462,0 153.391289660287,-28.080914942322,0 153.391290077733,-28.080912227882,0 153.391290047504,-28.080911320955,0 153.391289917453,-28.080910548700,0 153.391289883821,-28.080910214042,0 153.391289888693,-28.080910119258,0 153.391290177672,-28.080909892098,0 153.391289917504,-28.080909955459,0 153.391289818000,-28.080910073339,0 153.391289688368,-28.080909940004,0 153.391289363131,-28.080909932054,0 153.391289073483,-28.080909856494,0 153.391288971426,-28.080909971804,0 153.391289107859,-28.080909985957,0 153.391289320579,-28.080909970948,0 153.391289451409,-28.080910048632,0 153.391289813742,-28.080910123301,0 153.391290197362,-28.080910191323,0 153.391290041603,-28.080910050825,0 153.391289764324,-28.080910078959,0 153.391289485458,-28.080910212671,0 153.391289410018,-28.080910228366,0 153.391289506805,-28.080910268562,0 153.391289938486,-28.080912182991,0 153.391290270946,-28.080913602835,0 153.391290676594,-28.080915466549,0 153.391291412916,-28.080916822176,0 153.391291875742,-28.080917516883,0 153.391292345513,-28.080918465616,0 153.391292894860,-28.080919525754,0 153.391292958362,-28.080920509645,0 153.391292691706,-28.080921576396,0 153.391292638939,-28.080923633002,0 153.391292663294,-28.080924443602,0</coordinates>
+      </LineString>
+    </Placemark>
+    <Folder>
+      <name>Optional boundary and saved return target</name>
+      <visibility>0</visibility>
+      <Placemark>
+        <name>Original central boundary</name>
+        <styleUrl>#boundary</styleUrl>
+        <description>Boundary through original central, parallel to selected wave line.</description>
+        <LineString>
+          <tessellate>1</tessellate>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>153.391131329492,-28.080859287722,0 153.391518329453,-28.081492561367,0</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>10 m sea-side stand-off line</name>
+        <styleUrl>#standOff</styleUrl>
+        <description>Perpendicular boundary distance 10 m; this does not mean 10 m from the central pin.</description>
+        <LineString>
+          <tessellate>1</tessellate>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>153.391221050593,-28.080816607356,0 153.391608050401,-28.081449881000,0</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Saved return target — 10 m sea-side</name>
+        <styleUrl>#target</styleUrl>
+        <description>Fixed target saved at 2026-10-08T09:56:20.177+10:00. Planned starting distance 2.002 m. Completion happens within existing 1 m arrival tolerance.</description>
+        <Point>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>153.391292069482,-28.080932820388,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <LookAt>
+      <latitude>-28.081046952002993</latitude>
+      <longitude>153.39130698884904</longitude>
+      <range>110</range>
+      <tilt>0</tilt>
+      <heading>0</heading>
+    </LookAt>
+  </Document>
+</kml>

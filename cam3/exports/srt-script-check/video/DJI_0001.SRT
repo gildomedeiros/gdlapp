@@ -1,0 +1,15 @@
+1
+00:00:00,000 --> 00:00:00,033
+Frame time: 2026-10-30 14:00:00.200
+Telemetry: last cycle in 1s interval; flags cover interval
+windowSecond: 0 | droneKmlPoint: n/a | droneMovingOnCommand: n/a
+surferKmlPoint: n/a | timestamp: 14:00:00.100 | fileIdPlayback: 1_0_00
+droneSurferDistanceM: [31][n/a][n/a] | cameraTiltDeg: -30 | surferGpsAgeMs: 0
+distanceFromStartM: n/a | retreatHappened: n/a | waveRiding: n/a
+waitingArea: n/a | surferSpeedKmh: n/a | surferDisplacementMetres: n/a
+
+2
+00:00:06,000 --> 00:00:06,033
+Frame time: 2026-10-30 14:00:06.200
+No telemetry for this frame
+

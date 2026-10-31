@@ -1,0 +1,29 @@
+{
+  "bufferMetres": 5,
+  "bands": [
+  {
+      "maxDistanceMetres": 10,
+      "pitchDegrees": -55
+    },
+    {
+      "maxDistanceMetres": 20,
+      "pitchDegrees": -35
+    },
+    {
+      "maxDistanceMetres": 30,
+      "pitchDegrees": -30
+    },
+    {
+      "maxDistanceMetres": 40,
+      "pitchDegrees": -30
+    },
+    {
+      "maxDistanceMetres": 50,
+      "pitchDegrees": -20
+    },
+    {
+      "maxDistanceMetres": null,
+      "pitchDegrees": -12
+    }
+  ]
+}

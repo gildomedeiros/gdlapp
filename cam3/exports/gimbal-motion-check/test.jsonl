@@ -1,0 +1,5 @@
+{"event": "gimbal_pitch_cycle", "epochMs": 1000, "pitchFresh": true, "targetReached": false, "commandResult": "accepted", "targetPitchDeg": -35}
+{"event": "lora_packet", "epochMs": 1100, "latitude": 0, "longitude": 0}
+{"event": "gimbal_pitch_cycle", "epochMs": 1200, "pitchFresh": true, "targetReached": true, "commandResult": "accepted"}
+{"event": "lora_packet", "epochMs": 1300, "latitude": 0, "longitude": 0}
+{"event": "lora_packet", "epochMs": 3000, "latitude": 0, "longitude": 0}

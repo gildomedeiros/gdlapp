@@ -1,0 +1,461 @@
+[
+  {
+    "ride": 1,
+    "clock": "14:03:21.812",
+    "video": "DJI_0626.MP4",
+    "playback": "04:56",
+    "gaps": [
+      {
+        "clockStart": "14:03:21.724",
+        "clockEnd": "14:03:24.724",
+        "video": "DJI_0626.MP4",
+        "playbackStart": "04:56",
+        "playbackEnd": "04:59",
+        "seconds": 3.0
+      }
+    ]
+  },
+  {
+    "ride": 2,
+    "clock": "14:05:49.716",
+    "video": "DJI_0627_4g.MP4",
+    "playback": "02:01",
+    "gaps": [
+      {
+        "clockStart": "14:05:49.686",
+        "clockEnd": "14:05:52.545",
+        "video": "DJI_0627_4g.MP4",
+        "playbackStart": "02:01",
+        "playbackEnd": "02:03",
+        "seconds": 2.859
+      },
+      {
+        "clockStart": "14:06:03.508",
+        "clockEnd": "14:06:06.506",
+        "video": "DJI_0627_4g.MP4",
+        "playbackStart": "02:14",
+        "playbackEnd": "02:17",
+        "seconds": 2.998
+      }
+    ]
+  },
+  {
+    "ride": 3,
+    "clock": "14:07:50.931",
+    "video": "DJI_0627_4g.MP4",
+    "playback": "04:02",
+    "gaps": []
+  },
+  {
+    "ride": 4,
+    "clock": "14:09:09.443",
+    "video": "DJI_0627_4g.MP4",
+    "playback": "05:20",
+    "gaps": []
+  },
+  {
+    "ride": 5,
+    "clock": "14:10:44.009",
+    "video": "DJI_0628.MP4",
+    "playback": "01:32",
+    "gaps": [
+      {
+        "clockStart": "14:10:47.723",
+        "clockEnd": "14:10:49.719",
+        "video": "DJI_0628.MP4",
+        "playbackStart": "01:35",
+        "playbackEnd": "01:37",
+        "seconds": 1.996
+      }
+    ]
+  },
+  {
+    "ride": 6,
+    "clock": "14:13:37.981",
+    "video": "DJI_0628.MP4",
+    "playback": "04:26",
+    "gaps": []
+  },
+  {
+    "ride": 7,
+    "clock": "14:17:13.859",
+    "video": "DJI_0629.MP4",
+    "playback": "02:38",
+    "gaps": [
+      {
+        "clockStart": "14:17:13.791",
+        "clockEnd": "14:17:18.149",
+        "video": "DJI_0629.MP4",
+        "playbackStart": "02:38",
+        "playbackEnd": "02:43",
+        "seconds": 4.358
+      },
+      {
+        "clockStart": "14:17:19.146",
+        "clockEnd": "14:17:23.505",
+        "video": "DJI_0629.MP4",
+        "playbackStart": "02:44",
+        "playbackEnd": "02:48",
+        "seconds": 4.359
+      }
+    ]
+  },
+  {
+    "ride": 8,
+    "clock": "14:20:22.404",
+    "video": "DJI_0630.MP4",
+    "playback": "00:24",
+    "gaps": [
+      {
+        "clockStart": "14:20:22.347",
+        "clockEnd": "14:20:24.850",
+        "video": "DJI_0630.MP4",
+        "playbackStart": "00:23",
+        "playbackEnd": "00:26",
+        "seconds": 2.503
+      },
+      {
+        "clockStart": "14:20:30.079",
+        "clockEnd": "14:20:31.932",
+        "video": "DJI_0630.MP4",
+        "playbackStart": "00:31",
+        "playbackEnd": "00:33",
+        "seconds": 1.853
+      },
+      {
+        "clockStart": "14:20:32.433",
+        "clockEnd": "14:20:34.932",
+        "video": "DJI_0630.MP4",
+        "playbackStart": "00:34",
+        "playbackEnd": "00:36",
+        "seconds": 2.499
+      }
+    ]
+  },
+  {
+    "ride": 9,
+    "clock": "14:22:37.610",
+    "video": "not covered",
+    "playback": "",
+    "gaps": [
+      {
+        "clockStart": "14:22:39.094",
+        "clockEnd": "14:22:41.092",
+        "video": "not covered",
+        "playbackStart": "",
+        "playbackEnd": "",
+        "seconds": 1.998
+      }
+    ]
+  },
+  {
+    "ride": 10,
+    "clock": "14:38:14.099",
+    "video": "DJI_0632.MP4",
+    "playback": "00:49",
+    "gaps": [
+      {
+        "clockStart": "14:38:14.530",
+        "clockEnd": "14:38:18.027",
+        "video": "DJI_0632.MP4",
+        "playbackStart": "00:49",
+        "playbackEnd": "00:53",
+        "seconds": 3.497
+      },
+      {
+        "clockStart": "14:38:29.720",
+        "clockEnd": "14:38:31.224",
+        "video": "DJI_0632.MP4",
+        "playbackStart": "01:04",
+        "playbackEnd": "01:06",
+        "seconds": 1.504
+      }
+    ]
+  },
+  {
+    "ride": 11,
+    "clock": "14:40:22.610",
+    "video": "DJI_0632.MP4",
+    "playback": "02:57",
+    "gaps": [
+      {
+        "clockStart": "14:40:22.564",
+        "clockEnd": "14:40:24.923",
+        "video": "DJI_0632.MP4",
+        "playbackStart": "02:57",
+        "playbackEnd": "02:59",
+        "seconds": 2.359
+      }
+    ]
+  },
+  {
+    "ride": 12,
+    "clock": "14:41:59.126",
+    "video": "DJI_0632.MP4",
+    "playback": "04:34",
+    "gaps": [
+      {
+        "clockStart": "14:42:01.076",
+        "clockEnd": "14:42:03.076",
+        "video": "DJI_0632.MP4",
+        "playbackStart": "04:36",
+        "playbackEnd": "04:38",
+        "seconds": 2.0
+      },
+      {
+        "clockStart": "14:42:11.538",
+        "clockEnd": "14:42:14.408",
+        "video": "DJI_0632.MP4",
+        "playbackStart": "04:46",
+        "playbackEnd": "04:49",
+        "seconds": 2.87
+      }
+    ]
+  },
+  {
+    "ride": 13,
+    "clock": "14:44:15.122",
+    "video": "DJI_0633.MP4",
+    "playback": "01:26",
+    "gaps": [
+      {
+        "clockStart": "14:44:16.080",
+        "clockEnd": "14:44:19.079",
+        "video": "DJI_0633.MP4",
+        "playbackStart": "01:27",
+        "playbackEnd": "01:30",
+        "seconds": 2.999
+      }
+    ]
+  },
+  {
+    "ride": 14,
+    "clock": "14:51:03.224",
+    "video": "DJI_0634.MP4",
+    "playback": "02:51",
+    "gaps": [
+      {
+        "clockStart": "14:51:03.706",
+        "clockEnd": "14:51:06.708",
+        "video": "DJI_0634.MP4",
+        "playbackStart": "02:52",
+        "playbackEnd": "02:55",
+        "seconds": 3.002
+      },
+      {
+        "clockStart": "14:51:18.535",
+        "clockEnd": "14:51:23.774",
+        "video": "DJI_0634.MP4",
+        "playbackStart": "03:07",
+        "playbackEnd": "03:12",
+        "seconds": 5.239
+      }
+    ]
+  },
+  {
+    "ride": 15,
+    "clock": "14:54:07.540",
+    "video": "DJI_0635.MP4",
+    "playback": "00:32",
+    "gaps": []
+  },
+  {
+    "ride": 16,
+    "clock": "14:56:43.157",
+    "video": "DJI_0635.MP4",
+    "playback": "03:08",
+    "gaps": [
+      {
+        "clockStart": "14:56:46.452",
+        "clockEnd": "14:56:48.807",
+        "video": "DJI_0635.MP4",
+        "playbackStart": "03:11",
+        "playbackEnd": "03:14",
+        "seconds": 2.355
+      },
+      {
+        "clockStart": "14:56:50.304",
+        "clockEnd": "14:56:51.805",
+        "video": "DJI_0635.MP4",
+        "playbackStart": "03:15",
+        "playbackEnd": "03:17",
+        "seconds": 1.501
+      },
+      {
+        "clockStart": "14:56:52.308",
+        "clockEnd": "14:56:56.161",
+        "video": "DJI_0635.MP4",
+        "playbackStart": "03:17",
+        "playbackEnd": "03:21",
+        "seconds": 3.853
+      }
+    ]
+  },
+  {
+    "ride": 17,
+    "clock": "14:58:01.035",
+    "video": "DJI_0635.MP4",
+    "playback": "04:26",
+    "gaps": [
+      {
+        "clockStart": "14:58:02.664",
+        "clockEnd": "14:58:04.658",
+        "video": "DJI_0635.MP4",
+        "playbackStart": "04:27",
+        "playbackEnd": "04:29",
+        "seconds": 1.994
+      }
+    ]
+  },
+  {
+    "ride": 18,
+    "clock": "15:00:42.691",
+    "video": "DJI_0636_4g.MP4",
+    "playback": "01:44",
+    "gaps": [
+      {
+        "clockStart": "15:00:46.391",
+        "clockEnd": "15:00:49.269",
+        "video": "DJI_0636_4g.MP4",
+        "playbackStart": "01:48",
+        "playbackEnd": "01:51",
+        "seconds": 2.878
+      },
+      {
+        "clockStart": "15:00:52.137",
+        "clockEnd": "15:00:54.999",
+        "video": "DJI_0636_4g.MP4",
+        "playbackStart": "01:54",
+        "playbackEnd": "01:57",
+        "seconds": 2.862
+      },
+      {
+        "clockStart": "15:00:56.993",
+        "clockEnd": "15:00:58.496",
+        "video": "DJI_0636_4g.MP4",
+        "playbackStart": "01:59",
+        "playbackEnd": "02:00",
+        "seconds": 1.503
+      }
+    ]
+  },
+  {
+    "ride": 19,
+    "clock": "15:08:24.055",
+    "video": "DJI_0638.MP4",
+    "playback": "00:54",
+    "gaps": []
+  },
+  {
+    "ride": 20,
+    "clock": "15:13:41.819",
+    "video": "DJI_0639.MP4",
+    "playback": "00:48",
+    "gaps": [
+      {
+        "clockStart": "15:13:41.806",
+        "clockEnd": "15:13:45.187",
+        "video": "DJI_0639.MP4",
+        "playbackStart": "00:48",
+        "playbackEnd": "00:52",
+        "seconds": 3.381
+      },
+      {
+        "clockStart": "15:13:58.646",
+        "clockEnd": "15:14:01.023",
+        "video": "DJI_0639.MP4",
+        "playbackStart": "01:05",
+        "playbackEnd": "01:08",
+        "seconds": 2.377
+      }
+    ]
+  },
+  {
+    "ride": 21,
+    "clock": "15:18:57.960",
+    "video": "DJI_0640_6g.MP4",
+    "playback": "00:41",
+    "gaps": [
+      {
+        "clockStart": "15:19:00.310",
+        "clockEnd": "15:19:02.790",
+        "video": "DJI_0640_6g.MP4",
+        "playbackStart": "00:44",
+        "playbackEnd": "00:46",
+        "seconds": 2.48
+      },
+      {
+        "clockStart": "15:19:09.527",
+        "clockEnd": "15:19:11.390",
+        "video": "DJI_0640_6g.MP4",
+        "playbackStart": "00:53",
+        "playbackEnd": "00:55",
+        "seconds": 1.863
+      },
+      {
+        "clockStart": "15:19:14.887",
+        "clockEnd": "15:19:16.753",
+        "video": "DJI_0640_6g.MP4",
+        "playbackStart": "00:58",
+        "playbackEnd": "01:00",
+        "seconds": 1.866
+      }
+    ]
+  },
+  {
+    "ride": 22,
+    "clock": "15:21:04.074",
+    "video": "DJI_0640_6g.MP4",
+    "playback": "02:47",
+    "gaps": [
+      {
+        "clockStart": "15:21:08.789",
+        "clockEnd": "15:21:12.649",
+        "video": "DJI_0640_6g.MP4",
+        "playbackStart": "02:52",
+        "playbackEnd": "02:56",
+        "seconds": 3.86
+      },
+      {
+        "clockStart": "15:21:17.394",
+        "clockEnd": "15:21:19.889",
+        "video": "DJI_0640_6g.MP4",
+        "playbackStart": "03:01",
+        "playbackEnd": "03:03",
+        "seconds": 2.495
+      }
+    ]
+  },
+  {
+    "ride": 23,
+    "clock": "15:23:46.192",
+    "video": "DJI_0641.MP4",
+    "playback": "00:06",
+    "gaps": [
+      {
+        "clockStart": "15:23:47.110",
+        "clockEnd": "15:23:50.470",
+        "video": "DJI_0641.MP4",
+        "playbackStart": "00:07",
+        "playbackEnd": "00:10",
+        "seconds": 3.36
+      },
+      {
+        "clockStart": "15:23:53.467",
+        "clockEnd": "15:23:57.329",
+        "video": "DJI_0641.MP4",
+        "playbackStart": "00:13",
+        "playbackEnd": "00:17",
+        "seconds": 3.862
+      },
+      {
+        "clockStart": "15:24:03.071",
+        "clockEnd": "15:24:05.935",
+        "video": "DJI_0641.MP4",
+        "playbackStart": "00:23",
+        "playbackEnd": "00:26",
+        "seconds": 2.864
+      }
+    ]
+  }
+]

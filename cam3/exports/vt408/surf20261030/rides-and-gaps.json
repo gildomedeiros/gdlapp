@@ -1,0 +1,1112 @@
+[
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 1,
+    "start": "14:03:21.812",
+    "end": "14:03:41.812",
+    "inside": [
+      {
+        "start": 1793333001724,
+        "end": 1793333004724,
+        "startTime": "14:03:21.724",
+        "endTime": "14:03:24.724",
+        "seconds": 3.0,
+        "missing": 5,
+        "previousSequence": 3493,
+        "nextSequence": 3499
+      },
+      {
+        "start": 1793333016916,
+        "end": 1793333017916,
+        "startTime": "14:03:36.916",
+        "endTime": "14:03:37.916",
+        "seconds": 1.0,
+        "missing": 1,
+        "previousSequence": 3522,
+        "nextSequence": 3524
+      }
+    ],
+    "before": {
+      "start": 1793332930495,
+      "end": 1793332931495,
+      "startTime": "14:02:10.495",
+      "endTime": "14:02:11.495",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 3357,
+      "nextSequence": 3359
+    },
+    "after": {
+      "start": 1793333149686,
+      "end": 1793333152545,
+      "startTime": "14:05:49.686",
+      "endTime": "14:05:52.545",
+      "seconds": 2.859,
+      "missing": 4,
+      "previousSequence": 3776,
+      "nextSequence": 3781
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 2,
+    "start": "14:05:49.716",
+    "end": "14:06:09.716",
+    "inside": [
+      {
+        "start": 1793333149686,
+        "end": 1793333152545,
+        "startTime": "14:05:49.686",
+        "endTime": "14:05:52.545",
+        "seconds": 2.859,
+        "missing": 4,
+        "previousSequence": 3776,
+        "nextSequence": 3781
+      },
+      {
+        "start": 1793333163508,
+        "end": 1793333166506,
+        "startTime": "14:06:03.508",
+        "endTime": "14:06:06.506",
+        "seconds": 2.998,
+        "missing": 5,
+        "previousSequence": 3802,
+        "nextSequence": 3808
+      }
+    ],
+    "before": {
+      "start": 1793333016916,
+      "end": 1793333017916,
+      "startTime": "14:03:36.916",
+      "endTime": "14:03:37.916",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 3522,
+      "nextSequence": 3524
+    },
+    "after": {
+      "start": 1793333178336,
+      "end": 1793333179827,
+      "startTime": "14:06:18.336",
+      "endTime": "14:06:19.827",
+      "seconds": 1.491,
+      "missing": 2,
+      "previousSequence": 3830,
+      "nextSequence": 3833
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 3,
+    "start": "14:07:50.931",
+    "end": "14:08:10.931",
+    "inside": [],
+    "before": {
+      "start": 1793333269372,
+      "end": 1793333270874,
+      "startTime": "14:07:49.372",
+      "endTime": "14:07:50.874",
+      "seconds": 1.502,
+      "missing": 2,
+      "previousSequence": 4004,
+      "nextSequence": 4007
+    },
+    "after": {
+      "start": 1793333313220,
+      "end": 1793333314591,
+      "startTime": "14:08:33.220",
+      "endTime": "14:08:34.591",
+      "seconds": 1.371,
+      "missing": 1,
+      "previousSequence": 4088,
+      "nextSequence": 4090
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 4,
+    "start": "14:09:09.443",
+    "end": "14:09:29.443",
+    "inside": [],
+    "before": {
+      "start": 1793333313220,
+      "end": 1793333314591,
+      "startTime": "14:08:33.220",
+      "endTime": "14:08:34.591",
+      "seconds": 1.371,
+      "missing": 1,
+      "previousSequence": 4088,
+      "nextSequence": 4090
+    },
+    "after": {
+      "start": 1793333401641,
+      "end": 1793333402643,
+      "startTime": "14:10:01.641",
+      "endTime": "14:10:02.643",
+      "seconds": 1.002,
+      "missing": 1,
+      "previousSequence": 4257,
+      "nextSequence": 4259
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 5,
+    "start": "14:10:44.009",
+    "end": "14:11:04.009",
+    "inside": [
+      {
+        "start": 1793333447723,
+        "end": 1793333449719,
+        "startTime": "14:10:47.723",
+        "endTime": "14:10:49.719",
+        "seconds": 1.996,
+        "missing": 3,
+        "previousSequence": 4345,
+        "nextSequence": 4349
+      }
+    ],
+    "before": {
+      "start": 1793333401641,
+      "end": 1793333402643,
+      "startTime": "14:10:01.641",
+      "endTime": "14:10:02.643",
+      "seconds": 1.002,
+      "missing": 1,
+      "previousSequence": 4257,
+      "nextSequence": 4259
+    },
+    "after": {
+      "start": 1793333697795,
+      "end": 1793333698795,
+      "startTime": "14:14:57.795",
+      "endTime": "14:14:58.795",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 4823,
+      "nextSequence": 4825
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 6,
+    "start": "14:13:37.981",
+    "end": "14:13:57.981",
+    "inside": [],
+    "before": {
+      "start": 1793333447723,
+      "end": 1793333449719,
+      "startTime": "14:10:47.723",
+      "endTime": "14:10:49.719",
+      "seconds": 1.996,
+      "missing": 3,
+      "previousSequence": 4345,
+      "nextSequence": 4349
+    },
+    "after": {
+      "start": 1793333697795,
+      "end": 1793333698795,
+      "startTime": "14:14:57.795",
+      "endTime": "14:14:58.795",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 4823,
+      "nextSequence": 4825
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 7,
+    "start": "14:17:13.859",
+    "end": "14:17:33.859",
+    "inside": [
+      {
+        "start": 1793333833791,
+        "end": 1793333838149,
+        "startTime": "14:17:13.791",
+        "endTime": "14:17:18.149",
+        "seconds": 4.358,
+        "missing": 7,
+        "previousSequence": 5083,
+        "nextSequence": 5091
+      },
+      {
+        "start": 1793333838149,
+        "end": 1793333839146,
+        "startTime": "14:17:18.149",
+        "endTime": "14:17:19.146",
+        "seconds": 0.997,
+        "missing": 1,
+        "previousSequence": 5091,
+        "nextSequence": 5093
+      },
+      {
+        "start": 1793333839146,
+        "end": 1793333843505,
+        "startTime": "14:17:19.146",
+        "endTime": "14:17:23.505",
+        "seconds": 4.359,
+        "missing": 7,
+        "previousSequence": 5093,
+        "nextSequence": 5101
+      }
+    ],
+    "before": {
+      "start": 1793333697795,
+      "end": 1793333698795,
+      "startTime": "14:14:57.795",
+      "endTime": "14:14:58.795",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 4823,
+      "nextSequence": 4825
+    },
+    "after": {
+      "start": 1793333967316,
+      "end": 1793333968683,
+      "startTime": "14:19:27.316",
+      "endTime": "14:19:28.683",
+      "seconds": 1.367,
+      "missing": 1,
+      "previousSequence": 5338,
+      "nextSequence": 5340
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 8,
+    "start": "14:20:22.404",
+    "end": "14:20:42.404",
+    "inside": [
+      {
+        "start": 1793334022347,
+        "end": 1793334024850,
+        "startTime": "14:20:22.347",
+        "endTime": "14:20:24.850",
+        "seconds": 2.503,
+        "missing": 4,
+        "previousSequence": 5443,
+        "nextSequence": 5448
+      },
+      {
+        "start": 1793334030079,
+        "end": 1793334031932,
+        "startTime": "14:20:30.079",
+        "endTime": "14:20:31.932",
+        "seconds": 1.853,
+        "missing": 2,
+        "previousSequence": 5458,
+        "nextSequence": 5461
+      },
+      {
+        "start": 1793334032433,
+        "end": 1793334034932,
+        "startTime": "14:20:32.433",
+        "endTime": "14:20:34.932",
+        "seconds": 2.499,
+        "missing": 4,
+        "previousSequence": 5462,
+        "nextSequence": 5467
+      }
+    ],
+    "before": {
+      "start": 1793333967316,
+      "end": 1793333968683,
+      "startTime": "14:19:27.316",
+      "endTime": "14:19:28.683",
+      "seconds": 1.367,
+      "missing": 1,
+      "previousSequence": 5338,
+      "nextSequence": 5340
+    },
+    "after": {
+      "start": 1793334083009,
+      "end": 1793334084365,
+      "startTime": "14:21:23.009",
+      "endTime": "14:21:24.365",
+      "seconds": 1.356,
+      "missing": 1,
+      "previousSequence": 5559,
+      "nextSequence": 5561
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "ride": 9,
+    "start": "14:22:37.610",
+    "end": "14:22:57.610",
+    "inside": [
+      {
+        "start": 1793334159094,
+        "end": 1793334161092,
+        "startTime": "14:22:39.094",
+        "endTime": "14:22:41.092",
+        "seconds": 1.998,
+        "missing": 3,
+        "previousSequence": 5704,
+        "nextSequence": 5708
+      },
+      {
+        "start": 1793334172054,
+        "end": 1793334173410,
+        "startTime": "14:22:52.054",
+        "endTime": "14:22:53.410",
+        "seconds": 1.356,
+        "missing": 1,
+        "previousSequence": 5729,
+        "nextSequence": 5731
+      }
+    ],
+    "before": {
+      "start": 1793334087364,
+      "end": 1793334088365,
+      "startTime": "14:21:27.364",
+      "endTime": "14:21:28.365",
+      "seconds": 1.001,
+      "missing": 1,
+      "previousSequence": 5567,
+      "nextSequence": 5569
+    },
+    "after": {
+      "start": 1793334178280,
+      "end": 1793334179143,
+      "startTime": "14:22:58.280",
+      "endTime": "14:22:59.143",
+      "seconds": 0.863,
+      "missing": 1,
+      "previousSequence": 5740,
+      "nextSequence": 5742
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 1,
+    "start": "14:38:14.099",
+    "end": "14:38:34.099",
+    "inside": [
+      {
+        "start": 1793335094530,
+        "end": 1793335098027,
+        "startTime": "14:38:14.530",
+        "endTime": "14:38:18.027",
+        "seconds": 3.497,
+        "missing": 6,
+        "previousSequence": 7492,
+        "nextSequence": 7499
+      },
+      {
+        "start": 1793335109720,
+        "end": 1793335111224,
+        "startTime": "14:38:29.720",
+        "endTime": "14:38:31.224",
+        "seconds": 1.504,
+        "missing": 2,
+        "previousSequence": 7521,
+        "nextSequence": 7524
+      }
+    ],
+    "before": {
+      "start": 1793335012837,
+      "end": 1793335013837,
+      "startTime": "14:36:52.837",
+      "endTime": "14:36:53.837",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 7336,
+      "nextSequence": 7338
+    },
+    "after": {
+      "start": 1793335221564,
+      "end": 1793335222564,
+      "startTime": "14:40:21.564",
+      "endTime": "14:40:22.564",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 7735,
+      "nextSequence": 7737
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 2,
+    "start": "14:40:22.610",
+    "end": "14:40:42.610",
+    "inside": [
+      {
+        "start": 1793335222564,
+        "end": 1793335224923,
+        "startTime": "14:40:22.564",
+        "endTime": "14:40:24.923",
+        "seconds": 2.359,
+        "missing": 3,
+        "previousSequence": 7737,
+        "nextSequence": 7741
+      },
+      {
+        "start": 1793335224923,
+        "end": 1793335225923,
+        "startTime": "14:40:24.923",
+        "endTime": "14:40:25.923",
+        "seconds": 1.0,
+        "missing": 1,
+        "previousSequence": 7741,
+        "nextSequence": 7743
+      },
+      {
+        "start": 1793335228419,
+        "end": 1793335229791,
+        "startTime": "14:40:28.419",
+        "endTime": "14:40:29.791",
+        "seconds": 1.372,
+        "missing": 1,
+        "previousSequence": 7748,
+        "nextSequence": 7750
+      }
+    ],
+    "before": {
+      "start": 1793335221564,
+      "end": 1793335222564,
+      "startTime": "14:40:21.564",
+      "endTime": "14:40:22.564",
+      "seconds": 1.0,
+      "missing": 1,
+      "previousSequence": 7735,
+      "nextSequence": 7737
+    },
+    "after": {
+      "start": 1793335280227,
+      "end": 1793335281228,
+      "startTime": "14:41:20.227",
+      "endTime": "14:41:21.228",
+      "seconds": 1.001,
+      "missing": 1,
+      "previousSequence": 7847,
+      "nextSequence": 7849
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 3,
+    "start": "14:41:59.126",
+    "end": "14:42:19.126",
+    "inside": [
+      {
+        "start": 1793335321076,
+        "end": 1793335323076,
+        "startTime": "14:42:01.076",
+        "endTime": "14:42:03.076",
+        "seconds": 2.0,
+        "missing": 3,
+        "previousSequence": 7925,
+        "nextSequence": 7929
+      },
+      {
+        "start": 1793335331538,
+        "end": 1793335334408,
+        "startTime": "14:42:11.538",
+        "endTime": "14:42:14.408",
+        "seconds": 2.87,
+        "missing": 4,
+        "previousSequence": 7945,
+        "nextSequence": 7950
+      },
+      {
+        "start": 1793335334408,
+        "end": 1793335335268,
+        "startTime": "14:42:14.408",
+        "endTime": "14:42:15.268",
+        "seconds": 0.86,
+        "missing": 1,
+        "previousSequence": 7950,
+        "nextSequence": 7952
+      }
+    ],
+    "before": {
+      "start": 1793335297794,
+      "end": 1793335298652,
+      "startTime": "14:41:37.794",
+      "endTime": "14:41:38.652",
+      "seconds": 0.858,
+      "missing": 1,
+      "previousSequence": 7880,
+      "nextSequence": 7882
+    },
+    "after": {
+      "start": 1793335451348,
+      "end": 1793335452351,
+      "startTime": "14:44:11.348",
+      "endTime": "14:44:12.351",
+      "seconds": 1.003,
+      "missing": 1,
+      "previousSequence": 8174,
+      "nextSequence": 8176
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 4,
+    "start": "14:44:15.122",
+    "end": "14:44:35.122",
+    "inside": [
+      {
+        "start": 1793335456080,
+        "end": 1793335459079,
+        "startTime": "14:44:16.080",
+        "endTime": "14:44:19.079",
+        "seconds": 2.999,
+        "missing": 5,
+        "previousSequence": 8183,
+        "nextSequence": 8189
+      },
+      {
+        "start": 1793335466042,
+        "end": 1793335467045,
+        "startTime": "14:44:26.042",
+        "endTime": "14:44:27.045",
+        "seconds": 1.003,
+        "missing": 1,
+        "previousSequence": 8202,
+        "nextSequence": 8204
+      }
+    ],
+    "before": {
+      "start": 1793335451348,
+      "end": 1793335452351,
+      "startTime": "14:44:11.348",
+      "endTime": "14:44:12.351",
+      "seconds": 1.003,
+      "missing": 1,
+      "previousSequence": 8174,
+      "nextSequence": 8176
+    },
+    "after": {
+      "start": 1793335725848,
+      "end": 1793335727205,
+      "startTime": "14:48:45.848",
+      "endTime": "14:48:47.205",
+      "seconds": 1.357,
+      "missing": 1,
+      "previousSequence": 8699,
+      "nextSequence": 8701
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 5,
+    "start": "14:51:03.224",
+    "end": "14:51:23.224",
+    "inside": [
+      {
+        "start": 1793335863706,
+        "end": 1793335866708,
+        "startTime": "14:51:03.706",
+        "endTime": "14:51:06.708",
+        "seconds": 3.002,
+        "missing": 5,
+        "previousSequence": 8962,
+        "nextSequence": 8968
+      },
+      {
+        "start": 1793335873307,
+        "end": 1793335874168,
+        "startTime": "14:51:13.307",
+        "endTime": "14:51:14.168",
+        "seconds": 0.861,
+        "missing": 1,
+        "previousSequence": 8980,
+        "nextSequence": 8982
+      },
+      {
+        "start": 1793335878535,
+        "end": 1793335883774,
+        "startTime": "14:51:18.535",
+        "endTime": "14:51:23.774",
+        "seconds": 5.239,
+        "missing": 9,
+        "previousSequence": 8990,
+        "nextSequence": 9000
+      }
+    ],
+    "before": {
+      "start": 1793335725848,
+      "end": 1793335727205,
+      "startTime": "14:48:45.848",
+      "endTime": "14:48:47.205",
+      "seconds": 1.357,
+      "missing": 1,
+      "previousSequence": 8699,
+      "nextSequence": 8701
+    },
+    "after": {
+      "start": 1793335893357,
+      "end": 1793335894715,
+      "startTime": "14:51:33.357",
+      "endTime": "14:51:34.715",
+      "seconds": 1.358,
+      "missing": 1,
+      "previousSequence": 9019,
+      "nextSequence": 9021
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 6,
+    "start": "14:54:07.540",
+    "end": "14:54:27.540",
+    "inside": [],
+    "before": {
+      "start": 1793336042798,
+      "end": 1793336045298,
+      "startTime": "14:54:02.798",
+      "endTime": "14:54:05.298",
+      "seconds": 2.5,
+      "missing": 4,
+      "previousSequence": 9304,
+      "nextSequence": 9309
+    },
+    "after": {
+      "start": 1793336135952,
+      "end": 1793336136955,
+      "startTime": "14:55:35.952",
+      "endTime": "14:55:36.955",
+      "seconds": 1.003,
+      "missing": 1,
+      "previousSequence": 9482,
+      "nextSequence": 9484
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 7,
+    "start": "14:56:43.157",
+    "end": "14:57:03.157",
+    "inside": [
+      {
+        "start": 1793336206452,
+        "end": 1793336208807,
+        "startTime": "14:56:46.452",
+        "endTime": "14:56:48.807",
+        "seconds": 2.355,
+        "missing": 3,
+        "previousSequence": 9617,
+        "nextSequence": 9621
+      },
+      {
+        "start": 1793336210304,
+        "end": 1793336211805,
+        "startTime": "14:56:50.304",
+        "endTime": "14:56:51.805",
+        "seconds": 1.501,
+        "missing": 2,
+        "previousSequence": 9624,
+        "nextSequence": 9627
+      },
+      {
+        "start": 1793336212308,
+        "end": 1793336216161,
+        "startTime": "14:56:52.308",
+        "endTime": "14:56:56.161",
+        "seconds": 3.853,
+        "missing": 6,
+        "previousSequence": 9628,
+        "nextSequence": 9635
+      }
+    ],
+    "before": {
+      "start": 1793336198722,
+      "end": 1793336201722,
+      "startTime": "14:56:38.722",
+      "endTime": "14:56:41.722",
+      "seconds": 3.0,
+      "missing": 5,
+      "previousSequence": 9602,
+      "nextSequence": 9608
+    },
+    "after": {
+      "start": 1793336282664,
+      "end": 1793336284658,
+      "startTime": "14:58:02.664",
+      "endTime": "14:58:04.658",
+      "seconds": 1.994,
+      "missing": 3,
+      "previousSequence": 9762,
+      "nextSequence": 9766
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 8,
+    "start": "14:58:01.035",
+    "end": "14:58:21.035",
+    "inside": [
+      {
+        "start": 1793336282664,
+        "end": 1793336284658,
+        "startTime": "14:58:02.664",
+        "endTime": "14:58:04.658",
+        "seconds": 1.994,
+        "missing": 3,
+        "previousSequence": 9762,
+        "nextSequence": 9766
+      },
+      {
+        "start": 1793336288393,
+        "end": 1793336289891,
+        "startTime": "14:58:08.393",
+        "endTime": "14:58:09.891",
+        "seconds": 1.498,
+        "missing": 2,
+        "previousSequence": 9773,
+        "nextSequence": 9776
+      }
+    ],
+    "before": {
+      "start": 1793336212308,
+      "end": 1793336216161,
+      "startTime": "14:56:52.308",
+      "endTime": "14:56:56.161",
+      "seconds": 3.853,
+      "missing": 6,
+      "previousSequence": 9628,
+      "nextSequence": 9635
+    },
+    "after": {
+      "start": 1793336446391,
+      "end": 1793336449269,
+      "startTime": "15:00:46.391",
+      "endTime": "15:00:49.269",
+      "seconds": 2.878,
+      "missing": 4,
+      "previousSequence": 10075,
+      "nextSequence": 10080
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "ride": 9,
+    "start": "15:00:42.691",
+    "end": "15:01:02.691",
+    "inside": [
+      {
+        "start": 1793336446391,
+        "end": 1793336449269,
+        "startTime": "15:00:46.391",
+        "endTime": "15:00:49.269",
+        "seconds": 2.878,
+        "missing": 4,
+        "previousSequence": 10075,
+        "nextSequence": 10080
+      },
+      {
+        "start": 1793336452137,
+        "end": 1793336454999,
+        "startTime": "15:00:52.137",
+        "endTime": "15:00:54.999",
+        "seconds": 2.862,
+        "missing": 4,
+        "previousSequence": 10086,
+        "nextSequence": 10091
+      },
+      {
+        "start": 1793336456993,
+        "end": 1793336458496,
+        "startTime": "15:00:56.993",
+        "endTime": "15:00:58.496",
+        "seconds": 1.503,
+        "missing": 2,
+        "previousSequence": 10095,
+        "nextSequence": 10098
+      }
+    ],
+    "before": {
+      "start": 1793336288393,
+      "end": 1793336289891,
+      "startTime": "14:58:08.393",
+      "endTime": "14:58:09.891",
+      "seconds": 1.498,
+      "missing": 2,
+      "previousSequence": 9773,
+      "nextSequence": 9776
+    },
+    "after": {
+      "start": 1793336489934,
+      "end": 1793336491472,
+      "startTime": "15:01:29.934",
+      "endTime": "15:01:31.472",
+      "seconds": 1.538,
+      "missing": 1,
+      "previousSequence": 10158,
+      "nextSequence": 10160
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "ride": 1,
+    "start": "15:08:24.055",
+    "end": "15:08:44.055",
+    "inside": [],
+    "before": null,
+    "after": {
+      "start": 1793336967429,
+      "end": 1793336968788,
+      "startTime": "15:09:27.429",
+      "endTime": "15:09:28.788",
+      "seconds": 1.359,
+      "missing": 1,
+      "previousSequence": 11069,
+      "nextSequence": 11071
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "ride": 2,
+    "start": "15:13:41.819",
+    "end": "15:14:01.819",
+    "inside": [
+      {
+        "start": 1793337221806,
+        "end": 1793337225187,
+        "startTime": "15:13:41.806",
+        "endTime": "15:13:45.187",
+        "seconds": 3.381,
+        "missing": 5,
+        "previousSequence": 11554,
+        "nextSequence": 11560
+      },
+      {
+        "start": 1793337229546,
+        "end": 1793337230907,
+        "startTime": "15:13:49.546",
+        "endTime": "15:13:50.907",
+        "seconds": 1.361,
+        "missing": 1,
+        "previousSequence": 11569,
+        "nextSequence": 11571
+      },
+      {
+        "start": 1793337236149,
+        "end": 1793337237648,
+        "startTime": "15:13:56.149",
+        "endTime": "15:13:57.648",
+        "seconds": 1.499,
+        "missing": 2,
+        "previousSequence": 11581,
+        "nextSequence": 11584
+      },
+      {
+        "start": 1793337238646,
+        "end": 1793337241023,
+        "startTime": "15:13:58.646",
+        "endTime": "15:14:01.023",
+        "seconds": 2.377,
+        "missing": 3,
+        "previousSequence": 11586,
+        "nextSequence": 11590
+      }
+    ],
+    "before": {
+      "start": 1793337143206,
+      "end": 1793337145704,
+      "startTime": "15:12:23.206",
+      "endTime": "15:12:25.704",
+      "seconds": 2.498,
+      "missing": 4,
+      "previousSequence": 11404,
+      "nextSequence": 11409
+    },
+    "after": {
+      "start": 1793337292548,
+      "end": 1793337293910,
+      "startTime": "15:14:52.548",
+      "endTime": "15:14:53.910",
+      "seconds": 1.362,
+      "missing": 1,
+      "previousSequence": 11689,
+      "nextSequence": 11691
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "ride": 3,
+    "start": "15:18:57.960",
+    "end": "15:19:17.960",
+    "inside": [
+      {
+        "start": 1793337540310,
+        "end": 1793337542790,
+        "startTime": "15:19:00.310",
+        "endTime": "15:19:02.790",
+        "seconds": 2.48,
+        "missing": 4,
+        "previousSequence": 12160,
+        "nextSequence": 12165
+      },
+      {
+        "start": 1793337549527,
+        "end": 1793337551390,
+        "startTime": "15:19:09.527",
+        "endTime": "15:19:11.390",
+        "seconds": 1.863,
+        "missing": 2,
+        "previousSequence": 12178,
+        "nextSequence": 12181
+      },
+      {
+        "start": 1793337551890,
+        "end": 1793337552889,
+        "startTime": "15:19:11.890",
+        "endTime": "15:19:12.889",
+        "seconds": 0.999,
+        "missing": 1,
+        "previousSequence": 12182,
+        "nextSequence": 12184
+      },
+      {
+        "start": 1793337554887,
+        "end": 1793337556753,
+        "startTime": "15:19:14.887",
+        "endTime": "15:19:16.753",
+        "seconds": 1.866,
+        "missing": 2,
+        "previousSequence": 12188,
+        "nextSequence": 12191
+      }
+    ],
+    "before": {
+      "start": 1793337439749,
+      "end": 1793337441116,
+      "startTime": "15:17:19.749",
+      "endTime": "15:17:21.116",
+      "seconds": 1.367,
+      "missing": 1,
+      "previousSequence": 11969,
+      "nextSequence": 11971
+    },
+    "after": {
+      "start": 1793337668789,
+      "end": 1793337672649,
+      "startTime": "15:21:08.789",
+      "endTime": "15:21:12.649",
+      "seconds": 3.86,
+      "missing": 6,
+      "previousSequence": 12405,
+      "nextSequence": 12412
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "ride": 4,
+    "start": "15:21:04.074",
+    "end": "15:21:24.074",
+    "inside": [
+      {
+        "start": 1793337668789,
+        "end": 1793337672649,
+        "startTime": "15:21:08.789",
+        "endTime": "15:21:12.649",
+        "seconds": 3.86,
+        "missing": 6,
+        "previousSequence": 12405,
+        "nextSequence": 12412
+      },
+      {
+        "start": 1793337677394,
+        "end": 1793337679889,
+        "startTime": "15:21:17.394",
+        "endTime": "15:21:19.889",
+        "seconds": 2.495,
+        "missing": 4,
+        "previousSequence": 12421,
+        "nextSequence": 12426
+      }
+    ],
+    "before": {
+      "start": 1793337554887,
+      "end": 1793337556753,
+      "startTime": "15:19:14.887",
+      "endTime": "15:19:16.753",
+      "seconds": 1.866,
+      "missing": 2,
+      "previousSequence": 12188,
+      "nextSequence": 12191
+    },
+    "after": {
+      "start": 1793337686127,
+      "end": 1793337687505,
+      "startTime": "15:21:26.127",
+      "endTime": "15:21:27.505",
+      "seconds": 1.378,
+      "missing": 1,
+      "previousSequence": 12438,
+      "nextSequence": 12440
+    }
+  },
+  {
+    "flight": "cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "ride": 5,
+    "start": "15:23:46.192",
+    "end": "15:24:06.192",
+    "inside": [
+      {
+        "start": 1793337827110,
+        "end": 1793337830470,
+        "startTime": "15:23:47.110",
+        "endTime": "15:23:50.470",
+        "seconds": 3.36,
+        "missing": 5,
+        "previousSequence": 12707,
+        "nextSequence": 12713
+      },
+      {
+        "start": 1793337833467,
+        "end": 1793337837329,
+        "startTime": "15:23:53.467",
+        "endTime": "15:23:57.329",
+        "seconds": 3.862,
+        "missing": 6,
+        "previousSequence": 12719,
+        "nextSequence": 12726
+      },
+      {
+        "start": 1793337842069,
+        "end": 1793337843071,
+        "startTime": "15:24:02.069",
+        "endTime": "15:24:03.071",
+        "seconds": 1.002,
+        "missing": 1,
+        "previousSequence": 12735,
+        "nextSequence": 12737
+      },
+      {
+        "start": 1793337843071,
+        "end": 1793337845935,
+        "startTime": "15:24:03.071",
+        "endTime": "15:24:05.935",
+        "seconds": 2.864,
+        "missing": 4,
+        "previousSequence": 12737,
+        "nextSequence": 12742
+      }
+    ],
+    "before": {
+      "start": 1793337715069,
+      "end": 1793337716071,
+      "startTime": "15:21:55.069",
+      "endTime": "15:21:56.071",
+      "seconds": 1.002,
+      "missing": 1,
+      "previousSequence": 12493,
+      "nextSequence": 12495
+    },
+    "after": {
+      "start": 1793337856409,
+      "end": 1793337858415,
+      "startTime": "15:24:16.409",
+      "endTime": "15:24:18.415",
+      "seconds": 2.006,
+      "missing": 3,
+      "previousSequence": 12762,
+      "nextSequence": 12766
+    }
+  }
+]

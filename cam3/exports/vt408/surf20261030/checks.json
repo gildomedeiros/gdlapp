@@ -1,0 +1,119 @@
+[
+  {
+    "file": "cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "failures": [],
+    "gimbal": {
+      "accepted": 49
+    },
+    "loraAccepted": {
+      "True": 3303
+    },
+    "noFixDatagrams": 0,
+    "staleIntervals": [
+      {
+        "start": "2026-10-30T14:07:48.615+10:00",
+        "end": "2026-10-30T14:07:49.353+10:00",
+        "cycles": 8,
+        "maxAge": 3839
+      },
+      {
+        "start": "2026-10-30T14:17:16.795+10:00",
+        "end": "2026-10-30T14:17:18.057+10:00",
+        "cycles": 13,
+        "maxAge": 4266
+      },
+      {
+        "start": "2026-10-30T14:17:22.248+10:00",
+        "end": "2026-10-30T14:17:23.504+10:00",
+        "cycles": 13,
+        "maxAge": 4359
+      }
+    ],
+    "returnInfo": [],
+    "rideCycles": 1720,
+    "staleRideEvidenceCycles": 163
+  },
+  {
+    "file": "cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+    "failures": [],
+    "gimbal": {
+      "accepted": 50
+    },
+    "loraAccepted": {
+      "True": 3644
+    },
+    "noFixDatagrams": 0,
+    "staleIntervals": [
+      {
+        "start": "2026-10-30T14:38:17.599+10:00",
+        "end": "2026-10-30T14:38:18.031+10:00",
+        "cycles": 5,
+        "maxAge": 3501
+      },
+      {
+        "start": "2026-10-30T14:51:21.584+10:00",
+        "end": "2026-10-30T14:51:23.678+10:00",
+        "cycles": 21,
+        "maxAge": 5144
+      },
+      {
+        "start": "2026-10-30T14:56:55.351+10:00",
+        "end": "2026-10-30T14:56:56.081+10:00",
+        "cycles": 8,
+        "maxAge": 3775
+      }
+    ],
+    "returnInfo": [
+      {
+        "timestamp": "2026-10-30T14:50:17.434+10:00",
+        "returnTargetRemainingM": 0.9109108880993119,
+        "currentBoundaryDistanceM": 10.910487259605498,
+        "surferDistanceM": 120.25258946092158,
+        "noRideTimerEvent": "none",
+        "inactivityElapsedMs": 0
+      }
+    ],
+    "rideCycles": 1715,
+    "staleRideEvidenceCycles": 248
+  },
+  {
+    "file": "cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "failures": [],
+    "gimbal": {
+      "accepted": 36
+    },
+    "loraAccepted": {
+      "True": 2650
+    },
+    "noFixDatagrams": 0,
+    "staleIntervals": [
+      {
+        "start": "2026-10-30T15:13:44.888+10:00",
+        "end": "2026-10-30T15:13:45.093+10:00",
+        "cycles": 3,
+        "maxAge": 3288
+      },
+      {
+        "start": "2026-10-30T15:21:11.862+10:00",
+        "end": "2026-10-30T15:21:12.596+10:00",
+        "cycles": 8,
+        "maxAge": 3808
+      },
+      {
+        "start": "2026-10-30T15:23:50.195+10:00",
+        "end": "2026-10-30T15:23:50.404+10:00",
+        "cycles": 3,
+        "maxAge": 3295
+      },
+      {
+        "start": "2026-10-30T15:23:56.486+10:00",
+        "end": "2026-10-30T15:23:57.224+10:00",
+        "cycles": 8,
+        "maxAge": 3758
+      }
+    ],
+    "returnInfo": [],
+    "rideCycles": 949,
+    "staleRideEvidenceCycles": 431
+  }
+]

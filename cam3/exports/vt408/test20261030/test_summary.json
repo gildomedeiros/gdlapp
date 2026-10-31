@@ -1,0 +1,27 @@
+{
+  "version": "4.0.8",
+  "files": 6,
+  "activeSessions": 3,
+  "journeys": 5,
+  "arrived": 3,
+  "cancelledByRetreat": 2,
+  "retreatStarts": 6,
+  "returnToCentralTested": false,
+  "parseErrors": 0,
+  "auditedNonzeroCommandFailures": 0,
+  "findings": [
+    {
+      "issue": "Slow dense-waypoint routes",
+      "evidence": "09:53:55: 33-waypoint 129.08 m route, cancelled by retreat after 101.764 s; 09:55:46: 18-waypoint 88.40 m route arrived after 125.871 s. Median approach command speeds 0.407 and 0.421 m/s. Controller applies arrival slowdown to each next waypoint."
+    },
+    {
+      "issue": "Control release unconfirmed after aircraft RTH",
+      "evidence": "09:58:26.268 RC_ONE_KEY_GO_HOME; VT stop 09:58:26.273; RELEASE_UNCONFIRMED 09:58:31.338. No disable request/callback recorded for this stop and no yaw/motion command events afterwards through session end. Do not infer retained authority."
+    },
+    {
+      "expected": "Destination beachward of boundary holds",
+      "evidence": "First active session has no positioning journey; retreat still moved. Later session boundary holds also recorded."
+    }
+  ],
+  "changes": "No source, settings, or original log changes."
+}

@@ -1,0 +1,26 @@
+VT 4.0.8 real-surf log analysis, 30 October 2026 (Australia/Brisbane)
+Scope: 11 supplied JSONL files, read-only. All parse successfully and report 4.0.8. Three main surfing sessions plus one brief startup/retreat session. No software/settings changes.
+
+Main sessions:
+13:57:59-14:23:04: filming31/retreat25 m, 9 ride starts, 64 arrived journeys, 7 cancelled (5 retreat, 1 ride, 1 aircraft RTH).
+14:32:57-15:01:12: filming28/retreat22 m, 9 ride starts, 64 arrived, 9 cancelled (6 retreat, 1 ride, 1 no-ride return, 1 aircraft RTH).
+15:07:59-15:28:13: filming30/retreat24 m, 5 ride starts, 47 arrived, 4 cancelled by retreat.
+Total: 23 detected ride starts; 175 arrivals out of195 accepted journeys;20 explicit cancellations. Ride starts are software detections, not independently video-confirmed waves.
+All used diagonal -45 degrees, angle tolerance5, margin5 m, maximum movement4 m/s, retreat2 m/s, yaw cap15 deg/s and acceleration8 deg/s^2, no-ride300 s.
+
+Primary operational finding: retreat triggers do not guarantee the threshold distance is maintained against a wave rider. Closest recorded horizontal surfer/drone distances in the three main sessions were4.364m (14:22:41.169),6.870m (14:51:06.802),4.177m (15:13:45.204). Each had an active submitted -2m/s backward command; respective GPS ages78,95,19ms. The boundary was not blocking at these minima. Heights above takeoff were8.5,10.0,9.7m, respectively; horizontal distances must not be mistaken for3D clearance. Height above takeoff is not a surveyed height above the surfer.
+At15:13:40.020 retreat began at22.844m with threshold24m. Ride detected15:13:41.819 at19.408km/h. GPS reception gap15:13:41.806-15:13:45.187 (3.381s). After new fix the reported separation was4.177m. Backward command continued2m/s; no boundary block. Rider speed can exceed retreat speed; stale positions and heading/yaw response add difficulty.
+
+Reception: active-session missing sequence counts72,89,80 (approximately2.5%,2.7%,3.5% relative to received+missing). Largest interpacket gaps4.359s,5.239s,3.862s. Missing numbers spread across last digits, unlike morning's systematic every-tenth-packet loss. Cause cannot be assigned to radio, Wi-Fi, body/water shielding or firmware from these logs alone. No NOFIX datagrams seen. Active aiming has10 short intervals marked stale_gps; retainedTargetAiming=true during them. GPS data can be older before reaching this application's stale threshold.
+
+Aiming: fresh-target horizontal heading error median2.50,2.15,2.42deg across active flights; these averages include paddling/holding. Some ride windows have much larger errors, e.g.15:13 ride fresh-target heading error reaches145.55deg. Configured15deg/s yaw cap and8deg/s^2 acceleration limit response. Camera framing requires video confirmation; heading error is not an optical framing measurement. Gimbal SDK results49/50/36 all accepted. Close-range gimbal adjustment also takes time: around15:13:45 actual pitch near-35deg; reached-55 around15:13:47.753.
+
+Return to central: one travel return, started14:49:42.694, arrived14:50:17.434. Final remaining target distance0.911m; boundary sea-side distance10.910m. Successful designed stand-off return, not aircraft RTH.
+
+Aircraft low-battery RTH stopped VT at14:23:04.977,15:01:12.483,15:28:13.614. Zero yaw_command events after these stops. Each later entered RELEASE_UNCONFIRMED approximately5s after stopping; no disable request/callback recorded for these RTH stops. Requires lifecycle/diagnostic review; not proof VT retained aircraft control.
+
+Around-route slowdown remains visible: journey57 first flight had9waypoints and took52.7s to arrive. Controller applies distance-based slowdown to each next waypoint. No persistent saved-route clearance/replan lockout observed.
+
+Independent command audit found no speed-cap breach, no non-seaward command from recorded beachward positions, no ordinary S0 clearance breach, no approach/return command with current surfer inside configured retreat threshold, and no approach/return command beyond excursion stop. Initial planning uses threshold+allowance; execution uses threshold. Escape legs require a different rule and were excluded from the ordinary clearance test. This audit checks recorded geometry/commands, not unrecorded obstacles or physical flight compliance.
+
+Evidence files: analysis.json, detail.json, checks.json and analysis scripts in this directory.

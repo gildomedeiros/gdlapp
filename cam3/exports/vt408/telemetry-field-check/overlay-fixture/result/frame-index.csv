@@ -1,0 +1,3 @@
+﻿reportRow,ride,clock,droneKmlPoint,surferKmlPoint,video,playback,srtClock,frame,status,error
+2,1,2026-10-30T14:00:00.000+10:00,R1-D1,R1-S1,DJI_0001.MP4,00:00.000,2026-10-30T14:00:00.000+10:00,row-0002-DJI_0001.png,extracted,
+4,1,2026-10-30T14:00:02.000+10:00,R1-D3,R1-S3,DJI_0001.MP4,00:02.000,2026-10-30T14:00:02.000+10:00,row-0004-DJI_0001.png,extracted,

@@ -1,0 +1,10 @@
+{"epochMs": 1793332800100, "event": "aiming_cycle", "session": "test", "cycleId": 0, "distanceM": 31, "targetAgeMs": 0}
+{"epochMs": 1793332800100, "event": "orientation_cycle", "session": "test", "cycleId": 0, "distanceM": 31, "targetAgeMs": 0, "gimbalPitchDeg": -30}
+{"epochMs": 1793332801100, "event": "aiming_cycle", "session": "test", "cycleId": 1, "distanceM": 31, "targetAgeMs": 1}
+{"epochMs": 1793332801100, "event": "orientation_cycle", "session": "test", "cycleId": 1, "distanceM": 31, "targetAgeMs": 1, "gimbalPitchDeg": -40}
+{"epochMs": 1793332802100, "event": "aiming_cycle", "session": "test", "cycleId": 2, "distanceM": 31, "targetAgeMs": 2}
+{"epochMs": 1793332802100, "event": "orientation_cycle", "session": "test", "cycleId": 2, "distanceM": 31, "targetAgeMs": 2, "gimbalPitchDeg": -35}
+{"epochMs": 1793332803100, "event": "aiming_cycle", "session": "test", "cycleId": 3, "distanceM": 31, "targetAgeMs": 3}
+{"epochMs": 1793332803100, "event": "orientation_cycle", "session": "test", "cycleId": 3, "distanceM": 31, "targetAgeMs": 3}
+{"epochMs": 1793332804100, "event": "aiming_cycle", "session": "test", "cycleId": 4, "distanceM": 31, "targetAgeMs": 4}
+{"epochMs": 1793332804100, "event": "orientation_cycle", "session": "test", "cycleId": 4, "distanceM": 31, "targetAgeMs": 4, "gimbalPitchDeg": -29}

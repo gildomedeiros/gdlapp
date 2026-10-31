@@ -1,0 +1,2 @@
+﻿point,sequence,accepted,latitude,longitude,sourceFile,receivedTimestamp,dronePoint,droneLatitude,droneLongitude,retreatActive
+S0,1,True,0,0,test,test,D0,0,0.001,False

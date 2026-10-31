@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "waveLines": [
+    {
+      "id": "9b9655d0-b8f9-474d-9887-f53151950cdd",
+      "name": "vc2",
+      "pointA": {
+        "latitude": -28.0888,
+        "longitude": 153.40852700000005
+      },
+      "pointB": {
+        "latitude": -28.088370000000005,
+        "longitude": 153.40841
+      },
+      "seaSide": "leftOfAToB",
+      "captureMethod": "lora",
+      "capturedAt": "2026-10-10T15:04:36+10:00",
+      "quality": {
+        "pointAFixes": 10,
+        "pointBFixes": 10,
+        "pointAScatterMetres": 0.686687881351504,
+        "pointBScatterMetres": 3.9504373690334213E-10
+      }
+    }
+  ]
+}

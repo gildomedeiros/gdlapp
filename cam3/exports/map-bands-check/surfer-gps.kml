@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Raw received surfer GPS</name><Placemark><name>S0 · packet 1</name><description>{
+  "time_ms": 1200,
+  "receivedTimestamp": "test",
+  "sequence": 1,
+  "latitude": 0,
+  "longitude": 0,
+  "accepted": true,
+  "senderMs": null,
+  "sourceFile": "test",
+  "sourceLine": 3,
+  "minimumDistanceMetres": null,
+  "filmingSeparationMetres": null,
+  "retreatStartedSincePreviousPacket": null,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": null,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": null,
+  "gimbalTargetPitchDeg": null,
+  "gimbalTiltDeg": null,
+  "gimbalReportedTimestamp": null,
+  "point": "S0",
+  "dronePoint": "D0",
+  "droneLatitude": 0,
+  "droneLongitude": 0.0001
+}</description><Point><coordinates>0,0,0</coordinates></Point></Placemark><Placemark><name>D0</name><description>{
+  "time_ms": 1200,
+  "receivedTimestamp": "test",
+  "sequence": 1,
+  "latitude": 0,
+  "longitude": 0,
+  "accepted": true,
+  "senderMs": null,
+  "sourceFile": "test",
+  "sourceLine": 3,
+  "minimumDistanceMetres": null,
+  "filmingSeparationMetres": null,
+  "retreatStartedSincePreviousPacket": null,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": null,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": null,
+  "gimbalTargetPitchDeg": null,
+  "gimbalTiltDeg": null,
+  "gimbalReportedTimestamp": null,
+  "point": "S0",
+  "dronePoint": "D0",
+  "droneLatitude": 0,
+  "droneLongitude": 0.0001
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>0.0001,0,0</coordinates></Point></Placemark><Placemark><name>S0 — D0: 11.1 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>0.0,0.0,0 4.583333333333334e-06,0.0,0</coordinates></LineString><LineString><coordinates>8.333333333333334e-06,0.0,0 1.2916666666666668e-05,0.0,0</coordinates></LineString><LineString><coordinates>1.6666666666666667e-05,0.0,0 2.125e-05,0.0,0</coordinates></LineString><LineString><coordinates>2.5e-05,0.0,0 2.9583333333333335e-05,0.0,0</coordinates></LineString><LineString><coordinates>3.3333333333333335e-05,0.0,0 3.791666666666667e-05,0.0,0</coordinates></LineString><LineString><coordinates>4.166666666666667e-05,0.0,0 4.625e-05,0.0,0</coordinates></LineString><LineString><coordinates>5e-05,0.0,0 5.458333333333333e-05,0.0,0</coordinates></LineString><LineString><coordinates>5.833333333333334e-05,0.0,0 6.291666666666667e-05,0.0,0</coordinates></LineString><LineString><coordinates>6.666666666666667e-05,0.0,0 7.125000000000001e-05,0.0,0</coordinates></LineString><LineString><coordinates>7.500000000000001e-05,0.0,0 7.958333333333335e-05,0.0,0</coordinates></LineString><LineString><coordinates>8.333333333333334e-05,0.0,0 8.791666666666668e-05,0.0,0</coordinates></LineString><LineString><coordinates>9.166666666666667e-05,0.0,0 9.625000000000001e-05,0.0,0</coordinates></LineString></MultiGeometry></Placemark></Document></kml>

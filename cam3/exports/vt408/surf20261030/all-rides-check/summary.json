@@ -1,0 +1,182 @@
+{
+  "mode": "all-rides",
+  "rideCount": 23,
+  "windows": [
+    {
+      "rideNumber": 1,
+      "timestamp": "2026-10-30T14:03:21.812+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 18783,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 2,
+      "timestamp": "2026-10-30T14:05:49.716+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 27330,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 3,
+      "timestamp": "2026-10-30T14:07:50.931+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 34306,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 4,
+      "timestamp": "2026-10-30T14:09:09.443+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 38869,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 5,
+      "timestamp": "2026-10-30T14:10:44.009+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 44358,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 6,
+      "timestamp": "2026-10-30T14:13:37.981+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 54412,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 7,
+      "timestamp": "2026-10-30T14:17:13.859+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 66921,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 8,
+      "timestamp": "2026-10-30T14:20:22.404+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 77838,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 9,
+      "timestamp": "2026-10-30T14:22:37.610+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+      "sourceLine": 85661,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 10,
+      "timestamp": "2026-10-30T14:38:14.099+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 21022,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 11,
+      "timestamp": "2026-10-30T14:40:22.610+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 28381,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 12,
+      "timestamp": "2026-10-30T14:41:59.126+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 33946,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 13,
+      "timestamp": "2026-10-30T14:44:15.122+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 41782,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 14,
+      "timestamp": "2026-10-30T14:51:03.224+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 65279,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 15,
+      "timestamp": "2026-10-30T14:54:07.540+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 75923,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 16,
+      "timestamp": "2026-10-30T14:56:43.157+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 84907,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 17,
+      "timestamp": "2026-10-30T14:58:01.035+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 89388,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 18,
+      "timestamp": "2026-10-30T15:00:42.691+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl",
+      "sourceLine": 98725,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 19,
+      "timestamp": "2026-10-30T15:08:24.055+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+      "sourceLine": 2977,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 20,
+      "timestamp": "2026-10-30T15:13:41.819+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+      "sourceLine": 21138,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 21,
+      "timestamp": "2026-10-30T15:18:57.960+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+      "sourceLine": 39312,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 22,
+      "timestamp": "2026-10-30T15:21:04.074+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+      "sourceLine": 46579,
+      "reportRows": 3
+    },
+    {
+      "rideNumber": 23,
+      "timestamp": "2026-10-30T15:23:46.192+10:00",
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+      "sourceLine": 55909,
+      "reportRows": 3
+    }
+  ],
+  "seconds_before": 1.0,
+  "seconds_after": 2.0,
+  "granularity_seconds": 1.0,
+  "utc_offset": "+10:00",
+  "reportRows": 69,
+  "kml_points": {
+    "surfer": 51,
+    "surfer_other": 0,
+    "drone": 69,
+    "invalid_coordinate_pairs": 0,
+    "direction_arrows": 74
+  },
+  "inputProblems": [],
+  "video_mapping_errors": [],
+  "notes": "All logged ride detections included, not verified waves. Each window resets windowSecond. Overlapping windows repeat records under their own rideNumber. KML labels Rn-Dx/Rn-Sx identify the ride; arrows never cross ride windows."
+}

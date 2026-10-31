@@ -1,0 +1,302 @@
+{
+  "folder": "C:\\Users\\gildo\\temp\\311026",
+  "target": "2026-10-30T13:47:29+10:00",
+  "utc_offset": "+10:00",
+  "seconds_before": 0,
+  "seconds_after": 6238.071,
+  "window_inclusive": true,
+  "files_scanned": 11,
+  "lines_scanned": 314779,
+  "matching_records": 9261,
+  "events": {
+    "yaw_command": 1267,
+    "aiming_cycle": 1575,
+    "movement_cycle": 1575,
+    "retreat_cycle": 1575,
+    "orientation_cycle": 1576,
+    "readiness": 319,
+    "blockers": 319,
+    "lora_datagram": 306,
+    "lora_packet": 274,
+    "gimbal_pitch_cycle": 252,
+    "gimbal_pitch_reached": 21,
+    "retreat_repeated": 31,
+    "retreat_boundary_allowed": 3,
+    "stop_request": 1,
+    "retreat_cancelled": 1,
+    "retreat_cooldown_started": 4,
+    "retreat_cooldown_ended": 1,
+    "stop": 1,
+    "state": 3,
+    "disable_request": 1,
+    "session_end": 1,
+    "telemetry_listener_connected": 1,
+    "telemetry_listener_flightMode": 2,
+    "telemetry_listener_stickLeftHorizontal": 4,
+    "telemetry_listener_stickLeftVertical": 1,
+    "telemetry_listener_stickRightHorizontal": 1,
+    "telemetry_listener_stickRightVertical": 1,
+    "telemetry_aircraftAttitude": 1,
+    "telemetry_gimbalAttitude": 1,
+    "telemetry_gimbalRelativeYaw": 1,
+    "telemetry_height": 1,
+    "input_event": 2,
+    "touch_lock": 1,
+    "user_start": 1,
+    "vt40_configuration": 1,
+    "retreat_settings_config": 1,
+    "rotation_speed_config": 1,
+    "retreat_settings": 1,
+    "initial_control": 1,
+    "enable_request": 1,
+    "gimbal_band_config": 1,
+    "gimbal_band_deferred": 43,
+    "authority_reason": 1,
+    "sdk_callback": 1,
+    "authority_observed": 2,
+    "sdk_callback_processed": 1,
+    "enable_result": 1,
+    "advanced_request": 1,
+    "retreat_started": 1,
+    "movement_transition": 3,
+    "retreat_boundary_blocked": 1,
+    "first_command": 1,
+    "gimbal_band_switch": 18,
+    "gimbal_pitch_command": 18,
+    "gimbal_pitch_result": 18,
+    "lora_gap": 17,
+    "retreat_finished": 3
+  },
+  "invalid_json_records": 0,
+  "records_without_valid_timestamp": 0,
+  "unreadable_files": 0,
+  "problem_examples": [],
+  "report_fields": [
+    "windowSecond",
+    "droneKmlPoint",
+    "droneMovingOnCommand",
+    "KML",
+    "surferKmlPoint",
+    "timestamp",
+    "fileIdPlayback",
+    "droneSurferDistanceM",
+    "cameraTiltDeg",
+    "surferGpsAgeMs",
+    "distanceFromStartM",
+    "retreatHappened",
+    "waveRiding",
+    "waitingArea",
+    "surferSpeedKmh",
+    "surferDisplacementMetres"
+  ],
+  "kml_references": "D/S labels refer to plotted points in the same interval, not necessarily the exact report cycle timestamp. Blank means no point plotted in that interval. SX means rejected/unknown surfer packet.",
+  "combined_cycle_rows": 1575,
+  "reported_rows": 166,
+  "granularity_seconds": 1.0,
+  "skip_unchanged": true,
+  "report_sampling": "Last control cycle per interval from window start, per source/session; then skip unchanged selected readings. GPS age counts; timestamps do not. Raw JSONL unsampled.",
+  "kml_sampling": "Same intervals as XLSX; last actual logged position per subject/interval, then omit unchanged coordinates unless --keep-unchanged. No GPS forward fill. Point times remain actual logged times.",
+  "missing_readings": {
+    "droneMovingOnCommand": 308,
+    "timestamp": 0,
+    "fileIdPlayback": 0,
+    "droneSurferDistanceM": 7,
+    "cameraTiltDeg": 1,
+    "surferGpsAgeMs": 7,
+    "distanceFromStartM": 308,
+    "retreatHappened": 0,
+    "waveRiding": 0,
+    "waitingArea": 94,
+    "surferSpeedKmh": 275,
+    "surferDisplacementMetres": 275
+  },
+  "raw_jsonl_contains_all_fields": true,
+  "kml_points": {
+    "surfer": 76,
+    "surfer_other": 0,
+    "drone": 166,
+    "invalid_coordinate_pairs": 0,
+    "direction_arrows": 232
+  },
+  "video_folder": "exports/pitch-range-check/missing",
+  "video_mapping_errors": [
+    "Video subtitle folder unavailable: exports\\pitch-range-check\\missing"
+  ],
+  "video_playback_definition": "DJI file number_minutes_seconds from nearest SRT frame; seconds truncated for display. Blank means no subtitle coverage. No clock offset adjustment.",
+  "surfer_speed_definition": "Signed beachward km/h: displacement between last accepted GPS packets in adjacent intervals projected opposite logged seawardBearingDeg, divided by actual receipt-time difference. Positive toward beach; negative seaward; sideways excluded. Blank if bearing/GPS unavailable or granularity 0. Not VT ride-detection speed. XLSX/text speed and displacement display [beachward][total] pairs, rounded to one decimal. Negative first value means seaward. Total includes sideways motion. Both blank if no adjacent GPS; n/a first value if bearing missing.",
+  "waiting_area_definition": "GPS estimate at last cycle: at least 5.0s, 6 accepted packets, cluster diameter <= 1.5m, gaps and latest GPS age <= 1.5s. Blank if insufficient/gapped GPS. False if VT riding during interval. Not verified body posture.",
+  "selection": "Inclusive cameraTiltDeg (logged gimbalPitchDeg) at the last cycle of each interval, after normal sampling. Missing pitch excluded. Overrides --all-rides and --at; before/after ignored. Raw records include the selected intervals; KML contains only referenced points.",
+  "mode": "pitch-range",
+  "pitch_range_degrees": [
+    -46.0,
+    -35.0
+  ]
+}
+
+windowSecond	droneKmlPoint	droneMovingOnCommand	KML	surferKmlPoint	timestamp	fileIdPlayback	droneSurferDistanceM	cameraTiltDeg	surferGpsAgeMs	distanceFromStartM	retreatHappened	waveRiding	waitingArea	surferSpeedKmh	surferDisplacementMetres
+376.0	D11	False			13:53:45.913		[15][25][31]	-35.0	194	0	True	False	True	[0][0]	[0][0]
+378.0	D13	False			13:53:47.949		[15][25][31]	-35.0	227	0	True	False	True	[0][0]	[0][0]
+379.0	D14	False			13:53:48.917		[14][25][31]	-35.0	199	0	True	False	True	[0][0]	[0][0]
+380.0	D15	True			13:53:49.981		[14][25][31]	-35.0	764	0	True	False	True	[0][0]	[0][0]
+381.0	D16	True			13:53:50.926		[15][25][31]	-35.0	479	2	True	False	True	[0][0]	[0][0]
+382.0	D17	True			13:53:51.685		[16][25][31]	-35.0	240	2	True	False	True	[0][0]	[0][0]
+553.0	D18			S3	13:56:42.982		[18][25][31]	-35.0	280		False	False			
+557.0	D22				13:56:46.984		[18][25][31]	-35.0	424		False	False		[0][0]	[0][0]
+558.0	D23				13:56:47.906		[18][25][31]	-35.0	846		False	False		[0][0]	[0][0]
+560.0	D25				13:56:49.964		[18][25][31]	-35.0	172		False	False	True	[0][0]	[0][0]
+561.0	D26				13:56:50.897		[18][25][31]	-35.0	106		False	False	True	[0][0]	[0][0]
+563.0	D28				13:56:52.969		[18][25][31]	-35.0	677		False	False	True	[0][0]	[0][0]
+565.0	D30				13:56:54.938		[18][25][31]	-35.0	413		False	False	True	[0][0]	[0][0]
+566.0	D31				13:56:55.972		[18][25][31]	-35.0	448		False	False	True	[0][0]	[0][0]
+567.0	D32				13:56:56.905		[17][25][31]	-35.0	380		False	False	True	[0][0]	[0][0]
+568.0	D33			S4	13:56:57.944		[18][25][31]	-35.0	418		False	False	True	[0][4]	[0][1.1]
+569.0	D34				13:56:58.978		[18][25][31]	-35.0	222		False	False	True	[0][0]	[0][0]
+570.0	D35				13:56:59.911		[18][25][31]	-35.0	153		False	False	True	[0][0]	[0][0]
+571.0	D36				13:57:00.948		[18][25][31]	-35.0	194		False	False	True	[0][0]	[0][0]
+572.0	D37				13:57:01.990		[18][25][31]	-35.0	236		False	False	True	[0][0]	[0][0]
+573.0	D38				13:57:02.918		[18][25][31]	-35.0	162		False	False	True	[0][0]	[0][0]
+575.0	D40				13:57:04.995		[18][25][31]	-35.0	7		False	False	True	[0][0]	[0][0]
+576.0	D41				13:57:05.927		[18][25][31]	-35.0	443		False	False	True	[0][0]	[0][0]
+578.0	D43				13:57:07.905		[17][25][31]	-35.0	418		False	False	True	[0][0]	[0][0]
+580.0	D45				13:57:09.971		[17][25][31]	-35.0	256		False	False	True	[0][0]	[0][0]
+583.0	D48				13:57:12.977		[16][25][31]	-35.0	258		False	False	True	[0][0]	[0][0]
+584.0	D49				13:57:13.907		[16][25][31]	-35.0	689		False	False	True	[0][0]	[0][0]
+589.0	D54				13:57:18.971		[16][25][31]	-35.0	523		False	False	True	[0][0]	[0][0]
+594.0	D59				13:57:23.959		[16][25][31]	-35.0	280		False	False	True	[0][0]	[0][0]
+595.0	D60				13:57:24.993		[16][25][31]	-35.0	80		False	False	True	[0][0]	[0][0]
+596.0	D61				13:57:25.925		[16][25][31]	-35.0	16		False	False	True	[0][0]	[0][0]
+600.0	D65				13:57:29.967		[16][25][31]	-35.0	186		False	False	True	[0][0]	[0][0]
+602.0	D67				13:57:31.926		[16][25][31]	-35.0	284		False	False	True	[0][0]	[0][0]
+604.0	D69				13:57:33.993		[16][25][31]	-35.0	352		False	False	True	[0][0]	[0][0]
+606.0	D71				13:57:35.974		[16][25][31]	-35.0	103		False	False	True	[0][0]	[0][0]
+607.0	D72				13:57:36.908		[16][25][31]	-35.0	32		False	False	True	[0][0]	[0][0]
+628.0	D78				13:57:57.924		[16][23][70]	-35.0	127		False	False		[n/a][0]	[n/a][0]
+629.0	D79				13:57:58.768		[16][23][70]	-35.0	472		False	False	True	[n/a][0]	[n/a][0]
+630.0	D80	False		S7	13:57:59.899		[16][25][31]	-35.0	108	0	True	False	True	[0][0]	[0][0]
+632.0	D82	False			13:58:01.952		[16][25][31]	-35.0	431	0	True	False	True	[0][0]	[0][0]
+633.0	D83	False			13:58:02.924		[16][25][31]	-35.0	402	0	True	False	True	[0][0]	[0][0]
+634.0	D84	False			13:58:03.893		[16][25][31]	-35.0	369	0	True	False	True	[0][0]	[0][0]
+635.0	D85	False			13:58:04.967		[16][25][31]	-35.0	444	0	True	False	True	[0][0]	[0][0]
+636.0	D86	True			13:58:05.931		[16][25][31]	-35.0	407	0	True	False	True	[0][0]	[0][0]
+637.0	D87	True			13:58:06.902		[16][25][31]	-35.0	140	1	True	False	True	[0][0]	[0][0]
+638.0	D88	True			13:58:07.975		[18][25][31]	-35.0	220	3	True	False	True	[0][0]	[0][0]
+639.0	D89	True			13:58:08.942		[20][25][31]	-35.0	188	5	True	False	True	[0][0]	[0][0]
+640.0	D90	True			13:58:09.925		[22][25][31]	-35.0	171	7	True	False	True	[0][0]	[0][0]
+641.0	D91	True			13:58:10.910		[24][25][31]	-35.0	153	9	True	False	True	[0][0]	[0][0]
+642.0	D92	True			13:58:11.991		[24][25][31]	-35.0	6	9	True	False	True	[0][0]	[0][0]
+958.0	D104	True		S15	14:03:27.926		[6][25][31]	-35.0	469	89	True	True	False	[0][4]	[0][1.1]
+959.0	D105	True		S16	14:03:28.982		[10][25][31]	-45.5	25	89	True	True	False	[-7.1][7.1]	[-2][2]
+963.0	D109	True		S19	14:03:32.988		[22][25][31]	-41.400000000000006	302	90	True	True	False	[-7.1][8.2]	[-2][2.3]
+1105.0	D122	True		S29	14:05:54.978		[23][25][31]	-35.0	434	74	True	True	False	[10.6][11.3]	[2.9][3.1]
+1106.0	D123	True		S30	14:05:55.924		[25][25][31]	-35.0	381	74	True	True	False	[3.5][3.5]	[1][1]
+1107.0	D124	True		S31	14:05:56.977		[26][25][31]	-35.0	434	76	True	True	False	[-3.5][5.3]	[-1][1.5]
+1302.0	D136	True		S42	14:09:11.958		[12][25][31]	-35.0	394	76	True	True	False	[11.5][17.4]	[3.9][5.9]
+1303.0	D137	True		S43	14:09:12.903		[11][25][31]	-38.2	336	75	True	True	False	[7][13.9]	[2][3.9]
+1309.0	D143	True		S48	14:09:18.991		[20][25][31]	-40.1	197	67	True	True	False	[-3.5][5.3]	[-1][1.5]
+1311.0	D145	True			14:09:20.978		[24][25][31]	-35.0	184	65	True	True	False	[0][0]	[0][0]
+1398.0	D157	True		S58	14:10:47.911		[12][25][31]	-35.0	195	69	True	True	False	[10.6][13.2]	[2.9][3.7]
+1400.0	D159	True		S59	14:10:49.916		[15][25][31]	-35.0	198	67	True	True	False		
+1401.0	D160	True			14:10:50.976		[17][25][31]	-35.0	29	67	True	True	False	[0][0]	[0][0]
+1402.0	D161	True		S60	14:10:51.912		[18][25][31]	-35.0	463	66	True	True	False	[-3.5][5.3]	[-1][1.5]
+1403.0	D162	True			14:10:52.953		[20][25][31]	-35.0	6	66	True	True	False	[0][0]	[0][0]
+1571.0	D174	True		S70	14:13:40.929		[13][25][31]	-35.0	99	67	True	True	False	[10.6][16.1]	[2.9][4.5]
+1572.0	D175	True		S71	14:13:41.969		[10][25][31]	-35.0	141	66	True	True	False	[10.6][16]	[2.9][4.5]
+1573.0	D176	True		S72	14:13:42.915		[10][25][31]	-38.0	585	66	True	True	False	[14.1][16.2]	[2][2.3]
+1582.0	D185	True			14:13:51.999		[17][25][31]	-40.300000000000004	197	74	True	True	False	[0][0]	[0][0]
+1584.0	D187	True		S81	14:13:53.972		[22][25][31]	-35.0	304	78	True	True	False	[0][4.6]	[0][1.1]
+1585.0	D188	True		S82	14:13:54.909		[24][25][31]	-35.0	387	80	True	True	False	[-4.1][6.3]	[-1][1.5]
+1791.0	D200	True			14:17:20.988		[18][25][31]	-35.0	1844	82	True	True	False		
+1975.0	D214	True		S97	14:20:24.933		[12][25][31]	-35.0	87	83	True	True	False		
+1976.0	D215	True		S98	14:20:25.993		[12][25][31]	-35.0	648	81	True	True	False	[7.1][10.8]	[1][1.5]
+1977.0	D216	True		S99	14:20:26.934		[10][25][31]	-35.0	359	80	True	True	False	[11.5][17.4]	[3.9][5.9]
+1978.0	D217	True			14:20:27.986		[12][25][31]	-44.800000000000004	408	79	True	True	False	[0][0]	[0][0]
+1982.0	D221	True		S101	14:20:31.982		[20][25][31]	-36.800000000000004	51	80	True	True	False	[-1.9][1.9]	[-1][1]
+2109.0	D233	True		S109	14:22:38.973		[14][25][31]	-35.0	376	78	True	True	False	[10.6][15.9]	[2.9][4.5]
+2110.0	D234	True		S110	14:22:39.911		[13][25][31]	-35.0	817	76	True	True	False	[14.3][21.6]	[2][3]
+2111.0	D235	True			14:22:40.960		[15][25][31]	-35.0	1866	75	True	True	False		
+2112.0	D236	True		S111	14:22:41.897		[4][25][31]	-37.300000000000004	301	74	True	True	False		
+2121.0	D245	True		S120	14:22:50.939		[18][25][31]	-42.7	387	77	True	True	False	[-3.5][3.5]	[-1][1]
+2124.0	D248	True			14:22:53.899		[23][25][31]	-35.0	489	79	True	True	False	[0][0]	[0][0]
+2732.0	D260	False			14:33:01.903		[14][22][28]	-35.0	227	0	True	False	True	[0][0]	[0][0]
+2733.0	D261	False			14:33:02.969		[14][22][28]	-35.0	293	0	True	False	True	[0][0]	[0][0]
+2734.0	D262	False			14:33:03.940		[14][22][28]	-35.0	263	0	True	False	True	[0][0]	[0][0]
+2735.0	D263	False			14:33:04.910		[14][22][28]	-35.0	735	0	True	False	True	[0][0]	[0][0]
+2736.0	D264	False			14:33:05.993		[14][22][28]	-35.0	87	0	True	False	True	[0][0]	[0][0]
+2737.0	D265	True			14:33:06.964		[14][22][28]	-35.0	59	0	True	False	True	[0][0]	[0][0]
+2738.0	D266	True			14:33:07.932		[15][22][28]	-35.0	27	2	True	False	True	[0][0]	[0][0]
+2739.0	D267	True			14:33:08.905		[17][22][28]	-35.0	498	3	True	False	True	[0][0]	[0][0]
+2740.0	D268	True			14:33:09.974		[19][22][28]	-35.0	569	5	True	False	True	[0][0]	[0][0]
+2741.0	D269	True			14:33:10.940		[19][22][28]	-35.0	303	6	True	False	True	[0][0]	[0][0]
+2742.0	D270	True			14:33:11.907		[21][22][28]	-35.0	273	8	True	False	True	[0][0]	[0][0]
+2743.0	D271	True			14:33:12.976		[23][22][28]	-35.0	341	10	True	False	True	[0][0]	[0][0]
+2744.0	D272	True			14:33:13.956		[25][22][28]	-35.0	320	12	True	False	True	[0][0]	[0][0]
+3047.0	D296	True			14:38:16.971		[19][22][28]	-35.0	2442	74	True	True	False		
+3048.0	D297	True			14:38:17.915		[19][22][28]	-35.0	3385	74	True	True	False		
+3051.0	D300	True		S147	14:38:20.984		[22][22][28]	-35.0	220	68	True	True	False	[0][4]	[0][1.1]
+3176.0	D312	True		S156	14:40:25.899		[13][22][28]	-35.0	977	77	True	True	False	[10.6][19.2]	[2.9][5.3]
+3177.0	D313	True		S157	14:40:26.971		[7][22][28]	-42.6	51	76	True	True	False	[7.1][10.7]	[2][3]
+3183.0	D319	True			14:40:32.994		[21][22][28]	-36.0	339	67	True	True	False	[0][0]	[0][0]
+3272.0	D332	True		S170	14:42:01.976		[12][22][28]	-35.0	902	88	True	True	False	[14.2][21.5]	[2][3]
+3274.0	D334	True		S171	14:42:03.982		[10][22][28]	-42.300000000000004	35	88	True	True	False		
+3278.0	D338	True		S175	14:42:07.995		[17][22][28]	-43.300000000000004	189	91	True	True	False	[-3.5][3.5]	[-1][1]
+3279.0	D339	True			14:42:08.952		[19][22][28]	-35.0	647	92	True	True	False	[0][0]	[0][0]
+3280.0	D340	True			14:42:09.904		[21][22][28]	-35.0	370	94	True	True	False	[0][0]	[0][0]
+3410.0	D352	True		S183	14:44:19.989		[8][22][28]	-42.300000000000004	39	76	True	True	False		
+3416.0	D358	True		S189	14:44:25.912		[18][22][28]	-45.7	367	75	True	True	False	[-8.6][8.6]	[-2.9][2.9]
+3417.0	D359	True			14:44:26.976		[20][22][28]	-35.0	935	76	True	True	False	[0][0]	[0][0]
+3418.0	D360	True		S190	14:44:27.919		[25][22][28]	-35.0	375	75	True	True	False	[-11.8][11.8]	[-4.9][4.9]
+3816.0	D372	True			14:51:05.953		[20][22][28]	-35.0	2249	90	True	True	False		
+3817.0	D373	True		S199	14:51:06.908		[7][22][28]	-35.0	202	89	True	True	False		
+3818.0	D374	True		S200	14:51:07.966		[9][22][28]	-45.7	757	86	True	True	False	[21.2][22.6]	[2.9][3.1]
+3827.0	D383	True		S208	14:51:16.911		[17][22][28]	-45.800000000000004	237	86	True	True	False	[-7][7]	[-2][2]
+3828.0	D384	True		S209	14:51:17.954		[19][22][28]	-35.9	289	85	True	True	False	[-7.2][7.2]	[-2][2]
+3829.0	D385	True		S210	14:51:18.986		[23][22][28]	-35.0	452	85	True	True	False	[-4.1][6.1]	[-1][1.5]
+3831.0	D387	False			14:51:20.960		[24][22][28]	-35.0	2425	84	False	True	False		
+3832.0	D388	False			14:51:21.997		[24][22][28]	-35.0	3462	84	False	True	False		
+3833.0	D389	False			14:51:22.938		[24][22][28]	-35.0	4404	84	False	True	False		
+3979.0	D401	True			14:53:48.923		[24][22][28]	-35.0	313	87	True	False	False	[0][0]	[0][0]
+3996.0	D413	True		S224	14:54:05.964		[17][22][28]	-35.0	667	80	True	False			
+3999.0	D416	True			14:54:08.905		[24][22][28]	-35.0	373	77	True	True	False	[0][0]	[0][0]
+4155.0	D428	True			14:56:44.957		[20][22][28]	-35.0	9	74	True	True	False	[0][0]	[0][0]
+4156.0	D429	True		S236	14:56:45.903		[20][22][28]	-35.0	453	74	True	True	False	[-7.1][8.1]	[-2][2.3]
+4157.0	D430	True			14:56:46.947		[20][22][28]	-35.0	497	74	True	True	False	[0][0]	[0][0]
+4158.0	D431	True			14:56:47.896		[22][22][28]	-35.0	1443	75	True	True	False		
+4159.0	D432	True		S237	14:56:48.945		[25][22][28]	-35.0	138	76	True	True	False		
+4233.0	D444	True		S248	14:58:02.911		[9][22][28]	-35.0	248	78	True	True	False	[20.5][34.6]	[4.9][8.3]
+4234.0	D445	True			14:58:03.959		[11][22][28]	-41.7	1297	76	True	True	False		
+4240.0	D451	True		S254	14:58:09.952		[20][22][28]	-45.0	62	65	True	True	False	[-7.1][7.6]	[-2.9][3.1]
+4241.0	D452	True		S255	14:58:10.899		[23][22][28]	-35.0	12	64	True	True	False	[-3.5][3.5]	[-1][1]
+4242.0	D453	True		S256	14:58:11.953		[25][22][28]	-35.0	563	62	True	True	False	[-7][10.6]	[-1][1.5]
+4395.0	D465	True		S265	15:00:44.908		[12][22][28]	-35.0	14	87	True	True	False	[10.2][15.3]	[4.9][7.4]
+4396.0	D466	True		S266	15:00:45.958		[8][22][28]	-37.5	66	87	True	True	False	[14.2][21.4]	[3.9][5.9]
+4403.0	D473	True			15:00:52.993		[18][22][28]	-36.1	857	85	True	True	False	[0][0]	[0][0]
+4404.0	D474	True			15:00:53.943		[20][22][28]	-35.0	1807	86	True	True	False		
+4405.0	D475	True		S271	15:00:54.895		[22][22][28]	-35.0	2758	88	True	True	False		
+4406.0	D476	True		S272	15:00:55.946		[22][22][28]	-35.0	452	90	True	True	False	[-3.5][5.4]	[-1][1.5]
+4407.0	D477	True		S273	15:00:56.998		[23][22][28]	-35.0	6	92	True	True	False	[-3.6][5.4]	[-1][1.5]
+4412.0	D482	True		S277	15:01:01.926		[22][22][28]	-35.0	192	96	True	True	False	[-3.5][3.5]	[-1][1]
+4413.0	D483	True		S278	15:01:02.976		[25][22][28]	-35.0	241	97	True	True	False	[-3.5][5.3]	[-1][1.5]
+5100.0	D496	True		S290	15:12:29.944		[24][24][30]	-35.0	500	72	True	False		[-3.5][3.5]	[-1][1]
+5174.0	D508	True			15:13:43.933		[22][24][30]	-35.0	2127	86	True	True	False		
+5176.0	D510	True		S299	15:13:45.946		[6][24][30]	-41.7	399	82	True	True	False		
+5189.0	D522	True		S311	15:13:58.948		[21][24][30]	-40.6	303	85	True	True	False	[-10.6][13.3]	[-2.9][3.7]
+5190.0	D523	True			15:13:59.901		[23][24][30]	-35.0	1256	85	True	True	False		
+5191.0	D524	True			15:14:00.958		[25][24][30]	-35.0	2314	85	True	True	False		
+5303.0	D536	True			15:15:52.995		[22][24][30]	-35.0	1805	80	True	False			
+5305.0	D538	True		S324	15:15:54.906		[12][24][30]	-35.0	240	77	True	False		[10.6][13.3]	[2.9][3.7]
+5307.0	D540	True		S325	15:15:56.911		[14][24][30]	-35.0	366	75	True	False		[0][3.2]	[0][1.1]
+5308.0	D541	True		S326	15:15:57.968		[17][24][30]	-35.0	61	74	True	False		[-3.5][5.3]	[-1][1.5]
+5310.0	D543	True		S327	15:15:59.981		[23][24][30]	-35.0	72	72	True	False	False	[-4.7][5.4]	[-2][2.3]
+5491.0	D555	True		S338	15:19:00.897		[14][24][30]	-35.0	589	85	True	True	False	[8][12.1]	[2][3]
+5494.0	D558	True		S340	15:19:03.953		[11][24][30]	-43.1	162	82	True	True	False	[17.6][23.8]	[4.9][6.6]
+5498.0	D562	True		S344	15:19:07.964		[18][24][30]	-35.300000000000004	435	83	True	True	False	[0][4]	[0][1.1]
+5499.0	D563	True		S345	15:19:08.909		[17][24][30]	-35.0	380	83	True	True	False	[-7.1][8.1]	[-2][2.3]
+5500.0	D564	True		S346	15:19:09.970		[18][24][30]	-35.0	444	85	True	True	False	[-3.6][3.6]	[-1][1]
+5502.0	D566	True		S347	15:19:11.979		[19][24][30]	-35.0	90	88	True	True	False		
+5504.0	D568	True		S349	15:19:13.985		[21][24][30]	-35.0	94	91	True	True	False	[-3.5][3.5]	[-1][1]
+5505.0	D569	True		S350	15:19:14.934		[24][24][30]	-35.0	47	93	True	True	False	[-3.6][5.4]	[-1][1.5]
+5616.0	D581	True		S361	15:21:05.965		[11][24][30]	-35.0	420	83	True	True	False	[10.7][16.2]	[2.9][4.5]
+5617.0	D582	True		S362	15:21:06.921		[8][24][30]	-35.0	137	81	True	True	False	[8.6][15.5]	[2.9][5.3]
+5618.0	D583	True		S363	15:21:07.969		[6][24][30]	-46.0	185	80	True	True	False	[7.1][14]	[2][3.9]
+5624.0	D589	True		S366	15:21:13.968		[20][24][30]	-44.0	323	79	True	True	False	[-10.6][11.4]	[-2.9][3.1]
+5625.0	D590	True		S367	15:21:14.915		[20][24][30]	-39.0	265	79	True	True	False	[0][4]	[0][1.1]

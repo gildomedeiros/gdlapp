@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "enabled": true,
+  "filmingSeparationMetres": 31,
+  "reapproachMarginMetres": 5,
+  "maxMovementSpeedMetresPerSecond": 4,
+  "lineupWidthMetres": 150,
+  "rideStartKmh": 18,
+  "rideDurationSeconds": 20,
+  "noRideTimeoutSeconds": 300,
+  "maxYawRateDegreesPerSecond": 15,
+  "yawAccelerationDegreesPerSecondSquared": 8,
+  "mode": "diagonal",
+  "waveLineId": "9b9655d0-b8f9-474d-9887-f53151950cdd",
+  "sidewaysSide": "left",
+  "alignmentToleranceMetres": 3,
+  "positioningAngleDegrees": -45,
+  "positioningAngleToleranceDegrees": 5,
+  "extraPathClearanceMetres": 2,
+  "routePlanningAllowanceMetres": 2,
+  "maxExcursionMetres": 300,
+  "returnBoundaryStandOffMetres": 10
+}

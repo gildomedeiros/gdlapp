@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="850" viewBox="0 0 1100 850"><rect width="1100" height="850" fill="#f3f7fa"/><g font-family="Arial" fill="#17324d"><text x="25" y="30" font-size="20">Received surfer GPS — north up</text><text x="25" y="55" font-size="13">Green: surfer. Blue: latest prior drone GPS. Dashed lines connect S0–D0, S1–D1, etc.</text><text x="755" y="95" font-size="18">N ↑</text><path d="M60,70 V750 M60,70 H740" stroke="#d6e0e7" fill="none"/><path d="M196,70 V750 M60,206 H740" stroke="#d6e0e7" fill="none"/><path d="M332,70 V750 M60,342 H740" stroke="#d6e0e7" fill="none"/><path d="M468,70 V750 M60,478 H740" stroke="#d6e0e7" fill="none"/><path d="M604,70 V750 M60,614 H740" stroke="#d6e0e7" fill="none"/><path d="M740,70 V750 M60,750 H740" stroke="#d6e0e7" fill="none"/><path class="pair-line" data-pairs="S0" d="M619.07,652.86 L306.84,291.98" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S1" d="M362.25,384.48 L250.56,242.27" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S2" d="M302.98,339.76 L221.81,211.33" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S3" d="M283.23,317.39 L204.68,192.87" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S4" d="M243.72,272.66 L189.72,176.80" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S5" d="M243.72,250.30 L180.93,167.14" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><rect class="drone-marker" data-pairs="S0" x="301.84" y="286.98" width="10" height="10" fill="#2454c5"/><text x="315.84" y="308.98" font-size="14">D0</text><rect class="drone-marker" data-pairs="S1" x="245.56" y="237.27" width="10" height="10" fill="#2454c5"/><text x="259.56" y="259.27" font-size="14">D1</text><rect class="drone-marker" data-pairs="S2" x="216.81" y="206.33" width="10" height="10" fill="#2454c5"/><text x="230.81" y="228.33" font-size="14">D2</text><rect class="drone-marker" data-pairs="S3" x="199.68" y="187.87" width="10" height="10" fill="#2454c5"/><text x="213.68" y="209.87" font-size="14">D3</text><rect class="drone-marker" data-pairs="S4" x="184.72" y="171.80" width="10" height="10" fill="#2454c5"/><text x="198.72" y="193.80" font-size="14">D4</text><rect class="drone-marker" data-pairs="S5" x="175.93" y="162.14" width="10" height="10" fill="#2454c5"/><text x="189.93" y="184.14" font-size="14">D5</text><g class="surfer-marker" data-pairs="S0" data-detail="S0 ↔ D0 | 23.7 m horizontal
+Packet: 3493 | accepted: True
+Received: 2026-10-30T14:03:21.724+10:00
+Surfer: -27.95068, 153.43007
+Drone: -27.950518636340295, 153.42991194992229
+Drone reported: 2026-10-30T14:03:21.707+10:00
+Drone GPS age: None ms
+" tabindex="0" aria-label="S0 ↔ D0 | 23.7 m horizontal
+Packet: 3493 | accepted: True
+Received: 2026-10-30T14:03:21.724+10:00
+Surfer: -27.95068, 153.43007
+Drone: -27.950518636340295, 153.42991194992229
+Drone reported: 2026-10-30T14:03:21.707+10:00
+Drone GPS age: None ms
+"><circle cx="619.07" cy="652.86" r="12" fill="transparent"/><circle cx="619.07" cy="652.86" r="6" fill="#14804a"/><text x="628.07" y="643.86" font-size="15">S0</text></g><g class="surfer-marker" data-pairs="S1" data-detail="S1 ↔ D1 | 9.0 m horizontal
+Packet: 3499 | accepted: True
+Received: 2026-10-30T14:03:24.724+10:00
+Surfer: -27.95056, 153.42994
+Drone: -27.950496408530068, 153.429883464878
+Drone reported: 2026-10-30T14:03:24.643+10:00
+Drone GPS age: None ms
+" tabindex="0" aria-label="S1 ↔ D1 | 9.0 m horizontal
+Packet: 3499 | accepted: True
+Received: 2026-10-30T14:03:24.724+10:00
+Surfer: -27.95056, 153.42994
+Drone: -27.950496408530068, 153.429883464878
+Drone reported: 2026-10-30T14:03:24.643+10:00
+Drone GPS age: None ms
+"><circle cx="362.25" cy="384.48" r="12" fill="transparent"/><circle cx="362.25" cy="384.48" r="6" fill="#14804a"/><text x="371.25" y="375.48" font-size="15">S1</text></g><g class="surfer-marker" data-pairs="S2" data-detail="S2 ↔ D2 | 7.6 m horizontal
+Packet: 3500 | accepted: True
+Received: 2026-10-30T14:03:25.594+10:00
+Surfer: -27.95054, 153.42991
+Drone: -27.95048257691406, 153.42986891073122
+Drone reported: 2026-10-30T14:03:25.591+10:00
+Drone GPS age: None ms
+" tabindex="0" aria-label="S2 ↔ D2 | 7.6 m horizontal
+Packet: 3500 | accepted: True
+Received: 2026-10-30T14:03:25.594+10:00
+Surfer: -27.95054, 153.42991
+Drone: -27.95048257691406, 153.42986891073122
+Drone reported: 2026-10-30T14:03:25.591+10:00
+Drone GPS age: None ms
+"><circle cx="302.98" cy="339.76" r="12" fill="transparent"/><circle cx="302.98" cy="339.76" r="6" fill="#14804a"/><text x="311.98" y="330.76" font-size="15">S2</text></g><g class="surfer-marker" data-pairs="S3" data-detail="S3 ↔ D3 | 7.3 m horizontal
+Packet: 3501 | accepted: True
+Received: 2026-10-30T14:03:25.955+10:00
+Surfer: -27.95053, 153.4299
+Drone: -27.950474320669542, 153.4298602400172
+Drone reported: 2026-10-30T14:03:25.918+10:00
+Drone GPS age: None ms
+" tabindex="0" aria-label="S3 ↔ D3 | 7.3 m horizontal
+Packet: 3501 | accepted: True
+Received: 2026-10-30T14:03:25.955+10:00
+Surfer: -27.95053, 153.4299
+Drone: -27.950474320669542, 153.4298602400172
+Drone reported: 2026-10-30T14:03:25.918+10:00
+Drone GPS age: None ms
+"><circle cx="283.23" cy="317.39" r="12" fill="transparent"/><circle cx="283.23" cy="317.39" r="6" fill="#14804a"/><text x="292.23" y="308.39" font-size="15">S3</text></g><g class="surfer-marker" data-pairs="S4" data-detail="S4 ↔ D4 | 5.5 m horizontal
+Packet: 3502 | accepted: True
+Received: 2026-10-30T14:03:26.459+10:00
+Surfer: -27.95051, 153.42988
+Drone: -27.950467137212865, 153.42985266792263
+Drone reported: 2026-10-30T14:03:26.448+10:00
+Drone GPS age: None ms
+" tabindex="0" aria-label="S4 ↔ D4 | 5.5 m horizontal
+Packet: 3502 | accepted: True
+Received: 2026-10-30T14:03:26.459+10:00
+Surfer: -27.95051, 153.42988
+Drone: -27.950467137212865, 153.42985266792263
+Drone reported: 2026-10-30T14:03:26.448+10:00
+Drone GPS age: None ms
+"><circle cx="243.72" cy="272.66" r="12" fill="transparent"/><circle cx="243.72" cy="272.66" r="6" fill="#14804a"/><text x="252.72" y="263.66" font-size="15">S4</text></g><g class="surfer-marker" data-pairs="S5" data-detail="S5 ↔ D5 | 5.2 m horizontal
+Packet: 3503 | accepted: True
+Received: 2026-10-30T14:03:26.956+10:00
+Surfer: -27.9505, 153.42988
+Drone: -27.950462817653534, 153.4298482157209
+Drone reported: 2026-10-30T14:03:26.872+10:00
+Drone GPS age: None ms
+" tabindex="0" aria-label="S5 ↔ D5 | 5.2 m horizontal
+Packet: 3503 | accepted: True
+Received: 2026-10-30T14:03:26.956+10:00
+Surfer: -27.9505, 153.42988
+Drone: -27.950462817653534, 153.4298482157209
+Drone reported: 2026-10-30T14:03:26.872+10:00
+Drone GPS age: None ms
+"><circle cx="243.72" cy="250.30" r="12" fill="transparent"/><circle cx="243.72" cy="250.30" r="6" fill="#14804a"/><text x="252.72" y="241.30" font-size="15">S5</text></g><path d="M60,790 h170.00" stroke="#17324d" stroke-width="3"/><text x="60" y="815" font-size="13">8.45235 m map scale</text></g></svg>

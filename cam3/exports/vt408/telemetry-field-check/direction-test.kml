@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Recorded surfer and drone GPS</name><description>Logged points within the requested window. Green: accepted surfer packets; orange: other/rejected surfer packets; blue: drone-position snapshots. Repeated snapshots are retained, not new independent GPS fixes. Click a point for timestamp, GPS age if logged, source and original record. Times are observation/receipt times. Ground-clamped display, not flight altitude. Short arrows show bearing from the previous logged coordinate of the same subject, not aircraft heading or an observed path. Arrow length is display-only. No arrow for unchanged positions or the first point. A gap label identifies intervals over 1.5s. No connecting tracks or saved targets used as GPS observations.</description><Style id="surfer"><IconStyle><color>ff00cc00</color><scale>0.65</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0</scale></LabelStyle><LineStyle><color>ff00cc00</color><width>2</width></LineStyle></Style><Folder><name>Surfer — accepted packets</name><Placemark><name>surfer 0</name><styleUrl>#surfer</styleUrl><description>Logged time: 0
+Source: test:1
+{
+  "event": "lora_packet",
+  "accepted": true,
+  "latitude": 0,
+  "longitude": 0
+}</description><ExtendedData><Data name="loggedTimestamp"><value>0</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>1</value></Data><Data name="latitude"><value>0</value></Data><Data name="longitude"><value>0</value></Data><Data name="travelDirectionStatus"><value>First coordinate in window</value></Data><Data name="event"><value>lora_packet</value></Data><Data name="accepted"><value>True</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>0,0</coordinates></Point></Placemark><Placemark><name>surfer 1</name><styleUrl>#surfer</styleUrl><description>Logged time: 1
+Source: test:2
+{
+  "event": "lora_packet",
+  "accepted": true,
+  "latitude": 0,
+  "longitude": 0
+}</description><ExtendedData><Data name="loggedTimestamp"><value>1</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>2</value></Data><Data name="latitude"><value>0</value></Data><Data name="longitude"><value>0</value></Data><Data name="travelDirectionStatus"><value>Unchanged reported coordinate; no direction arrow</value></Data><Data name="event"><value>lora_packet</value></Data><Data name="accepted"><value>True</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>0,0</coordinates></Point></Placemark><Placemark><name>surfer 2</name><styleUrl>#surfer</styleUrl><description>Logged time: 2
+Source: test:3
+{
+  "event": "lora_packet",
+  "accepted": true,
+  "latitude": 0,
+  "longitude": 0.001
+}</description><ExtendedData><Data name="loggedTimestamp"><value>2</value></Data><Data name="sourceFile"><value>test</value></Data><Data name="sourceLine"><value>3</value></Data><Data name="latitude"><value>0</value></Data><Data name="longitude"><value>0.001</value></Data><Data name="travelBearingDegrees"><value>90.0</value></Data><Data name="previousCoordinateTimestamp"><value>1</value></Data><Data name="previousLatitude"><value>0</value></Data><Data name="previousLongitude"><value>0</value></Data><Data name="secondsSincePreviousCoordinate"><value>2.0</value></Data><Data name="travelDirectionStatus"><value>Bearing between recorded coordinates; not aircraft heading</value></Data><Data name="event"><value>lora_packet</value></Data><Data name="accepted"><value>True</value></Data></ExtendedData><Point><altitudeMode>clampToGround</altitudeMode><coordinates>0.001,0</coordinates></Point></Placemark></Folder><Style id="surfer_other"><IconStyle><color>ff0088ff</color><scale>0.65</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0</scale></LabelStyle><LineStyle><color>ff0088ff</color><width>2</width></LineStyle></Style><Folder><name>Surfer — rejected or acceptance unknown</name></Folder><Style id="drone"><IconStyle><color>ffff8800</color><scale>0.65</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0</scale></LabelStyle><LineStyle><color>ffff8800</color><width>2</width></LineStyle></Style><Folder><name>Drone — recorded position snapshots</name></Folder><Folder><name>Travel direction arrows (display only)</name><Placemark><name>surfer 2 — 90.0 deg — 2.000s gap</name><styleUrl>#surfer</styleUrl><description>Previous coordinate: 1 (0, 0)
+Current coordinate: 2 (0, 0.001)
+Elapsed: 2.000s. Bearing: 90.00 degrees clockwise from north.
+3.0m display arrow, not measured speed/path or drone heading. GPS variation can produce apparent movement.
+Source: test:3</description><MultiGeometry><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>0.001,0 0.0010269796481736648,1.652026989138585e-21</coordinates></LineString><LineString><altitudeMode>clampToGround</altitudeMode><coordinates>0.0010188018769383689,-4.721438431073322e-06 0.0010269796481736648,1.652026989138585e-21 0.0010188018769383689,4.721438431073321e-06</coordinates></LineString></MultiGeometry></Placemark></Folder></Document></kml>

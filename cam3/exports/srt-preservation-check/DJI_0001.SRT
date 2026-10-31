@@ -1,0 +1,13 @@
+1
+00:00:00,000 --> 00:00:00,033
+<font size="28">2026-10-30 14:00:00.200
+[latitude: -27.95] [longitude: 153.43] [rel_alt: 8.5] [iso: 100]</font>
+[VT TELEMETRY BEGIN]
+Telemetry: last cycle in 1s interval; flags cover interval
+windowSecond: 0 | droneKmlPoint: n/a | droneMovingOnCommand: n/a
+surferKmlPoint: n/a | timestamp: 14:00:00.100 | fileIdPlayback: 1_0_00
+droneSurferDistanceM: [31][n/a][n/a] | cameraTiltDeg: -30 | surferGpsAgeMs: 0
+distanceFromStartM: n/a | retreatHappened: n/a | waveRiding: n/a
+waitingArea: n/a | surferSpeedKmh: n/a | surferDisplacementMetres: n/a
+[VT TELEMETRY END]
+

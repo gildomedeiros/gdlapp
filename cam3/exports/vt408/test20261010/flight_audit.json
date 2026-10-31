@@ -1,0 +1,203 @@
+[
+  {
+    "file": "cam3_full_2026-10-10_150015_538_2a0b4126.jsonl",
+    "version": "4.0.8",
+    "commands": {},
+    "beachwardCommands": {},
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {},
+    "ranges": {},
+    "journeyOutcomes": {},
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 0,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_150038_244_a2b1e425.jsonl",
+    "version": "4.0.8",
+    "commands": {},
+    "beachwardCommands": {},
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {},
+    "ranges": {},
+    "journeyOutcomes": {},
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 0,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_150139_922_913f01e5.jsonl",
+    "version": "4.0.8",
+    "commands": {},
+    "beachwardCommands": {},
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {},
+    "ranges": {},
+    "journeyOutcomes": {},
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 0,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_153736_128_a258698f.jsonl",
+    "version": "4.0.8",
+    "commands": {},
+    "beachwardCommands": {},
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {},
+    "ranges": {},
+    "journeyOutcomes": {},
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 0,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_153847_172_f00e81b1.jsonl",
+    "version": "4.0.8",
+    "commands": {},
+    "beachwardCommands": {},
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {},
+    "ranges": {},
+    "journeyOutcomes": {},
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 0,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_153924_435_b460a81e.jsonl",
+    "version": "4.0.8",
+    "commands": {
+      "retreat": 408,
+      "approach": 1030
+    },
+    "beachwardCommands": {
+      "retreat": 11,
+      "approach": 30
+    },
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {
+      "moving_saved_route_aiming_surfer": 38
+    },
+    "ranges": {
+      "commandSpeed": [
+        0.20180889342476324,
+        4.0
+      ],
+      "currentSurferDistance": [
+        8.570873335809827,
+        62.659942592233875
+      ],
+      "beachwardDistance": [
+        -0.44833605633141893,
+        -0.0078580614880579
+      ],
+      "executionS0Clearance": [
+        30.2627775918793,
+        31.184635082741643
+      ]
+    },
+    "journeyOutcomes": {
+      "arrived:fixed_destination_arrived": 8,
+      "cancelled:screen_closed": 1
+    },
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 25,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_154504_835_32df8bc1.jsonl",
+    "version": "4.0.8",
+    "commands": {
+      "approach": 837,
+      "retreat": 20
+    },
+    "beachwardCommands": {
+      "approach": 9
+    },
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {
+      "moving_saved_route_aiming_surfer": 38
+    },
+    "ranges": {
+      "commandSpeed": [
+        0.09501951487282008,
+        4.0
+      ],
+      "currentSurferDistance": [
+        23.620131757022477,
+        43.97981317680459
+      ],
+      "executionS0Clearance": [
+        26.98016990498398,
+        32.78537883548761
+      ],
+      "beachwardDistance": [
+        -0.139684983421259,
+        -0.07571034008732269
+      ]
+    },
+    "journeyOutcomes": {
+      "cancelled:retreat": 1,
+      "arrived:fixed_destination_arrived": 5
+    },
+    "returnFirst": null,
+    "returnLast": null,
+    "returnTargetCount": 0,
+    "retreatThreshold": 25,
+    "configurationBlocks": []
+  },
+  {
+    "file": "cam3_full_2026-10-10_154848_214_9e9c62e0.jsonl",
+    "version": "4.0.8",
+    "commands": {
+      "approach": 1192,
+      "return": 213
+    },
+    "beachwardCommands": {},
+    "nonzeroCommandSafetyFailures": [],
+    "zeroSubmissionWhileMoving": {
+      "moving_saved_route_aiming_surfer": 24,
+      "moving_to_restart_target": 6
+    },
+    "ranges": {
+      "commandSpeed": [
+        0.20294926838799887,
+        4.0
+      ],
+      "currentSurferDistance": [
+        26.95081685533926,
+        80.203952525023
+      ],
+      "executionS0Clearance": [
+        27.69369943904501,
+        34.90711153534397
+      ],
+      "returnCurrentSurferDistance": [
+        35.485453283425336,
+        79.93683691518463
+      ]
+    },
+    "journeyOutcomes": {
+      "arrived:fixed_destination_arrived": 6,
+      "cancelled:no_ride_timeout": 1
+    },
+    "returnFirst": "2026-10-10T15:50:34.863+10:00",
+    "returnLast": "2026-10-10T15:51:05.858+10:00",
+    "returnTargetCount": 1,
+    "retreatThreshold": 25,
+    "configurationBlocks": []
+  }
+]

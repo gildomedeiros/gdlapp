@@ -1,0 +1,366 @@
+{
+  "3.7": {
+    "20.0": [
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-02_205321_699_f93669ed.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-02_211226_570_a725bf69.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-02_232710_147_64e1d97f.jsonl"
+      }
+    ]
+  },
+  "4.0.3": {
+    "18": [
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-03_223229_750_2f129f3e.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-03_223958_656_360c94e5.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\v4 test 2\\cam3_full_2026-10-04_060358_165_93da0cb8.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\v4 test 2\\cam3_full_2026-10-04_061049_287_f4ffd7d5.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\v4 test 2\\cam3_full_2026-10-04_061434_971_db306ad9.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\v4 test 2\\cam3_full_2026-10-04_061730_399_5f7ccb12.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\v4 test 2\\cam3_full_2026-10-04_062100_641_bcbe6746.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\v4 test 2\\cam3_full_2026-10-04_062645_773_0e8e295e.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 4.03\\logs\\cam3_full_2026-10-04_083821_554_1a3054b0.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 4.03\\logs\\cam3_full_2026-10-04_091937_120_b916420d.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 4.03\\logs\\cam3_full_2026-10-04_095648_530_8795e12c.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-04"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 4.03\\logs\\cam3_full_2026-10-04_095812_811_bcc33e7d.jsonl"
+      }
+    ],
+    "25": [
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_213413_701_60cb4e2a.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_214433_239_a4ee1d16.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_214841_088_ebd4710f.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_215551_904_791a03a2.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_220208_476_1f1cb1c6.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_220638_442_05e26c81.jsonl"
+      }
+    ],
+    "25.0": [
+      {
+        "date": [
+          "2026-10-05"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt404test\\cam3_full_2026-10-05_215414_537_adf262f9.jsonl"
+      }
+    ]
+  },
+  "4.0.6": {
+    "19": [
+      {
+        "date": [
+          "2026-10-07"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-07_080514_499_042b2a4f.jsonl"
+      }
+    ],
+    "19.0": [
+      {
+        "date": [
+          "2026-10-07"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\cam3_full_2026-10-07_090028_041_a2dcd7d5.jsonl"
+      }
+    ]
+  },
+  "3.5": {
+    "25.0": [
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.5\\cam3_full_2026-10-02_172258_411_6abd7343.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.5\\cam3_full_2026-10-02_172512_345_14325adb.jsonl"
+      }
+    ],
+    "20.0": [
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.5\\cam3_full_2026-10-02_172917_244_c2220047.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.5\\cam3_full_2026-10-02_174448_256_60f6bb1d.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.5\\cam3_full_2026-10-02_175110_550_ad3d7cb0.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-02"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.5\\cam3_full_2026-10-02_180824_192_0e1643fb.jsonl"
+      }
+    ]
+  },
+  "3.8": {
+    "23": [
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.8\\cam3_full_2026-10-03_084631_323_e332f36b.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.8\\cam3_full_2026-10-03_085135_954_5ec0e1d7.jsonl"
+      }
+    ],
+    "23.0": [
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.8\\cam3_full_2026-10-03_085120_068_297d42d9.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.8\\cam3_full_2026-10-03_092106_407_d151a60d.jsonl"
+      }
+    ],
+    "18": [
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.8\\cam3_full_2026-10-03_092718_407_9e91c5b5.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\3.8\\cam3_full_2026-10-03_094458_725_8c2c3251.jsonl"
+      }
+    ]
+  },
+  "4.0.2": {
+    "18": [
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\4 test\\cam3_full_2026-10-03_204516_874_f4ec028c.jsonl"
+      }
+    ],
+    "18.0": [
+      {
+        "date": [
+          "2026-10-03"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\4 test\\cam3_full_2026-10-03_211150_997_0d1b4a94.jsonl"
+      }
+    ]
+  },
+  "4.0.5": {
+    "25": [
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_181158_504_3ff3eccd.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_181614_064_4188e31c.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_181946_098_93efd082.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_182241_578_418e70b1.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_182518_143_907f54b6.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_183144_291_3f7cbe45.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-06"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\405 test\\cam3_full_2026-10-06_183437_420_649a64eb.jsonl"
+      }
+    ]
+  },
+  "4.0.8": {
+    "19": [
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\408\\cam3_full_2026-10-08_093257_305_0c64be51.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\408\\cam3_full_2026-10-08_093904_936_abc789a5.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\408\\cam3_full_2026-10-08_094845_183_9117a60f.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\408\\cam3_full_2026-10-08_095211_213_da352ea1.jsonl"
+      }
+    ]
+  },
+  "4.0.7": {
+    "19": [
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 407\\cam3_full_2026-10-08_064738_557_cdf5bc69.jsonl"
+      },
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 407\\cam3_full_2026-10-08_065204_691_e7bc5a17.jsonl"
+      }
+    ],
+    "19.0": [
+      {
+        "date": [
+          "2026-10-08"
+        ],
+        "file": "C:\\Users\\gildo\\temp\\vt 407\\cam3_full_2026-10-08_065434_219_7490d3e8.jsonl"
+      }
+    ]
+  }
+}

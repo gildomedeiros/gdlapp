@@ -1,0 +1,5 @@
+{"event": "lora_packet", "epochMs": 900}
+{"event": "movement_cycle", "epochMs": 1000, "filmingDistanceM": 31}
+{"event": "retreat_cycle", "epochMs": 1000, "minimumDistanceM": 25, "active": false}
+{"event": "lora_packet", "epochMs": 1100}
+{"event": "movement_cycle", "epochMs": 1200, "filmingDistanceM": 40}

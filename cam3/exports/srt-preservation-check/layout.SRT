@@ -1,0 +1,24 @@
+1
+00:00:00,000 --> 00:00:00,033
+{\an1}2026-10-30 14:00:00.000
+original DJI metadata
+<font size="14">
+[VT TELEMETRY BEGIN]
+windowSecond: 0
+droneKmlPoint: n/a
+droneMovingOnCommand: n/a
+surferKmlPoint: n/a
+timestamp: 14:00:00.000
+fileIdPlayback: 626_0_00
+droneSurferDistanceM: n/a
+cameraTiltDeg: -29.9
+surferGpsAgeMs: n/a
+distanceFromStartM: n/a
+retreatHappened: n/a
+waveRiding: n/a
+waitingArea: n/a
+surferSpeedKmh: n/a
+surferDisplacementMetres: n/a
+[VT TELEMETRY END]
+</font>
+
