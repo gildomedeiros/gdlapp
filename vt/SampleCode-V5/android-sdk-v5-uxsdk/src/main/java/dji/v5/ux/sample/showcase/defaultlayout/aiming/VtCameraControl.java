@@ -82,7 +82,7 @@ public final class VtCameraControl {
         // VT 3.5: During retreat/cooldown only, retained surfer GPS may select bands using live aircraft telemetry.
         boolean retainedRetreat=(age>3000 || session.cycleRetainedTarget) && session.retainedRetreatTarget(in,now);
         boolean gpsUsable=gpsFresh || retainedRetreat;
-        deferred(!gpsUsable ? "stale_surfer_gps" : !attitude.fresh(now) ? "stale_gimbal_attitude" : !range.fresh(now) ? "stale_gimbal_range" : pending ? "pending_command" : commandAt>=0 && now-commandAt<3000 ? "command_cooldown" : "none");
+        deferred(!gpsUsable ? "stale_surfer_gps" : !attitude.fresh(now) ? "stale_gimbal_attitude" : !range.fresh(now) ? "stale_gimbal_range" : pending ? "pending_command" : commandAt>=0 && now-commandAt<2000 ? "command_cooldown" : "none");
         if(!pending && (commandAt<0 || now-commandAt>=2000) && range.fresh(now) && range.value.getPitch()!=null) {
             double min=range.value.getPitch().getMin(), max=range.value.getPitch().getMax();
             int oldBand=policy.band;
@@ -105,7 +105,7 @@ public final class VtCameraControl {
             }
         }
         if(commandNeeded && !pending && gpsUsable && attitude.fresh(now) && range.fresh(now)
-                && attempts<3 && (commandAt<0 || now-commandAt>=3000)) {
+                && attempts<3 && (commandAt<0 || now-commandAt>=2000)) {
             commandAt=now;attempts++;pending=true;commandNeeded=false;
             final long token=sessionId,g=generation,id=++commandId; final double target=policy.target; sentTarget=target;sentBand=policy.band+1;sentCommandId=id;reachedLogged=false;
             GimbalAngleRotation rotation=new GimbalAngleRotation();
