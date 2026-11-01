@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "folder": "C:\\Users\\gildo\\temp\\311026",
+    "video_folder": "C:\\Users\\gildo\\temp\\100MEDIA",
+    "output": "C:\\Users\\gildo\\gdlapp\\VT Tools\\exports\\surfer-map-app",
+    "utc_offset": "+10:00",
+    "ffmpeg": "",
+    "recursive": false,
+    "gap_red_ms": 1000.0
+  },
+  "mode": "timestamp",
+  "presets": {
+    "rides": {
+      "scope": "first",
+      "number_of_rides": 3,
+      "ride_numbers": "",
+      "before": 15.0,
+      "after": 15.0,
+      "interval": 0.0,
+      "max_samples": null,
+      "auto_fov": false,
+      "filter_pitch": false,
+      "pitch_min": -40,
+      "pitch_max": -34,
+      "filter_distance": false,
+      "distance_min": 25,
+      "distance_max": 40
+    },
+    "timestamp": {
+      "at": "14:03:07.530",
+      "next": 5,
+      "auto_fov": false
+    },
+    "pitch": {
+      "pitch_min": -80.0,
+      "pitch_max": -50.0,
+      "distance_min": 0.0,
+      "distance_max": 400.0,
+      "before": 125.0,
+      "after": 125.0,
+      "interval": 1.0,
+      "max_samples": 10,
+      "auto_fov": false
+    },
+    "framing": {
+      "sample_bands": "0 20 30 40",
+      "sample_count": 3,
+      "before": 5,
+      "after": 20,
+      "interval": 5,
+      "sample_max_checks": 0
+    }
+  }
+}

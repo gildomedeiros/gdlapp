@@ -1,0 +1,3 @@
+# Optional: for frame overlays and person detection, not basic maps.
+pillow
+ultralytics
