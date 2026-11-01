@@ -91,21 +91,26 @@ def stamp_card(path, point, gap_red_ms=1000):
     frame.save(path)
 
 
-def capture_frame(point, video_folder, output, ffmpeg, gap_red_ms=1000, annotate=True):
-    seconds = point.get('videoPlaybackSeconds')
+def resolve_video(point, video_folder):
     ident = point.get('videoId')
-    if seconds is None or ident is None:
+    if point.get('videoPlaybackSeconds') is None or ident is None:
         raise ValueError('No unambiguous SRT frame mapping for this surfer point.')
     videos = [p for p in Path(video_folder).iterdir() if p.suffix.lower() == '.mp4'
               and re.match(r'^DJI_0*' + re.escape(ident) + r'(?:_|$)', p.stem, re.I)]
     if len(videos) != 1:
         raise ValueError('Matching MP4 is missing or ambiguous: DJI_' + ident)
+    return videos[0]
+
+
+def capture_frame(point, video_folder, output, ffmpeg, gap_red_ms=1000, annotate=True):
+    seconds = point.get('videoPlaybackSeconds')
+    video = resolve_video(point, video_folder)
     folder = Path(output) / ('captured-frames' if annotate else 'fov-frames')
     folder.mkdir(parents=True, exist_ok=True)
-    name = f'{point["point"]}-packet-{point["sequence"]}-{videos[0].stem}.png'
+    name = f'{point["point"]}-packet-{point["sequence"]}-{video.stem}.png'
     dest = folder / name
     result = subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-nostdin',
-                             '-ss', str(seconds), '-i', str(videos[0]), '-frames:v', '1',
+                             '-ss', str(seconds), '-i', str(video), '-frames:v', '1',
                              '-threads', '2', '-y', str(dest)], capture_output=True, text=True,
                             timeout=60, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     if result.returncode or not dest.is_file():
@@ -226,7 +231,7 @@ def serve_map(points, output, video_folder, ffmpeg=None, gap_red_ms=1000):
             self.reply(404, b'{}')
 
         def do_POST(self):
-            if self.path not in ('/capture','/fov') or self.headers.get('Host') != address or self.headers.get('Origin') != 'http://' + address:
+            if self.path not in ('/capture','/fov','/video-frame') or self.headers.get('Host') != address or self.headers.get('Origin') != 'http://' + address:
                 return self.reply(403, b'{}')
             try:
                 length = int(self.headers.get('Content-Length', '0'))
@@ -236,6 +241,12 @@ def serve_map(points, output, video_folder, ffmpeg=None, gap_red_ms=1000):
                 point = points_by_id.get(request.get('point'))
                 if point is None:
                     raise ValueError('Unknown surfer point')
+                if self.path=='/video-frame':
+                    from surfer_video_frames import capture_video_frame
+                    dest,result=capture_video_frame(point,request,video_folder,output,executable)
+                    url='/frames/'+dest.name
+                    images[url]=dest
+                    return self.reply(200,json.dumps(dict(result,url=url)).encode())
                 if self.path == '/fov':
                     dest=capture_frame(point,video_folder,output,executable,gap_red_ms,annotate=False)
                     result=estimator.classify_person(dest,point,output)

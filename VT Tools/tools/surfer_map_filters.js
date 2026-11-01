@@ -10,6 +10,7 @@ const positionFilter=document.getElementById('position-filter');
 const previousPosition=document.getElementById('position-prev');
 const nextPosition=document.getElementById('position-next');
 const hideSeaward=document.getElementById('hide-seaward');
+const hideSlowSpeed=document.getElementById('hide-slow-speed');
 let eligiblePoints=mapFilters.points, eligiblePairs=new Set(eligiblePoints.map(p=>p.id));
 let visiblePairs=new Set(eligiblePairs);
 const rideHighlight=document.getElementById('show-ride-rings');
@@ -143,7 +144,9 @@ function fitRide(){
 function changeRide(resetSelection=true, refit=true){
  const ride=mapFilters.rides.find(r=>r.id===rideFilter.value);
  const ridePoints=mapFilters.points.filter(p=>!ride||Object.hasOwn(p.offsets,ride.id));
- eligiblePoints=ridePoints.filter(p=>!hideSeaward?.checked||p.seaward!==true);
+ const directionPoints=ridePoints.filter(p=>!hideSeaward?.checked||p.seaward!==true);
+ const threshold=selectedSpeedThreshold(),filterSpeed=hideSlowSpeed?.checked&&threshold!==null;
+ eligiblePoints=directionPoints.filter(p=>!filterSpeed||!Number.isFinite(p.speedKmh)||p.speedKmh>=threshold);
  eligiblePairs=new Set(eligiblePoints.map(p=>p.id));
  pairChecks.forEach(c=>{
   const label=c.closest('label'), included=eligiblePairs.has(c.dataset.pair);
@@ -157,15 +160,20 @@ function changeRide(resetSelection=true, refit=true){
  document.getElementById('ride-window-info').textContent=ride?
   ride.beforeSeconds+'s before / '+ride.afterSeconds+'s after ride start':
   mapFilters.rides.length?'All loaded ride windows':'All loaded positions';
- if(hideSeaward?.checked)document.getElementById('ride-window-info').textContent+=' · '+(ridePoints.length-eligiblePoints.length)+' seaward positions hidden';
+ if(hideSeaward?.checked)document.getElementById('ride-window-info').textContent+=' · '+(ridePoints.length-directionPoints.length)+' seaward positions hidden';
+ if(filterSpeed)document.getElementById('ride-window-info').textContent+=' · '+(directionPoints.length-eligiblePoints.length)+' below '+threshold+' km/h hidden';
  document.getElementById('fit-ride').textContent=ride?'Fit ride':'Fit all';
  updatePairs();if(refit)fitRide();
 }
 function initializeMapFilters(){
  hideSeaward?.addEventListener('change',()=>changeRide(false,false));
+ hideSlowSpeed?.addEventListener('change',()=>changeRide(false,false));
  rideHighlight?.addEventListener('change',updateHighlights);
  speedHighlight?.addEventListener('change',updateHighlights);
- speedThreshold?.addEventListener('input',updateHighlights);
+ speedThreshold?.addEventListener('input',()=>{
+  updateHighlights();
+  if(hideSlowSpeed?.checked)changeRide(false,false);
+ });
  layerControls.forEach(layer=>layer.input?.addEventListener('change',()=>{
   clearDetails();clearMeasurement();applyLayerVisibility();
  }));

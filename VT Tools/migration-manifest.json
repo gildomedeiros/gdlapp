@@ -9,8 +9,8 @@
     },
     {
       "path": "README.txt",
-      "bytes": 6403,
-      "sha256": "33880c9db20b4d26c74df797a400c0a4f922fc3dec6a4373f0e73edcd1949686"
+      "bytes": 7944,
+      "sha256": "da972175af702990ef1f1162aa575e7c7fea8b73957232904745ccd48946571b"
     },
     {
       "path": "Start Map.cmd",
@@ -134,8 +134,8 @@
     },
     {
       "path": "tools/surfer_gps_map.py",
-      "bytes": 61347,
-      "sha256": "f12bf207565c337fef9f2b4957fdab083af055f38e6fefcecbca617d1a87810e"
+      "bytes": 61564,
+      "sha256": "84c34cd30e79e6f836bc6d5ee9c2155dec7e2dfdb27994b8307f8ba204e5de95"
     },
     {
       "path": "tools/surfer_map_app.html",
@@ -144,18 +144,18 @@
     },
     {
       "path": "tools/surfer_map_app.py",
-      "bytes": 27428,
-      "sha256": "a8021446ca50a95eac24d80a33a241dc8092ce8953dc43ee7bfff1af2ce12960"
+      "bytes": 28181,
+      "sha256": "9b93ed6f89052f7f0d5004303d4027a2bf42a0e35dee544dcae7362bf0dd723d"
     },
     {
       "path": "tools/surfer_map_capture.py",
-      "bytes": 13798,
-      "sha256": "f7c5582eb92dd6e35dcb3b7cda3c0142593afdc667ceca0ba08c58de5d80c1a3"
+      "bytes": 14335,
+      "sha256": "3ca0fc569d8378a3554d3aeea91fa6f897a98a169c3d98d2f792ebae4f776c32"
     },
     {
       "path": "tools/surfer_map_filters.js",
-      "bytes": 11382,
-      "sha256": "b16742ee90d8c2b93e8a0d0e577aa071a0f32d24155ecb6ee5caf615a3d78139"
+      "bytes": 11970,
+      "sha256": "9f9b4c8e6f2e0ecea39c0b86ced49c2c9dedc454c3037783d19b1c22ec7d17a9"
     },
     {
       "path": "tools/surfer_map_filters.py",
@@ -164,8 +164,8 @@
     },
     {
       "path": "tools/surfer_map_interactions.js",
-      "bytes": 15612,
-      "sha256": "14455d1f44ce9abf347523882d096e9776f799d93352afad7a0a226ba717f08c"
+      "bytes": 17849,
+      "sha256": "98ffd505ac296ee230f02aca828e265ee19b5bf6b8a1dc493db554bb489b68af"
     },
     {
       "path": "tools/surfer_pitch_samples.py",
@@ -176,6 +176,11 @@
       "path": "tools/surfer_side_view.js",
       "bytes": 8615,
       "sha256": "13f9ce0fe91024afccfb4b75f191b2b6d3439d0d8b884e9a81d0b5456e9209d5"
+    },
+    {
+      "path": "tools/surfer_video_frames.py",
+      "bytes": 4754,
+      "sha256": "47ebe7e20383055ff37155c3e7f0e79d2ad64ccc337199d9dab43600794b0760"
     },
     {
       "path": "tools/telemetry_around.py",
@@ -219,8 +224,8 @@
     },
     {
       "path": "tools/test_surfer_map_ui.cjs",
-      "bytes": 26324,
-      "sha256": "5b4eaa2dd619a1c9b127dc6b54eb6d2de8716e4cb0c6187bf068994c082c59ab"
+      "bytes": 33065,
+      "sha256": "ef87e220e9489a7e0881fef4baf7325f1ef0665b4f01ff78919eb5868e8e7029"
     },
     {
       "path": "tools/test_surfer_pitch_samples.py",
@@ -241,7 +246,12 @@
       "path": "tools/test_surfer_seaward.py",
       "bytes": 3898,
       "sha256": "68ae6329b59bc28b3dd5b6b81a530b94a835589d1dbe356ef1a4d03af725dad9"
+    },
+    {
+      "path": "tools/test_surfer_video_frames.py",
+      "bytes": 5541,
+      "sha256": "b83887591dc5c28bac3b08c887af44159e45c5567bdc5d038dbc115c217fac52"
     }
   ],
-  "updated": "2026-11-01: map/frame keyboard navigation, highlights, seaward filtering and clean/enhanced downloads"
+  "updated": "2026-11-01: frame/video navigation and optional speed-below-threshold visibility filter"
 }

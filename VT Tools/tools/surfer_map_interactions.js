@@ -162,8 +162,9 @@ pairChecks.forEach(check=>check.closest('label').addEventListener('click',e=>{
  if(e.ctrlKey&&e.button===0){e.preventDefault();e.stopPropagation();chooseCard(check.dataset.pair);capturePoint(check.dataset.pair);}
 },true));
 document.addEventListener('keydown',e=>{
+ if(captureDialog.open&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){navigateFrameKey(e);return;}
  if(e.key==='ArrowUp'||e.key==='ArrowDown'){
-  if(captureDialog.open)navigateFrameKey(e);else navigateSurferKey(e);
+  if(!captureDialog.open)navigateSurferKey(e);
   return;
  }
  if(e.key==='Escape'){clearDetails();return;}
@@ -187,17 +188,24 @@ function setFrameStatus(message){
  if(status)status.textContent=message;
 }
 function navigateFrameKey(e){
- if(e.ctrlKey||e.altKey||e.metaKey||e.shiftKey||e.isComposing||e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]'))return;
+ if(e.altKey||e.metaKey||e.shiftKey||e.isComposing||e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]'))return;
  e.preventDefault();e.stopPropagation();
  // One extraction at a time: held keys cannot queue stale frames.
  if(captureBusy)return;
+ const direction=e.key==='ArrowRight'?1:-1;
+ if(e.ctrlKey){captureVideoStep(direction);return;}
  const {single,points}=positionNavigation(),id=captureDialog.dataset.point;
  const index=points.findIndex(p=>p.id===id);if(index<0)return;
- const next=points[index+(e.key==='ArrowUp'?1:-1)];
- if(!next){setFrameStatus(e.key==='ArrowUp'?'Last position.':'First position.');return;}
+ const rawTime=Date.parse(captureDialog.dataset.timestamp);
+ let next=points[index+direction];
+ if(captureDialog.dataset.kind==='video'&&Number.isFinite(rawTime)){
+  const candidates=points.filter(p=>direction*(Date.parse(sideData[p.id]?.frame||p.time)-rawTime)>0);
+  next=direction>0?candidates[0]:candidates[candidates.length-1];
+ }
+ if(!next){setFrameStatus(direction>0?'Last position.':'First position.');return;}
  capturePoint(next.id,{advanceSelection:single});
 }
-function frameDownloadLink(id,variant,label){
+function frameDownloadLink(id,variant,label,videoTime=null){
  const link=document.createElement('a');link.href='#';link.textContent=label;
  link.dataset.downloadVariant=variant;link.style.marginLeft='16px';
  link.onclick=async e=>{
@@ -205,7 +213,9 @@ function frameDownloadLink(id,variant,label){
   captureBusy=true;captureDialog.setAttribute('aria-busy','true');link.setAttribute('aria-disabled','true');
   setFrameStatus('Preparing '+variant+' download…');
   try{
-   const response=await fetch(mapApi('/capture'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id,variant})});
+   const request={point:id,variant};
+   if(videoTime!==null)Object.assign(request,{videoTime,step:0});
+   const response=await fetch(mapApi(videoTime===null?'/capture':'/video-frame'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
    const result=await response.json();if(!response.ok)throw Error(result.error||'Download failed');
    if(result.variant!==variant)throw Error('Restart the map server to enable clean/enhanced downloads.');
    if(!captureDialog.open||captureDialog.dataset.point!==id)return;
@@ -217,6 +227,45 @@ function frameDownloadLink(id,variant,label){
   }finally{captureBusy=false;captureDialog.removeAttribute('aria-busy');link.removeAttribute('aria-disabled');}
  };
  return link;
+}
+function renderCapturedFrame(id,result){
+ const raw=result.kind==='video';
+ captureDialog.replaceChildren();captureDialog.dataset.point=id;
+ captureDialog.dataset.kind=raw?'video':'surfer';
+ captureDialog.dataset.timestamp=result.timestamp||'';
+ captureDialog.dataset.videoTime=raw?String(result.videoTime):'';
+ const close=document.createElement('button');close.textContent='Close';close.onclick=()=>captureDialog.close();
+ const hint=document.createElement('span');hint.textContent=' ← previous position · → next position · Ctrl+←/→ video frames';hint.style.fontSize='13px';
+ const label=document.createElement('p');label.id='frame-label';
+ label.textContent=raw?'Video frame — '+result.videoName+' · '+result.videoTime.toFixed(3)+' s'+(result.timestamp?' · '+result.timestamp:'')+' · GPS reference '+id:
+  id+' — nearest frame: '+result.timestamp;
+ const status=document.createElement('p');status.id='frame-status';status.setAttribute('role','status');status.style.margin='0';
+ const img=document.createElement('img');img.src=result.url+'#'+Date.now();img.alt=label.textContent;img.style.maxWidth='85vw';img.style.maxHeight='70vh';
+ captureDialog.append(close,hint,label,status,img,document.createElement('br'));
+ if(!raw){
+  const telemetry=document.createElement('a');telemetry.href=result.url;telemetry.download=result.filename;telemetry.textContent='Download with telemetry';
+  captureDialog.append(telemetry);
+ }
+ const clean=frameDownloadLink(id,'clean','Download clean',raw?result.videoTime:null);
+ if(raw){clean.href=result.url;clean.download=result.filename;clean.onclick=null;clean.style.marginLeft='0';}
+ const enhanced=frameDownloadLink(id,'enhanced','Download enhanced',raw?result.videoTime:null);
+ enhanced.title='Clean full-resolution frame with richer teal tones, contrast and light sharpening.';
+ captureDialog.append(clean,enhanced);clearDetails();
+ if(!captureDialog.open)captureDialog.showModal();
+ close.focus({preventScroll:true});
+}
+async function captureVideoStep(step){
+ const id=captureDialog.dataset.point,request={point:id,step};
+ if(captureDialog.dataset.kind==='video')request.videoTime=Number(captureDialog.dataset.videoTime);
+ captureBusy=true;captureDialog.setAttribute('aria-busy','true');
+ setFrameStatus('Loading '+(step>0?'next':'previous')+' video frame…');
+ try{
+  const response=await fetch(mapApi('/video-frame'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Video frame stepping requires a server restart.');
+  if(result.kind!=='video'||!Number.isFinite(result.videoTime))throw Error('Restart the map server to enable video-frame stepping.');
+  if(captureDialog.open)renderCapturedFrame(id,result);
+ }catch(error){if(captureDialog.open)setFrameStatus(error.message);}
+ finally{captureBusy=false;captureDialog.removeAttribute('aria-busy');}
 }
 function captureMarker(marker,e){
  if(captureBusy)return;
@@ -240,20 +289,7 @@ async function capturePoint(id,{advanceSelection=false}={}){
   if(fromViewer&&!captureDialog.open){setCaptureStatus('Saved '+result.saved);return;}
   if(advanceSelection)showPosition(id);
   chooseCard(id);
-  setCaptureStatus('Saved '+result.saved);captureDialog.replaceChildren();
-  captureDialog.dataset.point=id;
-  const close=document.createElement('button');close.textContent='Close';close.onclick=()=>captureDialog.close();
-  const hint=document.createElement('span');hint.textContent=' ↑ next frame · ↓ previous frame';hint.style.fontSize='13px';
-  const label=document.createElement('p');label.id='frame-label';label.textContent=id+' — nearest frame: '+result.timestamp;
-  const status=document.createElement('p');status.id='frame-status';status.setAttribute('role','status');status.style.margin='0';
-  const img=document.createElement('img');img.src=result.url+'#'+Date.now();img.alt=label.textContent;img.style.maxWidth='85vw';img.style.maxHeight='70vh';
-  const link=document.createElement('a');link.href=result.url;link.download=result.filename;link.textContent='Download with telemetry';
-  const clean=frameDownloadLink(id,'clean','Download clean');
-  const enhanced=frameDownloadLink(id,'enhanced','Download enhanced');
-  enhanced.title='Clean full-resolution frame with richer teal tones, contrast and light sharpening.';
-  captureDialog.append(close,hint,label,status,img,document.createElement('br'),link,clean,enhanced);clearDetails();
-  if(!captureDialog.open)captureDialog.showModal();
-  close.focus({preventScroll:true});
+  setCaptureStatus('Saved '+result.saved);renderCapturedFrame(id,result);
  }catch(error){
   const message='Capture failed: '+error.message;setCaptureStatus(message);
   if(fromViewer&&captureDialog.open)setFrameStatus(message);

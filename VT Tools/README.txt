@@ -92,8 +92,8 @@ Surfer keyboard navigation:
   Editing fields retain normal keyboard behaviour.
 
 Frame viewer navigation:
-  While a captured frame is open, Up loads the next surfer position's frame
-  and Down loads the previous one. The viewer stays open and uses the same
+  While a captured frame is open, Right loads the next surfer position's frame
+  and Left loads the previous one. The viewer stays open and uses the same
   ride, seaward and position selection as map navigation, without wrapping.
   Each frame includes the existing details card and its download link.
   The old frame remains visible while loading. Only one capture runs at a time;
@@ -111,3 +111,26 @@ Frame download options:
   each map selection's download-frames folder with distinct PNG filenames.
   The telemetry preview and its arrow-key navigation remain available.
   Restart Start Map.cmd and generate the map again after this server update.
+
+Actual video frame stepping:
+  In the frame viewer, Ctrl+Right advances one actual MP4 frame and Ctrl+Left
+  goes back one actual frame. This uses presentation timestamps decoded from
+  the video, including variable frame rates, independently of GPS sampling.
+  The first/last frame stops navigation at the current MP4's boundaries.
+  Video-only frames show their playback time and GPS reference, without a
+  telemetry overlay or any invented GPS position. Clean and enhanced downloads
+  export exactly the displayed video frame; map selection remains unchanged.
+  Plain Left/Right returns to the nearest eligible surfer record before/after
+  the displayed video frame. Ride and seaward filters still apply to records.
+  Up/Down remains the map navigation shortcut, outside the frame viewer.
+  Restart Start Map.cmd, then regenerate the map to load this server update.
+
+Speed visibility filter:
+  Map layers: Hide speed below threshold uses the existing Speed >= input.
+  It hides positions with known GPS speed below that value, plus their paired
+  drones and connection lines. Exactly-at-threshold and unknown speeds remain
+  visible. The speed-ring checkbox is independent. Threshold edits update the
+  filter immediately; invalid/empty values temporarily suspend speed filtering.
+  Ride and seaward filters combine with it. Position cards, lists and record
+  navigation use the remaining positions. Turning it off preserves manual
+  selections and other layer switches. Raw video stepping remains independent.

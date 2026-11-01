@@ -332,6 +332,18 @@ class MapApp:
             except (ValueError,OSError):pass
         return results
 
+    def video_frame(self,snapshot,request):
+        from surfer_video_frames import capture_video_frame
+        from telemetry_selected_frames import ffmpeg_path
+        point=snapshot['points'].get(request.get('point'))
+        if point is None:raise ValueError('Unknown surfer position in this map.')
+        s=snapshot['settings']
+        with snapshot['lock']:
+            dest,result=capture_video_frame(point,request,s['video_folder'],snapshot['output'],ffmpeg_path(s['ffmpeg'] or None))
+            url=f'/maps/{snapshot["id"]}/frames/{dest.name}'
+            snapshot['images'][url]=dest
+            return dict(result,url=url)
+
     def capture(self,snapshot,request,detect=False):
         from surfer_map_capture import capture_frame, capture_variant
         from telemetry_selected_frames import ffmpeg_path
@@ -411,10 +423,11 @@ def create_server(app,port=0):
                 path=urlsplit(self.path).path
                 if path=='/api/select':return self.reply(202,app.start(request))
                 if path=='/api/cancel':return self.reply(200,app.cancel(request.get('id')))
-                match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov)',path)
+                match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov|video-frame)',path)
                 if match:
                     snapshot=app.snapshot(match[1])
                     if not snapshot:return self.reply(410,dict(error='This map has expired. Generate the selection again.'))
+                    if match[2]=='video-frame':return self.reply(200,app.video_frame(snapshot,request))
                     return self.reply(200,app.capture(snapshot,request,detect=match[2]=='fov'))
                 return self.reply(404,dict(error='Not found.'))
             except (ValueError,TypeError,OSError,RuntimeError,ImportError) as error:
