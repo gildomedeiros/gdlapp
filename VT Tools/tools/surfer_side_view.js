@@ -22,7 +22,7 @@ function drawSide(){
  const canvas=document.getElementById('side-svg');canvas.replaceChildren();
  const note=document.getElementById('side-note');
  if(!p){document.getElementById('side-description').textContent='No surfer position selected.';note.textContent='Choose a position in the map sidebar.';return;}
- document.getElementById('side-description').textContent=pick.value+' — '+p.time+' | logged height above takeoff: '+(p.height===null?'unknown':p.height+' m');
+ document.getElementById('side-description').textContent=pick.value+' — '+p.time+' | logged height above takeoff: '+(p.height===null?'unknown':p.height+' m')+' | ride detected: '+(p.riding===true?'YES':p.riding===false?'NO':'unknown');
  const h=useTakeoff.checked?p.height:(heightInput.value===''?null:Number(heightInput.value));
  heightInput.disabled=useTakeoff.checked;
  if(h===null || !Number.isFinite(h) || h<0 || p.distance===null || p.tilt===null){note.textContent='Enter height above water (or explicitly use takeoff height). Distance and logged tilt must also be available.';return;}

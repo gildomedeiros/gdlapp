@@ -1,0 +1,610 @@
+{
+  "mode": "number-of-rides",
+  "numberOfRides": 3,
+  "totalRideCount": 23,
+  "selectedRideCount": 3,
+  "pitchRangeDegrees": null,
+  "distanceRangeMetres": null,
+  "maxSamples": null,
+  "sampleBeforeSeconds": 15.0,
+  "sampleAfterSeconds": 2.0,
+  "sampleIntervalSeconds": 0.0,
+  "tiltChangeDegrees": null,
+  "rideStartsBySource": {
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_134729_190_3377e50b.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_134733_431_dbc99fb6.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_134736_329_04bd75a1.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135009_512_2191b245.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135641_838_fb9d5744.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl": [
+      1793333001812,
+      1793333149716,
+      1793333270931
+    ],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_142719_899_e5f8cd16.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_153125_096_2157616b.jsonl": []
+  },
+  "eligiblePackets": 82,
+  "spacedCandidates": 82,
+  "selectedCount": 82,
+  "invalidGpsPackets": 0,
+  "selection": "Every received packet in the windows; actual received GPS packets and same-log ride windows",
+  "points": [
+    {
+      "point": "S1308",
+      "timestamp": "2026-10-30T14:03:07.033+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 25.41659500819447,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1309",
+      "timestamp": "2026-10-30T14:03:07.530+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 24.861332054440936,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1310",
+      "timestamp": "2026-10-30T14:03:08.030+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 24.343195335024166,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1311",
+      "timestamp": "2026-10-30T14:03:08.533+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 24.74163526603583,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1312",
+      "timestamp": "2026-10-30T14:03:09.030+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 25.422633237356372,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1313",
+      "timestamp": "2026-10-30T14:03:09.901+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 25.723932068364213,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1314",
+      "timestamp": "2026-10-30T14:03:10.264+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 26.046524845499757,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1315",
+      "timestamp": "2026-10-30T14:03:10.760+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 27.30458670646734,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1316",
+      "timestamp": "2026-10-30T14:03:11.263+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 28.145046867581637,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1317",
+      "timestamp": "2026-10-30T14:03:11.761+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 29.405291784821813,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1318",
+      "timestamp": "2026-10-30T14:03:12.267+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.576237734101,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1319",
+      "timestamp": "2026-10-30T14:03:12.764+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.818524584675057,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1320",
+      "timestamp": "2026-10-30T14:03:13.262+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.89571908619621,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1321",
+      "timestamp": "2026-10-30T14:03:13.764+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.914233907090267,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1322",
+      "timestamp": "2026-10-30T14:03:14.265+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.914233907090267,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1323",
+      "timestamp": "2026-10-30T14:03:15.132+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.902561848141815,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1324",
+      "timestamp": "2026-10-30T14:03:15.494+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.907703499261498,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1325",
+      "timestamp": "2026-10-30T14:03:15.993+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 31.430534426516864,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1326",
+      "timestamp": "2026-10-30T14:03:16.495+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 31.42063726751051,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1327",
+      "timestamp": "2026-10-30T14:03:16.997+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.421252636245505,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1328",
+      "timestamp": "2026-10-30T14:03:17.496+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.410188264720986,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1329",
+      "timestamp": "2026-10-30T14:03:18.006+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.410188264720986,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1330",
+      "timestamp": "2026-10-30T14:03:18.495+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.278133089858965,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1331",
+      "timestamp": "2026-10-30T14:03:18.993+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.204697147684104,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1332",
+      "timestamp": "2026-10-30T14:03:19.495+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.318489532041326,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1333",
+      "timestamp": "2026-10-30T14:03:20.364+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.304219697221797,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1334",
+      "timestamp": "2026-10-30T14:03:20.725+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 28.823714823548304,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1335",
+      "timestamp": "2026-10-30T14:03:21.223+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 26.685524069932555,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1336",
+      "timestamp": "2026-10-30T14:03:21.724+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 23.726574382895983,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1585",
+      "timestamp": "2026-10-30T14:05:34.999+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 32.12884691721089,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1586",
+      "timestamp": "2026-10-30T14:05:35.494+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 32.340051711401095,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1587",
+      "timestamp": "2026-10-30T14:05:36.364+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 32.350418131028036,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1588",
+      "timestamp": "2026-10-30T14:05:36.728+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 31.735326816402768,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1589",
+      "timestamp": "2026-10-30T14:05:37.225+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.871667647546385,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1590",
+      "timestamp": "2026-10-30T14:05:37.725+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.878323778888433,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1591",
+      "timestamp": "2026-10-30T14:05:38.225+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.875297897905504,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1592",
+      "timestamp": "2026-10-30T14:05:38.727+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.879845802521388,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1593",
+      "timestamp": "2026-10-30T14:05:39.227+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.880932749896832,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1594",
+      "timestamp": "2026-10-30T14:05:39.727+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.88198959911257,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1595",
+      "timestamp": "2026-10-30T14:05:40.231+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.884751578856537,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1596",
+      "timestamp": "2026-10-30T14:05:40.724+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.89076224414917,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1597",
+      "timestamp": "2026-10-30T14:05:41.598+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.898023036702842,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1598",
+      "timestamp": "2026-10-30T14:05:41.954+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.898878298605528,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1599",
+      "timestamp": "2026-10-30T14:05:42.457+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 31.581977559855666,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1600",
+      "timestamp": "2026-10-30T14:05:42.959+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.581377148008023,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1601",
+      "timestamp": "2026-10-30T14:05:43.457+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 31.589302903529997,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1602",
+      "timestamp": "2026-10-30T14:05:43.955+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 30.807797927580342,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1603",
+      "timestamp": "2026-10-30T14:05:44.455+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.799081286116937,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1604",
+      "timestamp": "2026-10-30T14:05:44.958+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 31.51908770770936,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1605",
+      "timestamp": "2026-10-30T14:05:45.457+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.513739462526406,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1606",
+      "timestamp": "2026-10-30T14:05:45.954+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.04632844158959,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1607",
+      "timestamp": "2026-10-30T14:05:46.832+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 30.05530678813876,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1608",
+      "timestamp": "2026-10-30T14:05:47.187+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 28.59601519186281,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1609",
+      "timestamp": "2026-10-30T14:05:47.687+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 27.150896492743904,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1610",
+      "timestamp": "2026-10-30T14:05:48.185+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 24.96675570453972,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1611",
+      "timestamp": "2026-10-30T14:05:48.688+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 22.819705913757893,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1612",
+      "timestamp": "2026-10-30T14:05:49.185+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 21.534274750538522,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1613",
+      "timestamp": "2026-10-30T14:05:49.686+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 20.421859462442832,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1804",
+      "timestamp": "2026-10-30T14:07:36.053+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 43.50707184349804,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1805",
+      "timestamp": "2026-10-30T14:07:36.928+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 42.92523453996091,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1806",
+      "timestamp": "2026-10-30T14:07:37.283+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 42.92523453996091,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1807",
+      "timestamp": "2026-10-30T14:07:37.787+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 42.03161138596491,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1808",
+      "timestamp": "2026-10-30T14:07:38.287+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 40.641180621412694,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1809",
+      "timestamp": "2026-10-30T14:07:38.784+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 39.45092151720096,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1810",
+      "timestamp": "2026-10-30T14:07:39.284+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 38.757750276000756,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1811",
+      "timestamp": "2026-10-30T14:07:39.785+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 37.757770360078595,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1812",
+      "timestamp": "2026-10-30T14:07:40.285+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 37.14728604433796,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1813",
+      "timestamp": "2026-10-30T14:07:40.783+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 37.06676090212547,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1814",
+      "timestamp": "2026-10-30T14:07:41.284+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 36.5414637233451,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1815",
+      "timestamp": "2026-10-30T14:07:42.159+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 36.198001461903445,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1816",
+      "timestamp": "2026-10-30T14:07:42.516+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 35.720273268435754,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1817",
+      "timestamp": "2026-10-30T14:07:43.015+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 35.36037517068988,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1818",
+      "timestamp": "2026-10-30T14:07:43.514+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 35.110734601069325,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1819",
+      "timestamp": "2026-10-30T14:07:44.015+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 34.76725699973273,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1820",
+      "timestamp": "2026-10-30T14:07:44.516+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 33.86323120225144,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1821",
+      "timestamp": "2026-10-30T14:07:45.015+10:00",
+      "pitch": -29.900000000000002,
+      "distanceMetres": 31.425719946794278,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1822",
+      "timestamp": "2026-10-30T14:07:45.515+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 29.03207951639107,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1823",
+      "timestamp": "2026-10-30T14:07:49.372+10:00",
+      "pitch": -30.0,
+      "distanceMetres": 14.402641608334052,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1824",
+      "timestamp": "2026-10-30T14:07:50.874+10:00",
+      "pitch": -32.5,
+      "distanceMetres": 19.622644162694872,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1825",
+      "timestamp": "2026-10-30T14:07:51.373+10:00",
+      "pitch": -33.800000000000004,
+      "distanceMetres": 23.241435383765968,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1826",
+      "timestamp": "2026-10-30T14:07:51.870+10:00",
+      "pitch": -34.9,
+      "distanceMetres": 25.45286001057212,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1827",
+      "timestamp": "2026-10-30T14:07:52.742+10:00",
+      "pitch": -34.9,
+      "distanceMetres": 27.902115505643746,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    }
+  ]
+}

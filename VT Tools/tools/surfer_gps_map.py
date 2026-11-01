@@ -84,6 +84,8 @@ def load_packets(folder, recursive, tz):
     gimbal_configs = {}
     first_wave_ride_ms = None
     wave_ride_starts = {}
+    ride_states = {}
+    seaward_states = {}
     distance_settings = {'minimumDistanceMetres': {}, 'filmingSeparationMetres': {}}
     paths = sorted(folder.rglob('*.jsonl') if recursive else folder.glob('*.jsonl'))
     for path in paths:
@@ -99,9 +101,15 @@ def load_packets(folder, recursive, tz):
                     raise ValueError(f'Invalid JSON: {path}:{line_no}') from error
                 if not isinstance(r, dict):
                     continue
-                if r.get('event') not in ('lora_packet', 'retreat_started', 'retreat_cycle', 'orientation_cycle', 'gimbal_pitch_cycle', 'movement_cycle', 'gimbal_band_config') and not ('aircraftLatitude' in r and 'aircraftLongitude' in r):
+                if r.get('event') not in ('lora_packet', 'retreat_started', 'retreat_cycle', 'orientation_cycle', 'gimbal_pitch_cycle', 'movement_cycle', 'gimbal_band_config', 'session_start', 'session_end') and not ('aircraftLatitude' in r and 'aircraftLongitude' in r):
                     continue
                 t = record_milliseconds(r, tz)
+                if r.get('event') in ('movement_cycle', 'session_start', 'session_end'):
+                    riding=r.get('riding') if r.get('event')=='movement_cycle' and isinstance(r.get('riding'),bool) else None
+                    ride_states.setdefault(source,[]).append((t,line_no,riding,r.get('session')))
+                    seaward=r.get('seawardBearingDeg') if r.get('event')=='movement_cycle' else None
+                    if not isinstance(seaward,(int,float)) or isinstance(seaward,bool) or not math.isfinite(seaward):seaward=None
+                    seaward_states.setdefault(source,[]).append((t,line_no,seaward,r.get('session')))
                 if r.get('event') == 'movement_cycle' and r.get('rideEvent') == 'ride_started':
                     first_wave_ride_ms=t if first_wave_ride_ms is None else min(first_wave_ride_ms,t)
                     wave_ride_starts.setdefault(source,set()).add(t)
@@ -135,7 +143,7 @@ def load_packets(folder, recursive, tz):
                     continue
                 packets.append(dict(time_ms=t, receivedTimestamp=datetime.fromtimestamp(t/1000, tz).isoformat(timespec='milliseconds'),
                                     sequence=r.get('sequence'), latitude=r.get('latitude'), longitude=r.get('longitude'),
-                                    accepted=r.get('accepted'), senderMs=r.get('senderMs'),
+                                    accepted=r.get('accepted'), senderMs=r.get('senderMs'), session=r.get('session'),
                                     sourceFile=source, sourceLine=line_no))
     packets.sort(key=lambda p: (p['time_ms'], p['sourceFile'], p['sourceLine']))
     wave_ride_starts={source:sorted(times) for source,times in wave_ride_starts.items()}
@@ -151,6 +159,8 @@ def load_packets(folder, recursive, tz):
             packet[field]=sources[source][i][2] if i>=0 else None
     mark_retreat_starts(packets, retreat_starts, tz)
     mark_retreat_active(packets, retreat_states, tz)
+    mark_ride_active(packets, ride_states, tz)
+    mark_seaward_bearing(packets, seaward_states)
     for source,states in gimbal_states.items():
         states.sort()
     gimbal_times={source:[s[0] for s in states] for source,states in gimbal_states.items()}
@@ -179,6 +189,42 @@ def load_packets(folder, recursive, tz):
         p['gimbalTiltDeg']=states[i][2] if i>=0 else None
         p['gimbalReportedTimestamp']=datetime.fromtimestamp(states[i][0]/1000,tz).isoformat(timespec='milliseconds') if i>=0 else None
     return packets, drones
+
+
+def mark_ride_active(packets, states, tz):
+    """Latest logged detector state at GPS receipt, within the same log/session.
+
+    Use line order to break equal timestamps. A cycle recorded after a packet
+    must not make that earlier packet appear to be riding. Missing state and
+    session boundaries remain unknown, rather than guessing a ride duration.
+    """
+    indexed={source:sorted(rows,key=lambda row:(row[0],row[1])) for source,rows in states.items()}
+    keys={source:[(row[0],row[1]) for row in rows] for source,rows in indexed.items()}
+    for p in packets:
+        source=p['sourceFile'];rows=indexed.get(source,[])
+        i=bisect.bisect_right(keys.get(source,[]),(p['time_ms'],p.get('sourceLine',math.inf)))-1
+        row=rows[i] if i>=0 else None
+        if row is not None and p.get('session') is not None and row[3] is not None and p['session']!=row[3]:row=None
+        p['waveRiding']=row[2] if row is not None else None
+        p['rideStateTimestamp']=datetime.fromtimestamp(row[0]/1000,tz).isoformat(timespec='milliseconds') if row is not None else None
+        p['rideStateSourceLine']=row[1] if row is not None else None
+
+
+def mark_seaward_bearing(packets, states):
+    """Attach the logged sea direction at receipt, without borrowing future state."""
+    indexed={source:sorted(rows,key=lambda row:(row[0],row[1])) for source,rows in states.items()}
+    keys={source:[(row[0],row[1]) for row in rows] for source,rows in indexed.items()}
+    for p in packets:
+        source=p['sourceFile'];rows=indexed.get(source,[])
+        i=bisect.bisect_right(keys.get(source,[]),(p['time_ms'],p.get('sourceLine',math.inf)))-1
+        row=rows[i] if i>=0 else None
+        if row is not None and p.get('session') is not None and row[3] is not None and p['session']!=row[3]:row=None
+        p['seawardBearingDeg']=row[2] if row is not None else None
+
+
+def ride_text(p):
+    active=p.get('waveRiding')
+    return 'Ride detected: '+('YES' if active is True else 'NO' if active is False else 'unknown')
 
 
 def mark_retreat_active(packets, states, tz):
@@ -357,7 +403,7 @@ def make_svg(points, gap_red_ms=1000, boundary=None):
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" data-units-per-metre="{680/span:.12f}" width="1100" height="{height}" viewBox="0 0 1100 {height}">',
            f'<rect width="1100" height="{height}" fill="#f3f7fa"/>',
            '<g font-family="Arial" fill="#17324d"><text x="25" y="30" font-size="20">Received surfer GPS — north up</text>',
-           '<text x="25" y="55" font-size="13">Surfer: green. Drone: blue = retreat off, orange = retreat active, grey = unknown.</text>',
+           '<text x="25" y="55" font-size="13">Surfer: green; purple ring = ride detected. Drone: blue = retreat off, orange = active, grey = unknown.</text>',
            '<text x="755" y="95" font-size="18">N ↑</text>']
     for fraction in range(6):
         x=60+fraction*136
@@ -426,6 +472,7 @@ def make_svg(points, gap_red_ms=1000, boundary=None):
             details.append(f'Surfer since previous packet: {travel_text} | {speed_text}')
             bearing=p.get('surferNextBearingDeg')
             details.append(f'Arrow direction: {bearing:.1f}° toward next received GPS' if bearing is not None else 'Arrow direction: next coordinates unchanged or unavailable')
+            details.append(ride_text(p))
             state=p.get('retreatActive')
             details.append(retreat_text(p))
             tilt=p.get('gimbalTiltDeg')
@@ -446,6 +493,11 @@ def make_svg(points, gap_red_ms=1000, boundary=None):
         bearing=ps[-1].get('surferNextBearingDeg')
         icon=(f'<path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate({x:.2f} {y:.2f}) rotate({bearing:.3f})" fill="{color}" stroke="white" stroke-width="1"/>'
               if bearing is not None else f'<circle class="position-dot" cx="{x:.2f}" cy="{y:.2f}" r="5" fill="{color}"/>')
+        riding_count=sum(p.get('waveRiding') is True for p in ps)
+        if riding_count:
+            mode='all' if riding_count==len(ps) else 'mixed'
+            dash=' stroke-dasharray="4 3"' if mode=='mixed' else ''
+            icon=f'<circle class="ride-ring" data-ride-state="{mode}" cx="{x:.2f}" cy="{y:.2f}" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"{dash}/>'+icon
         out.append(f'<g class="surfer-marker" data-lat="{lat}" data-lon="{lon}" data-x="{x}" data-y="{y}" data-label="{label}" data-pairs="{ids}" data-detail="{detail}" data-red-lines="{red_ids}" data-green-lines="{green_ids}" tabindex="0" aria-label="{detail}"><circle cx="{x:.2f}" cy="{y:.2f}" r="12" fill="transparent"/>{icon}</g>')
     scale=min(10,span/4)
     length=scale*680/span
@@ -468,11 +520,13 @@ def write_outputs(points, target, output, tz, gap_red_ms=1000, boundary=None, se
     controls='<div class="controls"><button id="zin">Zoom +</button><button id="zout">Zoom −</button><button id="reset">Reset</button><button id="measure" aria-pressed="false">Measure distance</button><button id="clear-measure">Clear measurement</button> Scroll to zoom · drag to pan · double-click to reset</div><p id="measurement-result" role="status" aria-live="polite">Enable Measure distance, then select two markers.</p>'
     controls+='<div class="controls"><strong>1.75 m surfer reference</strong> — drag the figure; rotate: <input id="reference-angle" type="range" min="0" max="359" value="0" aria-label="Reference surfer rotation"><output id="reference-degrees">0°</output><button id="reference-center">Move reference to view centre</button></div><p>Scale guide only: head-to-foot length is 1.75 m on the map plane, not a standing person’s footprint or a measured GPS position.</p>'
     pair_controls='<section id="ride-filters" aria-label="Map filters"><label for="ride-filter">Wave ride</label><select id="ride-filter"></select><p id="ride-window-info"></p><label for="position-filter">Surfer position</label><select id="position-filter"></select><div class="position-nav"><button id="position-prev">Previous</button><button id="position-next">Next</button></div><button id="fit-ride">Fit ride</button><p id="position-filter-status" role="status" aria-live="polite"></p></section><details open><summary>Choose positions</summary><button id="pairs-all">Show all</button><button id="pairs-none">Hide all</button><div id="pair-options">'
+    pair_controls=pair_controls.replace('</section><details open>', '</section><fieldset id="map-layers"><legend>Map layers</legend><label><input id="hide-drones" type="checkbox"> Hide drone positions</label><label><input id="hide-connections" type="checkbox"> Hide connection lines</label><label><input id="hide-surfers" type="checkbox"> Hide surfer positions</label><label title="Hide seaward-pointing surfer arrows and their paired drones/lines, using the logged sea direction. Stationary or unknown directions remain visible."><input id="hide-seaward" type="checkbox"> Hide seaward positions</label></fieldset><fieldset id="surfer-highlights"><legend>Surfer highlights</legend><label><input id="show-ride-rings" type="checkbox" checked> <span class="ring-key ride-key" aria-hidden="true"></span> Ride detected</label><label><input id="show-speed-rings" type="checkbox"> <span class="ring-key speed-key" aria-hidden="true"></span> Speed threshold</label><label class="speed-threshold-label" for="speed-threshold">Speed ≥ <input id="speed-threshold" type="number" min="0" step="0.1" value="15" aria-label="Speed threshold (km/h)"> km/h</label><p id="speed-highlight-help" role="status">Uses GPS speed since the previous packet, as shown in the position card.</p></fieldset><p class="ride-legend">Purple: ride detected. Cyan: speed ≥ threshold. Dashed rings: mixed shared positions.</p><details open>', 1)
     for p in points:
         label=html.escape(p['point'],quote=True)
         drone=html.escape(str(p.get('dronePoint','no drone')))
-        pair_controls+=f'<label class="pair-option"><input type="checkbox" data-pair="{label}" checked> {label} ↔ {drone}<small class="pair-metadata"></small></label>'
-    pair_controls+='</div><p>Show/hide applies to the selected ride. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions.</p></details>'
+        badge=' <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong>' if p.get('waveRiding') is True else ''
+        pair_controls+=f'<label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="{label}" checked> {label} ↔ {drone}{badge}<small class="pair-metadata"></small></label>'
+    pair_controls+='</div><p>Show/hide applies to the selected ride. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details>'
     script='''<script>
 const svg=document.querySelector('#map svg');
 const svgNS='http://www.w3.org/2000/svg';
@@ -515,89 +569,7 @@ svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
  halo.setAttribute('stroke-width','3');halo.setAttribute('pointer-events','none');
  n.append(halo);
 });
-function clearDetails(){activeMarker=null;tip.hidden=true;svg.querySelectorAll('.active-pair').forEach(n=>n.classList.remove('active-pair'));}
-function showDetails(marker,e){
- clearDetails();activeMarker=marker;tip.replaceChildren();
- const red=new Set((marker.dataset.redLines||'').split(',').filter(Boolean).map(Number));
- const green=new Set((marker.dataset.greenLines||'').split(',').filter(Boolean).map(Number));
- filteredDetails(marker).forEach(({text,index:i})=>{
-  const line=document.createElement('span');line.textContent=text;
-  if(text.startsWith('Retreat active:') || text.startsWith('Gimbal tilt:'))line.classList.add('key-field');
-  if(text.startsWith('Retreat active:'))line.title='Brackets: minimum retreat distance in metres';
-  if(text.includes(' | ') && text.endsWith(' m horizontal')){
-   const split=text.lastIndexOf(' | '), end=text.lastIndexOf(' horizontal');
-   line.textContent=text.slice(0,split+3);
-   const distance=document.createElement('span');distance.className='key-field';distance.title='[horizontal GPS distance][filming separation], metres';distance.textContent=text.slice(split+3,end);
-   line.append(distance,document.createTextNode(text.slice(end)));
-  }
-  if(red.has(i)){line.style.color='#c40000';line.style.fontWeight='bold';}
-  if(green.has(i) || text.startsWith('Retreat active: YES ')){line.style.color='#08752e';line.style.fontWeight='bold';}
-  if(text.startsWith('Gimbal tilt:') && text.includes(' — TILTING')){
-   const parts=text.split(' — ');line.textContent=parts.shift()+' — ';
-   const status=document.createElement('span');status.textContent=parts.join(' — ');status.style.color='#08752e';status.style.fontWeight='bold';line.append(status);
-  }
-  if(text.startsWith('Gimbal bands: ')){
-   line.textContent='Gimbal bands: ';
-   text.slice('Gimbal bands: '.length).split(' | ').forEach((band,j)=>{
-    if(j)line.append(document.createTextNode(' | '));
-    const entry=document.createElement('span');entry.textContent=band;
-    if(band.endsWith(' (selected)')){entry.style.color='#08752e';entry.style.background='#e6f5e9';entry.style.fontWeight='bold';}
-    line.append(entry);
-   });
-  }
-  tip.append(line,document.createTextNode('\\n'));
- });tip.hidden=false;
- const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id));
- svg.querySelectorAll('.pair-line,.drone-marker,.surfer-marker').forEach(n=>{if(n.dataset.pairs.split(' ').some(id=>ids.includes(id)))n.classList.add('active-pair');});
- const r=marker.getBoundingClientRect();
- const x=e&&e.clientX!==undefined?e.clientX:r.right;
- const y=e&&e.clientY!==undefined?e.clientY:r.top;
- tip.style.left=Math.max(8,Math.min(x+18,window.innerWidth-tip.offsetWidth-8))+'px';
- tip.style.top=Math.max(8,Math.min(y+18,window.innerHeight-tip.offsetHeight-8))+'px';
-}
-svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
- n.addEventListener('pointerenter',e=>{selectSide(n);showDetails(n,e);});
- n.addEventListener('pointermove',e=>{if(!drag)showDetails(n,e);});
- n.addEventListener('pointerleave',clearDetails);
-
- n.addEventListener('focus',()=>{selectSide(n);showDetails(n);});n.addEventListener('blur',clearDetails);
- n.addEventListener('click',e=>{if(n.classList.contains('surfer-marker'))selectSide(n);if(e.ctrlKey&&e.button===0&&n.classList.contains('surfer-marker')){e.preventDefault();e.stopPropagation();captureMarker(n);return;}if(measuring){e.stopPropagation();measurePick(n);clearDetails();}else showDetails(n,e);});
- n.addEventListener('keydown',e=>{if(measuring&&(e.key==='Enter'||e.key===' ')){e.preventDefault();measurePick(n);}});
-});
-document.addEventListener('keydown',e=>{
- if(e.key!=='Delete' || e.target.closest('input,textarea,select,[contenteditable="true"]'))return;
- const marker=activeMarker || document.activeElement.closest('.surfer-marker,.drone-marker');
- if(!marker || marker.style.display==='none')return;
- e.preventDefault();
- const ids=new Set(marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id)));
- pairChecks.forEach(c=>{if(ids.has(c.dataset.pair))c.checked=false;});
- updatePairs();
-});
-let captureBusy=false;
-const captureDialog=document.createElement('dialog');
-captureDialog.style.maxWidth='90vw';captureDialog.style.maxHeight='90vh';
-document.body.append(captureDialog);
-const captureStatus=document.getElementById('capture-status');
-async function captureMarker(marker){
- if(captureBusy)return;
- if(location.protocol!=='http:'){captureStatus.textContent='Frame capture needs the --serve option. Open the local URL printed by the script.';return;}
- const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id));
- let id=ids[0];
- if(ids.length>1){id=prompt('Shared position: enter the surfer point to capture ('+ids.join(', ')+')',ids[ids.length-1]);if(!ids.includes(id))return;}
- captureBusy=true;captureStatus.textContent='Capturing '+id+'…';
- try{
-  const response=await fetch(mapApi('/capture'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id})});
-  const result=await response.json();if(!response.ok)throw Error(result.error||'Capture failed');
-  captureStatus.textContent='Saved '+result.saved;
-  captureDialog.replaceChildren();
-  const close=document.createElement('button');close.textContent='Close';close.onclick=()=>captureDialog.close();
-  const label=document.createElement('p');label.textContent=id+' — nearest frame: '+result.timestamp;
-  const img=document.createElement('img');img.src=result.url+'#'+Date.now();img.alt=label.textContent;img.style.maxWidth='85vw';img.style.maxHeight='70vh';
-  const link=document.createElement('a');link.href=result.url;link.download=result.filename;link.textContent='Download frame';
-  captureDialog.append(close,label,img,document.createElement('br'),link);captureDialog.showModal();
- }catch(error){captureStatus.textContent='Capture failed: '+error.message;}
- finally{captureBusy=false;}
-}
+__MAP_INTERACTION_SCRIPT__
 __SIDE_VIEW_SCRIPT__
 const original=svg.getAttribute('viewBox').split(' ').map(Number);
 let box=original.slice(), drag=null;
@@ -658,12 +630,14 @@ initializeMapFilters();
     filter_data=dict(map_filter_data(points),initialRide=initial_ride)
     filter_js=Path(__file__).with_name('surfer_map_filters.js').read_text(encoding='utf-8').replace('MAP_FILTER_DATA',json.dumps(filter_data).replace('<','\\u003c'))
     script=script.replace('__MAP_FILTER_SCRIPT__',filter_js)
-    side_data={p['point']:dict(distance=pair_distance(p),tilt=p.get('gimbalTiltDeg'),height=p.get('heightAboveTakeoffM'),time=p['receivedTimestamp'],source=p.get('sourceFile'),frame=p.get('videoFrameTimestamp'),position=p.get('personPosition'),positionError=p.get('personPositionError')) for p in points}
+    interaction_js=Path(__file__).with_name('surfer_map_interactions.js').read_text(encoding='utf-8')
+    script=script.replace('__MAP_INTERACTION_SCRIPT__',interaction_js)
+    side_data={p['point']:dict(distance=pair_distance(p),tilt=p.get('gimbalTiltDeg'),height=p.get('heightAboveTakeoffM'),time=p['receivedTimestamp'],source=p.get('sourceFile'),frame=p.get('videoFrameTimestamp'),position=p.get('personPosition'),positionError=p.get('personPositionError'),riding=p.get('waveRiding')) for p in points}
     side_js=Path(__file__).with_name('surfer_side_view.js').read_text(encoding='utf-8').replace('SIDE_DATA',json.dumps(side_data).replace('<','\\u003c'))
     script=script.replace('__SIDE_VIEW_SCRIPT__',side_js)
     heading = ('Selected samples — first: ' if selection_info else 'Requested: ') + datetime.fromtimestamp(target/1000,tz).isoformat(timespec='milliseconds')
     introduction = selection_info or 'S0 = last received packet at or before the requested time. Following points are successive received packets, including rejected packets.'
-    (output/'surfer-gps.html').write_text('<!doctype html><meta charset="utf-8"><title>Received surfer GPS</title><style>body{font-family:Arial}#map{border:1px solid #ccd;overflow:hidden;background:#f3f7fa}#map svg{display:block;width:100%;height:calc(100vh - 90px);touch-action:none;cursor:grab}#map-controls{margin-bottom:8px}#map-controls>summary{cursor:pointer;padding:10px;background:#eef3f7;font-weight:bold}#map-controls[open]~#map-layout #map svg{height:70vh}button{padding:8px 14px;margin:5px}td,th{border:1px solid #ccc;padding:6px;text-align:left}table{border-collapse:collapse}.pair-line{opacity:.35}.pair-line.active-pair{opacity:1;stroke:#e85b16;stroke-width:3}.pair-halo{display:none}.active-pair>.pair-halo{display:block}.drone-marker.active-pair>rect{stroke:#e85b16;stroke-width:3}#side-view{flex:0 0 360px;padding:12px;box-sizing:border-box;border:1px solid #ccd;font-size:13px}#side-view input[type=number]{width:80px}#map-layout{display:flex;gap:12px;align-items:flex-start}#map{flex:1;min-width:0}#pair-sidebar{flex:0 0 260px;box-sizing:border-box;padding:10px;border:1px solid #ccd;background:#f8fafc}#pair-sidebar summary{cursor:pointer;font-weight:bold}#pair-sidebar button{padding:6px 10px;margin:8px 2px}#pair-sidebar p{font-size:12px;color:#46586a}.pair-option{display:block;margin:8px 0}#pair-options{max-height:max(140px,calc(100vh - 410px));overflow:auto}.pair-option[hidden]{display:none!important}.pair-metadata{display:block;margin:3px 0 0 24px;color:#46586a;font-size:11px}#ride-filters{border-bottom:1px solid #ccd;margin-bottom:12px;padding-bottom:4px}#ride-filters label{display:block;font-size:13px;font-weight:bold;margin:0 0 6px}#ride-filters select{box-sizing:border-box;width:100%;padding:6px 3px;color:#17324d;background:white;border:1px solid #aebdca;border-radius:3px}#ride-filters .position-nav{display:flex;gap:4px}#ride-filters .position-nav button{flex:1;margin:8px 0 0}#ride-filters #fit-ride{margin-left:0}#ride-window-info{margin:7px 0 12px}#position-filter-status{margin:2px 0 8px;font-weight:bold}@media(max-width:650px){#map-layout{flex-direction:column}#side-view{flex:auto;width:100%}#map{width:100%;box-sizing:border-box}#pair-sidebar{flex:auto;width:100%}#pair-options{max-height:160px}.pair-option{display:inline-block;margin:6px 12px 6px 0}}.surfer-marker{cursor:help}.key-field{background:#fff0dc;color:#a94700;font-weight:bold;border-radius:3px;padding:0 3px;box-decoration-break:clone}#tooltip{position:fixed;z-index:10;white-space:pre-line;background:#fff;color:#17324d;border:1px solid #9baaba;border-radius:8px;padding:12px;box-shadow:0 3px 16px #0003;font-size:14px;pointer-events:none;max-width:420px;max-height:85vh;overflow:auto}</style><details id="map-controls"><summary>Map controls &amp; info — expand / collapse</summary><h2>'+html.escape(heading)+'</h2><p>'+html.escape(introduction)+' Each D is the latest prior drone report from the same log. Distances are horizontal GPS-coordinate calculations, not independent range measurements. Identical coordinates share a marker. Point labels belong only to this map.</p>'+controls+'</details><div id="map-layout"><div id="map">'+svg+'</div><aside id="pair-sidebar" aria-label="Pair visibility">'+pair_controls+'<p>Ctrl + left-click a surfer to capture its nearest frame.</p><p id="capture-status" role="status" style="overflow-wrap:anywhere"></p></aside></div><div id="tooltip" hidden></div><details><summary>All packet details</summary>'+table+'</details>'+script,encoding='utf-8')
+    (output/'surfer-gps.html').write_text('<!doctype html><meta charset="utf-8"><title>Received surfer GPS</title><style>body{font-family:Arial}#map{border:1px solid #ccd;overflow:hidden;background:#f3f7fa}#map svg{display:block;width:100%;height:calc(100vh - 90px);touch-action:none;cursor:grab}#map-controls{margin-bottom:8px}#map-controls>summary{cursor:pointer;padding:10px;background:#eef3f7;font-weight:bold}#map-controls[open]~#map-layout #map svg{height:70vh}button{padding:8px 14px;margin:5px}td,th{border:1px solid #ccc;padding:6px;text-align:left}table{border-collapse:collapse}.pair-line{opacity:.35}.pair-line.active-pair{opacity:1;stroke:#e85b16;stroke-width:3}.pair-halo{display:none}.active-pair>.pair-halo{display:block}.drone-marker.active-pair>rect{stroke:#e85b16;stroke-width:3}#side-view{flex:0 0 360px;padding:12px;box-sizing:border-box;border:1px solid #ccd;font-size:13px}#side-view input[type=number]{width:80px}#map-layout{display:flex;gap:12px;align-items:flex-start}#map{flex:1;min-width:0}#pair-sidebar{flex:0 0 260px;box-sizing:border-box;padding:10px;border:1px solid #ccd;background:#f8fafc}#pair-sidebar summary{cursor:pointer;font-weight:bold}#pair-sidebar button{padding:6px 10px;margin:8px 2px}#pair-sidebar p{font-size:12px;color:#46586a}.ride-badge{background:#f5e8fa;color:#8226a0;font-size:12px;font-weight:bold;padding:1px 4px;border-radius:3px}.pair-option{display:block;margin:8px 0}#pair-options{max-height:max(140px,calc(100vh - 410px));overflow:auto}.pair-option[hidden]{display:none!important}.pair-metadata{display:block;margin:3px 0 0 24px;color:#46586a;font-size:11px}#ride-filters{border-bottom:1px solid #ccd;margin-bottom:12px;padding-bottom:4px}#ride-filters label{display:block;font-size:13px;font-weight:bold;margin:0 0 6px}#ride-filters select{box-sizing:border-box;width:100%;padding:6px 3px;color:#17324d;background:white;border:1px solid #aebdca;border-radius:3px}#ride-filters .position-nav{display:flex;gap:4px}#ride-filters .position-nav button{flex:1;margin:8px 0 0}#ride-filters #fit-ride{margin-left:0}#ride-window-info{margin:7px 0 12px}#position-filter-status{margin:2px 0 8px;font-weight:bold}@media(max-width:650px){#map-layout{flex-direction:column}#side-view{flex:auto;width:100%}#map{width:100%;box-sizing:border-box}#pair-sidebar{flex:auto;width:100%}#pair-options{max-height:160px}.pair-option{display:inline-block;margin:6px 12px 6px 0}}.surfer-marker{cursor:help}.key-field{background:#fff0dc;color:#a94700;font-weight:bold;border-radius:3px;padding:0 3px;box-decoration-break:clone}#tooltip{position:fixed;z-index:10;white-space:pre-line;background:#fff;color:#17324d;border:1px solid #9baaba;border-radius:8px;padding:12px;box-shadow:0 3px 16px #0003;font-size:14px;pointer-events:auto;width:min(420px,calc(100vw - 50px));max-height:85vh;overflow:auto;box-sizing:border-box;overscroll-behavior:contain}#map-layers{border:0;border-top:1px solid #ccd;margin:8px 0 14px;padding:8px 0}#map-layers legend{font-weight:bold;font-size:13px;padding:0 4px 0 0}#map-layers label{display:block;font-size:13px;margin:7px 0}#surfer-highlights{border:0;border-top:1px solid #ccd;margin:8px 0 14px;padding:8px 0}#surfer-highlights legend{font-weight:bold;font-size:13px;padding:0 4px 0 0}#surfer-highlights label{display:block;font-size:13px;margin:7px 0}#speed-threshold{width:72px;padding:4px;box-sizing:border-box}.ring-key{display:inline-block;width:10px;height:10px;border:2px solid;border-radius:50%;vertical-align:middle}.ride-key{border-color:#9b2dbd}.speed-key{border-color:#008baa}#speed-highlight-help[data-invalid="true"]{color:#b00020}.position-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:normal}.position-card-heading button{margin:0;padding:4px 9px}.position-card-hint{font-size:12px;white-space:normal;color:#46586a;margin:8px 0}.position-card{white-space:pre-line;padding:8px 2px;border-top:1px solid #d9e2eb}.position-card[data-capture-point]{cursor:pointer}.position-card[data-capture-point]:hover,.position-card[data-capture-point]:focus{background:#eef5ff;outline:1px solid #9baaba}#details-capture-status{font-size:12px;white-space:normal;overflow-wrap:anywhere}</style><details id="map-controls"><summary>Map controls &amp; info — expand / collapse</summary><h2>'+html.escape(heading)+'</h2><p>'+html.escape(introduction)+' Each D is the latest prior drone report from the same log. Distances are horizontal GPS-coordinate calculations, not independent range measurements. Identical coordinates share a marker. Point labels belong only to this map.</p>'+controls+'</details><div id="map-layout"><div id="map">'+svg+'</div><aside id="pair-sidebar" aria-label="Pair visibility">'+pair_controls+'<p>Ctrl + left-click a surfer to capture its nearest frame.</p><p id="capture-status" role="status" style="overflow-wrap:anywhere"></p></aside></div><div id="tooltip" tabindex="-1" aria-label="Position details" hidden></div><details><summary>All packet details</summary>'+table+'</details>'+script,encoding='utf-8')
     ns='http://www.opengis.net/kml/2.2';ET.register_namespace('',ns)
     def e(parent,name,text=None):
         node=ET.SubElement(parent,'{'+ns+'}'+name);node.text=text;return node

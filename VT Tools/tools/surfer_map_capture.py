@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from html.parser import HTMLParser
@@ -56,6 +57,8 @@ def stamp_card(path, point, gap_red_ms=1000):
                     color, background, bold = orange, '#fff0dc', True
                 if line.startswith('Retreat active: YES ') or '(selected)' in chunk or chunk.startswith('TILTING'):
                     color, background, bold = green, '#e6f5e9', True
+                if line=='Ride detected: YES':
+                    color, background, bold = '#8226a0', '#f5e8fa', True
                 if index in red:
                     color, bold = '#c40000', True
                 font = fonts[int(bold)]
@@ -110,6 +113,38 @@ def capture_frame(point, video_folder, output, ffmpeg, gap_red_ms=1000, annotate
     if annotate:
         stamp_card(dest, point, gap_red_ms)
     return dest
+
+
+def enhance_frame(source, destination):
+    """A restrained teal surf grade; keep the original framing and resolution."""
+    from PIL import Image, ImageEnhance, ImageFilter
+    with Image.open(source) as image:
+        frame=image.convert('RGB')
+    # Deepen washed-out midtones while keeping the end points fixed.
+    frame=frame.point([round(255*(v/255)**1.12) for v in range(256)]*3)
+    frame=ImageEnhance.Contrast(frame).enhance(1.12)
+    frame=ImageEnhance.Color(frame).enhance(1.18)
+    # Tint the midtones slightly toward teal, leaving black and white neutral.
+    lut=[max(0,min(255,round(v+strength*v*(1-v/255))))
+         for strength in (-.06,.015,.04) for v in range(256)]
+    frame=frame.point(lut)
+    frame=frame.filter(ImageFilter.UnsharpMask(radius=1.2,percent=110,threshold=3))
+    frame.save(destination,format='PNG')
+
+
+def capture_variant(point, video_folder, output, ffmpeg, gap_red_ms=1000, variant='telemetry'):
+    """Export separate files; clean/enhanced always start with the original MP4."""
+    if variant not in ('telemetry','clean','enhanced'):
+        raise ValueError('Unknown frame variant; use telemetry, clean or enhanced.')
+    if variant=='telemetry':
+        return capture_frame(point,video_folder,output,ffmpeg,gap_red_ms)
+    source=capture_frame(point,video_folder,output,ffmpeg,gap_red_ms,annotate=False)
+    folder=Path(output)/'download-frames'
+    folder.mkdir(parents=True,exist_ok=True)
+    destination=folder/(source.stem+'-'+variant+'.png')
+    if variant=='clean':shutil.copyfile(source,destination)
+    else:enhance_frame(source,destination)
+    return destination
 
 
 def precompute_positions(points, output, video_folder, ffmpeg=None, progress=None, check_cancel=None, cache_output=None):
@@ -205,10 +240,12 @@ def serve_map(points, output, video_folder, ffmpeg=None, gap_red_ms=1000):
                     dest=capture_frame(point,video_folder,output,executable,gap_red_ms,annotate=False)
                     result=estimator.classify_person(dest,point,output)
                     return self.reply(200,json.dumps(result).encode())
-                dest = capture_frame(point, video_folder, output, executable, gap_red_ms)
-                url = '/frames/' + point['point'] + '.png'
+                variant=request.get('variant','telemetry')
+                dest = capture_variant(point, video_folder, output, executable, gap_red_ms,variant)
+                suffix='' if variant=='telemetry' else '-'+variant
+                url = '/frames/' + point['point'] + suffix + '.png'
                 images[url] = dest
-                self.reply(200, json.dumps(dict(url=url, filename=dest.name,
+                self.reply(200, json.dumps(dict(url=url, filename=dest.name,variant=variant,
                     timestamp=point['videoFrameTimestamp'], saved=str(dest.resolve()))).encode())
             except (ValueError, OSError, RuntimeError, ImportError, subprocess.TimeoutExpired) as error:
                 self.reply(400, json.dumps(dict(error=str(error))).encode())

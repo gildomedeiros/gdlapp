@@ -8,14 +8,14 @@
     "recursive": false,
     "gap_red_ms": 1000.0
   },
-  "mode": "timestamp",
+  "mode": "rides",
   "presets": {
     "rides": {
       "scope": "first",
-      "number_of_rides": 3,
+      "number_of_rides": 4,
       "ride_numbers": "",
-      "before": 15.0,
-      "after": 15.0,
+      "before": 30.0,
+      "after": 20.0,
       "interval": 0.0,
       "max_samples": null,
       "auto_fov": false,
@@ -28,7 +28,7 @@
     },
     "timestamp": {
       "at": "14:03:07.530",
-      "next": 5,
+      "next": 2,
       "auto_fov": false
     },
     "pitch": {

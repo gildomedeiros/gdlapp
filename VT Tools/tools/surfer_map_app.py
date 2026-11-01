@@ -333,7 +333,7 @@ class MapApp:
         return results
 
     def capture(self,snapshot,request,detect=False):
-        from surfer_map_capture import capture_frame
+        from surfer_map_capture import capture_frame, capture_variant
         from telemetry_selected_frames import ffmpeg_path
         point=snapshot['points'].get(request.get('point'))
         if point is None:raise ValueError('Unknown surfer position in this map.')
@@ -342,14 +342,17 @@ class MapApp:
             if detect:
                 saved=next((r for r in self.fov_results(snapshot) if r.get('sourceFile')==point.get('sourceFile') and r.get('gpsTimestamp')==point.get('receivedTimestamp') and r.get('frameTimestamp')==point.get('videoFrameTimestamp')),None)
                 if saved:return saved
-            dest=capture_frame(point,s['video_folder'],snapshot['output'],ffmpeg_path(s['ffmpeg'] or None),s['gap_red_ms'],annotate=not detect)
             if detect:
+                dest=capture_frame(point,s['video_folder'],snapshot['output'],ffmpeg_path(s['ffmpeg'] or None),s['gap_red_ms'],annotate=False)
                 from surfer_fov import FovEstimator
                 estimator=FovEstimator(Path(__file__).with_name('models')/'yolo11n-seg.pt')
                 return estimator.classify_person(dest,point,snapshot['cache_output'])
-            url=f'/maps/{snapshot["id"]}/frames/{point["point"]}.png'
+            variant=request.get('variant','telemetry')
+            dest=capture_variant(point,s['video_folder'],snapshot['output'],ffmpeg_path(s['ffmpeg'] or None),s['gap_red_ms'],variant)
+            suffix='' if variant=='telemetry' else '-'+variant
+            url=f'/maps/{snapshot["id"]}/frames/{point["point"]}{suffix}.png'
             snapshot['images'][url]=dest
-            return dict(url=url,filename=dest.name,timestamp=point['videoFrameTimestamp'],saved=str(dest))
+            return dict(url=url,filename=dest.name,variant=variant,timestamp=point['videoFrameTimestamp'],saved=str(dest))
 
 
 def create_server(app,port=0):

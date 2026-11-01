@@ -9,8 +9,47 @@ const rideFilter=document.getElementById('ride-filter');
 const positionFilter=document.getElementById('position-filter');
 const previousPosition=document.getElementById('position-prev');
 const nextPosition=document.getElementById('position-next');
+const hideSeaward=document.getElementById('hide-seaward');
 let eligiblePoints=mapFilters.points, eligiblePairs=new Set(eligiblePoints.map(p=>p.id));
 let visiblePairs=new Set(eligiblePairs);
+const rideHighlight=document.getElementById('show-ride-rings');
+const speedHighlight=document.getElementById('show-speed-rings');
+const speedThreshold=document.getElementById('speed-threshold');
+function selectedSpeedThreshold(){
+ const value=speedThreshold?.valueAsNumber;
+ return Number.isFinite(value)&&value>=0?value:null;
+}
+function updateHighlights(){
+ const invalid=selectedSpeedThreshold()===null,help=document.getElementById('speed-highlight-help');
+ if(help){
+  help.textContent=invalid?'Enter a speed threshold of 0 km/h or greater.':'Uses GPS speed since the previous packet, as shown in the position card.';
+  help.dataset.invalid=String(invalid);
+ }
+ speedThreshold?.setAttribute('aria-invalid',String(invalid));
+ pairMarkers.forEach(updateMarker);
+}
+function addMarkerRing(marker,className,stateKey,color,radius,count,total){
+ if(!count)return;
+ const all=count===total,ring=document.createElementNS(svgNS,'circle');
+ ring.setAttribute('class',className);ring.dataset[stateKey]=all?'all':'mixed';
+ ring.setAttribute('cx',marker.dataset.x);ring.setAttribute('cy',marker.dataset.y);ring.setAttribute('r',String(radius));
+ ring.setAttribute('fill','none');ring.setAttribute('stroke',color);ring.setAttribute('stroke-width','2.5');
+ ring.setAttribute('vector-effect','non-scaling-stroke');if(!all)ring.setAttribute('stroke-dasharray','4 3');
+ marker.insertBefore(ring,marker.querySelector('.pair-halo'));
+}
+const layerControls=[
+ {input:document.getElementById('hide-drones'),className:'drone-marker'},
+ {input:document.getElementById('hide-connections'),className:'pair-line'},
+ {input:document.getElementById('hide-surfers'),className:'surfer-marker'}
+];
+function applyLayerVisibility(){
+ pairElements.forEach(n=>{
+  const selected=n.dataset.pairs.split(' ').some(id=>visiblePairs.has(id));
+  const hidden=layerControls.some(layer=>layer.input?.checked&&n.classList.contains(layer.className));
+  n.style.display=selected&&!hidden?'':'none';
+ });
+}
+
 
 function option(value,text){const o=document.createElement('option');o.value=value;o.textContent=text;return o;}
 function positionDescription(p){
@@ -19,11 +58,11 @@ function positionDescription(p){
  return [time,Number.isFinite(p.distance)?p.distance.toFixed(1)+' m':null,
          Number.isFinite(p.pitch)?p.pitch.toFixed(1)+'°':null].filter(Boolean).join(' · ');
 }
-function filteredDetails(marker){
+function filteredDetails(marker,pointId=null){
  let included=false;
  return marker.dataset.detail.split('\n').map((text,index)=>{
   const header=text.match(/^(S\d+)(?: ↔|:)/)||text.match(/^D\d+ ↔ (S\d+)/);
-  if(header)included=visiblePairs.has(header[1]);
+  if(header)included=visiblePairs.has(header[1])&&(!pointId||header[1]===pointId);
   return included?{text,index}:null;
  }).filter(Boolean);
 }
@@ -36,7 +75,15 @@ function updateMarker(marker){
  // A shared coordinate must use the latest *visible* packet's real direction.
  const rows=ids.map(id=>filterPoints.get(id)), latest=rows[rows.length-1];
  const bearing=surfer?latest.surferBearing:latest.droneBearing;
- marker.querySelectorAll('.travel-arrow,.position-dot,.drone-direction').forEach(n=>n.remove());
+ marker.querySelectorAll('.travel-arrow,.position-dot,.drone-direction,.ride-ring,.speed-ring').forEach(n=>n.remove());
+ if(surfer){
+  if(rideHighlight?.checked!==false)addMarkerRing(marker,'ride-ring','rideState','#9b2dbd',10.5,rows.filter(p=>p.waveRiding===true).length,rows.length);
+  const threshold=selectedSpeedThreshold();
+  if(speedHighlight?.checked&&threshold!==null){
+   addMarkerRing(marker,'speed-ring','speedState','#008baa',15,
+    rows.filter(p=>Number.isFinite(p.speedKmh)&&p.speedKmh>=threshold).length,rows.length);
+  }
+ }
  if(!surfer&&!Number.isFinite(bearing))return;
  const arrow=Number.isFinite(bearing), icon=document.createElementNS(svgNS,arrow?'path':'circle');
  icon.setAttribute('class',surfer?(arrow?'travel-arrow':'position-dot'):'drone-direction');
@@ -51,7 +98,7 @@ function updateMarker(marker){
 function updatePairs(){
  clearDetails();clearMeasurement();
  visiblePairs=new Set(pairChecks.filter(c=>c.checked&&eligiblePairs.has(c.dataset.pair)).map(c=>c.dataset.pair));
- pairElements.forEach(n=>{n.style.display=n.dataset.pairs.split(' ').some(id=>visiblePairs.has(id))?'':'none';});
+ applyLayerVisibility();
  pairMarkers.forEach(updateMarker);
  const single=visiblePairs.size===1?[...visiblePairs][0]:null;
  positionFilter.value=single||(!visiblePairs.size?'custom':visiblePairs.size===eligiblePoints.length?'all':'custom');
@@ -93,14 +140,15 @@ function fitRide(){
  if(width/height<aspect)width=height*aspect;else height=width/aspect;
  box=[(minX+maxX-width)/2,(minY+maxY-height)/2,width,height];draw();
 }
-function changeRide(){
+function changeRide(resetSelection=true, refit=true){
  const ride=mapFilters.rides.find(r=>r.id===rideFilter.value);
- eligiblePoints=mapFilters.points.filter(p=>!ride||Object.hasOwn(p.offsets,ride.id));
+ const ridePoints=mapFilters.points.filter(p=>!ride||Object.hasOwn(p.offsets,ride.id));
+ eligiblePoints=ridePoints.filter(p=>!hideSeaward?.checked||p.seaward!==true);
  eligiblePairs=new Set(eligiblePoints.map(p=>p.id));
  pairChecks.forEach(c=>{
   const label=c.closest('label'), included=eligiblePairs.has(c.dataset.pair);
   label.hidden=!included;
-  if(included){c.checked=true;label.querySelector('.pair-metadata').textContent=positionDescription(filterPoints.get(c.dataset.pair));}
+  if(included){if(resetSelection)c.checked=true;label.querySelector('.pair-metadata').textContent=positionDescription(filterPoints.get(c.dataset.pair));}
  });
  document.getElementById('pair-options').scrollTop=0;
  positionFilter.replaceChildren(option('all','All positions'));
@@ -109,15 +157,24 @@ function changeRide(){
  document.getElementById('ride-window-info').textContent=ride?
   ride.beforeSeconds+'s before / '+ride.afterSeconds+'s after ride start':
   mapFilters.rides.length?'All loaded ride windows':'All loaded positions';
+ if(hideSeaward?.checked)document.getElementById('ride-window-info').textContent+=' · '+(ridePoints.length-eligiblePoints.length)+' seaward positions hidden';
  document.getElementById('fit-ride').textContent=ride?'Fit ride':'Fit all';
- updatePairs();fitRide();
+ updatePairs();if(refit)fitRide();
 }
 function initializeMapFilters(){
+ hideSeaward?.addEventListener('change',()=>changeRide(false,false));
+ rideHighlight?.addEventListener('change',updateHighlights);
+ speedHighlight?.addEventListener('change',updateHighlights);
+ speedThreshold?.addEventListener('input',updateHighlights);
+ layerControls.forEach(layer=>layer.input?.addEventListener('change',()=>{
+  clearDetails();clearMeasurement();applyLayerVisibility();
+ }));
+
  rideFilter.append(option('all',mapFilters.rides.length?'All rides':'All positions'));
  mapFilters.rides.forEach(r=>rideFilter.append(option(r.id,'Ride '+r.number+' · '+r.timestamp.slice(11,19)+' ('+r.points.length+')')));
  rideFilter.disabled=!mapFilters.rides.length;
  if(mapFilters.rides.length&&mapFilters.initialRide!=='all')rideFilter.value=mapFilters.rides[0].id;
- rideFilter.addEventListener('change',changeRide);
+ rideFilter.addEventListener('change',()=>changeRide());
  positionFilter.addEventListener('change',()=>showPosition(positionFilter.value));
  previousPosition.onclick=()=>stepPosition(-1);nextPosition.onclick=()=>stepPosition(1);
  document.getElementById('fit-ride').onclick=fitRide;
