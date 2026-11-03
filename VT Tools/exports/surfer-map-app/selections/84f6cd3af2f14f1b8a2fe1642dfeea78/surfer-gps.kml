@@ -1,0 +1,753 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Raw received surfer GPS</name><Placemark><name>Start (surfer)</name><description>{
+  "latitude": -27.95102,
+  "longitude": 153.429,
+  "session": null,
+  "time_ms": 1793332673063,
+  "sourceLine": 20,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "kind": "start",
+  "label": "Start (surfer)",
+  "pairs": [
+    "S1828",
+    "S1830"
+  ]
+}</description><Point><coordinates>153.429,-27.95102,0</coordinates></Point></Placemark><Placemark><name>Boundary line</name><description>{
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "session": 1,
+  "kind": "boundary",
+  "label": "Boundary line",
+  "latitude": -27.950982039576107,
+  "longitude": 153.42915581756125,
+  "bearingDegrees": 0.0,
+  "pairs": [
+    "S1828",
+    "S1830"
+  ]
+}</description><Point><coordinates>153.42915581756125,-27.950982039576107,0</coordinates></Point></Placemark><Placemark><name>Wave line · seaworld</name><description>{
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "session": 1,
+  "kind": "wave",
+  "label": "Wave line \u00b7 seaworld",
+  "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+  "pointA": {
+    "latitude": -27.950620000000008,
+    "longitude": 153.42910000000006
+  },
+  "pointB": {
+    "latitude": -27.951079999999997,
+    "longitude": 153.42910000000006
+  },
+  "pairs": [
+    "S1828",
+    "S1830"
+  ]
+}</description><LineString><coordinates>153.42910000000006,-27.950620000000008,0 153.42910000000006,-27.951079999999997,0</coordinates></LineString></Placemark><Placemark><name>Start (surfer)</name><description>{
+  "latitude": -27.95103,
+  "longitude": 153.429,
+  "session": null,
+  "time_ms": 1793336847781,
+  "sourceLine": 34,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+  "kind": "start",
+  "label": "Start (surfer)",
+  "pairs": [
+    "S8400"
+  ]
+}</description><Point><coordinates>153.429,-27.95103,0</coordinates></Point></Placemark><Placemark><name>Boundary line</name><description>{
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+  "session": 1,
+  "kind": "boundary",
+  "label": "Boundary line",
+  "latitude": -27.950983311987724,
+  "longitude": 153.42920753430394,
+  "bearingDegrees": 0.0,
+  "pairs": [
+    "S8400"
+  ]
+}</description><Point><coordinates>153.42920753430394,-27.950983311987724,0</coordinates></Point></Placemark><Placemark><name>Wave line · seaworld</name><description>{
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+  "session": 1,
+  "kind": "wave",
+  "label": "Wave line \u00b7 seaworld",
+  "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+  "pointA": {
+    "latitude": -27.950620000000008,
+    "longitude": 153.42910000000006
+  },
+  "pointB": {
+    "latitude": -27.951079999999997,
+    "longitude": 153.42910000000006
+  },
+  "pairs": [
+    "S8400"
+  ]
+}</description><LineString><coordinates>153.42910000000006,-27.950620000000008,0 153.42910000000006,-27.951079999999997,0</coordinates></LineString></Placemark><Placemark><name>S1828 · packet 4011</name><description>{
+  "time_ms": 1793333273105,
+  "receivedTimestamp": "2026-10-30T14:07:53.105+10:00",
+  "sequence": 4011,
+  "latitude": -27.95102,
+  "longitude": 153.42962,
+  "accepted": true,
+  "senderMs": 2110903,
+  "session": null,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "sourceLine": 34434,
+  "firstWaveRideTimeMs": 1793333001812,
+  "waveRideStartTimesMs": [
+    1793333001812,
+    1793333149716,
+    1793333270931,
+    1793333349443,
+    1793333444009,
+    1793333617981,
+    1793333833859,
+    1793334022404,
+    1793334157610
+  ],
+  "minimumDistanceMetres": 25.0,
+  "filmingSeparationMetres": 31.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": true,
+  "retreatStateTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "waveRiding": true,
+  "rideStateTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "rideStateSourceLine": 34430,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": true,
+  "gimbalTargetPitchDeg": -30.0,
+  "heightAboveTakeoffM": 8.5,
+  "gimbalTiltDeg": -34.7,
+  "gimbalReportedTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "point": "S1828",
+  "secondsFromRequestedTime": 1223.457,
+  "surferNextBearingDeg": 269.99999766884144,
+  "sincePreviousReceivedMs": 363,
+  "surferTravelSincePreviousMetres": 4.514689083423868,
+  "surferSpeedSincePreviousKmh": 44.77377603395572,
+  "surferTravelBearingDeg": 240.4889189485644,
+  "dronePoint": "D1828",
+  "droneLatitude": -27.95082253654489,
+  "droneLongitude": 153.42986741401745,
+  "droneReportedTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "droneReportLagMs": 72,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 34431,
+  "droneSurferDistanceMetres": 32.75200113126036,
+  "droneDisplacementMetres": 1.2030094276287164,
+  "previousDronePoint": "D1827",
+  "droneNextBearingDeg": 348.4167413026801,
+  "mapRideWindows": [
+    {
+      "id": "R2",
+      "number": 2,
+      "startMs": 1793333149716,
+      "timestamp": "2026-10-30T14:05:49.716+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R3",
+      "number": 3,
+      "startMs": 1793333270931,
+      "timestamp": "2026-10-30T14:07:50.931+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R4",
+      "number": 4,
+      "startMs": 1793333349443,
+      "timestamp": "2026-10-30T14:09:09.443+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "627_4_04",
+  "videoFrameTimestamp": "2026-10-30T14:07:53.122+10:00",
+  "videoFrameOffsetMs": 17.0,
+  "videoId": "627",
+  "videoPlaybackSeconds": 244.051
+}</description><Point><coordinates>153.42962,-27.95102,0</coordinates></Point></Placemark><Placemark><name>D1828</name><description>{
+  "time_ms": 1793333273105,
+  "receivedTimestamp": "2026-10-30T14:07:53.105+10:00",
+  "sequence": 4011,
+  "latitude": -27.95102,
+  "longitude": 153.42962,
+  "accepted": true,
+  "senderMs": 2110903,
+  "session": null,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "sourceLine": 34434,
+  "firstWaveRideTimeMs": 1793333001812,
+  "waveRideStartTimesMs": [
+    1793333001812,
+    1793333149716,
+    1793333270931,
+    1793333349443,
+    1793333444009,
+    1793333617981,
+    1793333833859,
+    1793334022404,
+    1793334157610
+  ],
+  "minimumDistanceMetres": 25.0,
+  "filmingSeparationMetres": 31.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": true,
+  "retreatStateTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "waveRiding": true,
+  "rideStateTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "rideStateSourceLine": 34430,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": true,
+  "gimbalTargetPitchDeg": -30.0,
+  "heightAboveTakeoffM": 8.5,
+  "gimbalTiltDeg": -34.7,
+  "gimbalReportedTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "point": "S1828",
+  "secondsFromRequestedTime": 1223.457,
+  "surferNextBearingDeg": 269.99999766884144,
+  "sincePreviousReceivedMs": 363,
+  "surferTravelSincePreviousMetres": 4.514689083423868,
+  "surferSpeedSincePreviousKmh": 44.77377603395572,
+  "surferTravelBearingDeg": 240.4889189485644,
+  "dronePoint": "D1828",
+  "droneLatitude": -27.95082253654489,
+  "droneLongitude": 153.42986741401745,
+  "droneReportedTimestamp": "2026-10-30T14:07:53.033+10:00",
+  "droneReportLagMs": 72,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 34431,
+  "droneSurferDistanceMetres": 32.75200113126036,
+  "droneDisplacementMetres": 1.2030094276287164,
+  "previousDronePoint": "D1827",
+  "droneNextBearingDeg": 348.4167413026801,
+  "mapRideWindows": [
+    {
+      "id": "R2",
+      "number": 2,
+      "startMs": 1793333149716,
+      "timestamp": "2026-10-30T14:05:49.716+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R3",
+      "number": 3,
+      "startMs": 1793333270931,
+      "timestamp": "2026-10-30T14:07:50.931+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R4",
+      "number": 4,
+      "startMs": 1793333349443,
+      "timestamp": "2026-10-30T14:09:09.443+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "627_4_04",
+  "videoFrameTimestamp": "2026-10-30T14:07:53.122+10:00",
+  "videoFrameOffsetMs": 17.0,
+  "videoId": "627",
+  "videoPlaybackSeconds": 244.051
+}</description><Style><IconStyle><color>ff0075e8</color></IconStyle></Style><Point><coordinates>153.42986741401745,-27.95082253654489,0</coordinates></Point></Placemark><Placemark><name>S1828 — D1828: 32.8 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42962,-27.95102,0 153.42963133980913,-27.95101094959164,0</coordinates></LineString><LineString><coordinates>153.4296406178348,-27.951003544712073,0 153.42965195764393,-27.950994494303714,0</coordinates></LineString><LineString><coordinates>153.42966123566958,-27.95098708942415,0 153.42967257547872,-27.95097803901579,0</coordinates></LineString><LineString><coordinates>153.42968185350435,-27.950970634136223,0 153.42969319331348,-27.950961583727864,0</coordinates></LineString><LineString><coordinates>153.42970247133914,-27.950954178848296,0 153.42971381114828,-27.950945128439937,0</coordinates></LineString><LineString><coordinates>153.42972308917393,-27.950937723560372,0 153.42973442898307,-27.950928673152013,0</coordinates></LineString><LineString><coordinates>153.42974370700873,-27.950921268272445,0 153.42975504681786,-27.950912217864087,0</coordinates></LineString><LineString><coordinates>153.42976432484352,-27.95090481298452,0 153.42977566465265,-27.95089576257616,0</coordinates></LineString><LineString><coordinates>153.4297849426783,-27.950888357696595,0 153.42979628248744,-27.950879307288236,0</coordinates></LineString><LineString><coordinates>153.4298055605131,-27.950871902408668,0 153.4298169003222,-27.95086285200031,0</coordinates></LineString><LineString><coordinates>153.42982617834787,-27.95085544712074,0 153.429837518157,-27.950846396712382,0</coordinates></LineString><LineString><coordinates>153.42984679618266,-27.950838991832818,0 153.4298581359918,-27.95082994142446,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S1830 · packet 4013</name><description>{
+  "time_ms": 1793333274111,
+  "receivedTimestamp": "2026-10-30T14:07:54.111+10:00",
+  "sequence": 4013,
+  "latitude": -27.95102,
+  "longitude": 153.42961,
+  "accepted": true,
+  "senderMs": 2111903,
+  "session": null,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "sourceLine": 34496,
+  "firstWaveRideTimeMs": 1793333001812,
+  "waveRideStartTimesMs": [
+    1793333001812,
+    1793333149716,
+    1793333270931,
+    1793333349443,
+    1793333444009,
+    1793333617981,
+    1793333833859,
+    1793334022404,
+    1793334157610
+  ],
+  "minimumDistanceMetres": 25.0,
+  "filmingSeparationMetres": 31.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-10-30T14:07:54.072+10:00",
+  "waveRiding": true,
+  "rideStateTimestamp": "2026-10-30T14:07:54.072+10:00",
+  "rideStateSourceLine": 34492,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": true,
+  "gimbalTargetPitchDeg": -30.0,
+  "heightAboveTakeoffM": 8.5,
+  "gimbalTiltDeg": -32.2,
+  "gimbalReportedTimestamp": "2026-10-30T14:07:54.073+10:00",
+  "point": "S1830",
+  "secondsFromRequestedTime": 1224.463,
+  "surferNextBearingDeg": 90.00000233115857,
+  "sincePreviousReceivedMs": 510,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D1830",
+  "droneLatitude": -27.950805131568085,
+  "droneLongitude": 153.4298653003389,
+  "droneReportedTimestamp": "2026-10-30T14:07:54.072+10:00",
+  "droneReportLagMs": 39,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 34493,
+  "droneSurferDistanceMetres": 34.63636342991502,
+  "droneDisplacementMetres": 1.1559379271307244,
+  "previousDronePoint": "D1829",
+  "droneNextBearingDeg": 2.8312460662693217,
+  "mapRideWindows": [
+    {
+      "id": "R2",
+      "number": 2,
+      "startMs": 1793333149716,
+      "timestamp": "2026-10-30T14:05:49.716+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R3",
+      "number": 3,
+      "startMs": 1793333270931,
+      "timestamp": "2026-10-30T14:07:50.931+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R4",
+      "number": 4,
+      "startMs": 1793333349443,
+      "timestamp": "2026-10-30T14:09:09.443+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "627_4_05",
+  "videoFrameTimestamp": "2026-10-30T14:07:54.122+10:00",
+  "videoFrameOffsetMs": 11.0,
+  "videoId": "627",
+  "videoPlaybackSeconds": 245.052
+}</description><Point><coordinates>153.42961,-27.95102,0</coordinates></Point></Placemark><Placemark><name>D1830</name><description>{
+  "time_ms": 1793333274111,
+  "receivedTimestamp": "2026-10-30T14:07:54.111+10:00",
+  "sequence": 4013,
+  "latitude": -27.95102,
+  "longitude": 153.42961,
+  "accepted": true,
+  "senderMs": 2111903,
+  "session": null,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+  "sourceLine": 34496,
+  "firstWaveRideTimeMs": 1793333001812,
+  "waveRideStartTimesMs": [
+    1793333001812,
+    1793333149716,
+    1793333270931,
+    1793333349443,
+    1793333444009,
+    1793333617981,
+    1793333833859,
+    1793334022404,
+    1793334157610
+  ],
+  "minimumDistanceMetres": 25.0,
+  "filmingSeparationMetres": 31.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-10-30T14:07:54.072+10:00",
+  "waveRiding": true,
+  "rideStateTimestamp": "2026-10-30T14:07:54.072+10:00",
+  "rideStateSourceLine": 34492,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": true,
+  "gimbalTargetPitchDeg": -30.0,
+  "heightAboveTakeoffM": 8.5,
+  "gimbalTiltDeg": -32.2,
+  "gimbalReportedTimestamp": "2026-10-30T14:07:54.073+10:00",
+  "point": "S1830",
+  "secondsFromRequestedTime": 1224.463,
+  "surferNextBearingDeg": 90.00000233115857,
+  "sincePreviousReceivedMs": 510,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D1830",
+  "droneLatitude": -27.950805131568085,
+  "droneLongitude": 153.4298653003389,
+  "droneReportedTimestamp": "2026-10-30T14:07:54.072+10:00",
+  "droneReportLagMs": 39,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 34493,
+  "droneSurferDistanceMetres": 34.63636342991502,
+  "droneDisplacementMetres": 1.1559379271307244,
+  "previousDronePoint": "D1829",
+  "droneNextBearingDeg": 2.8312460662693217,
+  "mapRideWindows": [
+    {
+      "id": "R2",
+      "number": 2,
+      "startMs": 1793333149716,
+      "timestamp": "2026-10-30T14:05:49.716+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R3",
+      "number": 3,
+      "startMs": 1793333270931,
+      "timestamp": "2026-10-30T14:07:50.931+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    },
+    {
+      "id": "R4",
+      "number": 4,
+      "startMs": 1793333349443,
+      "timestamp": "2026-10-30T14:09:09.443+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "627_4_05",
+  "videoFrameTimestamp": "2026-10-30T14:07:54.122+10:00",
+  "videoFrameOffsetMs": 11.0,
+  "videoId": "627",
+  "videoPlaybackSeconds": 245.052
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.4298653003389,-27.950805131568085,0</coordinates></Point></Placemark><Placemark><name>S1830 — D1830: 34.6 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42961,-27.95102,0 153.42962170126552,-27.95101015186354,0</coordinates></LineString><LineString><coordinates>153.42963127502824,-27.95100209429734,0 153.42964297629376,-27.950992246160876,0</coordinates></LineString><LineString><coordinates>153.4296525500565,-27.95098418859468,0 153.429664251322,-27.950974340458217,0</coordinates></LineString><LineString><coordinates>153.4296738250847,-27.950966282892022,0 153.42968552635026,-27.950956434755557,0</coordinates></LineString><LineString><coordinates>153.42969510011295,-27.950948377189363,0 153.4297068013785,-27.950938529052898,0</coordinates></LineString><LineString><coordinates>153.4297163751412,-27.950930471486704,0 153.42972807640675,-27.95092062335024,0</coordinates></LineString><LineString><coordinates>153.42973765016944,-27.950912565784044,0 153.42974935143496,-27.95090271764758,0</coordinates></LineString><LineString><coordinates>153.4297589251977,-27.95089466008138,0 153.4297706264632,-27.95088481194492,0</coordinates></LineString><LineString><coordinates>153.42978020022593,-27.950876754378722,0 153.42979190149146,-27.95086690624226,0</coordinates></LineString><LineString><coordinates>153.42980147525418,-27.950858848676063,0 153.4298131765197,-27.950849000539602,0</coordinates></LineString><LineString><coordinates>153.4298227502824,-27.950840942973404,0 153.42983445154795,-27.950831094836943,0</coordinates></LineString><LineString><coordinates>153.42984402531064,-27.950823037270744,0 153.4298557265762,-27.950813189134283,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S8400 · packet 11592</name><description>{
+  "time_ms": 1793337241888,
+  "receivedTimestamp": "2026-10-30T15:14:01.888+10:00",
+  "sequence": 11592,
+  "latitude": -27.9513,
+  "longitude": 153.43012,
+  "accepted": true,
+  "senderMs": 6079648,
+  "session": null,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+  "sourceLine": 22284,
+  "firstWaveRideTimeMs": 1793333001812,
+  "waveRideStartTimesMs": [
+    1793336904055,
+    1793337221819,
+    1793337537960,
+    1793337664074,
+    1793337826192
+  ],
+  "minimumDistanceMetres": 24.0,
+  "filmingSeparationMetres": 30.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": true,
+  "retreatStateTimestamp": "2026-10-30T15:14:01.811+10:00",
+  "waveRiding": true,
+  "rideStateTimestamp": "2026-10-30T15:14:01.811+10:00",
+  "rideStateSourceLine": 22280,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": true,
+  "gimbalTargetPitchDeg": -30.0,
+  "heightAboveTakeoffM": 9.700000000000001,
+  "gimbalTiltDeg": -32.6,
+  "gimbalReportedTimestamp": "2026-10-30T15:14:01.812+10:00",
+  "point": "S8400",
+  "secondsFromRequestedTime": 5192.24,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 501,
+  "surferTravelSincePreviousMetres": 1.4836506918139114,
+  "surferSpeedSincePreviousKmh": 10.660963054950262,
+  "surferTravelBearingDeg": 138.54434981926514,
+  "dronePoint": "D8400",
+  "droneLatitude": -27.950999610128882,
+  "droneLongitude": 153.4300659519695,
+  "droneReportedTimestamp": "2026-10-30T15:14:01.811+10:00",
+  "droneReportLagMs": 77,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 22281,
+  "droneSurferDistanceMetres": 33.821082106191255,
+  "droneDisplacementMetres": 1.2303699953166407,
+  "previousDronePoint": "D8399",
+  "droneNextBearingDeg": 354.4404788895212,
+  "mapRideWindows": [
+    {
+      "id": "R20",
+      "number": 20,
+      "startMs": 1793337221819,
+      "timestamp": "2026-10-30T15:13:41.819+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "639_1_08",
+  "videoFrameTimestamp": "2026-10-30T15:14:01.902+10:00",
+  "videoFrameOffsetMs": 14.0,
+  "videoId": "639",
+  "videoPlaybackSeconds": 68.42699999999999
+}</description><Point><coordinates>153.43012,-27.9513,0</coordinates></Point></Placemark><Placemark><name>D8400</name><description>{
+  "time_ms": 1793337241888,
+  "receivedTimestamp": "2026-10-30T15:14:01.888+10:00",
+  "sequence": 11592,
+  "latitude": -27.9513,
+  "longitude": 153.43012,
+  "accepted": true,
+  "senderMs": 6079648,
+  "session": null,
+  "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+  "sourceLine": 22284,
+  "firstWaveRideTimeMs": 1793333001812,
+  "waveRideStartTimesMs": [
+    1793336904055,
+    1793337221819,
+    1793337537960,
+    1793337664074,
+    1793337826192
+  ],
+  "minimumDistanceMetres": 24.0,
+  "filmingSeparationMetres": 30.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": true,
+  "retreatStateTimestamp": "2026-10-30T15:14:01.811+10:00",
+  "waveRiding": true,
+  "rideStateTimestamp": "2026-10-30T15:14:01.811+10:00",
+  "rideStateSourceLine": 22280,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -55
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -35
+      },
+      {
+        "maxDistanceMetres": 30,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": true,
+  "gimbalTargetPitchDeg": -30.0,
+  "heightAboveTakeoffM": 9.700000000000001,
+  "gimbalTiltDeg": -32.6,
+  "gimbalReportedTimestamp": "2026-10-30T15:14:01.812+10:00",
+  "point": "S8400",
+  "secondsFromRequestedTime": 5192.24,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 501,
+  "surferTravelSincePreviousMetres": 1.4836506918139114,
+  "surferSpeedSincePreviousKmh": 10.660963054950262,
+  "surferTravelBearingDeg": 138.54434981926514,
+  "dronePoint": "D8400",
+  "droneLatitude": -27.950999610128882,
+  "droneLongitude": 153.4300659519695,
+  "droneReportedTimestamp": "2026-10-30T15:14:01.811+10:00",
+  "droneReportLagMs": 77,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 22281,
+  "droneSurferDistanceMetres": 33.821082106191255,
+  "droneDisplacementMetres": 1.2303699953166407,
+  "previousDronePoint": "D8399",
+  "droneNextBearingDeg": 354.4404788895212,
+  "mapRideWindows": [
+    {
+      "id": "R20",
+      "number": 20,
+      "startMs": 1793337221819,
+      "timestamp": "2026-10-30T15:13:41.819+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "639_1_08",
+  "videoFrameTimestamp": "2026-10-30T15:14:01.902+10:00",
+  "videoFrameOffsetMs": 14.0,
+  "videoId": "639",
+  "videoPlaybackSeconds": 68.42699999999999
+}</description><Style><IconStyle><color>ff0075e8</color></IconStyle></Style><Point><coordinates>153.4300659519695,-27.950999610128882,0</coordinates></Point></Placemark><Placemark><name>S8400 — D8400: 33.8 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.43012,-27.9513,0 153.43011752279858,-27.951286232130908,0</coordinates></LineString><LineString><coordinates>153.43011549599746,-27.95127496751074,0 153.43011301879605,-27.951261199641646,0</coordinates></LineString><LineString><coordinates>153.43011099199492,-27.95124993502148,0 153.43010851479352,-27.951236167152388,0</coordinates></LineString><LineString><coordinates>153.43010648799236,-27.95122490253222,0 153.43010401079098,-27.951211134663126,0</coordinates></LineString><LineString><coordinates>153.43010198398983,-27.95119987004296,0 153.43009950678842,-27.951186102173867,0</coordinates></LineString><LineString><coordinates>153.4300974799873,-27.9511748375537,0 153.4300950027859,-27.95116106968461,0</coordinates></LineString><LineString><coordinates>153.43009297598473,-27.95114980506444,0 153.43009049878336,-27.951136037195347,0</coordinates></LineString><LineString><coordinates>153.4300884719822,-27.95112477257518,0 153.43008599478082,-27.95111100470609,0</coordinates></LineString><LineString><coordinates>153.43008396797967,-27.951099740085922,0 153.43008149077826,-27.951085972216827,0</coordinates></LineString><LineString><coordinates>153.43007946397714,-27.95107470759666,0 153.43007698677573,-27.95106093972757,0</coordinates></LineString><LineString><coordinates>153.4300749599746,-27.951049675107402,0 153.4300724827732,-27.95103590723831,0</coordinates></LineString><LineString><coordinates>153.43007045597204,-27.95102464261814,0 153.43006797877067,-27.95101087474905,0</coordinates></LineString></MultiGeometry></Placemark></Document></kml>

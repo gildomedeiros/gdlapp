@@ -1,0 +1,747 @@
+<!doctype html><meta charset="utf-8"><title>Received surfer GPS</title><style>body{font-family:Arial}#map{border:1px solid #ccd;overflow:hidden;background:#f3f7fa}#map svg{display:block;width:100%;height:calc(100vh - 90px);touch-action:none;cursor:grab}#map-controls{margin-bottom:8px}#map-controls>summary{cursor:pointer;padding:10px;background:#eef3f7;font-weight:bold}#map-controls[open]~#map-layout #map svg{height:70vh}button{padding:8px 14px;margin:5px}td,th{border:1px solid #ccc;padding:6px;text-align:left}table{border-collapse:collapse}.pair-line{opacity:.35}.pair-line.active-pair{opacity:1;stroke:#e85b16;stroke-width:3}.pair-halo{display:none}.active-pair>.pair-halo{display:block}.drone-marker.active-pair>rect{stroke:#e85b16;stroke-width:3}#side-view{flex:0 0 360px;padding:12px;box-sizing:border-box;border:1px solid #ccd;font-size:13px}#side-view input[type=number]{width:80px}#map-layout{display:flex;gap:12px;align-items:flex-start}#map{flex:1;min-width:0}#pair-sidebar{flex:0 0 260px;box-sizing:border-box;padding:10px;border:1px solid #ccd;background:#f8fafc}#pair-sidebar summary{cursor:pointer;font-weight:bold}#pair-sidebar button{padding:6px 10px;margin:8px 2px}#pair-sidebar p{font-size:12px;color:#46586a}.ride-badge{background:#f5e8fa;color:#8226a0;font-size:12px;font-weight:bold;padding:1px 4px;border-radius:3px}.pair-option{display:block;margin:8px 0}#pair-options{max-height:max(140px,calc(100vh - 410px));overflow:auto}.pair-option[hidden]{display:none!important}.pair-metadata{display:block;margin:3px 0 0 24px;color:#46586a;font-size:11px}#ride-filters{border-bottom:1px solid #ccd;margin-bottom:12px;padding-bottom:4px}#ride-filters label{display:block;font-size:13px;font-weight:bold;margin:0 0 6px}#ride-filters select{box-sizing:border-box;width:100%;padding:6px 3px;color:#17324d;background:white;border:1px solid #aebdca;border-radius:3px}#ride-filters .position-nav{display:flex;gap:4px}#ride-filters .position-nav button{flex:1;margin:8px 0 0}#ride-filters #fit-ride{margin-left:0}#ride-window-info{margin:7px 0 12px}#position-filter-status{margin:2px 0 8px;font-weight:bold}@media(max-width:650px){#map-layout{flex-direction:column}#side-view{flex:auto;width:100%}#map{width:100%;box-sizing:border-box}#pair-sidebar{flex:auto;width:100%}#pair-options{max-height:160px}.pair-option{display:inline-block;margin:6px 12px 6px 0}}.surfer-marker{cursor:help}.key-field{background:#fff0dc;color:#a94700;font-weight:bold;border-radius:3px;padding:0 3px;box-decoration-break:clone}#tooltip{position:fixed;z-index:10;white-space:pre-line;background:#fff;color:#17324d;border:1px solid #9baaba;border-radius:8px;padding:12px;box-shadow:0 3px 16px #0003;font-size:14px;pointer-events:auto;width:min(420px,calc(100vw - 50px));max-height:85vh;overflow:auto;box-sizing:border-box;overscroll-behavior:contain}#map-layers{border:0;border-top:1px solid #ccd;margin:8px 0 14px;padding:8px 0}#map-layers legend{font-weight:bold;font-size:13px;padding:0 4px 0 0}#map-layers label{display:block;font-size:13px;margin:7px 0}#surfer-highlights{border:0;border-top:1px solid #ccd;margin:8px 0 14px;padding:8px 0}#surfer-highlights legend{font-weight:bold;font-size:13px;padding:0 4px 0 0}#surfer-highlights label{display:block;font-size:13px;margin:7px 0}#speed-threshold{width:72px;padding:4px;box-sizing:border-box}.ring-key{display:inline-block;width:10px;height:10px;border:2px solid;border-radius:50%;vertical-align:middle}.ride-key{border-color:#9b2dbd}.speed-key{border-color:#008baa}#speed-highlight-help[data-invalid="true"]{color:#b00020}.position-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:normal}.position-card-heading button{margin:0;padding:4px 9px}.position-card-hint{font-size:12px;white-space:normal;color:#46586a;margin:8px 0}.position-card{white-space:pre-line;padding:8px 2px;border-top:1px solid #d9e2eb}.position-card[data-capture-point]{cursor:pointer}.position-card[data-capture-point]:hover,.position-card[data-capture-point]:focus{background:#eef5ff;outline:1px solid #9baaba}#details-capture-status{font-size:12px;white-space:normal;overflow-wrap:anywhere}</style><details id="map-controls"><summary>Map controls &amp; info — expand / collapse</summary><h2>Selected samples — first: 2026-10-30T14:03:35.186+10:00</h2><p>All logged wave rides. Actual logged gimbal pitch -36° to -31° AND horizontal GPS distance 29 to 36 m; range endpoints inclusive. 125s before to 125s after each logged ride start, using 23 ride windows from the same source logs. Chronological selection. 1s spacing per log (also keep tilt changes of at least 3°); maximum 10 samples. 10 selected from 13 spaced candidates / 22 matching packets. S/D IDs retain their original full-log order; gaps between selected IDs are expected. Speeds, receipt gaps and arrows use the original neighbouring packets. Each D is the latest prior drone report from the same log. Distances are horizontal GPS-coordinate calculations, not independent range measurements. Identical coordinates share a marker. Point labels belong only to this map.</p><div class="controls"><button id="zin">Zoom +</button><button id="zout">Zoom −</button><button id="reset">Reset</button><button id="measure" aria-pressed="false">Measure distance</button><button id="clear-measure">Clear measurement</button> Scroll to zoom · drag to pan · double-click to reset</div><p id="measurement-result" role="status" aria-live="polite">Enable Measure distance, then select two markers.</p><div class="controls"><strong>1.75 m surfer reference</strong> — drag the figure; rotate: <input id="reference-angle" type="range" min="0" max="359" value="0" aria-label="Reference surfer rotation"><output id="reference-degrees">0°</output><button id="reference-center">Move reference to view centre</button></div><p>Scale guide only: head-to-foot length is 1.75 m on the map plane, not a standing person’s footprint or a measured GPS position.</p></details><div id="map-layout"><div id="map"><svg xmlns="http://www.w3.org/2000/svg" data-units-per-metre="4.435217629336" width="1100" height="850" viewBox="0 0 1100 850"><rect width="1100" height="850" fill="#f3f7fa"/><g font-family="Arial" fill="#17324d"><text x="25" y="30" font-size="20">Received surfer GPS — north up</text><text x="25" y="55" font-size="13">Surfer: green; purple ring = ride detected. Drone: blue = retreat off, orange = active, grey = unknown.</text><text x="755" y="95" font-size="18">N ↑</text><path d="M60,70 V750 M60,70 H740" stroke="#d6e0e7" fill="none"/><path d="M196,70 V750 M60,206 H740" stroke="#d6e0e7" fill="none"/><path d="M332,70 V750 M60,342 H740" stroke="#d6e0e7" fill="none"/><path d="M468,70 V750 M60,478 H740" stroke="#d6e0e7" fill="none"/><path d="M604,70 V750 M60,614 H740" stroke="#d6e0e7" fill="none"/><path d="M740,70 V750 M60,750 H740" stroke="#d6e0e7" fill="none"/><g id="boundary-orientation"><rect x="805" y="85" width="280" height="190" rx="8" fill="white" stroke="#ccd6df"/><text x="825" y="110" font-size="14">Boundary orientation only</text><text x="1000" y="145" font-size="13">N ↑</text><path d="M925.00,215.00 L925.00,125.00" stroke="#c52b34" stroke-width="3"/><text x="825" y="240" font-size="13" fill="#c52b34">0.0° / 180.0° — not a mapped position</text></g><path class="pair-line" data-pairs="S1357" d="M447.92,248.45 L347.51,167.63" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S1359" d="M456.63,253.39 L347.11,167.14" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S1828" d="M295.44,495.04 L403.23,397.66" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S1830" d="M291.09,495.04 L402.31,389.07" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S2174" d="M426.14,391.48 L327.53,303.78" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S3253" d="M482.77,583.81 L444.66,457.67" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S3515" d="M426.14,549.29 L447.90,418.88" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S4758" d="M478.42,490.11 L358.39,442.40" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S5000" d="M474.06,450.66 L354.78,398.08" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><path class="pair-line" data-pairs="S6207" d="M508.91,652.86 L452.71,535.80" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/><g class="drone-marker" data-lat="-27.95035612279373" data-lon="153.42973950531348" data-x="347.5069337680866" data-y="167.6347817316524" data-label="D1357" data-pairs="S1357" data-detail="D1357 ↔ S1357&#10;Displacement from D1356: 0.64 m&#10;Gimbal tilt: -33.9° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:03:35.095+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 626_5_09&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D1357 ↔ S1357&#10;Displacement from D1356: 0.64 m&#10;Gimbal tilt: -33.9° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:03:35.095+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 626_5_09&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="340.51" y="160.63" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(347.51 167.63) rotate(320.629)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.950355125326528" data-lon="153.42973859996107" data-x="347.11252032717766" data-y="167.14285714285705" data-label="D1359" data-pairs="S1359" data-detail="D1359 ↔ S1359&#10;Displacement from D1358: 0.01 m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:03:36.359+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 626_5_10&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D1359 ↔ S1359&#10;Displacement from D1358: 0.01 m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:03:36.359+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 626_5_10&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="340.11" y="160.14" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/></g><g class="drone-marker" data-lat="-27.95082253654489" data-lon="153.42986741401745" data-x="403.22988938404194" data-y="397.6577766320581" data-label="D1828" data-pairs="S1828" data-detail="D1828 ↔ S1828&#10;Displacement from D1827: 1.20 m&#10;Gimbal tilt: -34.7° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:07:53.033+10:00&#10;Retreat active: YES [25] m&#10;Video playback: 627_4_04&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D1828 ↔ S1828&#10;Displacement from D1827: 1.20 m&#10;Gimbal tilt: -34.7° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:07:53.033+10:00&#10;Retreat active: YES [25] m&#10;Video playback: 627_4_04&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="396.23" y="390.66" width="14.00" height="14" rx="1" fill="#e87500" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(403.23 397.66) rotate(348.417)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.950805131568085" data-lon="153.4298653003389" data-x="402.30907310621694" data-y="389.0740998407697" data-label="D1830" data-pairs="S1830" data-detail="D1830 ↔ S1830&#10;Displacement from D1829: 1.16 m&#10;Gimbal tilt: -32.2° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:07:54.073+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 627_4_05&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D1830 ↔ S1830&#10;Displacement from D1829: 1.16 m&#10;Gimbal tilt: -32.2° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:07:54.073+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 627_4_05&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="395.31" y="382.07" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(402.31 389.07) rotate(2.831)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.95063218592574" data-lon="153.4296936594058" data-x="327.5343330100875" data-y="303.7818576892505" data-label="D2174" data-pairs="S2174" data-detail="D2174 ↔ S2174&#10;Displacement from D2173: 1.04 m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:10:56.647+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 628_1_44&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D2174 ↔ S2174&#10;Displacement from D2173: 1.04 m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:10:56.647+10:00&#10;Retreat active: NO [25] m&#10;Video playback: 628_1_44&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="320.53" y="296.78" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(327.53 303.78) rotate(328.393)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.95094421661202" data-lon="153.42996251946667" data-x="444.6622279274253" data-y="457.6671854256429" data-label="D3253" data-pairs="S3253" data-detail="D3253 ↔ S3253&#10;Displacement from D3252: 1.18 m&#10;Gimbal tilt: -34.2° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:20:35.337+10:00&#10;Retreat active: YES [25] m&#10;Video playback: 630_0_36&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D3253 ↔ S3253&#10;Displacement from D3252: 1.18 m&#10;Gimbal tilt: -34.2° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:20:35.337+10:00&#10;Retreat active: YES [25] m&#10;Video playback: 630_0_36&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="437.66" y="450.67" width="14.00" height="14" rx="1" fill="#e87500" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(444.66 457.67) rotate(355.842)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.95086556044798" data-lon="153.42996994368212" data-x="447.8965600359792" data-y="418.8760340616216" data-label="D3515" data-pairs="S3515" data-detail="D3515 ↔ S3515&#10;Displacement from D3514: 1.08 m&#10;Gimbal tilt: -32.1° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:22:56.317+10:00&#10;Retreat active: NO [25] m&#10;Video playback: not covered&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D3515 ↔ S3515&#10;Displacement from D3514: 1.08 m&#10;Gimbal tilt: -32.1° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:22:56.317+10:00&#10;Retreat active: NO [25] m&#10;Video playback: not covered&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="440.90" y="411.88" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(447.90 418.88) rotate(0.192)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.950913256589644" data-lon="153.42976448777384" data-x="358.3904505779051" data-y="442.39851667143074" data-label="D4758" data-pairs="S4758" data-detail="D4758 ↔ S4758&#10;Displacement from D4757: 2.11 m&#10;Gimbal tilt: -31.3° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:38:24.066+10:00&#10;Retreat active: NO [22] m&#10;Video playback: 632_0_58&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D4758 ↔ S4758&#10;Displacement from D4757: 2.11 m&#10;Gimbal tilt: -31.3° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:38:24.066+10:00&#10;Retreat active: NO [22] m&#10;Video playback: 632_0_58&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="351.39" y="435.40" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(358.39 442.40) rotate(292.677)" fill="white" stroke="none"/></g><g class="drone-marker" data-lat="-27.950823400204545" data-lon="153.42975620778734" data-x="354.7833049650133" data-y="398.08371085826" data-label="D5000" data-pairs="S5000" data-detail="D5000 ↔ S5000&#10;Displacement from D4999: 2.15 m&#10;Gimbal tilt: -32.6° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:40:35.004+10:00&#10;Retreat active: NO [22] m&#10;Video playback: 632_3_09&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D5000 ↔ S5000&#10;Displacement from D4999: 2.15 m&#10;Gimbal tilt: -32.6° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:40:35.004+10:00&#10;Retreat active: NO [22] m&#10;Video playback: 632_3_09&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="347.78" y="391.08" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/></g><g class="drone-marker" data-lat="-27.951102652396266" data-lon="153.42998099522228" data-x="452.7111227863258" data-y="535.8035471881474" data-label="D6207" data-pairs="S6207" data-detail="D6207 ↔ S6207&#10;Displacement from D6206: 0.00 m&#10;Gimbal tilt: -34.9° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:51:24.093+10:00&#10;Retreat active: NO [22] m&#10;Video playback: 634_3_12&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;" tabindex="0" aria-label="D6207 ↔ S6207&#10;Displacement from D6206: 0.00 m&#10;Gimbal tilt: -34.9° — TILTING → -30° (command active)&#10;Gimbal reported: 2026-10-30T14:51:24.093+10:00&#10;Retreat active: NO [22] m&#10;Video playback: 634_3_12&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m&#10;"><rect x="445.71" y="528.80" width="14.00" height="14" rx="1" fill="#2454c5" stroke="#17324d" stroke-width="0.8"/><path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate(452.71 535.80) rotate(28.735)" fill="white" stroke="none"/></g><g class="surfer-marker" data-lat="-27.95052" data-lon="153.42997" data-x="447.92109470986645" data-y="248.4547097221769" data-label="S1357" data-pairs="S1357" data-detail="S1357 ↔ D1357 | [29.1][31] m horizontal&#10;Surfer since previous packet: 1.0 m | 7.1 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -33.9° — TILTING → -30° (command active)&#10;Video playback: 626_5_09&#10;Packet: 3519 | accepted: True&#10;Received: 2026-10-30T14:03:35.186+10:00 (497 ms after previous packet)&#10;Surfer: -27.95052, 153.42997&#10;Drone: -27.95035612279373, 153.42973950531348&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S1357 ↔ D1357 | [29.1][31] m horizontal&#10;Surfer since previous packet: 1.0 m | 7.1 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -33.9° — TILTING → -30° (command active)&#10;Video playback: 626_5_09&#10;Packet: 3519 | accepted: True&#10;Received: 2026-10-30T14:03:35.186+10:00 (497 ms after previous packet)&#10;Surfer: -27.95052, 153.42997&#10;Drone: -27.95035612279373, 153.42973950531348&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="447.92" cy="248.45" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="447.92" cy="248.45" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(447.92 248.45) rotate(90.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95053" data-lon="153.42999" data-x="456.6340210241281" data-y="253.38644671145673" data-label="S1359" data-pairs="S1359" data-detail="S1359 ↔ D1359 | [31.4][31] m horizontal&#10;Surfer since previous packet: 1.5 m | 14.9 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Video playback: 626_5_10&#10;Packet: 3521 | accepted: True&#10;Received: 2026-10-30T14:03:36.420+10:00 (359 ms after previous packet)&#10;Surfer: -27.95053, 153.42999&#10;Drone: -27.950355125326528, 153.42973859996107&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S1359 ↔ D1359 | [31.4][31] m horizontal&#10;Surfer since previous packet: 1.5 m | 14.9 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Video playback: 626_5_10&#10;Packet: 3521 | accepted: True&#10;Received: 2026-10-30T14:03:36.420+10:00 (359 ms after previous packet)&#10;Surfer: -27.95053, 153.42999&#10;Drone: -27.950355125326528, 153.42973859996107&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="456.63" cy="253.39" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="456.63" cy="253.39" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(456.63 253.39) rotate(90.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95102" data-lon="153.42962" data-x="295.44488425981456" data-y="495.04155919493076" data-label="S1828" data-pairs="S1828" data-detail="S1828 ↔ D1828 | [32.8][31] m horizontal&#10;Surfer since previous packet: 4.5 m | 44.8 km/h&#10;Arrow direction: 270.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: YES [25] m&#10;Gimbal tilt: -34.7° — TILTING → -30° (command active)&#10;Video playback: 627_4_04&#10;Packet: 4011 | accepted: True&#10;Received: 2026-10-30T14:07:53.105+10:00 (363 ms after previous packet)&#10;Surfer: -27.95102, 153.42962&#10;Drone: -27.95082253654489, 153.42986741401745&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S1828 ↔ D1828 | [32.8][31] m horizontal&#10;Surfer since previous packet: 4.5 m | 44.8 km/h&#10;Arrow direction: 270.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: YES [25] m&#10;Gimbal tilt: -34.7° — TILTING → -30° (command active)&#10;Video playback: 627_4_04&#10;Packet: 4011 | accepted: True&#10;Received: 2026-10-30T14:07:53.105+10:00 (363 ms after previous packet)&#10;Surfer: -27.95102, 153.42962&#10;Drone: -27.95082253654489, 153.42986741401745&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="295.44" cy="495.04" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="295.44" cy="495.04" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(295.44 495.04) rotate(270.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95102" data-lon="153.42961" data-x="291.0884211026837" data-y="495.04155919493076" data-label="S1830" data-pairs="S1830" data-detail="S1830 ↔ D1830 | [34.6][31] m horizontal&#10;Surfer since previous packet: 0.0 m | 0.0 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -32.2° — TILTING → -30° (command active)&#10;Video playback: 627_4_05&#10;Packet: 4013 | accepted: True&#10;Received: 2026-10-30T14:07:54.111+10:00 (510 ms after previous packet)&#10;Surfer: -27.95102, 153.42961&#10;Drone: -27.950805131568085, 153.4298653003389&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S1830 ↔ D1830 | [34.6][31] m horizontal&#10;Surfer since previous packet: 0.0 m | 0.0 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -32.2° — TILTING → -30° (command active)&#10;Video playback: 627_4_05&#10;Packet: 4013 | accepted: True&#10;Received: 2026-10-30T14:07:54.111+10:00 (510 ms after previous packet)&#10;Surfer: -27.95102, 153.42961&#10;Drone: -27.950805131568085, 153.4298653003389&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="291.09" cy="495.04" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="291.09" cy="495.04" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(291.09 495.04) rotate(90.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95081" data-lon="153.42992" data-x="426.1387789365941" data-y="391.47508241654936" data-label="S2174" data-pairs="S2174" data-detail="S2174 ↔ D2174 | [29.8][31] m horizontal&#10;Surfer since previous packet: 1.5 m | 10.7 km/h&#10;Arrow direction: next coordinates unchanged or unavailable&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Video playback: 628_1_44&#10;Packet: 4362 | accepted: True&#10;Received: 2026-10-30T14:10:56.679+10:00 (500 ms after previous packet)&#10;Surfer: -27.95081, 153.42992&#10;Drone: -27.95063218592574, 153.4296936594058&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S2174 ↔ D2174 | [29.8][31] m horizontal&#10;Surfer since previous packet: 1.5 m | 10.7 km/h&#10;Arrow direction: next coordinates unchanged or unavailable&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -31.4° — TILTING → -30° (command active)&#10;Video playback: 628_1_44&#10;Packet: 4362 | accepted: True&#10;Received: 2026-10-30T14:10:56.679+10:00 (500 ms after previous packet)&#10;Surfer: -27.95081, 153.42992&#10;Drone: -27.95063218592574, 153.4296936594058&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="426.14" cy="391.48" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="426.14" cy="391.48" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><circle class="position-dot" cx="426.14" cy="391.48" r="5" fill="#14804a"/></g><g class="surfer-marker" data-lat="-27.9512" data-lon="153.43005" data-x="482.7727999545313" data-y="583.8128250054726" data-label="S3253" data-pairs="S3253" data-detail="S3253 ↔ D3253 | [29.7][31] m horizontal&#10;Surfer since previous packet: 2.3 m | 16.2 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: YES [25] m&#10;Gimbal tilt: -34.2° — TILTING → -30° (command active)&#10;Video playback: 630_0_36&#10;Packet: 5468 | accepted: True&#10;Received: 2026-10-30T14:20:35.433+10:00 (501 ms after previous packet)&#10;Surfer: -27.9512, 153.43005&#10;Drone: -27.95094421661202, 153.42996251946667&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S3253 ↔ D3253 | [29.7][31] m horizontal&#10;Surfer since previous packet: 2.3 m | 16.2 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: YES [25] m&#10;Gimbal tilt: -34.2° — TILTING → -30° (command active)&#10;Video playback: 630_0_36&#10;Packet: 5468 | accepted: True&#10;Received: 2026-10-30T14:20:35.433+10:00 (501 ms after previous packet)&#10;Surfer: -27.9512, 153.43005&#10;Drone: -27.95094421661202, 153.42996251946667&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="482.77" cy="583.81" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="482.77" cy="583.81" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(482.77 583.81) rotate(90.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95113" data-lon="153.42992" data-x="426.1387789365941" data-y="549.2906660787614" data-label="S3515" data-pairs="S3515" data-detail="S3515 ↔ D3515 | [29.8][31] m horizontal&#10;Surfer since previous packet: 1.5 m | 10.7 km/h&#10;Arrow direction: next coordinates unchanged or unavailable&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -32.1° — TILTING → -30° (command active)&#10;Video playback: not covered&#10;Packet: 5737 | accepted: True&#10;Received: 2026-10-30T14:22:56.418+10:00 (501 ms after previous packet)&#10;Surfer: -27.95113, 153.42992&#10;Drone: -27.95086556044798, 153.42996994368212&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S3515 ↔ D3515 | [29.8][31] m horizontal&#10;Surfer since previous packet: 1.5 m | 10.7 km/h&#10;Arrow direction: next coordinates unchanged or unavailable&#10;Ride detected: YES&#10;Retreat active: NO [25] m&#10;Gimbal tilt: -32.1° — TILTING → -30° (command active)&#10;Video playback: not covered&#10;Packet: 5737 | accepted: True&#10;Received: 2026-10-30T14:22:56.418+10:00 (501 ms after previous packet)&#10;Surfer: -27.95113, 153.42992&#10;Drone: -27.95086556044798, 153.42996994368212&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="426.14" cy="549.29" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="426.14" cy="549.29" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><circle class="position-dot" cx="426.14" cy="549.29" r="5" fill="#14804a"/></g><g class="surfer-marker" data-lat="-27.95101" data-lon="153.43004" data-x="478.4163367974005" data-y="490.1098222056509" data-label="S4758" data-pairs="S4758" data-detail="S4758 ↔ D4758 | [29.1][28] m horizontal&#10;Surfer since previous packet: 0.0 m | 0.0 km/h&#10;Arrow direction: 41.5° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [22] m&#10;Gimbal tilt: -31.3° — TILTING → -30° (command active)&#10;Video playback: 632_0_58&#10;Packet: 7510 | accepted: True&#10;Received: 2026-10-30T14:38:24.129+10:00 (871 ms after previous packet)&#10;Surfer: -27.95101, 153.43004&#10;Drone: -27.950913256589644, 153.42976448777384&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S4758 ↔ D4758 | [29.1][28] m horizontal&#10;Surfer since previous packet: 0.0 m | 0.0 km/h&#10;Arrow direction: 41.5° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [22] m&#10;Gimbal tilt: -31.3° — TILTING → -30° (command active)&#10;Video playback: 632_0_58&#10;Packet: 7510 | accepted: True&#10;Received: 2026-10-30T14:38:24.129+10:00 (871 ms after previous packet)&#10;Surfer: -27.95101, 153.43004&#10;Drone: -27.950913256589644, 153.42976448777384&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="478.42" cy="490.11" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="478.42" cy="490.11" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(478.42 490.11) rotate(41.456)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95093" data-lon="153.43003" data-x="474.05987364026964" data-y="450.6559262896599" data-label="S5000" data-pairs="S5000" data-detail="S5000 ↔ D5000 | [29.4][28] m horizontal&#10;Surfer since previous packet: 1.0 m | 4.1 km/h&#10;Arrow direction: 180.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [22] m&#10;Gimbal tilt: -32.6° — TILTING → -30° (command active)&#10;Video playback: 632_3_09&#10;Packet: 7760 | accepted: True&#10;Received: 2026-10-30T14:40:35.027+10:00 (872 ms after previous packet)&#10;Surfer: -27.95093, 153.43003&#10;Drone: -27.950823400204545, 153.42975620778734&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S5000 ↔ D5000 | [29.4][28] m horizontal&#10;Surfer since previous packet: 1.0 m | 4.1 km/h&#10;Arrow direction: 180.0° toward next received GPS&#10;Ride detected: YES&#10;Retreat active: NO [22] m&#10;Gimbal tilt: -32.6° — TILTING → -30° (command active)&#10;Video playback: 632_3_09&#10;Packet: 7760 | accepted: True&#10;Received: 2026-10-30T14:40:35.027+10:00 (872 ms after previous packet)&#10;Surfer: -27.95093, 153.43003&#10;Drone: -27.950823400204545, 153.42975620778734&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="474.06" cy="450.66" r="12" fill="transparent"/><circle class="ride-ring" data-ride-state="all" cx="474.06" cy="450.66" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(474.06 450.66) rotate(180.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g class="surfer-marker" data-lat="-27.95134" data-lon="153.43011" data-x="508.9115788973163" data-y="652.8571428571429" data-label="S6207" data-pairs="S6207" data-detail="S6207 ↔ D6207 | [29.3][28] m horizontal&#10;Surfer since previous packet: 2.0 m | 19.6 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: NO&#10;Retreat active: NO [22] m&#10;Gimbal tilt: -34.9° — TILTING → -30° (command active)&#10;Video playback: 634_3_12&#10;Packet: 9001 | accepted: True&#10;Received: 2026-10-30T14:51:24.134+10:00 (360 ms after previous packet)&#10;Surfer: -27.95134, 153.43011&#10;Drone: -27.951102652396266, 153.42998099522228&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m" data-red-lines="" data-green-lines="" tabindex="0" aria-label="S6207 ↔ D6207 | [29.3][28] m horizontal&#10;Surfer since previous packet: 2.0 m | 19.6 km/h&#10;Arrow direction: 90.0° toward next received GPS&#10;Ride detected: NO&#10;Retreat active: NO [22] m&#10;Gimbal tilt: -34.9° — TILTING → -30° (command active)&#10;Video playback: 634_3_12&#10;Packet: 9001 | accepted: True&#10;Received: 2026-10-30T14:51:24.134+10:00 (360 ms after previous packet)&#10;Surfer: -27.95134, 153.43011&#10;Drone: -27.951102652396266, 153.42998099522228&#10;&#10;Gimbal bands: 0–10 m: -55° | 10–20 m: -35° | 20–30 m: -30° (selected)&#10;Gimbal bands: 30–40 m: -30° | 40–50 m: -20° | &gt;50 m: -12°&#10;Band buffer: 5 m"><circle cx="508.91" cy="652.86" r="12" fill="transparent"/><path class="travel-arrow" d="M0,-9 L6,6 L0,3 L-6,6 Z" transform="translate(508.91 652.86) rotate(90.000)" fill="#14804a" stroke="white" stroke-width="1"/></g><g id="map-scale-static"><rect x="805" y="515" width="270" height="270" rx="8" fill="white" stroke="#ccd6df"/><text x="820" y="540" font-size="13">Map scale</text><path d="M850,685.65 V730 H894.35 Z" stroke="#111" stroke-width="3" stroke-linejoin="round" fill="none"/><text x="872.18" y="758" font-size="13" text-anchor="middle">10 m</text><text x="840" y="711.82" font-size="13" text-anchor="end">10 m</text><text x="886.18" y="696.82" font-size="13" text-anchor="middle">14.1 m</text></g></g></svg></div><aside id="pair-sidebar" aria-label="Pair visibility"><section id="ride-filters" aria-label="Map filters"><label for="ride-filter">Wave ride</label><select id="ride-filter"></select><p id="ride-window-info"></p><label for="position-filter">Surfer position</label><select id="position-filter"></select><div class="position-nav"><button id="position-prev">Previous</button><button id="position-next">Next</button></div><button id="fit-ride">Fit ride</button><p id="position-filter-status" role="status" aria-live="polite"></p></section><fieldset id="map-layers"><legend>Map layers</legend><label><input id="hide-drones" type="checkbox"> Hide drone positions</label><label><input id="hide-connections" type="checkbox"> Hide connection lines</label><label><input id="hide-surfers" type="checkbox"> Hide surfer positions</label><label title="Hide seaward-pointing surfer arrows and their paired drones/lines, using the logged sea direction. Stationary or unknown directions remain visible."><input id="hide-seaward" type="checkbox"> Hide seaward positions</label><label title="Uses the speed threshold below. Hide slower surfer positions and their paired drones/lines; unknown speeds remain visible."><input id="hide-slow-speed" type="checkbox"> Hide speed below threshold</label></fieldset><fieldset id="surfer-highlights"><legend>Surfer highlights</legend><label><input id="show-ride-rings" type="checkbox" checked> <span class="ring-key ride-key" aria-hidden="true"></span> Ride detected</label><label><input id="show-speed-rings" type="checkbox"> <span class="ring-key speed-key" aria-hidden="true"></span> Speed threshold</label><label class="speed-threshold-label" for="speed-threshold">Speed ≥ <input id="speed-threshold" type="number" min="0" step="0.1" value="15" aria-label="Speed threshold (km/h)"> km/h</label><p id="speed-highlight-help" role="status">Uses GPS speed since the previous packet, as shown in the position card.</p></fieldset><p class="ride-legend">Purple: ride detected. Cyan: speed ≥ threshold. Dashed rings: mixed shared positions.</p><details open><summary>Choose positions</summary><button id="pairs-all">Show all</button><button id="pairs-none">Hide all</button><div id="pair-options"><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S1357" checked> S1357 ↔ D1357 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S1359" checked> S1359 ↔ D1359 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S1828" checked> S1828 ↔ D1828 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S1830" checked> S1830 ↔ D1830 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S2174" checked> S2174 ↔ D2174 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S3253" checked> S3253 ↔ D3253 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S3515" checked> S3515 ↔ D3515 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S4758" checked> S4758 ↔ D4758 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S5000" checked> S5000 ↔ D5000 <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong><small class="pair-metadata"></small></label><label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="S6207" checked> S6207 ↔ D6207<small class="pair-metadata"></small></label></div><p>Show/hide applies to the selected ride. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details><p>Ctrl + left-click a surfer to capture its nearest frame.</p><p id="capture-status" role="status" style="overflow-wrap:anywhere"></p></aside></div><div id="tooltip" tabindex="-1" aria-label="Position details" hidden></div><details><summary>All packet details</summary><table><tr><th>receivedTimestamp</th><th>sequence</th><th>latitude</th><th>longitude</th><th>accepted</th><th>senderMs</th><th>session</th><th>sourceFile</th><th>sourceLine</th><th>firstWaveRideTimeMs</th><th>waveRideStartTimesMs</th><th>minimumDistanceMetres</th><th>filmingSeparationMetres</th><th>retreatStartedSincePreviousPacket</th><th>retreatStartTimestamps</th><th>retreatActive</th><th>retreatStateTimestamp</th><th>waveRiding</th><th>rideStateTimestamp</th><th>rideStateSourceLine</th><th>seawardBearingDeg</th><th>gimbalBandConfig</th><th>gimbalActiveBand</th><th>gimbalTilting</th><th>gimbalTargetPitchDeg</th><th>heightAboveTakeoffM</th><th>gimbalTiltDeg</th><th>gimbalReportedTimestamp</th><th>point</th><th>secondsFromRequestedTime</th><th>surferNextBearingDeg</th><th>sincePreviousReceivedMs</th><th>surferTravelSincePreviousMetres</th><th>surferSpeedSincePreviousKmh</th><th>surferTravelBearingDeg</th><th>dronePoint</th><th>droneLatitude</th><th>droneLongitude</th><th>droneReportedTimestamp</th><th>droneReportLagMs</th><th>droneGpsAgeAtSurferReceiptMs</th><th>droneFixMs</th><th>droneSourceLine</th><th>droneSurferDistanceMetres</th><th>droneDisplacementMetres</th><th>previousDronePoint</th><th>droneNextBearingDeg</th><th>mapRideWindows</th><th>fileIdPlayback</th><th>videoFrameTimestamp</th><th>videoFrameOffsetMs</th><th>videoId</th><th>videoPlaybackSeconds</th></tr><tr><td>2026-10-30T14:03:35.186+10:00</td><td>3519</td><td>-27.95052</td><td>153.42997</td><td>True</td><td>1852989</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>19563</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:03:35.094+10:00</td><td>True</td><td>2026-10-30T14:03:35.094+10:00</td><td>19559</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.5</td><td>-33.9</td><td>2026-10-30T14:03:35.095+10:00</td><td>S1357</td><td>965.538</td><td>90.00000233114777</td><td>497</td><td>0.9822433804185517</td><td>7.114841387337598</td><td>90.00000233114777</td><td>D1357</td><td>-27.95035612279373</td><td>153.42973950531348</td><td>2026-10-30T14:03:35.094+10:00</td><td>92</td><td>None</td><td>None</td><td>19560</td><td>29.062546610304775</td><td>0.6403361030205219</td><td>D1356</td><td>320.6293811029115</td><td>[{&#x27;id&#x27;: &#x27;R1&#x27;, &#x27;number&#x27;: 1, &#x27;startMs&#x27;: 1793333001812, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:03:21.812+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>626_5_09</td><td>2026-10-30T14:03:35.190+10:00</td><td>4.0</td><td>626</td><td>309.343</td></tr><tr><td>2026-10-30T14:03:36.420+10:00</td><td>3521</td><td>-27.95053</td><td>153.42999</td><td>True</td><td>1854220</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>19635</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:03:36.359+10:00</td><td>True</td><td>2026-10-30T14:03:36.359+10:00</td><td>19629</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.5</td><td>-31.400000000000002</td><td>2026-10-30T14:03:36.359+10:00</td><td>S1359</td><td>966.772</td><td>90.00000233114798</td><td>359</td><td>1.4836553305030398</td><td>14.877880751562516</td><td>138.54414699653896</td><td>D1359</td><td>-27.950355125326528</td><td>153.42973859996107</td><td>2026-10-30T14:03:36.359+10:00</td><td>61</td><td>None</td><td>None</td><td>19630</td><td>31.430713684987165</td><td>0.005185320402490977</td><td>D1358</td><td>None</td><td>[{&#x27;id&#x27;: &#x27;R1&#x27;, &#x27;number&#x27;: 1, &#x27;startMs&#x27;: 1793333001812, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:03:21.812+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>626_5_10</td><td>2026-10-30T14:03:36.424+10:00</td><td>4.0</td><td>626</td><td>310.578</td></tr><tr><td>2026-10-30T14:07:53.105+10:00</td><td>4011</td><td>-27.95102</td><td>153.42962</td><td>True</td><td>2110903</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>34434</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>True</td><td>2026-10-30T14:07:53.033+10:00</td><td>True</td><td>2026-10-30T14:07:53.033+10:00</td><td>34430</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.5</td><td>-34.7</td><td>2026-10-30T14:07:53.033+10:00</td><td>S1828</td><td>1223.457</td><td>269.99999766884144</td><td>363</td><td>4.514689083423868</td><td>44.77377603395572</td><td>240.4889189485644</td><td>D1828</td><td>-27.95082253654489</td><td>153.42986741401745</td><td>2026-10-30T14:07:53.033+10:00</td><td>72</td><td>None</td><td>None</td><td>34431</td><td>32.75200113126036</td><td>1.2030094276287164</td><td>D1827</td><td>348.4167413026801</td><td>[{&#x27;id&#x27;: &#x27;R2&#x27;, &#x27;number&#x27;: 2, &#x27;startMs&#x27;: 1793333149716, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:05:49.716+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R3&#x27;, &#x27;number&#x27;: 3, &#x27;startMs&#x27;: 1793333270931, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:07:50.931+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R4&#x27;, &#x27;number&#x27;: 4, &#x27;startMs&#x27;: 1793333349443, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:09:09.443+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>627_4_04</td><td>2026-10-30T14:07:53.122+10:00</td><td>17.0</td><td>627</td><td>244.051</td></tr><tr><td>2026-10-30T14:07:54.111+10:00</td><td>4013</td><td>-27.95102</td><td>153.42961</td><td>True</td><td>2111903</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>34496</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:07:54.072+10:00</td><td>True</td><td>2026-10-30T14:07:54.072+10:00</td><td>34492</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.5</td><td>-32.2</td><td>2026-10-30T14:07:54.073+10:00</td><td>S1830</td><td>1224.463</td><td>90.00000233115857</td><td>510</td><td>0.0</td><td>0.0</td><td>None</td><td>D1830</td><td>-27.950805131568085</td><td>153.4298653003389</td><td>2026-10-30T14:07:54.072+10:00</td><td>39</td><td>None</td><td>None</td><td>34493</td><td>34.63636342991502</td><td>1.1559379271307244</td><td>D1829</td><td>2.8312460662693217</td><td>[{&#x27;id&#x27;: &#x27;R2&#x27;, &#x27;number&#x27;: 2, &#x27;startMs&#x27;: 1793333149716, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:05:49.716+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R3&#x27;, &#x27;number&#x27;: 3, &#x27;startMs&#x27;: 1793333270931, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:07:50.931+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R4&#x27;, &#x27;number&#x27;: 4, &#x27;startMs&#x27;: 1793333349443, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:09:09.443+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>627_4_05</td><td>2026-10-30T14:07:54.122+10:00</td><td>11.0</td><td>627</td><td>245.052</td></tr><tr><td>2026-10-30T14:10:56.679+10:00</td><td>4362</td><td>-27.95081</td><td>153.42992</td><td>True</td><td>2294478</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>45092</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:10:56.647+10:00</td><td>True</td><td>2026-10-30T14:10:56.647+10:00</td><td>45088</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.4</td><td>-31.400000000000002</td><td>2026-10-30T14:10:56.647+10:00</td><td>S2174</td><td>1407.031</td><td>None</td><td>500</td><td>1.4836535840721345</td><td>10.682305805319368</td><td>41.455781320885585</td><td>D2174</td><td>-27.95063218592574</td><td>153.4296936594058</td><td>2026-10-30T14:10:56.647+10:00</td><td>32</td><td>None</td><td>None</td><td>45089</td><td>29.752306929383796</td><td>1.037618941988251</td><td>D2173</td><td>328.3925002557151</td><td>[{&#x27;id&#x27;: &#x27;R4&#x27;, &#x27;number&#x27;: 4, &#x27;startMs&#x27;: 1793333349443, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:09:09.443+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R5&#x27;, &#x27;number&#x27;: 5, &#x27;startMs&#x27;: 1793333444009, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:10:44.009+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>628_1_44</td><td>2026-10-30T14:10:56.686+10:00</td><td>7.0</td><td>628</td><td>104.326</td></tr><tr><td>2026-10-30T14:20:35.433+10:00</td><td>5468</td><td>-27.9512</td><td>153.43005</td><td>True</td><td>2873227</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>78588</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>True</td><td>2026-10-30T14:20:35.337+10:00</td><td>True</td><td>2026-10-30T14:20:35.337+10:00</td><td>78584</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.4</td><td>-34.2</td><td>2026-10-30T14:20:35.337+10:00</td><td>S3253</td><td>1985.785</td><td>90.00000469326955</td><td>501</td><td>2.257341612588471</td><td>16.22041877309081</td><td>119.51111844085733</td><td>D3253</td><td>-27.95094421661202</td><td>153.42996251946667</td><td>2026-10-30T14:20:35.337+10:00</td><td>96</td><td>None</td><td>None</td><td>78585</td><td>29.71146046003591</td><td>1.1817683355632382</td><td>D3252</td><td>355.8421058290792</td><td>[{&#x27;id&#x27;: &#x27;R8&#x27;, &#x27;number&#x27;: 8, &#x27;startMs&#x27;: 1793334022404, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:20:22.404+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R9&#x27;, &#x27;number&#x27;: 9, &#x27;startMs&#x27;: 1793334157610, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:22:37.610+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>630_0_36</td><td>2026-10-30T14:20:35.437+10:00</td><td>4.0</td><td>630</td><td>36.566</td></tr><tr><td>2026-10-30T14:22:56.418+10:00</td><td>5737</td><td>-27.95113</td><td>153.42992</td><td>True</td><td>3014203</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl</td><td>86754</td><td>1793333001812</td><td>[1793333001812, 1793333149716, 1793333270931, 1793333349443, 1793333444009, 1793333617981, 1793333833859, 1793334022404, 1793334157610]</td><td>25.0</td><td>31.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:22:56.317+10:00</td><td>True</td><td>2026-10-30T14:22:56.317+10:00</td><td>86750</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>8.5</td><td>-32.1</td><td>2026-10-30T14:22:56.317+10:00</td><td>S3515</td><td>2126.77</td><td>None</td><td>501</td><td>1.4836517174472674</td><td>10.660970424770785</td><td>138.54430497166072</td><td>D3515</td><td>-27.95086556044798</td><td>153.42996994368212</td><td>2026-10-30T14:22:56.317+10:00</td><td>101</td><td>None</td><td>None</td><td>86751</td><td>29.810745440277262</td><td>1.0750196379217785</td><td>D3514</td><td>0.19179336849125211</td><td>[{&#x27;id&#x27;: &#x27;R9&#x27;, &#x27;number&#x27;: 9, &#x27;startMs&#x27;: 1793334157610, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:22:37.610+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>not covered</td><td>None</td><td>None</td><td>None</td><td>None</td></tr><tr><td>2026-10-30T14:38:24.129+10:00</td><td>7510</td><td>-27.95101</td><td>153.43004</td><td>True</td><td>3941543</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_143157_105_11310e33.jsonl</td><td>21589</td><td>1793333001812</td><td>[1793335094099, 1793335222610, 1793335319126, 1793335455122, 1793335863224, 1793336047540, 1793336203157, 1793336281035, 1793336442691]</td><td>22.0</td><td>28.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:38:24.065+10:00</td><td>True</td><td>2026-10-30T14:38:24.065+10:00</td><td>21585</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>10.0</td><td>-31.3</td><td>2026-10-30T14:38:24.066+10:00</td><td>S4758</td><td>3054.481</td><td>41.455731289097386</td><td>871</td><td>0.0</td><td>0.0</td><td>None</td><td>D4758</td><td>-27.950913256589644</td><td>153.42976448777384</td><td>2026-10-30T14:38:24.065+10:00</td><td>64</td><td>None</td><td>None</td><td>21586</td><td>29.121595547726514</td><td>2.106864542387825</td><td>D4757</td><td>292.6767110858833</td><td>[{&#x27;id&#x27;: &#x27;R10&#x27;, &#x27;number&#x27;: 10, &#x27;startMs&#x27;: 1793335094099, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:38:14.099+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R11&#x27;, &#x27;number&#x27;: 11, &#x27;startMs&#x27;: 1793335222610, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:40:22.610+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>632_0_58</td><td>2026-10-30T14:38:24.141+10:00</td><td>12.0</td><td>632</td><td>58.719</td></tr><tr><td>2026-10-30T14:40:35.027+10:00</td><td>7760</td><td>-27.95093</td><td>153.43003</td><td>True</td><td>4072437</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_143157_105_11310e33.jsonl</td><td>29106</td><td>1793333001812</td><td>[1793335094099, 1793335222610, 1793335319126, 1793335455122, 1793335863224, 1793336047540, 1793336203157, 1793336281035, 1793336442691]</td><td>22.0</td><td>28.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:40:35.003+10:00</td><td>True</td><td>2026-10-30T14:40:35.003+10:00</td><td>29102</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>10.0</td><td>-32.6</td><td>2026-10-30T14:40:35.004+10:00</td><td>S5000</td><td>3185.379</td><td>180.0</td><td>872</td><td>0.9822396481122646</td><td>4.055117813307514</td><td>90.00000233115664</td><td>D5000</td><td>-27.950823400204545</td><td>153.42975620778734</td><td>2026-10-30T14:40:35.003+10:00</td><td>24</td><td>None</td><td>None</td><td>29103</td><td>29.389350016801256</td><td>2.1464066472441803</td><td>D4999</td><td>None</td><td>[{&#x27;id&#x27;: &#x27;R11&#x27;, &#x27;number&#x27;: 11, &#x27;startMs&#x27;: 1793335222610, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:40:22.610+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}, {&#x27;id&#x27;: &#x27;R12&#x27;, &#x27;number&#x27;: 12, &#x27;startMs&#x27;: 1793335319126, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:41:59.126+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>632_3_09</td><td>2026-10-30T14:40:35.025+10:00</td><td>-2.0</td><td>632</td><td>189.603</td></tr><tr><td>2026-10-30T14:51:24.134+10:00</td><td>9001</td><td>-27.95134</td><td>153.43011</td><td>True</td><td>4721906</td><td>None</td><td>C:\Users\gildo\temp\311026\cam3_full_2026-10-30_143157_105_11310e33.jsonl</td><td>66480</td><td>1793333001812</td><td>[1793335094099, 1793335222610, 1793335319126, 1793335455122, 1793335863224, 1793336047540, 1793336203157, 1793336281035, 1793336442691]</td><td>22.0</td><td>28.0</td><td>False</td><td></td><td>False</td><td>2026-10-30T14:51:24.093+10:00</td><td>False</td><td>2026-10-30T14:51:24.093+10:00</td><td>66476</td><td>90.0</td><td>{&#x27;bufferMetres&#x27;: 5, &#x27;bands&#x27;: [{&#x27;maxDistanceMetres&#x27;: 10, &#x27;pitchDegrees&#x27;: -55}, {&#x27;maxDistanceMetres&#x27;: 20, &#x27;pitchDegrees&#x27;: -35}, {&#x27;maxDistanceMetres&#x27;: 30, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 40, &#x27;pitchDegrees&#x27;: -30}, {&#x27;maxDistanceMetres&#x27;: 50, &#x27;pitchDegrees&#x27;: -20}, {&#x27;maxDistanceMetres&#x27;: None, &#x27;pitchDegrees&#x27;: -12}]}</td><td>3</td><td>True</td><td>-30.0</td><td>9.9</td><td>-34.9</td><td>2026-10-30T14:51:24.093+10:00</td><td>S6207</td><td>3834.486</td><td>90.00000233116548</td><td>360</td><td>1.964471842678131</td><td>19.64471842678131</td><td>90.00000469327563</td><td>D6207</td><td>-27.951102652396266</td><td>153.42998099522228</td><td>2026-10-30T14:51:24.093+10:00</td><td>41</td><td>None</td><td>None</td><td>66477</td><td>29.276137581221384</td><td>0.0</td><td>D6206</td><td>28.73476899428009</td><td>[{&#x27;id&#x27;: &#x27;R14&#x27;, &#x27;number&#x27;: 14, &#x27;startMs&#x27;: 1793335863224, &#x27;timestamp&#x27;: &#x27;2026-10-30T14:51:03.224+10:00&#x27;, &#x27;beforeSeconds&#x27;: 125.0, &#x27;afterSeconds&#x27;: 125.0}]</td><td>634_3_12</td><td>2026-10-30T14:51:24.141+10:00</td><td>7.0</td><td>634</td><td>192.205</td></tr></table></details><script>
+const svg=document.querySelector('#map svg');
+const svgNS='http://www.w3.org/2000/svg';
+// App maps have immutable selection URLs; old standalone maps use the root API.
+function mapApi(path){const match=location.pathname.match(/^\/maps\/([a-f0-9]+)\//);return (match?'/maps/'+match[1]:'')+path;}
+const measureLayer=document.createElementNS(svgNS,'g');
+measureLayer.style.pointerEvents='none';svg.append(measureLayer);
+let measuring=false, selected=[];
+const measureButton=document.getElementById('measure');
+const measureResult=document.getElementById('measurement-result');
+function gpsDistance(a,b){
+ const rad=Math.PI/180, lat1=Number(a.dataset.lat)*rad,lat2=Number(b.dataset.lat)*rad;
+ const dl=(Number(b.dataset.lon)-Number(a.dataset.lon))*rad;
+ const h=Math.sin((lat2-lat1)/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dl/2)**2;
+ return 12742000*Math.asin(Math.sqrt(Math.min(1,Math.max(0,h))));
+}
+function clearMeasurement(){selected=[];measureLayer.replaceChildren();measureResult.textContent=measuring?'Select the first marker.':'Enable Measure distance, then select two markers.';}
+function measurePick(marker){
+ if(selected.length===2)clearMeasurement();
+ selected.push(marker);
+ const ring=document.createElementNS(svgNS,'circle');
+ ring.setAttribute('cx',marker.dataset.x);ring.setAttribute('cy',marker.dataset.y);
+ ring.setAttribute('r','11');ring.setAttribute('fill','none');ring.setAttribute('stroke','#b218cf');ring.setAttribute('stroke-width','3');ring.setAttribute('vector-effect','non-scaling-stroke');measureLayer.append(ring);
+ if(selected.length===1){measureResult.textContent=marker.dataset.label+' selected. Select the second marker.';return;}
+ const [a,b]=selected,line=document.createElementNS(svgNS,'line');
+ line.setAttribute('x1',a.dataset.x);line.setAttribute('y1',a.dataset.y);line.setAttribute('x2',b.dataset.x);line.setAttribute('y2',b.dataset.y);
+ line.setAttribute('stroke','#b218cf');line.setAttribute('stroke-width','3');line.setAttribute('vector-effect','non-scaling-stroke');measureLayer.prepend(line);
+ measureResult.textContent=a.dataset.label+' ↔ '+b.dataset.label+': '+gpsDistance(a,b).toFixed(2)+' m horizontal GPS distance (≈ '+(gpsDistance(a,b)/1.75).toFixed(1)+' surfer lengths of 1.75 m). Select another marker to start a new measurement.';
+}
+measureButton.onclick=()=>{measuring=!measuring;measureButton.setAttribute('aria-pressed',String(measuring));measureButton.textContent=measuring?'Measuring: ON':'Measure distance';clearMeasurement();};
+document.getElementById('clear-measure').onclick=clearMeasurement;
+const tip=document.getElementById('tooltip');
+let activeMarker=null;
+// Sidebar filtering never changes packet IDs or the underlying log samples.
+const mapFilters={"rides": [{"id": "R1", "number": 1, "startMs": 1793333001812, "timestamp": "2026-10-30T14:03:21.812+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S1357", "S1359"]}, {"id": "R2", "number": 2, "startMs": 1793333149716, "timestamp": "2026-10-30T14:05:49.716+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S1828", "S1830"]}, {"id": "R3", "number": 3, "startMs": 1793333270931, "timestamp": "2026-10-30T14:07:50.931+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S1828", "S1830"]}, {"id": "R4", "number": 4, "startMs": 1793333349443, "timestamp": "2026-10-30T14:09:09.443+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S1828", "S1830", "S2174"]}, {"id": "R5", "number": 5, "startMs": 1793333444009, "timestamp": "2026-10-30T14:10:44.009+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S2174"]}, {"id": "R8", "number": 8, "startMs": 1793334022404, "timestamp": "2026-10-30T14:20:22.404+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S3253"]}, {"id": "R9", "number": 9, "startMs": 1793334157610, "timestamp": "2026-10-30T14:22:37.610+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S3253", "S3515"]}, {"id": "R10", "number": 10, "startMs": 1793335094099, "timestamp": "2026-10-30T14:38:14.099+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S4758"]}, {"id": "R11", "number": 11, "startMs": 1793335222610, "timestamp": "2026-10-30T14:40:22.610+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S4758", "S5000"]}, {"id": "R12", "number": 12, "startMs": 1793335319126, "timestamp": "2026-10-30T14:41:59.126+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S5000"]}, {"id": "R14", "number": 14, "startMs": 1793335863224, "timestamp": "2026-10-30T14:51:03.224+10:00", "beforeSeconds": 125.0, "afterSeconds": 125.0, "points": ["S6207"]}], "points": [{"id": "S1357", "time": "2026-10-30T14:03:35.186+10:00", "distance": 29.062546610304775, "pitch": -33.9, "offsets": {"R1": 13.374}, "accepted": true, "waveRiding": true, "speedKmh": 7.114841387337598, "seaward": true, "surferBearing": 90.00000233114777, "droneBearing": 320.6293811029115}, {"id": "S1359", "time": "2026-10-30T14:03:36.420+10:00", "distance": 31.430713684987165, "pitch": -31.400000000000002, "offsets": {"R1": 14.608}, "accepted": true, "waveRiding": true, "speedKmh": 14.877880751562516, "seaward": true, "surferBearing": 90.00000233114798, "droneBearing": null}, {"id": "S1828", "time": "2026-10-30T14:07:53.105+10:00", "distance": 32.75200113126036, "pitch": -34.7, "offsets": {"R2": 123.389, "R3": 2.174, "R4": -76.338}, "accepted": true, "waveRiding": true, "speedKmh": 44.77377603395572, "seaward": false, "surferBearing": 269.99999766884144, "droneBearing": 348.4167413026801}, {"id": "S1830", "time": "2026-10-30T14:07:54.111+10:00", "distance": 34.63636342991502, "pitch": -32.2, "offsets": {"R2": 124.395, "R3": 3.18, "R4": -75.332}, "accepted": true, "waveRiding": true, "speedKmh": 0.0, "seaward": true, "surferBearing": 90.00000233115857, "droneBearing": 2.8312460662693217}, {"id": "S2174", "time": "2026-10-30T14:10:56.679+10:00", "distance": 29.752306929383796, "pitch": -31.400000000000002, "offsets": {"R4": 107.236, "R5": 12.67}, "accepted": true, "waveRiding": true, "speedKmh": 10.682305805319368, "seaward": null, "surferBearing": null, "droneBearing": 328.3925002557151}, {"id": "S3253", "time": "2026-10-30T14:20:35.433+10:00", "distance": 29.71146046003591, "pitch": -34.2, "offsets": {"R8": 13.029, "R9": -122.177}, "accepted": true, "waveRiding": true, "speedKmh": 16.22041877309081, "seaward": true, "surferBearing": 90.00000469326955, "droneBearing": 355.8421058290792}, {"id": "S3515", "time": "2026-10-30T14:22:56.418+10:00", "distance": 29.810745440277262, "pitch": -32.1, "offsets": {"R9": 18.808}, "accepted": true, "waveRiding": true, "speedKmh": 10.660970424770785, "seaward": null, "surferBearing": null, "droneBearing": 0.19179336849125211}, {"id": "S4758", "time": "2026-10-30T14:38:24.129+10:00", "distance": 29.121595547726514, "pitch": -31.3, "offsets": {"R10": 10.03, "R11": -118.481}, "accepted": true, "waveRiding": true, "speedKmh": 0.0, "seaward": true, "surferBearing": 41.455731289097386, "droneBearing": 292.6767110858833}, {"id": "S5000", "time": "2026-10-30T14:40:35.027+10:00", "distance": 29.389350016801256, "pitch": -32.6, "offsets": {"R11": 12.417, "R12": -84.099}, "accepted": true, "waveRiding": true, "speedKmh": 4.055117813307514, "seaward": false, "surferBearing": 180.0, "droneBearing": null}, {"id": "S6207", "time": "2026-10-30T14:51:24.134+10:00", "distance": 29.276137581221384, "pitch": -34.9, "offsets": {"R14": 20.91}, "accepted": true, "waveRiding": false, "speedKmh": 19.64471842678131, "seaward": true, "surferBearing": 90.00000233116548, "droneBearing": 28.73476899428009}], "initialRide": "all"};
+const filterPoints=new Map(mapFilters.points.map(p=>[p.id,p]));
+const pairChecks=[...document.querySelectorAll('#pair-options input[data-pair]')];
+const pairCheckById=new Map(pairChecks.map(c=>[c.dataset.pair,c]));
+const pairMarkers=[...svg.querySelectorAll('.surfer-marker,.drone-marker')];
+const pairElements=[...svg.querySelectorAll('.pair-line,.surfer-marker,.drone-marker')];
+const rideFilter=document.getElementById('ride-filter');
+const positionFilter=document.getElementById('position-filter');
+const previousPosition=document.getElementById('position-prev');
+const nextPosition=document.getElementById('position-next');
+const hideSeaward=document.getElementById('hide-seaward');
+const hideSlowSpeed=document.getElementById('hide-slow-speed');
+let eligiblePoints=mapFilters.points, eligiblePairs=new Set(eligiblePoints.map(p=>p.id));
+let visiblePairs=new Set(eligiblePairs);
+const rideHighlight=document.getElementById('show-ride-rings');
+const speedHighlight=document.getElementById('show-speed-rings');
+const speedThreshold=document.getElementById('speed-threshold');
+function selectedSpeedThreshold(){
+ const value=speedThreshold?.valueAsNumber;
+ return Number.isFinite(value)&&value>=0?value:null;
+}
+function updateHighlights(){
+ const invalid=selectedSpeedThreshold()===null,help=document.getElementById('speed-highlight-help');
+ if(help){
+  help.textContent=invalid?'Enter a speed threshold of 0 km/h or greater.':'Uses GPS speed since the previous packet, as shown in the position card.';
+  help.dataset.invalid=String(invalid);
+ }
+ speedThreshold?.setAttribute('aria-invalid',String(invalid));
+ pairMarkers.forEach(updateMarker);
+}
+function addMarkerRing(marker,className,stateKey,color,radius,count,total){
+ if(!count)return;
+ const all=count===total,ring=document.createElementNS(svgNS,'circle');
+ ring.setAttribute('class',className);ring.dataset[stateKey]=all?'all':'mixed';
+ ring.setAttribute('cx',marker.dataset.x);ring.setAttribute('cy',marker.dataset.y);ring.setAttribute('r',String(radius));
+ ring.setAttribute('fill','none');ring.setAttribute('stroke',color);ring.setAttribute('stroke-width','2.5');
+ ring.setAttribute('vector-effect','non-scaling-stroke');if(!all)ring.setAttribute('stroke-dasharray','4 3');
+ marker.insertBefore(ring,marker.querySelector('.pair-halo'));
+}
+const layerControls=[
+ {input:document.getElementById('hide-drones'),className:'drone-marker'},
+ {input:document.getElementById('hide-connections'),className:'pair-line'},
+ {input:document.getElementById('hide-surfers'),className:'surfer-marker'}
+];
+function applyLayerVisibility(){
+ pairElements.forEach(n=>{
+  const selected=n.dataset.pairs.split(' ').some(id=>visiblePairs.has(id));
+  const hidden=layerControls.some(layer=>layer.input?.checked&&n.classList.contains(layer.className));
+  n.style.display=selected&&!hidden?'':'none';
+ });
+}
+
+
+function option(value,text){const o=document.createElement('option');o.value=value;o.textContent=text;return o;}
+function positionDescription(p){
+ const offset=p.offsets[rideFilter.value];
+ const time=offset===undefined?p.time.slice(11,23):(offset>=0?'+':'')+offset.toFixed(1)+'s';
+ return [time,Number.isFinite(p.distance)?p.distance.toFixed(1)+' m':null,
+         Number.isFinite(p.pitch)?p.pitch.toFixed(1)+'°':null].filter(Boolean).join(' · ');
+}
+function filteredDetails(marker,pointId=null){
+ let included=false;
+ return marker.dataset.detail.split('\n').map((text,index)=>{
+  const header=text.match(/^(S\d+)(?: ↔|:)/)||text.match(/^D\d+ ↔ (S\d+)/);
+  if(header)included=visiblePairs.has(header[1])&&(!pointId||header[1]===pointId);
+  return included?{text,index}:null;
+ }).filter(Boolean);
+}
+function updateMarker(marker){
+ const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id));
+ if(!ids.length)return;
+ const surfer=marker.classList.contains('surfer-marker');
+ marker.dataset.label=ids.map(id=>surfer?id:'D'+id.slice(1)).join(', ');
+ marker.setAttribute('aria-label',filteredDetails(marker).map(line=>line.text).join('\n'));
+ // A shared coordinate must use the latest *visible* packet's real direction.
+ const rows=ids.map(id=>filterPoints.get(id)), latest=rows[rows.length-1];
+ const bearing=surfer?latest.surferBearing:latest.droneBearing;
+ marker.querySelectorAll('.travel-arrow,.position-dot,.drone-direction,.ride-ring,.speed-ring').forEach(n=>n.remove());
+ if(surfer){
+  if(rideHighlight?.checked!==false)addMarkerRing(marker,'ride-ring','rideState','#9b2dbd',10.5,rows.filter(p=>p.waveRiding===true).length,rows.length);
+  const threshold=selectedSpeedThreshold();
+  if(speedHighlight?.checked&&threshold!==null){
+   addMarkerRing(marker,'speed-ring','speedState','#008baa',15,
+    rows.filter(p=>Number.isFinite(p.speedKmh)&&p.speedKmh>=threshold).length,rows.length);
+  }
+ }
+ if(!surfer&&!Number.isFinite(bearing))return;
+ const arrow=Number.isFinite(bearing), icon=document.createElementNS(svgNS,arrow?'path':'circle');
+ icon.setAttribute('class',surfer?(arrow?'travel-arrow':'position-dot'):'drone-direction');
+ icon.setAttribute('fill',surfer?(rows.every(p=>p.accepted===true)?'#14804a':'#d96b16'):'white');
+ if(arrow){
+  icon.setAttribute('d',surfer?'M0,-9 L6,6 L0,3 L-6,6 Z':'M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z');
+  icon.setAttribute('transform',`translate(${marker.dataset.x} ${marker.dataset.y}) rotate(${bearing})`);
+  icon.setAttribute('stroke',surfer?'white':'none');icon.setAttribute('stroke-width','1');
+ }else{icon.setAttribute('cx',marker.dataset.x);icon.setAttribute('cy',marker.dataset.y);icon.setAttribute('r','5');}
+ marker.insertBefore(icon,marker.querySelector('.pair-halo'));
+}
+function updatePairs(){
+ clearDetails();clearMeasurement();
+ visiblePairs=new Set(pairChecks.filter(c=>c.checked&&eligiblePairs.has(c.dataset.pair)).map(c=>c.dataset.pair));
+ applyLayerVisibility();
+ pairMarkers.forEach(updateMarker);
+ const single=visiblePairs.size===1?[...visiblePairs][0]:null;
+ positionFilter.value=single||(!visiblePairs.size?'custom':visiblePairs.size===eligiblePoints.length?'all':'custom');
+ positionFilter.querySelector('option[value="custom"]').textContent=visiblePairs.size?'Custom selection ('+visiblePairs.size+')':'No positions selected';
+ const index=single?eligiblePoints.findIndex(p=>p.id===single):-1;
+ previousPosition.disabled=!eligiblePoints.length||index===0;
+ nextPosition.disabled=!eligiblePoints.length||index===eligiblePoints.length-1;
+ document.getElementById('position-filter-status').textContent=visiblePairs.size+' of '+eligiblePoints.length+' positions shown';
+ // Keep the side view on a visible point, including after Hide all / Delete.
+ const desired=visiblePairs.has(pick.value)?pick.value:eligiblePoints.find(p=>visiblePairs.has(p.id))?.id;
+ const marker=desired&&pairMarkers.find(n=>n.classList.contains('surfer-marker')&&n.dataset.pairs.split(' ').includes(desired));
+ selectSide(marker||{dataset:{pairs:''}});
+ if(desired){pick.value=desired;loadPairFov();drawSide();}
+}
+function showPosition(id){
+ pairChecks.forEach(c=>{if(eligiblePairs.has(c.dataset.pair))c.checked=id==='all'||c.dataset.pair===id;});
+ updatePairs();
+ const chosen=pairCheckById.get(id);
+ if(chosen){
+  const list=document.getElementById('pair-options');
+  const row=chosen.closest('label').getBoundingClientRect(), viewport=list.getBoundingClientRect();
+  if(row.top<viewport.top)list.scrollTop+=row.top-viewport.top;
+  else if(row.bottom>viewport.bottom)list.scrollTop+=row.bottom-viewport.bottom;
+ }
+}
+function stepPosition(step){
+ const index=eligiblePoints.findIndex(p=>p.id===positionFilter.value);
+ const next=index<0?(step>0?0:eligiblePoints.length-1):index+step;
+ if(next>=0&&next<eligiblePoints.length)showPosition(eligiblePoints[next].id);
+}
+function fitRide(){
+ const markers=pairMarkers.filter(n=>n.dataset.pairs.split(' ').some(id=>eligiblePairs.has(id)));
+ if(!markers.length){box=original.slice();draw();return;}
+ const xs=markers.map(n=>Number(n.dataset.x)),ys=markers.map(n=>Number(n.dataset.y));
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ const rect=svg.getBoundingClientRect(), aspect=rect.width/rect.height||original[2]/original[3];
+ const minSpan=Math.max(40,10*unitsPerMetre);
+ let width=Math.max(minSpan,(maxX-minX)*1.2+24),height=Math.max(minSpan,(maxY-minY)*1.2+24);
+ if(width/height<aspect)width=height*aspect;else height=width/aspect;
+ box=[(minX+maxX-width)/2,(minY+maxY-height)/2,width,height];draw();
+}
+function changeRide(resetSelection=true, refit=true){
+ const ride=mapFilters.rides.find(r=>r.id===rideFilter.value);
+ const ridePoints=mapFilters.points.filter(p=>!ride||Object.hasOwn(p.offsets,ride.id));
+ const directionPoints=ridePoints.filter(p=>!hideSeaward?.checked||p.seaward!==true);
+ const threshold=selectedSpeedThreshold(),filterSpeed=hideSlowSpeed?.checked&&threshold!==null;
+ eligiblePoints=directionPoints.filter(p=>!filterSpeed||!Number.isFinite(p.speedKmh)||p.speedKmh>=threshold);
+ eligiblePairs=new Set(eligiblePoints.map(p=>p.id));
+ pairChecks.forEach(c=>{
+  const label=c.closest('label'), included=eligiblePairs.has(c.dataset.pair);
+  label.hidden=!included;
+  if(included){if(resetSelection)c.checked=true;label.querySelector('.pair-metadata').textContent=positionDescription(filterPoints.get(c.dataset.pair));}
+ });
+ document.getElementById('pair-options').scrollTop=0;
+ positionFilter.replaceChildren(option('all','All positions'));
+ const custom=option('custom','Custom selection');custom.disabled=true;positionFilter.append(custom);
+ eligiblePoints.forEach(p=>positionFilter.append(option(p.id,p.id+' · '+positionDescription(p))));
+ document.getElementById('ride-window-info').textContent=ride?
+  ride.beforeSeconds+'s before / '+ride.afterSeconds+'s after ride start':
+  mapFilters.rides.length?'All loaded ride windows':'All loaded positions';
+ if(hideSeaward?.checked)document.getElementById('ride-window-info').textContent+=' · '+(ridePoints.length-directionPoints.length)+' seaward positions hidden';
+ if(filterSpeed)document.getElementById('ride-window-info').textContent+=' · '+(directionPoints.length-eligiblePoints.length)+' below '+threshold+' km/h hidden';
+ document.getElementById('fit-ride').textContent=ride?'Fit ride':'Fit all';
+ updatePairs();if(refit)fitRide();
+}
+function initializeMapFilters(){
+ hideSeaward?.addEventListener('change',()=>changeRide(false,false));
+ hideSlowSpeed?.addEventListener('change',()=>changeRide(false,false));
+ rideHighlight?.addEventListener('change',updateHighlights);
+ speedHighlight?.addEventListener('change',updateHighlights);
+ speedThreshold?.addEventListener('input',()=>{
+  updateHighlights();
+  if(hideSlowSpeed?.checked)changeRide(false,false);
+ });
+ layerControls.forEach(layer=>layer.input?.addEventListener('change',()=>{
+  clearDetails();clearMeasurement();applyLayerVisibility();
+ }));
+
+ rideFilter.append(option('all',mapFilters.rides.length?'All rides':'All positions'));
+ mapFilters.rides.forEach(r=>rideFilter.append(option(r.id,'Ride '+r.number+' · '+r.timestamp.slice(11,19)+' ('+r.points.length+')')));
+ rideFilter.disabled=!mapFilters.rides.length;
+ if(mapFilters.rides.length&&mapFilters.initialRide!=='all')rideFilter.value=mapFilters.rides[0].id;
+ rideFilter.addEventListener('change',()=>changeRide());
+ positionFilter.addEventListener('change',()=>showPosition(positionFilter.value));
+ previousPosition.onclick=()=>stepPosition(-1);nextPosition.onclick=()=>stepPosition(1);
+ document.getElementById('fit-ride').onclick=fitRide;
+ pairChecks.forEach(c=>c.addEventListener('change',updatePairs));
+ document.getElementById('pairs-all').onclick=()=>showPosition('all');
+ document.getElementById('pairs-none').onclick=()=>showPosition('none');
+ changeRide();
+}
+
+svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
+ const halo=document.createElementNS(svgNS,'circle');
+ halo.setAttribute('cx',n.dataset.x);halo.setAttribute('cy',n.dataset.y);
+ halo.setAttribute('r','12');halo.setAttribute('class','pair-halo');
+ halo.setAttribute('fill','none');halo.setAttribute('stroke','#e85b16');
+ halo.setAttribute('stroke-width','3');halo.setAttribute('pointer-events','none');
+ n.append(halo);
+});
+// Position cards remain interactive so a shared coordinate needs no typed ID.
+let detailsPinned=false, detailsHideTimer=null;
+function cancelDetailsHide(){clearTimeout(detailsHideTimer);detailsHideTimer=null;}
+function clearDetails(){
+ cancelDetailsHide();detailsPinned=false;activeMarker=null;tip.hidden=true;
+ delete tip.dataset.selectedPoint;
+ svg.querySelectorAll('.active-pair').forEach(n=>n.classList.remove('active-pair'));
+}
+function scheduleDetailsHide(){
+ cancelDetailsHide();if(!detailsPinned)detailsHideTimer=setTimeout(clearDetails,220);
+}
+function positionDetails(marker,e){
+ const r=marker.getBoundingClientRect();
+ const x=e&&e.clientX!==undefined?e.clientX:r.right;
+ const y=e&&e.clientY!==undefined?e.clientY:r.top;
+ tip.style.left=Math.max(8,Math.min(x+18,window.innerWidth-tip.offsetWidth-8))+'px';
+ tip.style.top=Math.max(8,Math.min(y+18,window.innerHeight-tip.offsetHeight-8))+'px';
+}
+function showDetails(marker,e,pin=false,pointId=null){
+ cancelDetailsHide();
+ if(activeMarker===marker&&!tip.hidden&&(tip.dataset.selectedPoint||null)===pointId){
+  if(pin)detailsPinned=true;
+  return; // Preserve scrolling, focus and the exact card under the pointer.
+ }
+ clearDetails();detailsPinned=pin;activeMarker=marker;tip.replaceChildren();
+ if(pointId)tip.dataset.selectedPoint=pointId;
+ const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id)&&(!pointId||id===pointId));
+ const surfer=marker.classList.contains('surfer-marker');
+ const heading=document.createElement('div');heading.className='position-card-heading';
+ const title=document.createElement('strong');
+ title.textContent=pointId|| (ids.length>1?ids.length+' positions at this coordinate':marker.dataset.label);
+ const close=document.createElement('button');close.type='button';close.textContent='Close';close.onclick=clearDetails;
+ heading.append(title,close);tip.append(heading);
+ if(surfer){
+  const hint=document.createElement('p');hint.className='position-card-hint';
+  hint.textContent='→ next · ← previous. Ctrl + left-click a position below to capture its frame.';tip.append(hint);
+ }
+ const red=new Set((marker.dataset.redLines||'').split(',').filter(Boolean).map(Number));
+ const green=new Set((marker.dataset.greenLines||'').split(',').filter(Boolean).map(Number));
+ let card=null;
+ filteredDetails(marker,pointId).forEach(({text,index:i})=>{
+  const header=text.match(/^(S\d+)(?: ↔|:)/)||text.match(/^D\d+ ↔ (S\d+)/);
+  if(header||!card){
+   card=document.createElement('article');card.className='position-card';
+   if(surfer&&header){
+    card.dataset.capturePoint=header[1];card.tabIndex=0;
+    card.setAttribute('aria-label',header[1]+' details; Ctrl-click or Ctrl+Enter to capture frame');
+   }
+   tip.append(card);
+  }
+  const line=document.createElement('span');line.textContent=text;
+  if(text.startsWith('Retreat active:')||text.startsWith('Gimbal tilt:'))line.classList.add('key-field');
+  if(text.startsWith('Ride detected:')){
+   line.title='Latest logged movement_cycle.riding at this GPS receipt; before/after ride windows do not change this state.';
+   if(text==='Ride detected: YES')line.className='ride-badge';
+  }
+  if(text.startsWith('Retreat active:'))line.title='Brackets: minimum retreat distance in metres';
+  if(text.includes(' | ')&&text.endsWith(' m horizontal')){
+   const split=text.lastIndexOf(' | '),end=text.lastIndexOf(' horizontal');line.textContent=text.slice(0,split+3);
+   const distance=document.createElement('span');distance.className='key-field';
+   distance.title='[horizontal GPS distance][filming separation], metres';distance.textContent=text.slice(split+3,end);
+   line.append(distance,document.createTextNode(text.slice(end)));
+  }
+  if(red.has(i)){line.style.color='#c40000';line.style.fontWeight='bold';}
+  if(green.has(i)||text.startsWith('Retreat active: YES ')){line.style.color='#08752e';line.style.fontWeight='bold';}
+  if(text.startsWith('Gimbal tilt:')&&text.includes(' — TILTING')){
+   const parts=text.split(' — ');line.textContent=parts.shift()+' — ';
+   const status=document.createElement('span');status.textContent=parts.join(' — ');status.style.color='#08752e';status.style.fontWeight='bold';line.append(status);
+  }
+  if(text.startsWith('Gimbal bands: ')){
+   line.textContent='Gimbal bands: ';
+   text.slice('Gimbal bands: '.length).split(' | ').forEach((band,j)=>{
+    if(j)line.append(document.createTextNode(' | '));
+    const entry=document.createElement('span');entry.textContent=band;
+    if(band.endsWith(' (selected)')){entry.style.color='#08752e';entry.style.background='#e6f5e9';entry.style.fontWeight='bold';}
+    line.append(entry);
+   });
+  }
+  card.append(line,document.createTextNode('\n'));
+ });
+ const status=document.createElement('p');status.id='details-capture-status';status.setAttribute('role','status');tip.append(status);
+ tip.hidden=false;
+ svg.querySelectorAll('.pair-line,.drone-marker,.surfer-marker').forEach(n=>{
+  if(n.dataset.pairs.split(' ').some(id=>ids.includes(id)))n.classList.add('active-pair');
+ });
+ positionDetails(marker,e);
+}
+tip.addEventListener('pointerenter',cancelDetailsHide);
+tip.addEventListener('pointerleave',scheduleDetailsHide);
+tip.addEventListener('focusin',()=>{cancelDetailsHide();detailsPinned=true;});
+tip.addEventListener('wheel',e=>e.stopPropagation());
+function chooseCard(id){
+ if(!visiblePairs.has(id))return;
+ const marker=pairMarkers.find(n=>n.classList.contains('surfer-marker')&&n.dataset.pairs.split(' ').includes(id));
+ if(marker){selectSide(marker);pick.value=id;loadPairFov();drawSide();}
+}
+
+function focusSurferPosition(id){
+ const marker=pairMarkers.find(n=>n.classList.contains('surfer-marker')&&n.dataset.pairs.split(' ').includes(id));
+ if(!marker||marker.style.display==='none'||!visiblePairs.has(id))return;
+ // Keep zoom unchanged; pan only when the next marker would be outside view.
+ const x=Number(marker.dataset.x),y=Number(marker.dataset.y),padX=box[2]*.08,padY=box[3]*.08;
+ if(x<box[0]+padX||x>box[0]+box[2]-padX||y<box[1]+padY||y>box[1]+box[3]-padY){
+  box=[x-box[2]/2,y-box[3]/2,box[2],box[3]];draw();
+ }
+ chooseCard(id);showDetails(marker,null,true,id);
+ marker.focus({preventScroll:true});
+}
+
+function positionNavigation(){
+ const single=visiblePairs.size===1&&eligiblePairs.has(positionFilter.value);
+ return {single,points:single?eligiblePoints:eligiblePoints.filter(p=>visiblePairs.has(p.id))};
+}
+
+function navigateSurferKey(e){
+ if(!['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey||e.isComposing)return;
+ if(measuring||captureBusy||captureDialog.open||document.getElementById('hide-surfers')?.checked)return;
+ const pointControl=e.target===positionFilter||e.target===pick;
+ if(!pointControl&&e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],dialog'))return;
+ const {single,points}=positionNavigation();
+ const selected=activeMarker?.classList.contains('surfer-marker')&&(detailsPinned||document.activeElement===activeMarker);
+ if(!single&&!selected&&!pointControl)return;
+ const id=e.target.closest('[data-capture-point]')?.dataset.capturePoint||pick.value;
+ // In single-position mode advance that selection. Otherwise keep the map's
+ // checked positions intact and skip hidden samples, including shared points.
+ const index=points.findIndex(p=>p.id===id);if(index<0)return;
+ e.preventDefault();e.stopPropagation();
+ const next=points[index+(['ArrowRight','ArrowUp'].includes(e.key)?1:-1)];if(!next)return;
+ if(single)showPosition(next.id);
+ focusSurferPosition(next.id);
+}
+tip.addEventListener('click',e=>{
+ const card=e.target.closest('[data-capture-point]');if(!card)return;
+ cancelDetailsHide();detailsPinned=true;chooseCard(card.dataset.capturePoint);
+ if(e.ctrlKey&&e.button===0){e.preventDefault();e.stopPropagation();capturePoint(card.dataset.capturePoint);}
+});
+tip.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){e.preventDefault();clearDetails();return;}
+ const card=e.target.closest('[data-capture-point]');
+ if(card&&e.ctrlKey&&e.key==='Enter'){e.preventDefault();capturePoint(card.dataset.capturePoint);}
+});
+svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
+ n.addEventListener('pointerenter',e=>{
+  if(drag||captureBusy||captureDialog.open)return;
+  if(n.classList.contains('surfer-marker')&&!measuring){
+   // Hover selects a starting point even after keyboard navigation pinned
+   // another marker. Keep it selected when the pointer leaves the marker.
+   const same=activeMarker===n&&!tip.hidden;
+   const pointId=same?tip.dataset.selectedPoint||null:null;
+   if(!same)selectSide(n);
+   showDetails(n,e,true,pointId);
+   // Hover alone does not focus an iframe. Route real keyboard events to
+   // this marker instead of leaving them on the outer page or a form field.
+   n.focus({preventScroll:true});
+  }else if(!detailsPinned){selectSide(n);showDetails(n,e);}
+ });
+ n.addEventListener('pointermove',e=>{if(!drag&&!detailsPinned)showDetails(n,e);});
+ n.addEventListener('pointerleave',scheduleDetailsHide);
+ n.addEventListener('focus',()=>{if(!detailsPinned){selectSide(n);showDetails(n);}});
+ n.addEventListener('blur',scheduleDetailsHide);
+ n.addEventListener('click',e=>{
+  if(n.classList.contains('surfer-marker'))selectSide(n);
+  if(e.ctrlKey&&e.button===0&&n.classList.contains('surfer-marker')){
+   e.preventDefault();e.stopPropagation();captureMarker(n,e);return;
+  }
+  if(measuring){e.stopPropagation();measurePick(n);clearDetails();}else showDetails(n,e,true);
+ });
+ n.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='Enter'&&n.classList.contains('surfer-marker')){e.preventDefault();captureMarker(n);}
+  else if(measuring&&(e.key==='Enter'||e.key===' ')){e.preventDefault();measurePick(n);}
+ });
+});
+// Ctrl-click the exact sidebar row without changing its visibility checkbox.
+pairChecks.forEach(check=>check.closest('label').addEventListener('click',e=>{
+ if(e.ctrlKey&&e.button===0){e.preventDefault();e.stopPropagation();chooseCard(check.dataset.pair);capturePoint(check.dataset.pair);}
+},true));
+document.addEventListener('keydown',e=>{
+ if(captureDialog.open&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){navigateFrameKey(e);return;}
+ if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){
+  if(!captureDialog.open)navigateSurferKey(e);
+  return;
+ }
+ if(e.key==='Escape'){clearDetails();return;}
+ if(e.key!=='Delete'||e.target.closest('input,textarea,select,[contenteditable="true"],#tooltip'))return;
+ const marker=activeMarker||document.activeElement.closest('.surfer-marker,.drone-marker');
+ if(!marker||marker.style.display==='none')return;
+ e.preventDefault();
+ const ids=new Set(marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id)));
+ pairChecks.forEach(c=>{if(ids.has(c.dataset.pair))c.checked=false;});updatePairs();
+});
+let captureBusy=false;
+const captureDialog=document.createElement('dialog');
+captureDialog.style.maxWidth='90vw';captureDialog.style.maxHeight='90vh';document.body.append(captureDialog);
+const captureStatus=document.getElementById('capture-status');
+function setCaptureStatus(message){
+ captureStatus.textContent=message;
+ const detailStatus=document.getElementById('details-capture-status');if(detailStatus)detailStatus.textContent=message;
+}
+function setFrameStatus(message){
+ const status=captureDialog.querySelector('#frame-status');
+ if(status)status.textContent=message;
+}
+function navigateFrameKey(e){
+ if(e.altKey||e.metaKey||e.shiftKey||e.isComposing||e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]'))return;
+ e.preventDefault();e.stopPropagation();
+ // One extraction at a time: held keys cannot queue stale frames.
+ if(captureBusy)return;
+ const direction=e.key==='ArrowRight'?1:-1;
+ if(e.ctrlKey){captureVideoStep(direction);return;}
+ const {single,points}=positionNavigation(),id=captureDialog.dataset.point;
+ const index=points.findIndex(p=>p.id===id);if(index<0)return;
+ const rawTime=Date.parse(captureDialog.dataset.timestamp);
+ let next=points[index+direction];
+ if(captureDialog.dataset.kind==='video'&&Number.isFinite(rawTime)){
+  const candidates=points.filter(p=>direction*(Date.parse(sideData[p.id]?.frame||p.time)-rawTime)>0);
+  next=direction>0?candidates[0]:candidates[candidates.length-1];
+ }
+ if(!next){setFrameStatus(direction>0?'Last position.':'First position.');return;}
+ capturePoint(next.id,{advanceSelection:single});
+}
+function frameDownloadLink(id,variant,label,videoTime=null){
+ const link=document.createElement('a');link.href='#';link.textContent=label;
+ link.dataset.downloadVariant=variant;link.style.marginLeft='16px';
+ link.onclick=async e=>{
+  e.preventDefault();if(captureBusy)return;
+  captureBusy=true;captureDialog.setAttribute('aria-busy','true');link.setAttribute('aria-disabled','true');
+  setFrameStatus('Preparing '+variant+' download…');
+  try{
+   const request={point:id,variant};
+   if(videoTime!==null)Object.assign(request,{videoTime,step:0});
+   const response=await fetch(mapApi(videoTime===null?'/capture':'/video-frame'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
+   const result=await response.json();if(!response.ok)throw Error(result.error||'Download failed');
+   if(result.variant!==variant)throw Error('Restart the map server to enable clean/enhanced downloads.');
+   if(!captureDialog.open||captureDialog.dataset.point!==id)return;
+   link.href=result.url;link.download=result.filename;link.onclick=null;
+   setFrameStatus(variant==='clean'?'Clean frame ready.':'Enhanced frame ready.');
+   link.click();
+  }catch(error){
+   if(captureDialog.open&&captureDialog.dataset.point===id)setFrameStatus('Download failed: '+error.message);
+  }finally{captureBusy=false;captureDialog.removeAttribute('aria-busy');link.removeAttribute('aria-disabled');}
+ };
+ return link;
+}
+function renderCapturedFrame(id,result){
+ const raw=result.kind==='video';
+ captureDialog.replaceChildren();captureDialog.dataset.point=id;
+ captureDialog.dataset.kind=raw?'video':'surfer';
+ captureDialog.dataset.timestamp=result.timestamp||'';
+ captureDialog.dataset.videoTime=raw?String(result.videoTime):'';
+ const close=document.createElement('button');close.textContent='Close';close.onclick=()=>captureDialog.close();
+ const hint=document.createElement('span');hint.textContent=' ← previous position · → next position · Ctrl+←/→ video frames';hint.style.fontSize='13px';
+ const label=document.createElement('p');label.id='frame-label';
+ label.textContent=raw?'Video frame — '+result.videoName+' · '+result.videoTime.toFixed(3)+' s'+(result.timestamp?' · '+result.timestamp:'')+' · GPS reference '+id:
+  id+' — nearest frame: '+result.timestamp;
+ const status=document.createElement('p');status.id='frame-status';status.setAttribute('role','status');status.style.margin='0';
+ const img=document.createElement('img');img.src=result.url+'#'+Date.now();img.alt=label.textContent;img.style.maxWidth='85vw';img.style.maxHeight='70vh';
+ captureDialog.append(close,hint,label,status,img,document.createElement('br'));
+ if(!raw){
+  const telemetry=document.createElement('a');telemetry.href=result.url;telemetry.download=result.filename;telemetry.textContent='Download with telemetry';
+  captureDialog.append(telemetry);
+ }
+ const clean=frameDownloadLink(id,'clean','Download clean',raw?result.videoTime:null);
+ if(raw){clean.href=result.url;clean.download=result.filename;clean.onclick=null;clean.style.marginLeft='0';}
+ const enhanced=frameDownloadLink(id,'enhanced','Download enhanced',raw?result.videoTime:null);
+ enhanced.title='Clean full-resolution frame with richer teal tones, contrast and light sharpening.';
+ captureDialog.append(clean,enhanced);clearDetails();
+ if(!captureDialog.open)captureDialog.showModal();
+ close.focus({preventScroll:true});
+}
+async function captureVideoStep(step){
+ const id=captureDialog.dataset.point,request={point:id,step};
+ if(captureDialog.dataset.kind==='video')request.videoTime=Number(captureDialog.dataset.videoTime);
+ captureBusy=true;captureDialog.setAttribute('aria-busy','true');
+ setFrameStatus('Loading '+(step>0?'next':'previous')+' video frame…');
+ try{
+  const response=await fetch(mapApi('/video-frame'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Video frame stepping requires a server restart.');
+  if(result.kind!=='video'||!Number.isFinite(result.videoTime))throw Error('Restart the map server to enable video-frame stepping.');
+  if(captureDialog.open)renderCapturedFrame(id,result);
+ }catch(error){if(captureDialog.open)setFrameStatus(error.message);}
+ finally{captureBusy=false;captureDialog.removeAttribute('aria-busy');}
+}
+function captureMarker(marker,e){
+ if(captureBusy)return;
+ const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id));
+ const selected=activeMarker===marker&&!tip.hidden&&tip.dataset.selectedPoint;
+ if(selected&&ids.includes(selected)){chooseCard(selected);capturePoint(selected);return;}
+ if(ids.length>1){showDetails(marker,e,true);tip.focus({preventScroll:true});return;}
+ if(ids.length===1)capturePoint(ids[0]);
+}
+async function capturePoint(id,{advanceSelection=false}={}){
+ if(captureBusy||!(advanceSelection?eligiblePairs:visiblePairs).has(id))return;
+ if(location.protocol!=='http:'){setCaptureStatus('Frame capture needs the --serve option. Open the local URL printed by the script.');return;}
+ const fromViewer=captureDialog.open;
+ captureBusy=true;setCaptureStatus('Capturing '+id+'…');
+ if(fromViewer){setFrameStatus('Loading '+id+'…');captureDialog.setAttribute('aria-busy','true');}
+ try{
+  const response=await fetch(mapApi('/capture'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id})});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Capture failed');
+  // Closing the viewer while extraction runs must not reopen it or change the
+  // map selection when the late response arrives.
+  if(fromViewer&&!captureDialog.open){setCaptureStatus('Saved '+result.saved);return;}
+  if(advanceSelection)showPosition(id);
+  chooseCard(id);
+  setCaptureStatus('Saved '+result.saved);renderCapturedFrame(id,result);
+ }catch(error){
+  const message='Capture failed: '+error.message;setCaptureStatus(message);
+  if(fromViewer&&captureDialog.open)setFrameStatus(message);
+ }
+ finally{captureBusy=false;captureDialog.removeAttribute('aria-busy');}
+}
+
+// Side elevation uses the same scale for horizontal and vertical metres.
+const sideData={"S1357": {"distance": 29.062546610304775, "tilt": -33.9, "height": 8.5, "time": "2026-10-30T14:03:35.186+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": "2026-10-30T14:03:35.190+10:00", "position": null, "positionError": null, "riding": true}, "S1359": {"distance": 31.430713684987165, "tilt": -31.400000000000002, "height": 8.5, "time": "2026-10-30T14:03:36.420+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": "2026-10-30T14:03:36.424+10:00", "position": null, "positionError": null, "riding": true}, "S1828": {"distance": 32.75200113126036, "tilt": -34.7, "height": 8.5, "time": "2026-10-30T14:07:53.105+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": "2026-10-30T14:07:53.122+10:00", "position": null, "positionError": null, "riding": true}, "S1830": {"distance": 34.63636342991502, "tilt": -32.2, "height": 8.5, "time": "2026-10-30T14:07:54.111+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": "2026-10-30T14:07:54.122+10:00", "position": null, "positionError": null, "riding": true}, "S2174": {"distance": 29.752306929383796, "tilt": -31.400000000000002, "height": 8.4, "time": "2026-10-30T14:10:56.679+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": "2026-10-30T14:10:56.686+10:00", "position": null, "positionError": null, "riding": true}, "S3253": {"distance": 29.71146046003591, "tilt": -34.2, "height": 8.4, "time": "2026-10-30T14:20:35.433+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": "2026-10-30T14:20:35.437+10:00", "position": null, "positionError": null, "riding": true}, "S3515": {"distance": 29.810745440277262, "tilt": -32.1, "height": 8.5, "time": "2026-10-30T14:22:56.418+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl", "frame": null, "position": null, "positionError": null, "riding": true}, "S4758": {"distance": 29.121595547726514, "tilt": -31.3, "height": 10.0, "time": "2026-10-30T14:38:24.129+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl", "frame": "2026-10-30T14:38:24.141+10:00", "position": null, "positionError": null, "riding": true}, "S5000": {"distance": 29.389350016801256, "tilt": -32.6, "height": 10.0, "time": "2026-10-30T14:40:35.027+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl", "frame": "2026-10-30T14:40:35.025+10:00", "position": null, "positionError": null, "riding": true}, "S6207": {"distance": 29.276137581221384, "tilt": -34.9, "height": 9.9, "time": "2026-10-30T14:51:24.134+10:00", "source": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl", "frame": "2026-10-30T14:51:24.141+10:00", "position": null, "positionError": null, "riding": false}};
+const layout=document.getElementById('map-layout'), sidebar=document.getElementById('pair-sidebar');
+layout.prepend(sidebar);
+const boundary=svg.querySelector('#boundary-orientation');
+if(boundary){
+ const inset=document.createElementNS(svgNS,'svg');inset.setAttribute('viewBox','795 75 300 210');inset.style.width='100%';
+ inset.append(boundary);sidebar.append(inset);
+}
+svg.setAttribute('viewBox','0 0 780 850');
+const side=document.createElement('aside');side.id='side-view';
+side.innerHTML='<strong>Selected surfer — side view</strong><p id="side-description">Hover over a surfer marker.</p><label>Point <select id="side-point"></select></label><p><label>Drone height above water (m) <input id="side-height" type="number" min="0" step="0.1" placeholder="Enter height"></label></p><label><input id="side-use-takeoff" type="checkbox" checked> Use logged height (assume water at takeoff level)</label><p><label>Vertical field of view (°), optional <input id="side-fov" type="number" min="1" max="179" placeholder="Unknown"></label><button id="calculate-fov">Detect person position</button><span id="fov-status" role="status"></span></p><svg id="side-svg" viewBox="0 0 440 360" style="width:100%;background:#f3f7fa"></svg><p id="side-note"></p><small>Surfer: 1.75 m standing reference. Drone icon is symbolic. Elevation assumes the camera faces toward the surfer; yaw and waves are not represented.</small>';
+layout.append(side);
+const pick=document.getElementById('side-point'), heightInput=document.getElementById('side-height'), useTakeoff=document.getElementById('side-use-takeoff'), fovInput=document.getElementById('side-fov');
+function selectSide(marker){
+ pick.replaceChildren();
+ marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id)).forEach(id=>{const option=document.createElement('option');option.value=id;option.textContent=id;pick.append(option);});
+ loadPairFov();drawSide();
+}
+function drawSide(){
+ const p=sideData[pick.value];
+ const canvas=document.getElementById('side-svg');canvas.replaceChildren();
+ const note=document.getElementById('side-note');
+ if(!p){document.getElementById('side-description').textContent='No surfer position selected.';note.textContent='Choose a position in the map sidebar.';return;}
+ document.getElementById('side-description').textContent=pick.value+' — '+p.time+' | logged height above takeoff: '+(p.height===null?'unknown':p.height+' m')+' | ride detected: '+(p.riding===true?'YES':p.riding===false?'NO':'unknown');
+ const h=useTakeoff.checked?p.height:(heightInput.value===''?null:Number(heightInput.value));
+ heightInput.disabled=useTakeoff.checked;
+ if(h===null || !Number.isFinite(h) || h<0 || p.distance===null || p.tilt===null){note.textContent='Enter height above water (or explicitly use takeoff height). Distance and logged tilt must also be available.';return;}
+ const d=p.distance, angle=-p.tilt*Math.PI/180;
+ const hit=Math.tan(angle)>0?h/Math.tan(angle):null;
+ const zone=side.dataset.zone;
+ const footprintNear=zone==='BOTTOM'?d:0;
+ const footprintFar=zone==='TOP'?d:2*d;
+ const extent=Math.max(d*1.2,zone?footprintFar*1.08:0,10,hit!==null&&hit<d*3+20?hit:0);
+ const scale=Math.min(350/extent,250/Math.max(h,1.75,3));
+ const x=45,y=300,dx=x,dy=y-h*scale,sx=x+d*scale;
+ function el(tag,attrs,text){const n=document.createElementNS(svgNS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text)n.textContent=text;canvas.append(n);return n;}
+ if(zone){
+  el('polygon',{points:`${dx},${dy} ${x+footprintNear*scale},${y} ${x+footprintFar*scale},${y}`,fill:'#b9ec321c',stroke:'#9bd600','stroke-width':2});
+ }
+ el('line',{x1:20,y1:y,x2:420,y2:y,stroke:'#4e9cb5'});
+ el('line',{x1:dx,y1:dy,x2:dx+30,y2:dy,stroke:'#777','stroke-dasharray':'3 3'});
+ el('rect',{x:dx-10,y:dy-4,width:20,height:8,fill:'#2454c5'});
+ el('text',{x:dx,y:Math.max(18,dy-12),'font-size':12},'Drone '+h.toFixed(1)+' m');
+ // A 1.75 m figure, with both axes scaled equally.
+ const top=y-1.75*scale;
+ el('circle',{cx:sx,cy:top+.12*scale,r:.12*scale,fill:'#14804a'});
+ el('path',{d:`M${sx},${top+.24*scale} L${sx},${y-.7*scale} M${sx-.25*scale},${top+.65*scale} L${sx+.25*scale},${top+.65*scale} M${sx},${y-.7*scale} L${sx-.2*scale},${y} M${sx},${y-.7*scale} L${sx+.2*scale},${y}`,stroke:'#14804a','stroke-width':Math.max(1,.07*scale),fill:'none'});
+ el('text',{x:sx,y:y+18,'text-anchor':'middle','font-size':12},'Surfer (1.75 m)');
+ if(side.dataset.zone){
+  el('text',{x:Math.max(100,Math.min(340,sx)),y:y+34,'text-anchor':'middle','font-size':12,fill:'#08752e'},'In frame: '+side.dataset.zone);
+  // Camera image inset, deliberately separate from the metre-scale geometry.
+  el('text',{x:360,y:43,'text-anchor':'middle','font-size':10},'Frame position');
+  ['TOP','MIDDLE','BOTTOM'].forEach((zone,i)=>{
+   el('rect',{x:320,y:50+i*28,width:80,height:28,fill:side.dataset.zone===zone?'#b8e7c6':'white',stroke:'#9baaba'});
+   el('text',{x:360,y:68+i*28,'text-anchor':'middle','font-size':10},zone);
+  });
+ }
+
+ function ray(a,color,dash){const cx=Math.cos(a),sy=Math.sin(a);let len=380; if(cx>0)len=Math.min(len,(420-dx)/cx);if(cx<0)len=Math.min(len,(dx-20)/-cx);if(sy>0)len=Math.min(len,(y-dy)/sy);if(sy<0)len=Math.min(len,(dy-15)/-sy);el('line',{x1:dx,y1:dy,x2:dx+cx*len,y2:dy+sy*len,stroke:color,'stroke-width':2,'stroke-dasharray':dash||''});}
+ ray(angle,'#f07818');
+ const fov=fovInput.value===''?null:Number(fovInput.value);
+ if(fov>0&&fov<180){ray(angle-fov*Math.PI/360,'#19a7cf','5 3');ray(angle+fov*Math.PI/360,'#19a7cf','5 3');}
+ el('text',{x:220,y:24,'text-anchor':'middle','font-size':14,fill:'#a94700'},'Actual gimbal tilt: '+p.tilt.toFixed(1)+'°');
+ el('text',{x:220,y:348,'text-anchor':'middle','font-size':13},'Horizontal separation: '+d.toFixed(1)+' m');
+ note.textContent=(zone?'Green coverage: illustrative '+zone.toLowerCase()+' framing, not a measured FOV. ':'')+(useTakeoff.checked?'Assumption: water is at takeoff elevation. ':'User-specified water-relative height. ')+(fov===null?'FOV unknown; only the orange camera centreline is shown.':fovInput.dataset.estimated==='true'?'Blue dashed lines: estimated FOV from this frame’s detected board.':'Blue dashed lines use your supplied vertical FOV.');
+}
+const fovButton=document.getElementById('calculate-fov'), fovStatus=document.getElementById('fov-status');
+const fovCache=new Map();
+function fovKey(){const p=sideData[pick.value];if(!p)return null;return JSON.stringify([p.source,p.frame,p.time]);}
+function loadPairFov(){
+ const key=fovKey();let saved=fovCache.get(key)||sideData[pick.value]?.position;
+ if(!saved){try{saved=JSON.parse(localStorage.getItem('surfer-person-position:'+key));}catch{}}
+ side.dataset.zone=saved?saved.zone:'';side.dataset.yFraction=saved?String(saved.yFraction):'';
+ fovStatus.textContent=saved?' Person: '+saved.zone+' ('+Math.round(saved.yFraction*100)+'% from top), confidence '+Math.round(saved.detection.confidence*100)+'%.':(sideData[pick.value]?.positionError?' Position unavailable: '+sideData[pick.value].positionError:'');
+}
+fovButton.onclick=async()=>{
+ const p=sideData[pick.value], id=pick.value,key=fovKey();if(!p)return;
+ if(location.protocol!=='http:'){fovStatus.textContent='Use --serve and open its local URL.';return;}
+ const height=useTakeoff.checked?p.height:(heightInput.value===''?null:Number(heightInput.value));
+ fovButton.disabled=true;fovStatus.textContent=' Detecting person…';
+ try{
+  const response=await fetch(mapApi('/fov'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id,height})});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Calculation failed');
+  fovCache.set(key,result);try{localStorage.setItem('surfer-person-position:'+key,JSON.stringify(result));}catch{}
+  if(fovKey()===key){loadPairFov();drawSide();}
+ }catch(error){if(fovKey()===key)fovStatus.textContent=' Position unavailable: '+error.message;}
+ finally{fovButton.disabled=false;}
+};
+[pick,heightInput,useTakeoff].forEach(n=>n.addEventListener('input',()=>{loadPairFov();drawSide();}));
+fovInput.addEventListener('input',()=>{fovInput.dataset.estimated='false';fovStatus.textContent=' Manual FOV';drawSide();});
+
+if(location.protocol==='http:')fetch(mapApi('/fov-results')).then(r=>r.ok?r.json():[]).then(results=>{
+ results.forEach(r=>fovCache.set(JSON.stringify([r.sourceFile,r.frameTimestamp,r.gpsTimestamp]),r));
+ if(pick.value){loadPairFov();drawSide();}
+}).catch(()=>{});
+
+const original=svg.getAttribute('viewBox').split(' ').map(Number);
+let box=original.slice(), drag=null;
+const reference=document.createElementNS(svgNS,'g');
+reference.id='surfer-reference';reference.style.cursor='move';
+reference.setAttribute('tabindex','0');reference.setAttribute('role','img');
+reference.setAttribute('aria-label','Movable 1.75 metre scale reference. Drag to move; use rotation slider.');
+// Shape coordinates are metres. With the 0.05 m stroke, total length is
+// exactly 1.75 m: head top -0.875 to feet bottom +0.875.
+const refShape=document.createElementNS(svgNS,'g');
+refShape.setAttribute('fill','#ffdf40');refShape.setAttribute('stroke','#2d2446');
+refShape.setAttribute('stroke-width','.05');refShape.setAttribute('stroke-linecap','round');
+refShape.setAttribute('stroke-linejoin','round');
+const refHead=document.createElementNS(svgNS,'circle');
+refHead.setAttribute('cx','0');refHead.setAttribute('cy','-.73');refHead.setAttribute('r','.12');
+const refBody=document.createElementNS(svgNS,'path');
+refBody.setAttribute('d','M-.09,-.55 L.09,-.55 L.19,-.45 L.34,.05 L.25,.09 L.13,-.22 L.12,.13 L.17,.85 L.05,.85 L0,.25 L-.05,.85 L-.17,.85 L-.12,.13 L-.13,-.22 L-.25,.09 L-.34,.05 L-.19,-.45 Z');
+refShape.append(refHead,refBody);
+const refHit=document.createElementNS(svgNS,'rect');
+refHit.setAttribute('x','-.4');refHit.setAttribute('y','-.9');refHit.setAttribute('width','.8');refHit.setAttribute('height','1.8');refHit.setAttribute('fill','transparent');
+const refTitle=document.createElementNS(svgNS,'title');refTitle.textContent='1.75 m reference only — drag to move; slider rotates';
+reference.append(refTitle,refHit,refShape);svg.append(reference);
+let referenceX=400,referenceY=410,referenceAngle=0,referenceDrag=null;
+const unitsPerMetre=Number(svg.dataset.unitsPerMetre);
+// A screen-anchored ruler: lengths use the main map's actual SVG transform.
+svg.querySelector('#map-scale-static')?.remove();
+const scalePanel=document.createElement('div');
+scalePanel.id='map-scale';scalePanel.hidden=true;
+Object.assign(scalePanel.style,{position:'absolute',left:'12px',bottom:'12px',pointerEvents:'none',
+ background:'rgba(255,255,255,.94)',border:'1px solid #cbd7e2',borderRadius:'6px'});
+const scaleCanvas=document.createElementNS(svgNS,'svg');
+scaleCanvas.setAttribute('viewBox','0 0 224 208');scaleCanvas.setAttribute('role','img');
+// Override the main map SVG's full-width/full-height rules.
+Object.assign(scaleCanvas.style,{width:'224px',height:'208px',display:'block'});
+scalePanel.append(scaleCanvas);
+const mapContainer=document.getElementById('map');
+mapContainer.style.position='relative';mapContainer.append(scalePanel);
+function scaleElement(tag,attributes,text){
+ const node=document.createElementNS(svgNS,tag);
+ Object.entries(attributes).forEach(([name,value])=>node.setAttribute(name,value));
+ if(text!==undefined)node.textContent=text;
+ scaleCanvas.append(node);return node;
+}
+function scaleText(value){
+ const decimals=value<1?Math.max(2,1-Math.floor(Math.log10(value))):1;
+ return Number(value.toFixed(decimals))+' m';
+}
+function updateMapScale(){
+ const matrix=svg.getScreenCTM?.();
+ const pixelsPerMetre=matrix&&Math.hypot(matrix.a,matrix.b)*unitsPerMetre;
+ if(!Number.isFinite(pixelsPerMetre)||pixelsPerMetre<=0)return;
+ // Select a readable round distance, keeping the ruler compact at any zoom.
+ const maxMetres=140/pixelsPerMetre;
+ const magnitude=10**Math.floor(Math.log10(maxMetres));
+ const metres=[1,2,2.5,5,10].filter(n=>n*magnitude<=maxMetres).at(-1)*magnitude;
+ const length=metres*pixelsPerMetre,diagonal=metres*Math.SQRT2;
+ const x=52,y=174;
+ scaleCanvas.replaceChildren();
+ scaleCanvas.setAttribute('aria-label','Map scale: horizontal and vertical '+scaleText(metres)+', diagonal '+scaleText(diagonal)+' at 45 degrees.');
+ scalePanel.dataset.metres=String(metres);
+ scaleElement('text',{x:12,y:19,'font-size':12,fill:'#46586a'},'Map scale');
+ scaleElement('path',{id:'scale-triangle',d:`M${x},${y-length} V${y} H${x+length} Z`,
+  fill:'none',stroke:'#111','stroke-width':3,'stroke-linejoin':'round'});
+ const label={'font-family':'Arial','font-size':12,fill:'#111','text-anchor':'middle'};
+ scaleElement('text',{...label,id:'scale-horizontal',x:x+length/2,y:195},scaleText(metres));
+ scaleElement('text',{...label,id:'scale-vertical',x:x-9,y:y-length/2+4,'text-anchor':'end'},scaleText(metres));
+ scaleElement('text',{...label,id:'scale-diagonal',x:x+length/2+14,y:y-length/2-11},scaleText(diagonal));
+ scalePanel.hidden=false;
+}
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(updateMapScale).observe(svg);
+window.addEventListener('resize',updateMapScale);
+
+function drawReference(){reference.setAttribute('transform','translate('+referenceX+' '+referenceY+') rotate('+referenceAngle+') scale('+unitsPerMetre+')');}
+drawReference();
+document.getElementById('reference-angle').addEventListener('input',e=>{referenceAngle=Number(e.target.value);document.getElementById('reference-degrees').textContent=referenceAngle+'°';drawReference();});
+document.getElementById('reference-center').onclick=()=>{referenceX=box[0]+box[2]/2;referenceY=box[1]+box[3]/2;drawReference();};
+reference.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.stopPropagation();clearDetails();const p=point(e);referenceDrag={x:p.x-referenceX,y:p.y-referenceY};reference.setPointerCapture(e.pointerId);});
+reference.addEventListener('pointermove',e=>{if(!referenceDrag)return;e.stopPropagation();const p=point(e);referenceX=p.x-referenceDrag.x;referenceY=p.y-referenceDrag.y;drawReference();});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])reference.addEventListener(event,e=>{referenceDrag=null;e.stopPropagation();});
+reference.addEventListener('click',e=>e.stopPropagation());
+reference.addEventListener('dblclick',e=>e.stopPropagation());
+function draw(){clearDetails();svg.setAttribute('viewBox',box.join(' '));updateMapScale();}
+function point(event){const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function zoom(f,px=box[0]+box[2]/2,py=box[1]+box[3]/2){
+ const w=Math.max(original[2]/30,Math.min(original[2]*3,box[2]*f));
+ const scale=w/box[2];box=[px+(box[0]-px)*scale,py+(box[1]-py)*scale,w,box[3]*scale];draw();
+}
+function reset(){fitRide();}
+document.getElementById('zin').onclick=()=>zoom(.8);
+document.getElementById('zout').onclick=()=>zoom(1.25);
+document.getElementById('reset').onclick=reset;
+svg.addEventListener('wheel',e=>{e.preventDefault();const p=point(e);zoom(e.deltaY<0?.85:1/.85,p.x,p.y);},{passive:false});
+svg.addEventListener('pointerdown',e=>{if(e.button!==0 || (e.ctrlKey&&e.target.closest('.surfer-marker')) || (measuring&&e.target.closest('.surfer-marker,.drone-marker')))return;drag={x:e.clientX,y:e.clientY};svg.setPointerCapture(e.pointerId);});
+svg.addEventListener('pointermove',e=>{if(!drag)return;
+ const inv=svg.getScreenCTM().inverse();
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ box[0]-=inv.a*dx+inv.c*dy;box[1]-=inv.b*dx+inv.d*dy;
+ drag={x:e.clientX,y:e.clientY};draw();});
+svg.addEventListener('pointerup',()=>drag=null);
+svg.addEventListener('pointercancel',()=>drag=null);
+svg.addEventListener('lostpointercapture',()=>drag=null);
+svg.addEventListener('dblclick',reset);
+initializeMapFilters();
+</script>

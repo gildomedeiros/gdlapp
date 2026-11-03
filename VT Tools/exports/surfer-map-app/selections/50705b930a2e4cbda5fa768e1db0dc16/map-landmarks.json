@@ -1,0 +1,91 @@
+[
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "session": 1,
+    "kind": "start",
+    "label": "Start (VT control)",
+    "latitude": -27.950982039576107,
+    "longitude": 153.42915581756125,
+    "time_ms": 1793332679279,
+    "sourceLine": 346,
+    "pairs": [
+      "S1828",
+      "S1830"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "session": 1,
+    "kind": "boundary",
+    "label": "Boundary line",
+    "latitude": -27.950982039576107,
+    "longitude": 153.42915581756125,
+    "bearingDegrees": 0.0,
+    "pairs": [
+      "S1828",
+      "S1830"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl",
+    "session": 1,
+    "kind": "wave",
+    "label": "Wave line \u00b7 seaworld",
+    "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+    "pointA": {
+      "latitude": -27.950620000000008,
+      "longitude": 153.42910000000006
+    },
+    "pointB": {
+      "latitude": -27.951079999999997,
+      "longitude": 153.42910000000006
+    },
+    "pairs": [
+      "S1828",
+      "S1830"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "session": 1,
+    "kind": "start",
+    "label": "Start (VT control)",
+    "latitude": -27.950983311987724,
+    "longitude": 153.42920753430394,
+    "time_ms": 1793336879178,
+    "sourceLine": 1563,
+    "pairs": [
+      "S8400"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "session": 1,
+    "kind": "boundary",
+    "label": "Boundary line",
+    "latitude": -27.950983311987724,
+    "longitude": 153.42920753430394,
+    "bearingDegrees": 0.0,
+    "pairs": [
+      "S8400"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl",
+    "session": 1,
+    "kind": "wave",
+    "label": "Wave line \u00b7 seaworld",
+    "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+    "pointA": {
+      "latitude": -27.950620000000008,
+      "longitude": 153.42910000000006
+    },
+    "pointB": {
+      "latitude": -27.951079999999997,
+      "longitude": 153.42910000000006
+    },
+    "pairs": [
+      "S8400"
+    ]
+  }
+]

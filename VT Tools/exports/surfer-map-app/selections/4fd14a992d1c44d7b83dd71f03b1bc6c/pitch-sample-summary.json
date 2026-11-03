@@ -1,0 +1,85 @@
+{
+  "mode": "pitch-range",
+  "numberOfRides": null,
+  "totalRideCount": 23,
+  "selectedRideCount": 23,
+  "pitchRangeDegrees": [
+    -36.0,
+    -31.0
+  ],
+  "distanceRangeMetres": [
+    32.0,
+    36.0
+  ],
+  "maxSamples": 10,
+  "sampleBeforeSeconds": 125.0,
+  "sampleAfterSeconds": 125.0,
+  "sampleIntervalSeconds": 1.0,
+  "tiltChangeDegrees": 3,
+  "rideStartsBySource": {
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_134729_190_3377e50b.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_134733_431_dbc99fb6.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_134736_329_04bd75a1.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135009_512_2191b245.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135641_838_fb9d5744.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl": [
+      1793333001812,
+      1793333149716,
+      1793333270931,
+      1793333349443,
+      1793333444009,
+      1793333617981,
+      1793333833859,
+      1793334022404,
+      1793334157610
+    ],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_142719_899_e5f8cd16.jsonl": [],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_143157_105_11310e33.jsonl": [
+      1793335094099,
+      1793335222610,
+      1793335319126,
+      1793335455122,
+      1793335863224,
+      1793336047540,
+      1793336203157,
+      1793336281035,
+      1793336442691
+    ],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl": [
+      1793336904055,
+      1793337221819,
+      1793337537960,
+      1793337664074,
+      1793337826192
+    ],
+    "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_153125_096_2157616b.jsonl": []
+  },
+  "eligiblePackets": 6,
+  "spacedCandidates": 3,
+  "selectedCount": 3,
+  "invalidGpsPackets": 0,
+  "selection": "1s spacing per log (also keep tilt changes of at least 3\u00b0); actual received GPS packets and same-log ride windows",
+  "points": [
+    {
+      "point": "S1828",
+      "timestamp": "2026-10-30T14:07:53.105+10:00",
+      "pitch": -34.7,
+      "distanceMetres": 32.75200113126036,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S1830",
+      "timestamp": "2026-10-30T14:07:54.111+10:00",
+      "pitch": -32.2,
+      "distanceMetres": 34.63636342991502,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_135752_696_d8a69d1a.jsonl"
+    },
+    {
+      "point": "S8400",
+      "timestamp": "2026-10-30T15:14:01.888+10:00",
+      "pitch": -32.6,
+      "distanceMetres": 33.821082106191255,
+      "sourceFile": "C:\\Users\\gildo\\temp\\311026\\cam3_full_2026-10-30_150727_177_70db8986.jsonl"
+    }
+  ]
+}

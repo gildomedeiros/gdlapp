@@ -83,7 +83,7 @@ const arrow=(key,target=d.activeElement,extra={})=>{
 (async()=>{
  await settle();
  assert.deepEqual(errors,[]);
- assert.equal(d.querySelectorAll('#map-layers input').length,5);
+ assert.equal(d.querySelectorAll('#map-layers input').length,8);
  const shared=marker('S0');
  assert(shared.dataset.pairs.includes('S1'));
  assert.equal(shared.querySelector('.ride-ring').dataset.rideState,'mixed');
@@ -295,66 +295,93 @@ const arrow=(key,target=d.activeElement,extra={})=>{
  closeCapture();
  check('S1').checked=false;check('S0').checked=true;check('S0').dispatchEvent(new w.Event('change',{bubbles:true}));
  assert.equal(shared.querySelector('.ride-ring'),null,'No ride ring when only the non-riding packet is selected');
- // Click selects the starting point. Keyboard navigation preserves the map
- // selection and visits distinct receipts even at the same coordinates.
+ // Hover selects the starting point. Left/Right navigation preserves checked
+ // positions and visits distinct receipts even at the same coordinates.
  changeRide('all');
- click(shared);
+ threshold.focus();
+ hover(shared);
+ assert.equal(d.activeElement,shared,'Hover transfers keyboard focus from a field to the surfer');
+ assert(shared.classList.contains('active-pair'));
+ shared.dispatchEvent(new w.MouseEvent('pointerleave'));
+ await new Promise(resolve=>setTimeout(resolve,250));
+ assert(!d.getElementById('tooltip').hidden,'Hover selection persists after leaving the marker');
  const beforeKeys=checked(),capturesBeforeKeys=captures.length;
  assert.equal(d.getElementById('side-point').value,'S0');
- assert(arrow('ArrowUp',shared).defaultPrevented);
+ assert(arrow('ArrowRight').defaultPrevented,'Hover supplies keyboard focus without a click');
  assert.equal(d.getElementById('side-point').value,'S1');
  assert.deepEqual([...d.querySelectorAll('#tooltip [data-capture-point]')].map(n=>n.dataset.capturePoint),['S1']);
  assert.equal(d.activeElement,shared);
  assert.deepEqual(checked(),beforeKeys);
- assert(arrow('ArrowDown').defaultPrevented);
+ assert(arrow('ArrowLeft').defaultPrevented);
  assert.equal(d.getElementById('side-point').value,'S0');
- arrow('ArrowDown');assert.equal(d.getElementById('side-point').value,'S0','First point does not wrap');
- arrow('ArrowUp');arrow('ArrowUp');
+ arrow('ArrowLeft');assert.equal(d.getElementById('side-point').value,'S0','First point does not wrap');
+ arrow('ArrowRight');arrow('ArrowRight');
  assert.equal(d.getElementById('side-point').value,'S2');
  assert.equal(d.activeElement,marker('S2'));
  assert(marker('S2').classList.contains('active-pair'));
  assert(!shared.classList.contains('active-pair'));
- arrow('ArrowUp');arrow('ArrowUp');
+ arrow('ArrowRight');arrow('ArrowRight');
  assert.equal(d.getElementById('side-point').value,'S3','Last point does not wrap');
  assert.deepEqual(checked(),beforeKeys);
  assert.equal(captures.length,capturesBeforeKeys,'Arrow keys must not capture frames');
  for(const target of [threshold,d.getElementById('side-height'),d.getElementById('ride-filter')]){
-  assert(!arrow('ArrowDown',target).defaultPrevented,'Editing controls keep native arrow keys');
+  assert(!arrow('ArrowLeft',target).defaultPrevented,'Editing controls keep native arrow keys');
   assert.equal(d.getElementById('side-point').value,'S3');
  }
- assert(!arrow('ArrowDown',marker('S3'),{ctrlKey:true}).defaultPrevented);
+ assert(!arrow('ArrowLeft',marker('S3'),{ctrlKey:true}).defaultPrevented);
  assert.equal(d.getElementById('side-point').value,'S3');
  toggle('hide-surfers',true);
- assert(!arrow('ArrowDown',marker('S3')).defaultPrevented);
+ assert(!arrow('ArrowLeft',marker('S3')).defaultPrevented);
  toggle('hide-surfers',false);
  click(d.querySelector('.drone-marker'));
- assert(!arrow('ArrowDown',d.body).defaultPrevented,'A drone selection cannot start surfer navigation');
+ assert(!arrow('ArrowLeft',d.body).defaultPrevented,'A drone selection cannot start surfer navigation');
  click(d.querySelector('#tooltip .position-card-heading button'));
  hover(shared);
- assert(!arrow('ArrowUp',d.body).defaultPrevented,'Hover alone is not a selected surfer');
+ assert(arrow('ArrowRight',d.body).defaultPrevented,'Hover alone selects a surfer');
+ assert.equal(d.getElementById('side-point').value,'S1');
+ hover(shared);
+ assert.equal(d.getElementById('side-point').value,'S1','Re-entering the shared marker preserves the exact keyboard-selected record');
+ hover(marker('S3'));
+ assert.equal(d.getElementById('side-point').value,'S3','Hover replaces the previous keyboard selection');
+ assert(marker('S3').classList.contains('active-pair'));
+ assert(!shared.classList.contains('active-pair'));
+ assert(arrow('ArrowLeft',d.body).defaultPrevented);
+ assert.equal(d.getElementById('side-point').value,'S2');
+ marker('S3').dispatchEvent(new w.MouseEvent('pointermove'));
+ assert.equal(d.getElementById('side-point').value,'S2','Movement over the old marker cannot undo a keyboard step');
+ assert(arrow('ArrowUp').defaultPrevented,'Up remains a map alias');
+ assert.equal(d.getElementById('side-point').value,'S3');
+ assert(arrow('ArrowDown').defaultPrevented,'Down remains a map alias');
+ assert.equal(d.getElementById('side-point').value,'S2');
 
  // Manual hides and the seaward filter are respected; layer toggles stay set.
  check('S1').checked=false;check('S1').dispatchEvent(new w.Event('change',{bubbles:true}));
- click(shared);arrow('ArrowUp',shared);
+ click(shared);arrow('ArrowRight',shared);
  assert.equal(d.getElementById('side-point').value,'S2','Skip manually hidden S1');
  click(d.getElementById('pairs-all'));toggle('hide-seaward',true);
  toggle('hide-drones',true);toggle('hide-connections',true);
- click(shared);arrow('ArrowUp',shared);
+ click(shared);arrow('ArrowRight',shared);
  assert.equal(d.getElementById('side-point').value,'S3','Skip seaward S1 and S2');
  assert.equal(shown('.drone-marker').length,0);
  assert.equal(shown('.pair-line').length,0);
  toggle('hide-seaward',false);toggle('hide-drones',false);toggle('hide-connections',false);
- changeRide('R1');click(shared);arrow('ArrowUp',shared);arrow('ArrowUp');
+ changeRide('R1');click(shared);arrow('ArrowRight',shared);arrow('ArrowRight');
  assert.equal(d.getElementById('side-point').value,'S1','Do not leave the filtered ride');
  changeRide('all');
+ speedValue(15);toggle('hide-slow-speed',true);
+ hover(shared);assert.equal(d.getElementById('side-point').value,'S1');
+ arrow('ArrowRight',d.body);assert.equal(d.getElementById('side-point').value,'S2');
+ arrow('ArrowLeft');arrow('ArrowLeft');
+ assert.equal(d.getElementById('side-point').value,'S1','Do not navigate into a below-threshold position');
+ toggle('hide-slow-speed',false);
 
  // A single-position dropdown advances through the eligible positions too.
  position.value='S1';position.dispatchEvent(new w.Event('change',{bubbles:true}));
- arrow('ArrowUp',position);
+ arrow('ArrowRight',position);
  assert.deepEqual(checked(),['S2']);
  assert.equal(d.getElementById('side-point').value,'S2');
- arrow('ArrowDown');assert.deepEqual(checked(),['S1']);
- click(d.getElementById('pairs-all'));click(shared);arrow('ArrowUp',shared);
+ arrow('ArrowLeft');assert.deepEqual(checked(),['S1']);
+ click(d.getElementById('pairs-all'));click(shared);arrow('ArrowRight',shared);
  assert.equal(d.getElementById('side-point').value,'S1');
  click(shared,true);await settle();
  assert.equal(captures.at(-1).id,'S1','Ctrl-click captures the exact keyboard-selected shared point');

@@ -2,11 +2,6 @@
 const sideData=SIDE_DATA;
 const layout=document.getElementById('map-layout'), sidebar=document.getElementById('pair-sidebar');
 layout.prepend(sidebar);
-const boundary=svg.querySelector('#boundary-orientation');
-if(boundary){
- const inset=document.createElementNS(svgNS,'svg');inset.setAttribute('viewBox','795 75 300 210');inset.style.width='100%';
- inset.append(boundary);sidebar.append(inset);
-}
 svg.setAttribute('viewBox','0 0 780 850');
 const side=document.createElement('aside');side.id='side-view';
 side.innerHTML='<strong>Selected surfer — side view</strong><p id="side-description">Hover over a surfer marker.</p><label>Point <select id="side-point"></select></label><p><label>Drone height above water (m) <input id="side-height" type="number" min="0" step="0.1" placeholder="Enter height"></label></p><label><input id="side-use-takeoff" type="checkbox" checked> Use logged height (assume water at takeoff level)</label><p><label>Vertical field of view (°), optional <input id="side-fov" type="number" min="1" max="179" placeholder="Unknown"></label><button id="calculate-fov">Detect person position</button><span id="fov-status" role="status"></span></p><svg id="side-svg" viewBox="0 0 440 360" style="width:100%;background:#f3f7fa"></svg><p id="side-note"></p><small>Surfer: 1.75 m standing reference. Drone icon is symbolic. Elevation assumes the camera faces toward the surfer; yaw and waves are not represented.</small>';

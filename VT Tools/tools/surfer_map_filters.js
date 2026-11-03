@@ -4,7 +4,7 @@ const filterPoints=new Map(mapFilters.points.map(p=>[p.id,p]));
 const pairChecks=[...document.querySelectorAll('#pair-options input[data-pair]')];
 const pairCheckById=new Map(pairChecks.map(c=>[c.dataset.pair,c]));
 const pairMarkers=[...svg.querySelectorAll('.surfer-marker,.drone-marker')];
-const pairElements=[...svg.querySelectorAll('.pair-line,.surfer-marker,.drone-marker')];
+const pairElements=[...svg.querySelectorAll('.pair-line,.surfer-marker,.drone-marker,.map-landmark')];
 const rideFilter=document.getElementById('ride-filter');
 const positionFilter=document.getElementById('position-filter');
 const previousPosition=document.getElementById('position-prev');
@@ -41,7 +41,10 @@ function addMarkerRing(marker,className,stateKey,color,radius,count,total){
 const layerControls=[
  {input:document.getElementById('hide-drones'),className:'drone-marker'},
  {input:document.getElementById('hide-connections'),className:'pair-line'},
- {input:document.getElementById('hide-surfers'),className:'surfer-marker'}
+ {input:document.getElementById('hide-surfers'),className:'surfer-marker'},
+ {input:document.getElementById('hide-wave-line'),className:'wave-line'},
+ {input:document.getElementById('hide-boundary-line'),className:'boundary-line'},
+ {input:document.getElementById('hide-start-point'),className:'start-point'}
 ];
 function applyLayerVisibility(){
  pairElements.forEach(n=>{
@@ -49,6 +52,7 @@ function applyLayerVisibility(){
   const hidden=layerControls.some(layer=>layer.input?.checked&&n.classList.contains(layer.className));
   n.style.display=selected&&!hidden?'':'none';
  });
+ if(activeLandmark?.style.display==='none')clearLandmarkSelection();
 }
 
 
@@ -132,6 +136,9 @@ function stepPosition(step){
 }
 function fitRide(){
  const markers=pairMarkers.filter(n=>n.dataset.pairs.split(' ').some(id=>eligiblePairs.has(id)));
+ svg.querySelectorAll('.map-landmark').forEach(n=>{
+  if(n.style.display!=='none'&&n.dataset.pairs.split(' ').some(id=>eligiblePairs.has(id)))markers.push(...n.querySelectorAll('.landmark-anchor'));
+ });
  if(!markers.length){box=original.slice();draw();return;}
  const xs=markers.map(n=>Number(n.dataset.x)),ys=markers.map(n=>Number(n.dataset.y));
  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);

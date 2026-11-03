@@ -29,6 +29,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from telemetry_around import offset_timezone, parse_time, record_milliseconds, load_video_timeline, offset_point, travel_bearing
+from surfer_map_landmarks import load_map_landmarks, landmark_coordinates, render_landmarks
 
 
 def load_boundary(source, target, tz):
@@ -388,43 +389,52 @@ def gimbal_tilt_text(p):
     return text
 
 
-def make_svg(points, gap_red_ms=1000, boundary=None):
+def pair_hover_text(p):
+    distance = pair_distance(p)
+    actual = f'{distance:.1f}' if distance is not None else 'unknown'
+    return '\n'.join([
+        f'{p["point"]} ↔ {p.get("dronePoint", "?")} | [{actual}][{setting_text(p, "filmingSeparationMetres")}] m',
+        ride_text(p), retreat_text(p), gimbal_tilt_text(p)])
+
+
+def make_svg(points, gap_red_ms=1000, boundary=None, landmarks=None):
     # Projection is only for drawing. Original coordinates are unchanged in outputs.
     lat0, lon0 = points[0]['latitude'], points[0]['longitude']
     xy = [(6371000*math.radians(p['longitude']-lon0)*math.cos(math.radians(lat0)),
            6371000*math.radians(p['latitude']-lat0)) for p in points]
     drone_xy = {p['point']:(6371000*math.radians(p['droneLongitude']-lon0)*math.cos(math.radians(lat0)),
                           6371000*math.radians(p['droneLatitude']-lat0)) for p in points if p.get('droneLatitude') is not None}
-    xs, ys = zip(*(xy+list(drone_xy.values())))
+    landmarks=landmarks or []
+    reference_xy=[(6371000*math.radians(p['longitude']-lon0)*math.cos(math.radians(lat0)),
+                   6371000*math.radians(p['latitude']-lat0)) for p in landmark_coordinates(landmarks)]
+    xs, ys = zip(*(xy+list(drone_xy.values())+reference_xy))
     span = max(max(xs)-min(xs), max(ys)-min(ys), 10) * 1.4
     cx, cy = (min(xs)+max(xs))/2, (min(ys)+max(ys))/2
     def screen(x,y): return 400+(x-cx)*680/span, 410-(y-cy)*680/span
     height=850
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" data-units-per-metre="{680/span:.12f}" width="1100" height="{height}" viewBox="0 0 1100 {height}">',
-           f'<rect width="1100" height="{height}" fill="#f3f7fa"/>',
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" data-units-per-metre="{680/span:.12f}" data-grid-x="60" data-grid-y="70" data-grid-step="136" width="1100" height="{height}" viewBox="0 0 1100 {height}">',
+           '<defs><pattern id="map-grid-pattern" x="60" y="70" width="136" height="136" patternUnits="userSpaceOnUse"><path d="M0,136 V0 H136" stroke="#d6e0e7" stroke-width="1" vector-effect="non-scaling-stroke" fill="none"/></pattern></defs>',
+           f'<rect id="map-background" width="1100" height="{height}" fill="#f3f7fa"/>',
+           f'<rect id="map-grid" width="1100" height="{height}" fill="url(#map-grid-pattern)" pointer-events="none"/>',
            '<g font-family="Arial" fill="#17324d"><text x="25" y="30" font-size="20">Received surfer GPS — north up</text>',
            '<text x="25" y="55" font-size="13">Surfer: green; purple ring = ride detected. Drone: blue = retreat off, orange = active, grey = unknown.</text>',
            '<text x="755" y="95" font-size="18">N ↑</text>']
-    for fraction in range(6):
-        x=60+fraction*136
-        out.append(f'<path d="M{x},70 V750 M60,{70+fraction*136} H740" stroke="#d6e0e7" fill="none"/>')
-    if boundary:
-        # Orientation-only inset. Its location is not a geographic boundary anchor.
-        bx,by=925,170
-        angle=math.radians(boundary['lineBearingDeg'])
-        dx,dy=math.sin(angle)*45,-math.cos(angle)*45
-        out.append('<g id="boundary-orientation"><rect x="805" y="85" width="280" height="190" rx="8" fill="white" stroke="#ccd6df"/>')
-        out.append('<text x="825" y="110" font-size="14">Boundary orientation only</text>')
-        out.append('<text x="1000" y="145" font-size="13">N ↑</text>')
-        out.append(f'<path d="M{bx-dx:.2f},{by-dy:.2f} L{bx+dx:.2f},{by+dy:.2f}" stroke="#c52b34" stroke-width="3"/>')
-        out.append(f'<text x="825" y="240" font-size="13" fill="#c52b34">{boundary["lineBearingDeg"]:.1f}° / {(boundary["lineBearingDeg"]+180):.1f}° — not a mapped position</text></g>')
     screens=[screen(x,y) for x,y in xy]
     drone_groups={}
     for p,(sx,sy) in zip(points,screens):
         if p['point'] not in drone_xy: continue
         dx,dy=screen(*drone_xy[p['point']])
-        out.append(f'<path class="pair-line" data-pairs="{p["point"]}" d="M{sx:.2f},{sy:.2f} L{dx:.2f},{dy:.2f}" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5"/>')
+        compact = html.escape(pair_hover_text(p), quote=True).replace('\n', '&#10;')
+        path = f'M{sx:.2f},{sy:.2f} L{dx:.2f},{dy:.2f}'
+        out.append(f'<g class="pair-line" data-pairs="{p["point"]}" data-compact="{compact}" data-x="{(sx+dx)/2}" data-y="{(sy+dy)/2}" tabindex="0" role="img" aria-label="{compact}" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5">'
+                   f'<path class="pair-line-stroke" d="{path}" fill="none" pointer-events="none"/>'
+                   f'<path class="pair-line-hit" d="{path}" fill="none" stroke="transparent" stroke-width="10" stroke-dasharray="none" vector-effect="non-scaling-stroke" pointer-events="stroke"/></g>')
         drone_groups.setdefault((dx,dy),{}).setdefault(p.get('retreatActive'),[]).append(p['point'])
+    def project(lat,lon):
+        return screen(6371000*math.radians(lon-lon0)*math.cos(math.radians(lat0)),6371000*math.radians(lat-lat0))
+    # Reference hit targets sit behind GPS markers so Ctrl-click and navigation
+    # keep selecting the surfer when it shares the start/reference coordinates.
+    out.append(render_landmarks(landmarks,project))
     for (dx,dy),states in drone_groups.items():
         # Shared coordinates can represent different retreat states. Split the
         # icon into colour strips instead of hiding one state behind another.
@@ -499,16 +509,23 @@ def make_svg(points, gap_red_ms=1000, boundary=None):
             dash=' stroke-dasharray="4 3"' if mode=='mixed' else ''
             icon=f'<circle class="ride-ring" data-ride-state="{mode}" cx="{x:.2f}" cy="{y:.2f}" r="10.5" fill="none" stroke="#9b2dbd" stroke-width="2.5" vector-effect="non-scaling-stroke"{dash}/>'+icon
         out.append(f'<g class="surfer-marker" data-lat="{lat}" data-lon="{lon}" data-x="{x}" data-y="{y}" data-label="{label}" data-pairs="{ids}" data-detail="{detail}" data-red-lines="{red_ids}" data-green-lines="{green_ids}" tabindex="0" aria-label="{detail}"><circle cx="{x:.2f}" cy="{y:.2f}" r="12" fill="transparent"/>{icon}</g>')
-    scale=min(10,span/4)
-    length=scale*680/span
-    out.append(f'<path d="M60,790 h{length:.2f}" stroke="#17324d" stroke-width="3"/><text x="60" y="815" font-size="13">{scale:g} m map scale</text>')
+    grid_metres=span/5
+    side_label=f'{grid_metres:.1f}'.rstrip('0').rstrip('.')+' m'
+    diagonal_label=f'{grid_metres*math.sqrt(2):.1f}'.rstrip('0').rstrip('.')+' m'
+    out.append('<g id="map-scale-static" pointer-events="none"><path d="M60,614 V750 H196 M60,750 L196,614" stroke="#d7ae00" stroke-width="3" stroke-linejoin="round" fill="none"/>')
+    out.append(f'<g font-size="13" fill="#111" stroke="#f3f7fa" stroke-width="3" paint-order="stroke"><text x="128" y="774" text-anchor="middle">{side_label}</text>')
+    out.append(f'<text x="48" y="686" text-anchor="end">{side_label}</text><text x="128" y="669" text-anchor="middle">{diagonal_label}</text></g></g>')
     out.append('</g></svg>')
     return ''.join(out)
 
 
-def write_outputs(points, target, output, tz, gap_red_ms=1000, boundary=None, selection_info=None, initial_ride='first'):
+def write_outputs(points, target, output, tz, gap_red_ms=1000, boundary=None, selection_info=None, initial_ride='first', landmarks=None):
     output.mkdir(parents=True, exist_ok=True)
-    svg=make_svg(points, gap_red_ms, boundary)
+    if landmarks is None:landmarks=load_map_landmarks(points,tz)
+    if not landmarks and boundary:
+        landmarks=[dict(kind='boundary',label='Boundary line',latitude=boundary['latitude'],longitude=boundary['longitude'],
+                        bearingDegrees=boundary['lineBearingDeg'],sourceFile=boundary.get('sourceFile',''),pairs=[p['point'] for p in points])]
+    svg=make_svg(points, gap_red_ms, boundary,landmarks)
     (output/'surfer-gps.svg').write_text(svg,encoding='utf-8')
     fields=list(dict.fromkeys(k for p in points for k in p if k!='time_ms'))
     with (output/'surfer-gps.csv').open('w',encoding='utf-8-sig',newline='') as f:
@@ -527,37 +544,15 @@ def write_outputs(points, target, output, tz, gap_red_ms=1000, boundary=None, se
         badge=' <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong>' if p.get('waveRiding') is True else ''
         pair_controls+=f'<label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="{label}" checked> {label} ↔ {drone}{badge}<small class="pair-metadata"></small></label>'
     pair_controls+='</div><p>Show/hide applies to the selected ride. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details>'
+    reference_controls=''.join(f'<label><input id="hide-{kind}" type="checkbox"> Hide {label}</label>' for kind,label in [('wave-line','wave line'),('boundary-line','boundary line'),('start-point','start point')])
+    pair_controls=pair_controls.replace('</fieldset><fieldset id="surfer-highlights">',reference_controls+'</fieldset><p><span style="color:#007d98">Wave line</span> · <span style="color:#c52b34">Boundary line</span> · <span style="color:#7036a5">Start (surfer)</span></p><fieldset id="surfer-highlights">',1)
+    if not landmarks:pair_controls+='<p>No logged wave line, boundary or start point is available at these positions.</p>'
     script='''<script>
 const svg=document.querySelector('#map svg');
 const svgNS='http://www.w3.org/2000/svg';
 // App maps have immutable selection URLs; old standalone maps use the root API.
 function mapApi(path){const match=location.pathname.match(/^\\/maps\\/([a-f0-9]+)\\//);return (match?'/maps/'+match[1]:'')+path;}
-const measureLayer=document.createElementNS(svgNS,'g');
-measureLayer.style.pointerEvents='none';svg.append(measureLayer);
-let measuring=false, selected=[];
-const measureButton=document.getElementById('measure');
-const measureResult=document.getElementById('measurement-result');
-function gpsDistance(a,b){
- const rad=Math.PI/180, lat1=Number(a.dataset.lat)*rad,lat2=Number(b.dataset.lat)*rad;
- const dl=(Number(b.dataset.lon)-Number(a.dataset.lon))*rad;
- const h=Math.sin((lat2-lat1)/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dl/2)**2;
- return 12742000*Math.asin(Math.sqrt(Math.min(1,Math.max(0,h))));
-}
-function clearMeasurement(){selected=[];measureLayer.replaceChildren();measureResult.textContent=measuring?'Select the first marker.':'Enable Measure distance, then select two markers.';}
-function measurePick(marker){
- if(selected.length===2)clearMeasurement();
- selected.push(marker);
- const ring=document.createElementNS(svgNS,'circle');
- ring.setAttribute('cx',marker.dataset.x);ring.setAttribute('cy',marker.dataset.y);
- ring.setAttribute('r','11');ring.setAttribute('fill','none');ring.setAttribute('stroke','#b218cf');ring.setAttribute('stroke-width','3');ring.setAttribute('vector-effect','non-scaling-stroke');measureLayer.append(ring);
- if(selected.length===1){measureResult.textContent=marker.dataset.label+' selected. Select the second marker.';return;}
- const [a,b]=selected,line=document.createElementNS(svgNS,'line');
- line.setAttribute('x1',a.dataset.x);line.setAttribute('y1',a.dataset.y);line.setAttribute('x2',b.dataset.x);line.setAttribute('y2',b.dataset.y);
- line.setAttribute('stroke','#b218cf');line.setAttribute('stroke-width','3');line.setAttribute('vector-effect','non-scaling-stroke');measureLayer.prepend(line);
- measureResult.textContent=a.dataset.label+' ↔ '+b.dataset.label+': '+gpsDistance(a,b).toFixed(2)+' m horizontal GPS distance (≈ '+(gpsDistance(a,b)/1.75).toFixed(1)+' surfer lengths of 1.75 m). Select another marker to start a new measurement.';
-}
-measureButton.onclick=()=>{measuring=!measuring;measureButton.setAttribute('aria-pressed',String(measuring));measureButton.textContent=measuring?'Measuring: ON':'Measure distance';clearMeasurement();};
-document.getElementById('clear-measure').onclick=clearMeasurement;
+__MAP_MEASUREMENT_SCRIPT__
 const tip=document.getElementById('tooltip');
 let activeMarker=null;
 __MAP_FILTER_SCRIPT__
@@ -594,6 +589,9 @@ const refTitle=document.createElementNS(svgNS,'title');refTitle.textContent='1.7
 reference.append(refTitle,refHit,refShape);svg.append(reference);
 let referenceX=400,referenceY=410,referenceAngle=0,referenceDrag=null;
 const unitsPerMetre=Number(svg.dataset.unitsPerMetre);
+__MAP_LANDMARK_SCRIPT__
+__MAP_PAIR_HOVER_SCRIPT__
+__MAP_SCALE_SCRIPT__
 function drawReference(){reference.setAttribute('transform','translate('+referenceX+' '+referenceY+') rotate('+referenceAngle+') scale('+unitsPerMetre+')');}
 drawReference();
 document.getElementById('reference-angle').addEventListener('input',e=>{referenceAngle=Number(e.target.value);document.getElementById('reference-degrees').textContent=referenceAngle+'°';drawReference();});
@@ -603,7 +601,7 @@ reference.addEventListener('pointermove',e=>{if(!referenceDrag)return;e.stopProp
 for(const event of ['pointerup','pointercancel','lostpointercapture'])reference.addEventListener(event,e=>{referenceDrag=null;e.stopPropagation();});
 reference.addEventListener('click',e=>e.stopPropagation());
 reference.addEventListener('dblclick',e=>e.stopPropagation());
-function draw(){clearDetails();svg.setAttribute('viewBox',box.join(' '));}
+function draw(){clearDetails();clearLandmarkSelection();svg.setAttribute('viewBox',box.join(' '));updateMapScale();}
 function point(event){const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
 function zoom(f,px=box[0]+box[2]/2,py=box[1]+box[3]/2){
  const w=Math.max(original[2]/30,Math.min(original[2]*3,box[2]*f));
@@ -614,7 +612,7 @@ document.getElementById('zin').onclick=()=>zoom(.8);
 document.getElementById('zout').onclick=()=>zoom(1.25);
 document.getElementById('reset').onclick=reset;
 svg.addEventListener('wheel',e=>{e.preventDefault();const p=point(e);zoom(e.deltaY<0?.85:1/.85,p.x,p.y);},{passive:false});
-svg.addEventListener('pointerdown',e=>{if(e.button!==0 || (e.ctrlKey&&e.target.closest('.surfer-marker')) || (measuring&&e.target.closest('.surfer-marker,.drone-marker')))return;drag={x:e.clientX,y:e.clientY};svg.setPointerCapture(e.pointerId);});
+svg.addEventListener('pointerdown',e=>{if(e.button!==0 || (e.ctrlKey&&e.target.closest('.surfer-marker')) || (measuring&&(e.target.closest('.surfer-marker,.drone-marker')||landmarkMeasureTarget(e.target))))return;drag={x:e.clientX,y:e.clientY};svg.setPointerCapture(e.pointerId);});
 svg.addEventListener('pointermove',e=>{if(!drag)return;
  const inv=svg.getScreenCTM().inverse();
  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
@@ -632,6 +630,14 @@ initializeMapFilters();
     script=script.replace('__MAP_FILTER_SCRIPT__',filter_js)
     interaction_js=Path(__file__).with_name('surfer_map_interactions.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_INTERACTION_SCRIPT__',interaction_js)
+    measurement_js=Path(__file__).with_name('surfer_map_measurement.js').read_text(encoding='utf-8')
+    script=script.replace('__MAP_MEASUREMENT_SCRIPT__',measurement_js)
+    landmark_js=Path(__file__).with_name('surfer_map_landmarks.js').read_text(encoding='utf-8')
+    script=script.replace('__MAP_LANDMARK_SCRIPT__',landmark_js)
+    pair_hover_js=Path(__file__).with_name('surfer_map_pair_hover.js').read_text(encoding='utf-8')
+    script=script.replace('__MAP_PAIR_HOVER_SCRIPT__',pair_hover_js)
+    scale_js=Path(__file__).with_name('surfer_map_scale.js').read_text(encoding='utf-8')
+    script=script.replace('__MAP_SCALE_SCRIPT__',scale_js)
     side_data={p['point']:dict(distance=pair_distance(p),tilt=p.get('gimbalTiltDeg'),height=p.get('heightAboveTakeoffM'),time=p['receivedTimestamp'],source=p.get('sourceFile'),frame=p.get('videoFrameTimestamp'),position=p.get('personPosition'),positionError=p.get('personPositionError'),riding=p.get('waveRiding')) for p in points}
     side_js=Path(__file__).with_name('surfer_side_view.js').read_text(encoding='utf-8').replace('SIDE_DATA',json.dumps(side_data).replace('<','\\u003c'))
     script=script.replace('__SIDE_VIEW_SCRIPT__',side_js)
@@ -642,9 +648,14 @@ initializeMapFilters();
     def e(parent,name,text=None):
         node=ET.SubElement(parent,'{'+ns+'}'+name);node.text=text;return node
     root=ET.Element('{'+ns+'}kml'); doc=e(root,'Document');e(doc,'name','Raw received surfer GPS')
-    if boundary:
-        e(doc,'description',f'Boundary orientation only: {boundary["lineBearingDeg"]:.1f}° / {boundary["lineBearingDeg"]+180:.1f}°. Actual boundary position is deliberately not plotted.')
-        (output/'boundary.json').write_text(json.dumps(boundary,indent=2),encoding='utf-8')
+    if landmarks:
+        (output/'map-landmarks.json').write_text(json.dumps(landmarks,indent=2),encoding='utf-8')
+        for ref in landmarks:
+            mark=e(doc,'Placemark');e(mark,'name',ref['label']);e(mark,'description',json.dumps(ref,indent=2))
+            if ref['kind']=='wave':
+                geometry=e(mark,'LineString');e(geometry,'coordinates',' '.join(f'{p["longitude"]},{p["latitude"]},0' for p in (ref['pointA'],ref['pointB'])))
+            else:
+                geometry=e(mark,'Point');e(geometry,'coordinates',f'{ref["longitude"]},{ref["latitude"]},0')
     for p in points:
         mark=e(doc,'Placemark');e(mark,'name',p['point']+' · packet '+str(p['sequence']))
         e(mark,'description',json.dumps(p,indent=2));point=e(mark,'Point');e(point,'coordinates',f'{p["longitude"]},{p["latitude"]},0')
@@ -731,11 +742,10 @@ def main():
                 print('No matching GPS samples inside wave-ride windows; no interactive map generated.')
                 return
             target=points[0]['time_ms']
-            boundary=load_boundary(points[0]['sourceFile'],target,tz)
             if a.auto_fov:
                 from surfer_map_capture import precompute_positions
                 precompute_positions(points,out,a.video_folder,a.ffmpeg)
-            write_outputs(points,target,out,tz,a.gap_red_ms,boundary,selection_info=description)
+            write_outputs(points,target,out,tz,a.gap_red_ms,selection_info=description)
             print('Interactive ride map:' if ride_mode else 'Interactive pitch map:',(out/'surfer-gps.html').resolve())
             return
         if a.get_fov_samples:
@@ -751,13 +761,12 @@ def main():
             return
         target,points=select_packets(packets,a.at,a.next,tz)
         pair_drones(points,drones)
-        boundary=load_boundary(points[0]['sourceFile'],target,tz)
         add_video_playback(points,a.video_folder,tz)
         out=Path(a.output) if a.output else Path.cwd()/('surfer-gps-'+datetime.fromtimestamp(target/1000,tz).strftime('%Y%m%d-%H%M%S-%f'))
         if a.auto_fov:
             from surfer_map_capture import precompute_positions
             precompute_positions(points,out,a.video_folder,a.ffmpeg)
-        write_outputs(points,target,out,tz,a.gap_red_ms,boundary)
+        write_outputs(points,target,out,tz,a.gap_red_ms)
         for point in points:print(point['point'],point['receivedTimestamp'],'packet',point['sequence'],point['latitude'],point['longitude'],'accepted=',point['accepted'])
         print('Map:',(out/'surfer-gps.html').resolve())
     except (ValueError,OSError) as error:p.exit(2,f'Error: {error}\n')

@@ -2,6 +2,7 @@
 let detailsPinned=false, detailsHideTimer=null;
 function cancelDetailsHide(){clearTimeout(detailsHideTimer);detailsHideTimer=null;}
 function clearDetails(){
+ clearPairHover();
  cancelDetailsHide();detailsPinned=false;activeMarker=null;tip.hidden=true;
  delete tip.dataset.selectedPoint;
  svg.querySelectorAll('.active-pair').forEach(n=>n.classList.remove('active-pair'));
@@ -33,7 +34,7 @@ function showDetails(marker,e,pin=false,pointId=null){
  heading.append(title,close);tip.append(heading);
  if(surfer){
   const hint=document.createElement('p');hint.className='position-card-hint';
-  hint.textContent='↑ next · ↓ previous. Ctrl + left-click a position below to capture its frame.';tip.append(hint);
+  hint.textContent='→ next · ← previous. Ctrl + left-click a position below to capture its frame.';tip.append(hint);
  }
  const red=new Set((marker.dataset.redLines||'').split(',').filter(Boolean).map(Number));
  const green=new Set((marker.dataset.greenLines||'').split(',').filter(Boolean).map(Number));
@@ -113,7 +114,7 @@ function positionNavigation(){
 }
 
 function navigateSurferKey(e){
- if(!['ArrowUp','ArrowDown'].includes(e.key)||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey||e.isComposing)return;
+ if(!['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey||e.isComposing)return;
  if(measuring||captureBusy||captureDialog.open||document.getElementById('hide-surfers')?.checked)return;
  const pointControl=e.target===positionFilter||e.target===pick;
  if(!pointControl&&e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],dialog'))return;
@@ -125,7 +126,7 @@ function navigateSurferKey(e){
  // checked positions intact and skip hidden samples, including shared points.
  const index=points.findIndex(p=>p.id===id);if(index<0)return;
  e.preventDefault();e.stopPropagation();
- const next=points[index+(e.key==='ArrowUp'?1:-1)];if(!next)return;
+ const next=points[index+(['ArrowRight','ArrowUp'].includes(e.key)?1:-1)];if(!next)return;
  if(single)showPosition(next.id);
  focusSurferPosition(next.id);
 }
@@ -140,10 +141,23 @@ tip.addEventListener('keydown',e=>{
  if(card&&e.ctrlKey&&e.key==='Enter'){e.preventDefault();capturePoint(card.dataset.capturePoint);}
 });
 svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
- n.addEventListener('pointerenter',e=>{if(!detailsPinned){selectSide(n);showDetails(n,e);}});
- n.addEventListener('pointermove',e=>{if(!drag&&!detailsPinned)showDetails(n,e);});
+ n.addEventListener('pointerenter',e=>{
+  if(drag||captureBusy||captureDialog.open||measuring)return;
+  if(n.classList.contains('surfer-marker')&&!measuring){
+   // Hover selects a starting point even after keyboard navigation pinned
+   // another marker. Keep it selected when the pointer leaves the marker.
+   const same=activeMarker===n&&!tip.hidden;
+   const pointId=same?tip.dataset.selectedPoint||null:null;
+   if(!same)selectSide(n);
+   showDetails(n,e,true,pointId);
+   // Hover alone does not focus an iframe. Route real keyboard events to
+   // this marker instead of leaving them on the outer page or a form field.
+   n.focus({preventScroll:true});
+  }else if(!detailsPinned){selectSide(n);showDetails(n,e);}
+ });
+ n.addEventListener('pointermove',e=>{if(!measuring&&!drag&&!detailsPinned)showDetails(n,e);});
  n.addEventListener('pointerleave',scheduleDetailsHide);
- n.addEventListener('focus',()=>{if(!detailsPinned){selectSide(n);showDetails(n);}});
+ n.addEventListener('focus',()=>{if(!measuring&&!detailsPinned){selectSide(n);showDetails(n);}});
  n.addEventListener('blur',scheduleDetailsHide);
  n.addEventListener('click',e=>{
   if(n.classList.contains('surfer-marker'))selectSide(n);
@@ -163,7 +177,7 @@ pairChecks.forEach(check=>check.closest('label').addEventListener('click',e=>{
 },true));
 document.addEventListener('keydown',e=>{
  if(captureDialog.open&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){navigateFrameKey(e);return;}
- if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+ if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){
   if(!captureDialog.open)navigateSurferKey(e);
   return;
  }

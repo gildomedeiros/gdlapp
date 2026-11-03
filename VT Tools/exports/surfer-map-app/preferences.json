@@ -8,7 +8,7 @@
     "recursive": false,
     "gap_red_ms": 1000.0
   },
-  "mode": "rides",
+  "mode": "pitch",
   "presets": {
     "rides": {
       "scope": "first",
@@ -27,15 +27,15 @@
       "distance_max": 40
     },
     "timestamp": {
-      "at": "14:03:07.530",
-      "next": 2,
+      "at": "13:58:39",
+      "next": 200,
       "auto_fov": false
     },
     "pitch": {
-      "pitch_min": -80.0,
-      "pitch_max": -50.0,
-      "distance_min": 0.0,
-      "distance_max": 400.0,
+      "pitch_min": -36.0,
+      "pitch_max": -31.0,
+      "distance_min": 32.0,
+      "distance_max": 36.0,
       "before": 125.0,
       "after": 125.0,
       "interval": 1.0,

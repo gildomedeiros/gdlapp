@@ -249,7 +249,7 @@ class MapApp:
 
     def run(self,ident,request):
         try:
-            from surfer_gps_map import select_packets,pair_drones,add_video_playback,load_boundary,write_outputs
+            from surfer_gps_map import select_packets,pair_drones,add_video_playback,write_outputs
             from surfer_pitch_samples import run_log_samples,annotate_ride_windows
             s,q,mode=request['settings'],request['selection'],request['mode']
             packets,drones,prepared,tz=self.load_logs(s,ident)
@@ -292,8 +292,7 @@ class MapApp:
                     progress=lambda message:self.progress(ident,message),check_cancel=lambda:self.check_cancel(ident),cache_output=cache_output)
             self.check_cancel(ident)
             self.progress(ident,f'Drawing {len(points)} positions…')
-            boundary=load_boundary(points[0]['sourceFile'],target,tz)
-            write_outputs(points,target,output,tz,s['gap_red_ms'],boundary,selection_info=description,initial_ride='first' if mode=='rides' else 'all')
+            write_outputs(points,target,output,tz,s['gap_red_ms'],selection_info=description,initial_ride='first' if mode=='rides' else 'all')
             self.check_cancel(ident)
             snapshot=dict(id=ident,points={p['point']:p for p in points},output=output,cache_output=cache_output,
                           settings=s,images={},lock=threading.Lock())

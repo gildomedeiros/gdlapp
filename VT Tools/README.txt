@@ -81,9 +81,23 @@ Seaward position filter:
   position navigation use only the remaining positions. Switching the filter
   off restores positions without changing manual selections or other layers.
 
+Map scale:
+  The scale is drawn directly on the bottom-left complete visible grid square:
+  its left edge, bottom edge and rising 45-degree diagonal. Labels show the
+  actual grid distances (for example 29.2 m sides / 41.2 m diagonal), not a
+  separate 10 m ruler. The metre values stay constant while zooming, and the
+  scale follows the lowest, leftmost complete visible cell when panning.
+  If no complete cell is visible, the scale hides until a cell returns to view.
+  The SVG export labels the original bottom-left grid square too.
+
 Surfer keyboard navigation:
-  Click a surfer position, then press Up for the next position or Down for
-  the previous position in time order. The marker, details card and side view
+  Hover over a surfer position to select it, then press Right for the next
+  position or Left for the previous position in time order. The selection
+  stays active after the pointer leaves; hovering another surfer selects it.
+  Hover also gives the map keyboard focus, including when it is embedded in
+  the server page or a settings input previously had focus.
+  Clicking also selects; Up/Down remain available as aliases on the map.
+  The marker, details card and side view
   update together, including separate receipts at shared coordinates.
   In a multi-position view, navigation keeps the checked positions unchanged
   and skips hidden positions. In single-position mode, it advances the selection.
@@ -122,7 +136,8 @@ Actual video frame stepping:
   export exactly the displayed video frame; map selection remains unchanged.
   Plain Left/Right returns to the nearest eligible surfer record before/after
   the displayed video frame. Ride and seaward filters still apply to records.
-  Up/Down remains the map navigation shortcut, outside the frame viewer.
+  On the map, hover selects a surfer and Left/Right steps between positions;
+  Up/Down also works outside the frame viewer.
   Restart Start Map.cmd, then regenerate the map to load this server update.
 
 Speed visibility filter:
@@ -134,3 +149,35 @@ Speed visibility filter:
   Ride and seaward filters combine with it. Position cards, lists and record
   navigation use the remaining positions. Turning it off preserves manual
   selections and other layer switches. Raw video stepping remains independent.
+
+Full map grid and logged references:
+  The grid covers the whole visible map, including after pan, zoom and resize.
+  Wave line: the selected profile A/B coordinates from the logged configuration.
+  Boundary line: through the logged original anchor, perpendicular to the
+  logged seaward bearing. Start: the first valid, non-rejected surfer GPS fix
+  in the log session, including fixes before VT control starts. References follow
+  the selected log/session and only use information available at each sample.
+  Hover a reference line or start point to highlight it and show its label;
+  labels stay hidden otherwise. Tab focus also reveals a reference label.
+  Fit includes these reference positions. Map layers provides separate Hide
+  wave line, Hide boundary line and Hide start point switches. Missing logged
+  coordinates are not invented. SVG/KML and map-landmarks.json retain references.
+
+Marker distance ruler:
+  Expand Map controls & info and enable Measure distance. Left-click any two
+  surfer/drone markers, Start points, wave-line endpoints or boundary anchors.
+  Reference endpoint/anchor dots appear while measurement is on.
+  A purple ruler connects the exact coordinates, with metre ticks and the total
+  horizontal GPS distance on the map. The label keeps its size during zoom.
+  A third click starts a new measurement; Clear measurement resets it.
+  Layer/position filter changes also clear it. Enter/Space selects a focused
+  marker. The movable 1.75 m scale figure is not a GPS position.
+
+Connection-line hover labels:
+  Hover the dashed line between a surfer and drone for a compact floating label:
+  pair IDs with [horizontal distance][filming distance], ride detection, retreat
+  status with its minimum distance, and actual gimbal tilt plus active target.
+  These use the same logged values as the full position card. Missing values
+  remain unknown. Labels disappear on leaving, dragging, filtering or measuring.
+  The hidden hover stroke spans the gaps between dashes; GPS markers keep
+  priority at the endpoints. Tab focus also shows the connection label.
