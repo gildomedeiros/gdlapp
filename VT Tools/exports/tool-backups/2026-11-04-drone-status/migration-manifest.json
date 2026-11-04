@@ -1,0 +1,292 @@
+{
+  "source": "C:\\Users\\gildo\\gdlapp\\cam3",
+  "destination": "C:\\Users\\gildo\\gdlapp\\VT Tools",
+  "files": [
+    {
+      "path": "LICENSE.txt",
+      "bytes": 2312,
+      "sha256": "614550637351349a60a4f7e4ec2a24233d8a2c308dd9dd2f67f0715bb7b773f6"
+    },
+    {
+      "path": "README.txt",
+      "bytes": 10990,
+      "sha256": "faa036550c5cb0041b0fb2f72219b0ad2ad46978c7c6c6a09a2d329c093239ca"
+    },
+    {
+      "path": "Start Map.cmd",
+      "bytes": 96,
+      "sha256": "fb88b3dea39486c360a5e72bf985dbf5f8f45ef77bde9d3474672ba215ec2fdf"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/INSTALLER",
+      "bytes": 4,
+      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/METADATA",
+      "bytes": 1530,
+      "sha256": "4075fdc8d801fd272685fc779a3881a01c343e48db371b79c061a8c4062df096"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/RECORD",
+      "bytes": 1670,
+      "sha256": "13c0a86380592880b79412e155bfa6af7777461dc0a0fd86953ce8cc540d3ffd"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/REQUESTED",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/WHEEL",
+      "bytes": 96,
+      "sha256": "908bb0cc6270b854d3e61d322ba2f472b61f1643261a02bc61e6fcd0f89d5221"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/licenses/LICENSE",
+      "bytes": 1317,
+      "sha256": "eca73421d0c905a92e952a553d4d58919c5a507c2c2c76e3c0cf9ba408c299e4"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg-0.7.0.dist-info/top_level.txt",
+      "bytes": 15,
+      "sha256": "38341851861bb63f48d528c0484318ee1f10f2168bae630d5114829f4144075f"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/__init__.py",
+      "bytes": 225,
+      "sha256": "ba9d7d5506c18e2d57305a2d11df7aa1acd3deed7b0eaf863331d81db16a3852"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/_definitions.py",
+      "bytes": 2040,
+      "sha256": "19d13abae915122a8a788ad7f630bf5c960bc81e003955eb03251eb4f53040e0"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/_io.py",
+      "bytes": 27290,
+      "sha256": "5dda83a848e7313fa42628d1b75759e7e4e41454bfba1d9e0fdcec13adb7f3e3"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/_parsing.py",
+      "bytes": 6840,
+      "sha256": "514b583f26f3bfdbd0e2c28fc189514f268ffe4f64a0a5df97ecc8e919b8429a"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/_utils.py",
+      "bytes": 3833,
+      "sha256": "7951789f2f733f78cf7de608c25e957d5f53d6fdf84bac944560bf462194345f"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/binaries/README.md",
+      "bytes": 45,
+      "sha256": "b0d36dfb1ba1ea5ca873a6f6dbcc2295b7a7944aea875071d91a6aad1870e77d"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/binaries/__init__.py",
+      "bytes": 45,
+      "sha256": "ce39d166833a6d050160e237d07a73229e1c934edb3b2e28c5707e6f0377356f"
+    },
+    {
+      "path": "dependencies/frame-tools/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe",
+      "bytes": 87638016,
+      "sha256": "2ce797a0f88d7f067180338fb227f7b1928ea727bd9a4d7a1d022f7c52af71a3"
+    },
+    {
+      "path": "exports/surfer-map-app/preferences.json",
+      "bytes": 1268,
+      "sha256": "9a10a2612570aa403bc15b7c382b3bc9276ecd1707c747282d87f2301c4966c8"
+    },
+    {
+      "path": "requirements-cv.txt",
+      "bytes": 91,
+      "sha256": "3fedf3517b78f740172e75e0ea89e1ffada6accefb2ffbf713571e39ebcf8d47"
+    },
+    {
+      "path": "tools/gopro_wifi_probe.md",
+      "bytes": 3322,
+      "sha256": "a44c1d0053dfc98deb2bb0de0f9ef916bcc2d0f12c445334cc6d1da0d8a5308e"
+    },
+    {
+      "path": "tools/gopro_wifi_probe.py",
+      "bytes": 6492,
+      "sha256": "4f87853787d9dbe31b966c67a67fe18f8a579de67b0bcd397308f450d70bd2c1"
+    },
+    {
+      "path": "tools/models/yolo11n-seg.pt",
+      "bytes": 6182636,
+      "sha256": "55ed65c56c91713d23e8402371c6c49a6fd84f257f7dce452e8d70e41dcbe152"
+    },
+    {
+      "path": "tools/setup_surfer_fov.py",
+      "bytes": 933,
+      "sha256": "01a0fe813afedcc64aeec95474b4eb68764c9ba7cdc4c88d3101f1f49c2db90f"
+    },
+    {
+      "path": "tools/surfer_fov.py",
+      "bytes": 7226,
+      "sha256": "48adbdf5a355949dfb61213e5ff9e541b795dd678bdee35a026238e252717fe8"
+    },
+    {
+      "path": "tools/surfer_fov_samples.py",
+      "bytes": 13849,
+      "sha256": "914283ff5ae359262d2dac2871f72a85f0dd577a47860a11d16ab5a9dd91b07f"
+    },
+    {
+      "path": "tools/surfer_gps_map.py",
+      "bytes": 62743,
+      "sha256": "2ded3613c948191841047b8aa335dc4a898a1b1824774c3d729b0b7b297611a5"
+    },
+    {
+      "path": "tools/surfer_map_app.html",
+      "bytes": 16308,
+      "sha256": "536990a10c757d89d1737afbd3d24b6dbe1ab04a7917148f5d18986960f03785"
+    },
+    {
+      "path": "tools/surfer_map_app.py",
+      "bytes": 28544,
+      "sha256": "bb09d829c962d5f047def4ccf69b998518525e37df13a748430c90491f11d106"
+    },
+    {
+      "path": "tools/surfer_map_capture.py",
+      "bytes": 14335,
+      "sha256": "3ca0fc569d8378a3554d3aeea91fa6f897a98a169c3d98d2f792ebae4f776c32"
+    },
+    {
+      "path": "tools/surfer_map_filters.js",
+      "bytes": 12498,
+      "sha256": "1ac276897283edc431f20b1f57c816771908236a61823b28ab946651795b2101"
+    },
+    {
+      "path": "tools/surfer_map_filters.py",
+      "bytes": 2100,
+      "sha256": "c516c5bbb6b5a1a4c232e12998c5f75c0d2b3a8a5b14843fffcdccd915b0ba10"
+    },
+    {
+      "path": "tools/surfer_map_interactions.js",
+      "bytes": 18597,
+      "sha256": "26067bd721fae82cdde9b7fd4bd708459359090ebf224d3a0fb94acfffe7e1a2"
+    },
+    {
+      "path": "tools/surfer_map_landmarks.js",
+      "bytes": 4355,
+      "sha256": "4ba4ee671e49ff14421acc890fe6f804336811b5ea7cc21f385ef60237da26dc"
+    },
+    {
+      "path": "tools/surfer_map_landmarks.py",
+      "bytes": 10445,
+      "sha256": "568bf2e6caa288070d9bb9e4b670ed714bfa3c67a0210509208c855e7a46ccfe"
+    },
+    {
+      "path": "tools/surfer_map_measurement.js",
+      "bytes": 6169,
+      "sha256": "f298168dbdd08d42e85bd82cc82a8cbc906c61e0dc60d18c752a32ea9d96d8ea"
+    },
+    {
+      "path": "tools/surfer_map_pair_hover.js",
+      "bytes": 3970,
+      "sha256": "9c1b7ddee17a670b3cf3339ab5a91857ef134ff8d12c9ad7e561b23b127bbd2b"
+    },
+    {
+      "path": "tools/surfer_map_scale.js",
+      "bytes": 3976,
+      "sha256": "f943164a2414b3c1a2313e69ba01ea03199450a91912bf8828b444d894a92e36"
+    },
+    {
+      "path": "tools/surfer_pitch_samples.py",
+      "bytes": 10877,
+      "sha256": "c40d5c3595775f0205e9e6adce073f26e34322b052d51ab30e293d1e7351943d"
+    },
+    {
+      "path": "tools/surfer_side_view.js",
+      "bytes": 8364,
+      "sha256": "f7d840aaca9cd09fae117fceaa3b0fd6af3a336dd5404b164c88173b0461a43e"
+    },
+    {
+      "path": "tools/surfer_video_frames.py",
+      "bytes": 4754,
+      "sha256": "47ebe7e20383055ff37155c3e7f0e79d2ad64ccc337199d9dab43600794b0760"
+    },
+    {
+      "path": "tools/telemetry_around.py",
+      "bytes": 58049,
+      "sha256": "67d440573f68ced363272fdee9f6f9c6b35b703b03aa2316725d97319f654715"
+    },
+    {
+      "path": "tools/telemetry_selected_frames.py",
+      "bytes": 13180,
+      "sha256": "ebd2e857b7864dc021e1224f93cb2db510344db09671f657031f62ceec18b4dd"
+    },
+    {
+      "path": "tools/telemetry_selected_kml.py",
+      "bytes": 5536,
+      "sha256": "8c4e257f3a06ba0e282a385a6ae06905fcf3250bfa64584940f4be2a2f9ce34b"
+    },
+    {
+      "path": "tools/telemetry_to_srt.py",
+      "bytes": 13812,
+      "sha256": "c57868fa3dfececde229b141b69da578443a6a1a4dfc3dc8e3f95a317f183b19"
+    },
+    {
+      "path": "tools/telemetry_xlsx.py",
+      "bytes": 8189,
+      "sha256": "d1b8b5082699dbc1783abe3a0a9ff0d3d6fd5cc128b1ce624e7c952ed2acb928"
+    },
+    {
+      "path": "tools/test_surfer_downloads.py",
+      "bytes": 3643,
+      "sha256": "9504dbd0b88adbe4aa1eda7caa621078009e6801fe4bf35864b83345634f9f99"
+    },
+    {
+      "path": "tools/test_surfer_fov.py",
+      "bytes": 2308,
+      "sha256": "45ccecc4046c79ea459ba81c42e1445cb767ac5bb85c71e86cfc428ddc13ab76"
+    },
+    {
+      "path": "tools/test_surfer_map_app.py",
+      "bytes": 7902,
+      "sha256": "554d4eaa7910f916e7665993df8d48d17408f7236940466ae7a379434d5286bd"
+    },
+    {
+      "path": "tools/test_surfer_map_browser.cjs",
+      "bytes": 21673,
+      "sha256": "dca1e6a74342cbe1116f0036e05ee61cf53dca986b83cfa65110f526ee77917c"
+    },
+    {
+      "path": "tools/test_surfer_map_landmarks.py",
+      "bytes": 7221,
+      "sha256": "c6305533a37b78ae92c78e508045cd09c703cd3443ff08629948f3d10efdc30e"
+    },
+    {
+      "path": "tools/test_surfer_map_ui.cjs",
+      "bytes": 34923,
+      "sha256": "17e2d3fcbf72f216601ceda8d1f548ec5df5a5ead824b47dd03548fb2c66faa8"
+    },
+    {
+      "path": "tools/test_surfer_pitch_samples.py",
+      "bytes": 6619,
+      "sha256": "f04e84902ea438ad30df659f2b2eeb8b3ceaf629a082c2f0f47c38e317b18050"
+    },
+    {
+      "path": "tools/test_surfer_ride_samples.py",
+      "bytes": 9960,
+      "sha256": "217fc3cc95bf263b1e90c6b2f4d60c157deff46f120cb7a3229aacaea8ec20d3"
+    },
+    {
+      "path": "tools/test_surfer_ride_state.py",
+      "bytes": 4490,
+      "sha256": "6de3902830e7c552cd391ca28c0ab3a92f30f05d45f459b7b7b2ca8051b69bca"
+    },
+    {
+      "path": "tools/test_surfer_seaward.py",
+      "bytes": 3898,
+      "sha256": "68ae6329b59bc28b3dd5b6b81a530b94a835589d1dbe356ef1a4d03af725dad9"
+    },
+    {
+      "path": "tools/test_surfer_video_frames.py",
+      "bytes": 5541,
+      "sha256": "b83887591dc5c28bac3b08c887af44159e45c5567bdc5d038dbc115c217fac52"
+    }
+  ],
+  "updated": "2026-11-04: compact floating telemetry labels on surfer-drone connection hover"
+}

@@ -45,6 +45,14 @@ Migration:
   deleting it.
 
 Map interactions:
+  Press W on a highlighted surfer/drone/connection or in a surfer frame to
+  estimate the nearby breaking-wave crest. The clean MP4 frame is analysed;
+  telemetry text is excluded. A magenta overlay shows the detected edge in the
+  frame, and a dashed magenta orientation marker is saved at the surfer GPS.
+  Hover or focus a surfer, drone or connection line, then press Enter to preview
+  its nearest video frame. At shared coordinates this uses the selected Point;
+  focus an individual position card and press Enter to preview that receipt.
+  Enter keeps its usual behaviour in inputs, buttons and measurement mode.
   Ctrl + left-click a surfer marker to capture its nearest frame.
   At shared coordinates, Ctrl-click the exact position in the scrollable card.
   Ctrl-click a position in the left sidebar to capture it without changing its checkbox.
@@ -63,6 +71,47 @@ Ride detector markers:
   Padded ride-selection windows do not count as detector-active periods.
   Unknown or missing detector state is shown as unknown, without a purple ring.
 
+CV wave crest orientations:
+  W detects bright whitewater outer edges and estimates a nearby crest axis.
+  It is an estimated breaking crest, not a classification of every wave/ripple.
+  Check the magenta edge on the frame: foam boundaries are only a crest proxy.
+  Only edges within 25% of image width of the surfer reference are candidates.
+  The existing person model locates a single visible surfer when available
+  (overlapping duplicate detections are merged). Otherwise GPS projection is
+  used. A clear breaking lip close to the surfer can be accepted alone; distant
+  parallel foam cannot win simply by contributing more segments.
+  Distant foam is rejected even if there is no local match. This detector does
+  not identify unbroken crests from water shading; those may be unavailable.
+  After this update, estimates saved by the older detector are ignored; press W
+  to recalculate a frame. Old cache files remain on disk.
+  No line is added when edges are weak/ambiguous or camera telemetry is missing.
+  Map projection uses fresh logged aircraft yaw + gimbal relative yaw, gimbal
+  pitch/roll and a horizontal FOV estimate. The sidebar default is 74 degrees,
+  an uncalibrated starting estimate; adjust it for the camera/crop in use.
+  Flat water, square pixels, negligible lens distortion and water at the takeoff
+  height datum are assumed. These are orientation estimates, not surveyed lines.
+  Bearings are undirected axes (0-180 degrees), not wave travel directions.
+  Each marker follows the detected image segment projected onto the water plane.
+  With a single detected surfer, relative water offsets are registered to that
+  surfer's GPS; otherwise endpoints use the logged drone GPS and camera pose.
+  It can appear ahead of, across or behind the surfer. Its estimated length is
+  the detected segment, not a wavelength. Hover for the projection assumptions.
+  Results accumulate under exports/<map-output>/wave-orientations and are
+  restored for the same source log even when a different selection changes IDs.
+  Position/layer filters preserve the pattern. Hide wave crest detections in
+  Map layers hides both map marks and frame overlays without discarding them.
+  Fit saved orientations brings the complete pattern into view.
+  Press I on the same position or frame to ignore its detection. This persists
+  across reloads and selections; press W explicitly to retry an ignored frame.
+  Repeat W reuses a matching cached result, or replaces that frame's result
+  after changing FOV/source video. Raw Ctrl+arrow video frames require returning
+  to a surfer-position frame before W, so unrelated telemetry is not reused.
+  Source methods: https://docs.opencv.org/4.x/d9/db0/tutorial_hough_lines.html
+  Projection: https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html
+  OpenCV and NumPy are needed (included with the existing CV installation).
+  Restart and regenerate the map after this update; existing source video/logs
+  are read only.
+
 Surfer highlights:
   Ride detected toggles the purple rings. Speed threshold toggles cyan rings
   for GPS speed at or above an editable threshold (default 15 km/h).
@@ -72,6 +121,7 @@ Surfer highlights:
   Dashed rings at shared coordinates mean only some displayed positions qualify.
 
 Seaward position filter:
+  Hide seaward positions is checked by default when a map opens.
   In Map layers, Hide seaward positions removes surfer positions whose arrows
   point toward the logged sea direction, plus their paired drones and lines.
   Direction uses the next original GPS receipt, even outside the selected window.
@@ -174,10 +224,52 @@ Marker distance ruler:
   marker. The movable 1.75 m scale figure is not a GPS position.
 
 Connection-line hover labels:
-  Hover the dashed line between a surfer and drone for a compact floating label:
-  pair IDs with [horizontal distance][filming distance], ride detection, retreat
-  status with its minimum distance, and actual gimbal tilt plus active target.
-  These use the same logged values as the full position card. Missing values
-  remain unknown. Labels disappear on leaving, dragging, filtering or measuring.
+  Hover the dashed line between a surfer and drone for a floating label with
+  the same complete field list as both position cards and saved-frame telemetry.
+  This includes distance, movement, ride/retreat/controller state, drone height,
+  gimbal readings/bands, LoRa signal, packet timing, video time and coordinates.
+  Text wraps inside the map; selected bands stay green and packet gaps stay red.
+  Missing values remain unknown. Labels disappear on leaving, dragging,
+  filtering or measuring.
   The hidden hover stroke spans the gaps between dashes; GPS markers keep
   priority at the endpoints. Tab focus also shows the connection label.
+
+Drone height:
+  All cards and connection hover text use the logged heightAboveTakeoffM,
+  explicitly labelled "above takeoff". It is not a measured height above water.
+  Missing/invalid readings show unknown; zero and below-takeoff readings remain
+  valid. This uses the same logged height as the side view. Restart and regenerate
+  maps and saved frames to include the shared fields.
+
+Drone heading:
+  Translucent red arrows show the logged aircraft compass heading (north = 0,
+  east = 90), drawn behind the other map lines. Hide drone headings in Map
+  layers toggles these independently. They follow all position filters and only
+  appear while the paired surfer, drone or connection is hovered. Leaving the
+  target hides the ray; a pinned card or keyboard focus does not keep it visible.
+  Ray length matches the paired surfer distance for comparison; zero distance
+  uses a 10 m guide. This is direction, not a predicted flight path.
+  Only prior, fresh aircraft yaw in the same log/session is used (sensor age
+  plus receipt delay at most 1.5 seconds). Missing/stale readings get no ray.
+  Cards, connection hover text and saved telemetry also show Drone heading.
+
+Drone controller status:
+  Surfer/drone cards, connection hover labels and captured telemetry frames
+  include Aiming, Come to Me and Boundary status. These identify controller
+  state and the current reason (ride wait, retreat cooldown, route/clearance
+  failure, GPS pause, return, stopped, etc.). Boundary blocks are red and name
+  the affected destination, route or retreat; a nearby position alone is not
+  treated as proof of a block. The boundary row also shows logged distance
+  seaward/shoreward of the line when available. Sent yaw/movement rates describe
+  commands, not measured physical motion.
+  Status uses only records at or before that GPS receipt in the same file and
+  control session, breaking equal timestamps by source line. Start/stop/session
+  transitions clear previous evidence. Records older than one second are shown
+  as unknown with their age. The exported droneStatus field retains source
+  lines, cycle/session IDs and times. Restart and regenerate existing maps.
+
+LoRa signal:
+  Surfer/drone cards, connection hover labels and captured telemetry frames
+  show RSSI in dBm and SNR in dB from that GPS receipt's own lora_packet.
+  Missing or invalid readings are shown as unknown; readings are not borrowed
+  from adjacent packets. Restart and regenerate existing maps to include them.

@@ -1,5 +1,13 @@
 // Position cards remain interactive so a shared coordinate needs no typed ID.
 let detailsPinned=false, detailsHideTimer=null;
+function droneStatusColor(text){
+ if(!/^(Aiming|Come to Me|Boundary):/.test(text))return null;
+ if(/BLOCKED|STOPPED|RELEASE UNCONFIRMED/.test(text))return '#c40000';
+ if(/PAUSED|WAITING|suspended|slowing|cooldown/.test(text))return '#a94700';
+ if(text.includes('unknown'))return '#64748b';
+ if(/^(Aiming: AIMING|Come to Me: APPROACHING|Come to Me: RETURNING)/.test(text))return '#08752e';
+ return '#17324d';
+}
 function cancelDetailsHide(){clearTimeout(detailsHideTimer);detailsHideTimer=null;}
 function clearDetails(){
  clearPairHover();
@@ -23,7 +31,7 @@ function showDetails(marker,e,pin=false,pointId=null){
   if(pin)detailsPinned=true;
   return; // Preserve scrolling, focus and the exact card under the pointer.
  }
- clearDetails();detailsPinned=pin;activeMarker=marker;tip.replaceChildren();
+ clearDetails();clearLandmarkSelection();detailsPinned=pin;activeMarker=marker;tip.replaceChildren();
  if(pointId)tip.dataset.selectedPoint=pointId;
  const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id)&&(!pointId||id===pointId));
  const surfer=marker.classList.contains('surfer-marker');
@@ -32,10 +40,8 @@ function showDetails(marker,e,pin=false,pointId=null){
  title.textContent=pointId|| (ids.length>1?ids.length+' positions at this coordinate':marker.dataset.label);
  const close=document.createElement('button');close.type='button';close.textContent='Close';close.onclick=clearDetails;
  heading.append(title,close);tip.append(heading);
- if(surfer){
-  const hint=document.createElement('p');hint.className='position-card-hint';
-  hint.textContent='→ next · ← previous. Ctrl + left-click a position below to capture its frame.';tip.append(hint);
- }
+ const hint=document.createElement('p');hint.className='position-card-hint';
+ hint.textContent=(surfer?'→ next · ← previous. ':'')+'Enter: preview selected frame. Ctrl + left-click a position below for its frame.';tip.append(hint);
  const red=new Set((marker.dataset.redLines||'').split(',').filter(Boolean).map(Number));
  const green=new Set((marker.dataset.greenLines||'').split(',').filter(Boolean).map(Number));
  let card=null;
@@ -43,13 +49,16 @@ function showDetails(marker,e,pin=false,pointId=null){
   const header=text.match(/^(S\d+)(?: ↔|:)/)||text.match(/^D\d+ ↔ (S\d+)/);
   if(header||!card){
    card=document.createElement('article');card.className='position-card';
-   if(surfer&&header){
+   if(header){
     card.dataset.capturePoint=header[1];card.tabIndex=0;
-    card.setAttribute('aria-label',header[1]+' details; Ctrl-click or Ctrl+Enter to capture frame');
+    card.setAttribute('aria-label',header[1]+' details; Enter or Ctrl-click to preview frame');
+    card.setAttribute('aria-keyshortcuts','Enter');
    }
    tip.append(card);
   }
   const line=document.createElement('span');line.textContent=text;
+  const statusColor=droneStatusColor(text);
+  if(statusColor){line.style.color=statusColor;line.style.fontWeight='bold';line.title='Latest logged controller state at this GPS receipt. Sent rates are commands, not measured motion.';}
   if(text.startsWith('Retreat active:')||text.startsWith('Gimbal tilt:'))line.classList.add('key-field');
   if(text.startsWith('Ride detected:')){
    line.title='Latest logged movement_cycle.riding at this GPS receipt; before/after ride windows do not change this state.';
@@ -130,6 +139,21 @@ function navigateSurferKey(e){
  if(single)showPosition(next.id);
  focusSurferPosition(next.id);
 }
+
+function previewHighlightedFrame(e){
+ if(e.defaultPrevented||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey||e.isComposing||e.repeat)return;
+ if(measuring||drag||captureBusy||captureDialog.open)return;
+ if(e.target.closest('input,textarea,select,button,a,summary,[contenteditable]:not([contenteditable="false"]),[role="textbox"],dialog'))return;
+ const card=e.target.closest('[data-capture-point]');
+ const highlighted=activePairLine||(!tip.hidden?activeMarker:null);
+ if(!highlighted||highlighted.style.display==='none')return;
+ const ids=highlighted.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id));
+ // A shared coordinate previews the selected receipt, including a focused
+ // individual card. A connection always refers to its own single receipt.
+ const id=[card?.dataset.capturePoint,tip.dataset.selectedPoint,pick.value,...ids].find(id=>ids.includes(id));
+ if(!id)return;
+ e.preventDefault();e.stopPropagation();capturePoint(id);
+}
 tip.addEventListener('click',e=>{
  const card=e.target.closest('[data-capture-point]');if(!card)return;
  cancelDetailsHide();detailsPinned=true;chooseCard(card.dataset.capturePoint);
@@ -141,23 +165,20 @@ tip.addEventListener('keydown',e=>{
  if(card&&e.ctrlKey&&e.key==='Enter'){e.preventDefault();capturePoint(card.dataset.capturePoint);}
 });
 svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
+ n.setAttribute('aria-keyshortcuts','Enter');
  n.addEventListener('pointerenter',e=>{
   if(drag||captureBusy||captureDialog.open||measuring)return;
-  if(n.classList.contains('surfer-marker')&&!measuring){
-   // Hover selects a starting point even after keyboard navigation pinned
-   // another marker. Keep it selected when the pointer leaves the marker.
-   const same=activeMarker===n&&!tip.hidden;
-   const pointId=same?tip.dataset.selectedPoint||null:null;
-   if(!same)selectSide(n);
-   showDetails(n,e,true,pointId);
-   // Hover alone does not focus an iframe. Route real keyboard events to
-   // this marker instead of leaving them on the outer page or a form field.
-   n.focus({preventScroll:true});
-  }else if(!detailsPinned){selectSide(n);showDetails(n,e);}
+  // Hover selects either kind of marker, even after another was pinned.
+  const same=activeMarker===n&&!tip.hidden;
+  const pointId=same?tip.dataset.selectedPoint||null:null;
+  if(!same)selectSide(n);
+  showDetails(n,e,true,pointId);
+  // Focus the iframe as well as the marker so Enter reaches this map.
+  n.focus({preventScroll:true});
  });
  n.addEventListener('pointermove',e=>{if(!measuring&&!drag&&!detailsPinned)showDetails(n,e);});
  n.addEventListener('pointerleave',scheduleDetailsHide);
- n.addEventListener('focus',()=>{if(!measuring&&!detailsPinned){selectSide(n);showDetails(n);}});
+ n.addEventListener('focus',()=>{if(!measuring&&!captureBusy&&!captureDialog.open&&activeMarker!==n){selectSide(n);showDetails(n,null,true);}});
  n.addEventListener('blur',scheduleDetailsHide);
  n.addEventListener('click',e=>{
   if(n.classList.contains('surfer-marker'))selectSide(n);
@@ -167,8 +188,8 @@ svg.querySelectorAll('.surfer-marker,.drone-marker').forEach(n=>{
   if(measuring){e.stopPropagation();measurePick(n);clearDetails();}else showDetails(n,e,true);
  });
  n.addEventListener('keydown',e=>{
-  if(e.ctrlKey&&e.key==='Enter'&&n.classList.contains('surfer-marker')){e.preventDefault();captureMarker(n);}
-  else if(measuring&&(e.key==='Enter'||e.key===' ')){e.preventDefault();measurePick(n);}
+  if(measuring&&(e.key==='Enter'||e.key===' ')){e.preventDefault();measurePick(n);}
+  else if(e.ctrlKey&&e.key==='Enter'&&n.classList.contains('surfer-marker')){e.preventDefault();captureMarker(n);}
  });
 });
 // Ctrl-click the exact sidebar row without changing its visibility checkbox.
@@ -176,6 +197,7 @@ pairChecks.forEach(check=>check.closest('label').addEventListener('click',e=>{
  if(e.ctrlKey&&e.button===0){e.preventDefault();e.stopPropagation();chooseCard(check.dataset.pair);capturePoint(check.dataset.pair);}
 },true));
 document.addEventListener('keydown',e=>{
+ if(e.key==='Enter'){previewHighlightedFrame(e);return;}
  if(captureDialog.open&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){navigateFrameKey(e);return;}
  if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){
   if(!captureDialog.open)navigateSurferKey(e);
@@ -249,13 +271,15 @@ function renderCapturedFrame(id,result){
  captureDialog.dataset.timestamp=result.timestamp||'';
  captureDialog.dataset.videoTime=raw?String(result.videoTime):'';
  const close=document.createElement('button');close.textContent='Close';close.onclick=()=>captureDialog.close();
- const hint=document.createElement('span');hint.textContent=' ← previous position · → next position · Ctrl+←/→ video frames';hint.style.fontSize='13px';
+ const hint=document.createElement('span');hint.textContent=' ← previous position · → next position · Ctrl+←/→ video frames · W: detect crest · I: ignore crest';hint.style.fontSize='13px';
  const label=document.createElement('p');label.id='frame-label';
  label.textContent=raw?'Video frame — '+result.videoName+' · '+result.videoTime.toFixed(3)+' s'+(result.timestamp?' · '+result.timestamp:'')+' · GPS reference '+id:
   id+' — nearest frame: '+result.timestamp;
  const status=document.createElement('p');status.id='frame-status';status.setAttribute('role','status');status.style.margin='0';
  const img=document.createElement('img');img.src=result.url+'#'+Date.now();img.alt=label.textContent;img.style.maxWidth='85vw';img.style.maxHeight='70vh';
- captureDialog.append(close,hint,label,status,img,document.createElement('br'));
+ const picture=document.createElement('div');picture.id='frame-picture';picture.style.cssText='position:relative;display:table;line-height:0';
+ img.style.display='block';picture.append(img);
+ captureDialog.append(close,hint,label,status,picture,document.createElement('br'));
  if(!raw){
   const telemetry=document.createElement('a');telemetry.href=result.url;telemetry.download=result.filename;telemetry.textContent='Download with telemetry';
   captureDialog.append(telemetry);
@@ -267,6 +291,7 @@ function renderCapturedFrame(id,result){
  captureDialog.append(clean,enhanced);clearDetails();
  if(!captureDialog.open)captureDialog.showModal();
  close.focus({preventScroll:true});
+ drawWaveFrameOverlay();
 }
 async function captureVideoStep(step){
  const id=captureDialog.dataset.point,request={point:id,step};

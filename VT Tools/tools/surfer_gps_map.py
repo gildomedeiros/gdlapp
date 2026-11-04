@@ -30,6 +30,7 @@ import xml.etree.ElementTree as ET
 
 from telemetry_around import offset_timezone, parse_time, record_milliseconds, load_video_timeline, offset_point, travel_bearing
 from surfer_map_landmarks import load_map_landmarks, landmark_coordinates, render_landmarks
+from surfer_drone_status import STATUS_EVENTS, status_record, annotate_drone_status, drone_status_lines
 
 
 def load_boundary(source, target, tz):
@@ -87,10 +88,12 @@ def load_packets(folder, recursive, tz):
     wave_ride_starts = {}
     ride_states = {}
     seaward_states = {}
+    heading_states = {}
     distance_settings = {'minimumDistanceMetres': {}, 'filmingSeparationMetres': {}}
     paths = sorted(folder.rglob('*.jsonl') if recursive else folder.glob('*.jsonl'))
     for path in paths:
         source = str(path.resolve())
+        status_records, first_packet = [], len(packets)
         print(f'Reading {path.name}', flush=True)
         with path.open(encoding='utf-8-sig') as f:
             for line_no, line in enumerate(f, 1):
@@ -102,9 +105,15 @@ def load_packets(folder, recursive, tz):
                     raise ValueError(f'Invalid JSON: {path}:{line_no}') from error
                 if not isinstance(r, dict):
                     continue
-                if r.get('event') not in ('lora_packet', 'retreat_started', 'retreat_cycle', 'orientation_cycle', 'gimbal_pitch_cycle', 'movement_cycle', 'gimbal_band_config', 'session_start', 'session_end') and not ('aircraftLatitude' in r and 'aircraftLongitude' in r):
+                if r.get('event') not in STATUS_EVENTS + ('lora_packet', 'retreat_started', 'retreat_cycle', 'orientation_cycle', 'gimbal_pitch_cycle', 'movement_cycle', 'gimbal_band_config', 'session_start', 'session_end') and not ('aircraftLatitude' in r and 'aircraftLongitude' in r):
                     continue
                 t = record_milliseconds(r, tz)
+                evidence = status_record(r, t, line_no)
+                if evidence is not None: status_records.append(evidence)
+                if r.get('event') in ('orientation_cycle', 'session_start', 'session_end'):
+                    heading_states.setdefault(source, []).append((t, line_no, r.get('session'),
+                        r.get('aircraftYawDeg') if r.get('event') == 'orientation_cycle' else None,
+                        r.get('aircraftAttitudeFresh'), r.get('aircraftAttitudeAgeMs')))
                 if r.get('event') in ('movement_cycle', 'session_start', 'session_end'):
                     riding=r.get('riding') if r.get('event')=='movement_cycle' and isinstance(r.get('riding'),bool) else None
                     ride_states.setdefault(source,[]).append((t,line_no,riding,r.get('session')))
@@ -145,7 +154,9 @@ def load_packets(folder, recursive, tz):
                 packets.append(dict(time_ms=t, receivedTimestamp=datetime.fromtimestamp(t/1000, tz).isoformat(timespec='milliseconds'),
                                     sequence=r.get('sequence'), latitude=r.get('latitude'), longitude=r.get('longitude'),
                                     accepted=r.get('accepted'), senderMs=r.get('senderMs'), session=r.get('session'),
+                                    rssi=r.get('rssi'), snr=r.get('snr'),
                                     sourceFile=source, sourceLine=line_no))
+        annotate_drone_status(packets[first_packet:], status_records)
     packets.sort(key=lambda p: (p['time_ms'], p['sourceFile'], p['sourceLine']))
     wave_ride_starts={source:sorted(times) for source,times in wave_ride_starts.items()}
     for packet in packets:
@@ -162,6 +173,7 @@ def load_packets(folder, recursive, tz):
     mark_retreat_active(packets, retreat_states, tz)
     mark_ride_active(packets, ride_states, tz)
     mark_seaward_bearing(packets, seaward_states)
+    mark_drone_heading(packets, heading_states, tz)
     for source,states in gimbal_states.items():
         states.sort()
     gimbal_times={source:[s[0] for s in states] for source,states in gimbal_states.items()}
@@ -190,6 +202,23 @@ def load_packets(folder, recursive, tz):
         p['gimbalTiltDeg']=states[i][2] if i>=0 else None
         p['gimbalReportedTimestamp']=datetime.fromtimestamp(states[i][0]/1000,tz).isoformat(timespec='milliseconds') if i>=0 else None
     return packets, drones
+
+
+def mark_drone_heading(packets, sources, tz):
+    """Attach only the latest prior fresh aircraft yaw from the same log/session."""
+    indexed={source:sorted(rows,key=lambda r:(r[0],r[1])) for source,rows in sources.items()}
+    keys={source:[(r[0],r[1]) for r in rows] for source,rows in indexed.items()}
+    for p in packets:
+        p.update(droneHeadingDeg=None, droneHeadingTimestamp=None, droneHeadingSourceLine=None)
+        source=p['sourceFile'];rows=indexed.get(source,[])
+        index=bisect.bisect_right(keys.get(source,[]),(p['time_ms'],p.get('sourceLine',math.inf)))-1
+        if index<0:continue
+        time,line,session,heading,fresh,age=rows[index]
+        if p.get('session') is not None and session!=p['session']:continue
+        if fresh is not True or any(not isinstance(v,(int,float)) or isinstance(v,bool) or not math.isfinite(v) for v in (heading,age)):continue
+        total_age=age+p['time_ms']-time
+        if age<0 or not 0<=total_age<=1500:continue
+        p.update(droneHeadingDeg=heading%360,droneHeadingTimestamp=datetime.fromtimestamp(time/1000,tz).isoformat(timespec='milliseconds'),droneHeadingSourceLine=line)
 
 
 def mark_ride_active(packets, states, tz):
@@ -389,12 +418,50 @@ def gimbal_tilt_text(p):
     return text
 
 
-def pair_hover_text(p):
+def lora_signal_text(p):
+    def value(key, unit):
+        signal = p.get(key)
+        return f'{signal:g} {unit}' if isinstance(signal, (int, float)) and not isinstance(signal, bool) and math.isfinite(signal) else 'unknown'
+    return f'LoRa signal: RSSI {value("rssi", "dBm")} · SNR {value("snr", "dB")}'
+
+
+def position_detail_lines(p):
+    """One set of fields for both markers, the connection and saved frames."""
     distance = pair_distance(p)
-    actual = f'{distance:.1f}' if distance is not None else 'unknown'
-    return '\n'.join([
-        f'{p["point"]} ↔ {p.get("dronePoint", "?")} | [{actual}][{setting_text(p, "filmingSeparationMetres")}] m',
-        ride_text(p), retreat_text(p), gimbal_tilt_text(p)])
+    header = (f'{p["point"]} ↔ {p.get("dronePoint", "?")} | [{distance:.1f}][{setting_text(p, "filmingSeparationMetres")}] m horizontal'
+              if distance is not None else f'{p["point"]}: no prior drone GPS')
+    travel, speed = p.get('surferTravelSincePreviousMetres'), p.get('surferSpeedSincePreviousKmh')
+    travel_text = f'{travel:.1f} m' if travel is not None else 'unknown'
+    speed_text = f'{speed:.1f} km/h' if speed is not None else 'unknown'
+    bearing = p.get('surferNextBearingDeg')
+    height = p.get('heightAboveTakeoffM')
+    height_text = f'{height:g} m' if isinstance(height, (int, float)) and not isinstance(height, bool) and math.isfinite(height) else 'unknown'
+    heading = p.get('droneHeadingDeg')
+    heading_text = f'{heading:g}°' if isinstance(heading, (int,float)) and not isinstance(heading,bool) and math.isfinite(heading) else 'unknown'
+    displacement = p.get('droneDisplacementMetres')
+    return [header,
+        f'Surfer since previous packet: {travel_text} | {speed_text}',
+        f'Arrow direction: {bearing:.1f}° toward next received GPS' if bearing is not None else 'Arrow direction: next coordinates unchanged or unavailable',
+        ride_text(p), retreat_text(p), f'Drone height: {height_text} above takeoff', f'Drone heading: {heading_text}',
+        gimbal_tilt_text(p), f'Gimbal reported: {p.get("gimbalReportedTimestamp") or "unavailable"}',
+        *drone_status_lines(p), lora_signal_text(p),
+        f'Drone displacement from {p.get("previousDronePoint", "?")}: {displacement:.2f} m' if displacement is not None else 'Drone displacement: unavailable (no previous paired drone position)',
+        f'Video playback: {p.get("fileIdPlayback", "not mapped")}',
+        f'Packet: {p.get("sequence")} | accepted: {p.get("accepted")}',
+        f'Received: {p["receivedTimestamp"]} (' + (f'{p["sincePreviousReceivedMs"]:g} ms after previous packet' if p.get('sincePreviousReceivedMs') is not None else 'previous receipt unavailable') + ')',
+        f'Surfer: {p["latitude"]}, {p["longitude"]}',
+        f'Drone: {p.get("droneLatitude")}, {p.get("droneLongitude")}', '',
+        *gimbal_bands_text(p).split('\n')]
+
+
+def position_red_lines(p, lines, gap_red_ms):
+    if p.get('sincePreviousReceivedMs') is not None and p['sincePreviousReceivedMs'] > gap_red_ms:
+        return [i for i, text in enumerate(lines) if text.startswith('Received:')]
+    return []
+
+
+def pair_hover_text(p):
+    return '\n'.join(position_detail_lines(p))
 
 
 def make_svg(points, gap_red_ms=1000, boundary=None, landmarks=None):
@@ -412,7 +479,8 @@ def make_svg(points, gap_red_ms=1000, boundary=None, landmarks=None):
     cx, cy = (min(xs)+max(xs))/2, (min(ys)+max(ys))/2
     def screen(x,y): return 400+(x-cx)*680/span, 410-(y-cy)*680/span
     height=850
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" data-units-per-metre="{680/span:.12f}" data-grid-x="60" data-grid-y="70" data-grid-step="136" width="1100" height="{height}" viewBox="0 0 1100 {height}">',
+    origin_x,origin_y=screen(0,0)
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" data-units-per-metre="{680/span:.12f}" data-origin-lat="{lat0}" data-origin-lon="{lon0}" data-origin-x="{origin_x}" data-origin-y="{origin_y}" data-grid-x="60" data-grid-y="70" data-grid-step="136" width="1100" height="{height}" viewBox="0 0 1100 {height}">',
            '<defs><pattern id="map-grid-pattern" x="60" y="70" width="136" height="136" patternUnits="userSpaceOnUse"><path d="M0,136 V0 H136" stroke="#d6e0e7" stroke-width="1" vector-effect="non-scaling-stroke" fill="none"/></pattern></defs>',
            f'<rect id="map-background" width="1100" height="{height}" fill="#f3f7fa"/>',
            f'<rect id="map-grid" width="1100" height="{height}" fill="url(#map-grid-pattern)" pointer-events="none"/>',
@@ -421,12 +489,28 @@ def make_svg(points, gap_red_ms=1000, boundary=None, landmarks=None):
            '<text x="755" y="95" font-size="18">N ↑</text>']
     screens=[screen(x,y) for x,y in xy]
     drone_groups={}
+    # Composite the entire layer once: overlapping rays stay translucent.
+    out.append('<g id="drone-headings" opacity="0.4" stroke="#d52d3a" fill="none" stroke-width="2" pointer-events="none" aria-label="Logged aircraft heading rays">')
+    for p in points:
+        heading=p.get('droneHeadingDeg')
+        if p['point'] not in drone_xy or not isinstance(heading,(int,float)) or isinstance(heading,bool) or not math.isfinite(heading):continue
+        dx,dy=screen(*drone_xy[p['point']]);distance=pair_distance(p)
+        metres=distance if distance is not None and distance>0 else 10
+        length=metres*680/span;angle=math.radians(heading)
+        ux,uy=math.sin(angle),-math.cos(angle);ex,ey=dx+length*ux,dy+length*uy
+        head=min(8,length/4);nx,ny=-uy,ux
+        title=html.escape(f'{p.get("dronePoint", "Drone")} heading: {heading:g}° · ray {metres:.1f} m · logged {p.get("droneHeadingTimestamp") or "time unavailable"}')
+        out.append(f'<g class="drone-heading" data-pairs="{p["point"]}" data-heading="{heading:g}" data-length-metres="{metres}"><title>{title}</title>'
+                   f'<line class="heading-shaft" x1="{dx}" y1="{dy}" x2="{ex}" y2="{ey}" vector-effect="non-scaling-stroke"/>'
+                   f'<path d="M{ex-head*ux+head*.45*nx},{ey-head*uy+head*.45*ny} L{ex},{ey} L{ex-head*ux-head*.45*nx},{ey-head*uy-head*.45*ny}" vector-effect="non-scaling-stroke"/></g>')
+    out.append('</g>')
     for p,(sx,sy) in zip(points,screens):
         if p['point'] not in drone_xy: continue
         dx,dy=screen(*drone_xy[p['point']])
         compact = html.escape(pair_hover_text(p), quote=True).replace('\n', '&#10;')
+        red_ids = ','.join(map(str, position_red_lines(p, position_detail_lines(p), gap_red_ms)))
         path = f'M{sx:.2f},{sy:.2f} L{dx:.2f},{dy:.2f}'
-        out.append(f'<g class="pair-line" data-pairs="{p["point"]}" data-compact="{compact}" data-x="{(sx+dx)/2}" data-y="{(sy+dy)/2}" tabindex="0" role="img" aria-label="{compact}" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5">'
+        out.append(f'<g class="pair-line" data-pairs="{p["point"]}" data-compact="{compact}" data-red-lines="{red_ids}" data-x="{(sx+dx)/2}" data-y="{(sy+dy)/2}" tabindex="0" role="img" aria-label="{compact}" stroke="#386dcc" stroke-width="1.5" stroke-dasharray="6 5">'
                    f'<path class="pair-line-stroke" d="{path}" fill="none" pointer-events="none"/>'
                    f'<path class="pair-line-hit" d="{path}" fill="none" stroke="transparent" stroke-width="10" stroke-dasharray="none" vector-effect="non-scaling-stroke" pointer-events="stroke"/></g>')
         drone_groups.setdefault((dx,dy),{}).setdefault(p.get('retreatActive'),[]).append(p['point'])
@@ -442,23 +526,19 @@ def make_svg(points, gap_red_ms=1000, boundary=None, landmarks=None):
         for j,(active,labels) in enumerate(states.items()):
             color='#e87500' if active is True else ('#2454c5' if active is False else '#888888')
             details=[]
+            red_lines=[]
             bearing=None
             for point_index,p in enumerate(points):
                 if p['point'] not in labels: continue
-                displacement=p.get('droneDisplacementMetres'); tilt=p.get('gimbalTiltDeg')
-                details.append(f'{p["dronePoint"]} ↔ {p["point"]}')
-                details.append(f'Displacement from {p["previousDronePoint"]}: {displacement:.2f} m' if displacement is not None else 'Displacement: unavailable (no previous paired drone position)')
-                details.append(gimbal_tilt_text(p))
-                details.append(f'Gimbal reported: {p.get("gimbalReportedTimestamp") or "unavailable"}')
-                details.append(retreat_text(p))
-                details.append(f'Video playback: {p.get("fileIdPlayback", "not mapped")}')
+                rows=position_detail_lines(p)
+                red_lines.extend(len(details)+i for i in position_red_lines(p, rows, gap_red_ms))
+                details.extend(rows)
                 bearing=drone_next_bearing(points,point_index)
-                details.extend(gimbal_bands_text(p).split('\n'))
-                details.append('')
             detail=html.escape('\n'.join(details),quote=True).replace('\n','&#10;')
             geo=next(p for p in points if p['point'] in labels)
             marker_label=', '.join('D'+label[1:] for label in labels)
-            out.append(f'<g class="drone-marker" data-lat="{geo["droneLatitude"]}" data-lon="{geo["droneLongitude"]}" data-x="{dx}" data-y="{dy}" data-label="{marker_label}" data-pairs="{" ".join(labels)}" data-detail="{detail}" tabindex="0" aria-label="{detail}"><rect x="{dx-7+j*14/len(states):.2f}" y="{dy-7:.2f}" width="{14/len(states):.2f}" height="14" rx="1" fill="{color}" stroke="#17324d" stroke-width="0.8"/>')
+            red_ids=','.join(map(str,red_lines))
+            out.append(f'<g class="drone-marker" data-lat="{geo["droneLatitude"]}" data-lon="{geo["droneLongitude"]}" data-x="{dx}" data-y="{dy}" data-label="{marker_label}" data-pairs="{" ".join(labels)}" data-detail="{detail}" data-red-lines="{red_ids}" tabindex="0" aria-label="{detail}"><rect x="{dx-7+j*14/len(states):.2f}" y="{dy-7:.2f}" width="{14/len(states):.2f}" height="14" rx="1" fill="{color}" stroke="#17324d" stroke-width="0.8"/>')
             if bearing is not None:
                 out.append(f'<path class="drone-direction" d="M0,-5 L3,1 L1,0 L1,5 L-1,5 L-1,0 L-3,1 Z" transform="translate({dx:.2f} {dy:.2f}) rotate({bearing:.3f})" fill="white" stroke="none"/>')
             out.append('</g>')
@@ -473,27 +553,9 @@ def make_svg(points, gap_red_ms=1000, boundary=None, landmarks=None):
         red_lines=[]
         green_lines=[]
         for p in ps:
-            distance=pair_distance(p)
-            details.append(f'{p["point"]} ↔ {p.get("dronePoint", "?")} | [{distance:.1f}][{setting_text(p, "filmingSeparationMetres")}] m horizontal' if distance is not None else f'{p["point"]}: no prior drone GPS')
-            travel=p.get('surferTravelSincePreviousMetres')
-            speed=p.get('surferSpeedSincePreviousKmh')
-            travel_text=f'{travel:.1f} m' if travel is not None else 'unknown'
-            speed_text=f'{speed:.1f} km/h' if speed is not None else 'unknown'
-            details.append(f'Surfer since previous packet: {travel_text} | {speed_text}')
-            bearing=p.get('surferNextBearingDeg')
-            details.append(f'Arrow direction: {bearing:.1f}° toward next received GPS' if bearing is not None else 'Arrow direction: next coordinates unchanged or unavailable')
-            details.append(ride_text(p))
-            state=p.get('retreatActive')
-            details.append(retreat_text(p))
-            tilt=p.get('gimbalTiltDeg')
-            details.append(gimbal_tilt_text(p))
-            if p.get('sincePreviousReceivedMs') is not None and p['sincePreviousReceivedMs'] > gap_red_ms:
-                red_lines.append(len(details)+2)
-            details.extend([f'Video playback: {p.get("fileIdPlayback", "not mapped")}',
-                f'Packet: {p["sequence"]} | accepted: {p["accepted"]}',
-                f'Received: {p["receivedTimestamp"]} (' + (f'{p["sincePreviousReceivedMs"]:g} ms after previous packet' if p.get('sincePreviousReceivedMs') is not None else 'previous receipt unavailable') + ')', f'Surfer: {lat}, {lon}',
-                f'Drone: {p.get("droneLatitude")}, {p.get("droneLongitude")}', ''])
-            details.extend(gimbal_bands_text(p).split('\n'))
+            rows=position_detail_lines(p)
+            red_lines.extend(len(details)+i for i in position_red_lines(p, rows, gap_red_ms))
+            details.extend(rows)
         detail=html.escape('\n'.join(details), quote=True).replace('\n', '&#10;')
         ids=' '.join(p['point'] for p in ps)
         red_ids=','.join(map(str,red_lines))
@@ -538,12 +600,14 @@ def write_outputs(points, target, output, tz, gap_red_ms=1000, boundary=None, se
     controls+='<div class="controls"><strong>1.75 m surfer reference</strong> — drag the figure; rotate: <input id="reference-angle" type="range" min="0" max="359" value="0" aria-label="Reference surfer rotation"><output id="reference-degrees">0°</output><button id="reference-center">Move reference to view centre</button></div><p>Scale guide only: head-to-foot length is 1.75 m on the map plane, not a standing person’s footprint or a measured GPS position.</p>'
     pair_controls='<section id="ride-filters" aria-label="Map filters"><label for="ride-filter">Wave ride</label><select id="ride-filter"></select><p id="ride-window-info"></p><label for="position-filter">Surfer position</label><select id="position-filter"></select><div class="position-nav"><button id="position-prev">Previous</button><button id="position-next">Next</button></div><button id="fit-ride">Fit ride</button><p id="position-filter-status" role="status" aria-live="polite"></p></section><details open><summary>Choose positions</summary><button id="pairs-all">Show all</button><button id="pairs-none">Hide all</button><div id="pair-options">'
     pair_controls=pair_controls.replace('</section><details open>', '</section><fieldset id="map-layers"><legend>Map layers</legend><label><input id="hide-drones" type="checkbox"> Hide drone positions</label><label><input id="hide-connections" type="checkbox"> Hide connection lines</label><label><input id="hide-surfers" type="checkbox"> Hide surfer positions</label><label title="Hide seaward-pointing surfer arrows and their paired drones/lines, using the logged sea direction. Stationary or unknown directions remain visible."><input id="hide-seaward" type="checkbox"> Hide seaward positions</label><label title="Uses the speed threshold below. Hide slower surfer positions and their paired drones/lines; unknown speeds remain visible."><input id="hide-slow-speed" type="checkbox"> Hide speed below threshold</label></fieldset><fieldset id="surfer-highlights"><legend>Surfer highlights</legend><label><input id="show-ride-rings" type="checkbox" checked> <span class="ring-key ride-key" aria-hidden="true"></span> Ride detected</label><label><input id="show-speed-rings" type="checkbox"> <span class="ring-key speed-key" aria-hidden="true"></span> Speed threshold</label><label class="speed-threshold-label" for="speed-threshold">Speed ≥ <input id="speed-threshold" type="number" min="0" step="0.1" value="15" aria-label="Speed threshold (km/h)"> km/h</label><p id="speed-highlight-help" role="status">Uses GPS speed since the previous packet, as shown in the position card.</p></fieldset><p class="ride-legend">Purple: ride detected. Cyan: speed ≥ threshold. Dashed rings: mixed shared positions.</p><details open>', 1)
+    pair_controls=pair_controls.replace('<input id="hide-seaward" type="checkbox">','<input id="hide-seaward" type="checkbox" checked>')
+    pair_controls=pair_controls.replace('<label><input id="hide-connections"', '<label title="Translucent red rays show fresh logged aircraft heading. Ray length matches surfer distance; zero distance uses a 10 m guide."><input id="hide-drone-headings" type="checkbox"> <span style="color:#d52d3a">↗</span> Hide drone headings</label><label><input id="hide-connections"')
     for p in points:
         label=html.escape(p['point'],quote=True)
         drone=html.escape(str(p.get('dronePoint','no drone')))
         badge=' <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong>' if p.get('waveRiding') is True else ''
         pair_controls+=f'<label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="{label}" checked> {label} ↔ {drone}{badge}<small class="pair-metadata"></small></label>'
-    pair_controls+='</div><p>Show/hide applies to the selected ride. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details>'
+    pair_controls+='</div><p>Show/hide applies to the selected ride. Hover a surfer, drone or connection line and press Enter to preview its frame. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details>'
     reference_controls=''.join(f'<label><input id="hide-{kind}" type="checkbox"> Hide {label}</label>' for kind,label in [('wave-line','wave line'),('boundary-line','boundary line'),('start-point','start point')])
     pair_controls=pair_controls.replace('</fieldset><fieldset id="surfer-highlights">',reference_controls+'</fieldset><p><span style="color:#007d98">Wave line</span> · <span style="color:#c52b34">Boundary line</span> · <span style="color:#7036a5">Start (surfer)</span></p><fieldset id="surfer-highlights">',1)
     if not landmarks:pair_controls+='<p>No logged wave line, boundary or start point is available at these positions.</p>'
@@ -591,6 +655,7 @@ let referenceX=400,referenceY=410,referenceAngle=0,referenceDrag=null;
 const unitsPerMetre=Number(svg.dataset.unitsPerMetre);
 __MAP_LANDMARK_SCRIPT__
 __MAP_PAIR_HOVER_SCRIPT__
+__MAP_WAVE_SCRIPT__
 __MAP_SCALE_SCRIPT__
 function drawReference(){reference.setAttribute('transform','translate('+referenceX+' '+referenceY+') rotate('+referenceAngle+') scale('+unitsPerMetre+')');}
 drawReference();
@@ -636,6 +701,7 @@ initializeMapFilters();
     script=script.replace('__MAP_LANDMARK_SCRIPT__',landmark_js)
     pair_hover_js=Path(__file__).with_name('surfer_map_pair_hover.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_PAIR_HOVER_SCRIPT__',pair_hover_js)
+    script=script.replace('__MAP_WAVE_SCRIPT__',Path(__file__).with_name('surfer_map_waves.js').read_text(encoding='utf-8')+'\n'+Path(__file__).with_name('surfer_map_headings.js').read_text(encoding='utf-8'))
     scale_js=Path(__file__).with_name('surfer_map_scale.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_SCALE_SCRIPT__',scale_js)
     side_data={p['point']:dict(distance=pair_distance(p),tilt=p.get('gimbalTiltDeg'),height=p.get('heightAboveTakeoffM'),time=p['receivedTimestamp'],source=p.get('sourceFile'),frame=p.get('videoFrameTimestamp'),position=p.get('personPosition'),positionError=p.get('personPositionError'),riding=p.get('waveRiding')) for p in points}

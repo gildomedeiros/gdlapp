@@ -9,8 +9,8 @@
     },
     {
       "path": "README.txt",
-      "bytes": 10990,
-      "sha256": "faa036550c5cb0041b0fb2f72219b0ad2ad46978c7c6c6a09a2d329c093239ca"
+      "bytes": 17325,
+      "sha256": "c96ba839a88f07e7c45ae838ffe6609d9f176aa813376177cd6cc06d27f0abeb"
     },
     {
       "path": "Start Map.cmd",
@@ -123,6 +123,11 @@
       "sha256": "01a0fe813afedcc64aeec95474b4eb68764c9ba7cdc4c88d3101f1f49c2db90f"
     },
     {
+      "path": "tools/surfer_drone_status.py",
+      "bytes": 11519,
+      "sha256": "322d1807352bcb4156194ce1f49dd61f25625ea612f8992c730fad420ac4ddfb"
+    },
+    {
       "path": "tools/surfer_fov.py",
       "bytes": 7226,
       "sha256": "48adbdf5a355949dfb61213e5ff9e541b795dd678bdee35a026238e252717fe8"
@@ -134,8 +139,8 @@
     },
     {
       "path": "tools/surfer_gps_map.py",
-      "bytes": 62743,
-      "sha256": "2ded3613c948191841047b8aa335dc4a898a1b1824774c3d729b0b7b297611a5"
+      "bytes": 67918,
+      "sha256": "cd86706d750ad9fc3aec28ab24edf42a4b521cd965cac7219a31ff50b9f82cbf"
     },
     {
       "path": "tools/surfer_map_app.html",
@@ -144,18 +149,18 @@
     },
     {
       "path": "tools/surfer_map_app.py",
-      "bytes": 28544,
-      "sha256": "bb09d829c962d5f047def4ccf69b998518525e37df13a748430c90491f11d106"
+      "bytes": 29553,
+      "sha256": "8708adfbd22adf605ec74e979c1a3f495635a753d2ece6ad2f8d65f286c03bc4"
     },
     {
       "path": "tools/surfer_map_capture.py",
-      "bytes": 14335,
-      "sha256": "3ca0fc569d8378a3554d3aeea91fa6f897a98a169c3d98d2f792ebae4f776c32"
+      "bytes": 15079,
+      "sha256": "cf51bf651ae4a75b35855138e1918d38a08e21164a82c68719b48ba38d6df9d7"
     },
     {
       "path": "tools/surfer_map_filters.js",
-      "bytes": 12498,
-      "sha256": "1ac276897283edc431f20b1f57c816771908236a61823b28ab946651795b2101"
+      "bytes": 12673,
+      "sha256": "675d161ba72008fd479c3ea527caea42110d02eed3bbe412a0ba0fdc3aff72ae"
     },
     {
       "path": "tools/surfer_map_filters.py",
@@ -163,9 +168,14 @@
       "sha256": "c516c5bbb6b5a1a4c232e12998c5f75c0d2b3a8a5b14843fffcdccd915b0ba10"
     },
     {
+      "path": "tools/surfer_map_headings.js",
+      "bytes": 1415,
+      "sha256": "de8e6f258adae51dcc3b303a4dc49465ec6fda82eb47e83fc8780c5b0bbbc1b3"
+    },
+    {
       "path": "tools/surfer_map_interactions.js",
-      "bytes": 18597,
-      "sha256": "26067bd721fae82cdde9b7fd4bd708459359090ebf224d3a0fb94acfffe7e1a2"
+      "bytes": 20399,
+      "sha256": "c5cf2a8b8443b0f3e221e7bd1c32e19aab0c3d691ac2e7d11acbc9c58b84033e"
     },
     {
       "path": "tools/surfer_map_landmarks.js",
@@ -184,13 +194,18 @@
     },
     {
       "path": "tools/surfer_map_pair_hover.js",
-      "bytes": 3970,
-      "sha256": "9c1b7ddee17a670b3cf3339ab5a91857ef134ff8d12c9ad7e561b23b127bbd2b"
+      "bytes": 5878,
+      "sha256": "6b103fde274d63702b4ff7ca84ba7113c441bf28ef5675a31ef9fc3e79ef9490"
     },
     {
       "path": "tools/surfer_map_scale.js",
       "bytes": 3976,
       "sha256": "f943164a2414b3c1a2313e69ba01ea03199450a91912bf8828b444d894a92e36"
+    },
+    {
+      "path": "tools/surfer_map_waves.js",
+      "bytes": 8224,
+      "sha256": "19ec6d20486cab5c34b214fda7af02d80f676346e24b4c0e321c4b8cabcbf676"
     },
     {
       "path": "tools/surfer_pitch_samples.py",
@@ -206,6 +221,11 @@
       "path": "tools/surfer_video_frames.py",
       "bytes": 4754,
       "sha256": "47ebe7e20383055ff37155c3e7f0e79d2ad64ccc337199d9dab43600794b0760"
+    },
+    {
+      "path": "tools/surfer_wave_orientation.py",
+      "bytes": 16317,
+      "sha256": "ab63a89e8ad1218df2e739665de40a6190870d41f90693b1a4f2e7c50da590ff"
     },
     {
       "path": "tools/telemetry_around.py",
@@ -238,19 +258,29 @@
       "sha256": "9504dbd0b88adbe4aa1eda7caa621078009e6801fe4bf35864b83345634f9f99"
     },
     {
+      "path": "tools/test_surfer_drone_heading.py",
+      "bytes": 3473,
+      "sha256": "f157bbea5aeefe581c57cc8d3c32149226ea99fffc19fdb1da1c4d67dc158f94"
+    },
+    {
+      "path": "tools/test_surfer_drone_status.py",
+      "bytes": 7477,
+      "sha256": "c4163386485eb26be29114d29cc69fc3565fa35367ca2ef9b3e01ff1c1bd1e50"
+    },
+    {
       "path": "tools/test_surfer_fov.py",
       "bytes": 2308,
       "sha256": "45ccecc4046c79ea459ba81c42e1445cb767ac5bb85c71e86cfc428ddc13ab76"
     },
     {
       "path": "tools/test_surfer_map_app.py",
-      "bytes": 7902,
-      "sha256": "554d4eaa7910f916e7665993df8d48d17408f7236940466ae7a379434d5286bd"
+      "bytes": 9242,
+      "sha256": "4053a7b49b672fd00b8702cee201792c0432ed68d1dda8bc63a14d8403139670"
     },
     {
       "path": "tools/test_surfer_map_browser.cjs",
-      "bytes": 21673,
-      "sha256": "dca1e6a74342cbe1116f0036e05ee61cf53dca986b83cfa65110f526ee77917c"
+      "bytes": 38324,
+      "sha256": "b70dd6c78357e4669c424461444549ab6fcc2ac2d44c6976fdafc7859c884cc2"
     },
     {
       "path": "tools/test_surfer_map_landmarks.py",
@@ -259,8 +289,8 @@
     },
     {
       "path": "tools/test_surfer_map_ui.cjs",
-      "bytes": 34923,
-      "sha256": "17e2d3fcbf72f216601ceda8d1f548ec5df5a5ead824b47dd03548fb2c66faa8"
+      "bytes": 35216,
+      "sha256": "778004dd57f88bcb5d97eb0c0b2dc1aa86348fdc978ff0ee5a2fdfce0c55ee48"
     },
     {
       "path": "tools/test_surfer_pitch_samples.py",
@@ -286,7 +316,12 @@
       "path": "tools/test_surfer_video_frames.py",
       "bytes": 5541,
       "sha256": "b83887591dc5c28bac3b08c887af44159e45c5567bdc5d038dbc115c217fac52"
+    },
+    {
+      "path": "tools/test_surfer_wave_orientation.py",
+      "bytes": 13812,
+      "sha256": "43dedd1a4d19e7a7d9aa961e3b3aee45794f7e5805c1b5140ed757e1ca8f885b"
     }
   ],
-  "updated": "2026-11-04: compact floating telemetry labels on surfer-drone connection hover"
+  "updated": "2026-11-05: persistent crest rejection, hide switch, estimated water placement, clean-frame verification and contextual headings"
 }

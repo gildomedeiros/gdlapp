@@ -4,7 +4,7 @@ const filterPoints=new Map(mapFilters.points.map(p=>[p.id,p]));
 const pairChecks=[...document.querySelectorAll('#pair-options input[data-pair]')];
 const pairCheckById=new Map(pairChecks.map(c=>[c.dataset.pair,c]));
 const pairMarkers=[...svg.querySelectorAll('.surfer-marker,.drone-marker')];
-const pairElements=[...svg.querySelectorAll('.pair-line,.surfer-marker,.drone-marker,.map-landmark')];
+const pairElements=[...svg.querySelectorAll('.pair-line,.surfer-marker,.drone-marker,.drone-heading,.map-landmark')];
 const rideFilter=document.getElementById('ride-filter');
 const positionFilter=document.getElementById('position-filter');
 const previousPosition=document.getElementById('position-prev');
@@ -40,6 +40,7 @@ function addMarkerRing(marker,className,stateKey,color,radius,count,total){
 }
 const layerControls=[
  {input:document.getElementById('hide-drones'),className:'drone-marker'},
+ {input:document.getElementById('hide-drone-headings'),className:'drone-heading'},
  {input:document.getElementById('hide-connections'),className:'pair-line'},
  {input:document.getElementById('hide-surfers'),className:'surfer-marker'},
  {input:document.getElementById('hide-wave-line'),className:'wave-line'},
@@ -53,6 +54,7 @@ function applyLayerVisibility(){
   n.style.display=selected&&!hidden?'':'none';
  });
  if(activeLandmark?.style.display==='none')clearLandmarkSelection();
+ if(typeof updateDroneHeadingHover==='function')updateDroneHeadingHover();
 }
 
 

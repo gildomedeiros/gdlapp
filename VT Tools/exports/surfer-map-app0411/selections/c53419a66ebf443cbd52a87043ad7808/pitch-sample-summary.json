@@ -1,0 +1,121 @@
+{
+  "mode": "pitch-range",
+  "numberOfRides": null,
+  "totalRideCount": 14,
+  "selectedRideCount": 14,
+  "pitchRangeDegrees": [
+    -36.0,
+    -31.0
+  ],
+  "distanceRangeMetres": [
+    30.0,
+    32.0
+  ],
+  "maxSamples": 10,
+  "sampleBeforeSeconds": 125.0,
+  "sampleAfterSeconds": 125.0,
+  "sampleIntervalSeconds": 1.0,
+  "tiltChangeDegrees": 3,
+  "rideStartsBySource": {
+    "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl": [
+      1793773249013,
+      1793773707627,
+      1793773773783,
+      1793774271067
+    ],
+    "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_164918_768_218f04e7.jsonl": [
+      1793775223683,
+      1793775575407,
+      1793775765523,
+      1793775877273,
+      1793775999047
+    ],
+    "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_171453_707_d315c58a.jsonl": [
+      1793776897955
+    ],
+    "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_172600_679_9371f544.jsonl": [],
+    "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_172617_150_47a543c6.jsonl": [
+      1793777485614,
+      1793777665863,
+      1793777949823,
+      1793778115354
+    ]
+  },
+  "eligiblePackets": 418,
+  "spacedCandidates": 205,
+  "selectedCount": 10,
+  "invalidGpsPackets": 0,
+  "selection": "1s spacing per log (also keep tilt changes of at least 3\u00b0); actual received GPS packets and same-log ride windows",
+  "points": [
+    {
+      "point": "S1333",
+      "timestamp": "2026-11-04T16:22:03.643+10:00",
+      "pitch": -31.6,
+      "distanceMetres": 30.95387678845348,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1336",
+      "timestamp": "2026-11-04T16:22:05.140+10:00",
+      "pitch": -33.0,
+      "distanceMetres": 30.32468332313239,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1338",
+      "timestamp": "2026-11-04T16:22:06.511+10:00",
+      "pitch": -32.9,
+      "distanceMetres": 30.335143058189328,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1343",
+      "timestamp": "2026-11-04T16:22:08.873+10:00",
+      "pitch": -32.9,
+      "distanceMetres": 30.267155124369083,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1352",
+      "timestamp": "2026-11-04T16:22:13.600+10:00",
+      "pitch": -32.9,
+      "distanceMetres": 30.120258271556064,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1363",
+      "timestamp": "2026-11-04T16:22:19.333+10:00",
+      "pitch": -33.0,
+      "distanceMetres": 30.619646003608917,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1365",
+      "timestamp": "2026-11-04T16:22:20.333+10:00",
+      "pitch": -32.9,
+      "distanceMetres": 30.03021093528718,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1368",
+      "timestamp": "2026-11-04T16:22:22.202+10:00",
+      "pitch": -33.0,
+      "distanceMetres": 30.183208999938664,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1371",
+      "timestamp": "2026-11-04T16:22:23.564+10:00",
+      "pitch": -32.9,
+      "distanceMetres": 30.186622506926785,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    },
+    {
+      "point": "S1373",
+      "timestamp": "2026-11-04T16:22:24.564+10:00",
+      "pitch": -32.9,
+      "distanceMetres": 30.117785845562608,
+      "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl"
+    }
+  ]
+}

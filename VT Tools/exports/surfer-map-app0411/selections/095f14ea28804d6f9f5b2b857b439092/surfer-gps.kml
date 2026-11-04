@@ -1,0 +1,3109 @@
+<?xml version='1.0' encoding='utf-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Raw received surfer GPS</name><Placemark><name>Start (surfer)</name><description>{
+  "latitude": -27.95098,
+  "longitude": 153.429,
+  "session": null,
+  "time_ms": 1793772622136,
+  "sourceLine": 36,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "kind": "start",
+  "label": "Start (surfer)",
+  "pairs": [
+    "S954",
+    "S956",
+    "S959",
+    "S961",
+    "S963",
+    "S966",
+    "S968",
+    "S970",
+    "S973",
+    "S975"
+  ]
+}</description><Point><coordinates>153.429,-27.95098,0</coordinates></Point></Placemark><Placemark><name>Boundary line</name><description>{
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "session": 1,
+  "kind": "boundary",
+  "label": "Boundary line",
+  "latitude": -27.950890361640152,
+  "longitude": 153.4293631760675,
+  "bearingDegrees": 0.0,
+  "pairs": [
+    "S954",
+    "S956",
+    "S959",
+    "S961",
+    "S963",
+    "S966",
+    "S968",
+    "S970",
+    "S973",
+    "S975"
+  ]
+}</description><Point><coordinates>153.4293631760675,-27.950890361640152,0</coordinates></Point></Placemark><Placemark><name>Wave line · seaworld</name><description>{
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "session": 1,
+  "kind": "wave",
+  "label": "Wave line \u00b7 seaworld",
+  "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+  "pointA": {
+    "latitude": -27.950620000000008,
+    "longitude": 153.42910000000006
+  },
+  "pointB": {
+    "latitude": -27.951079999999997,
+    "longitude": 153.42910000000006
+  },
+  "pairs": [
+    "S954",
+    "S956",
+    "S959",
+    "S961",
+    "S963",
+    "S966",
+    "S968",
+    "S970",
+    "S973",
+    "S975"
+  ]
+}</description><LineString><coordinates>153.42910000000006,-27.950620000000008,0 153.42910000000006,-27.951079999999997,0</coordinates></LineString></Placemark><Placemark><name>S954 · packet 3094</name><description>{
+  "time_ms": 1793773124393,
+  "receivedTimestamp": "2026-11-04T16:18:44.393+10:00",
+  "sequence": 3094,
+  "latitude": -27.95072,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1642616,
+  "session": null,
+  "rssi": -88,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28258,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773124380,
+      "sourceLine": 28251,
+      "session": 1,
+      "cycleId": 4767
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 32.20693226626715,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 32.20693226626715,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.019939280464348088,
+      "submittedRightMps": 0.43379545999685837,
+      "event": "movement_cycle",
+      "timeMs": 1793773124380,
+      "sourceLine": 28252,
+      "session": 1,
+      "cycleId": 4767
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 32.20693226626715,
+      "event": "retreat_cycle",
+      "timeMs": 1793773124380,
+      "sourceLine": 28253,
+      "session": 1,
+      "cycleId": 4767
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:44.380+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:44.380+10:00",
+  "rideStateSourceLine": 28252,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:44.381+10:00",
+  "point": "S954",
+  "secondsFromRequestedTime": 502.757,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 506,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D954",
+  "droneLatitude": -27.95048018408856,
+  "droneLongitude": 153.42969106876075,
+  "droneReportedTimestamp": "2026-11-04T16:18:44.380+10:00",
+  "droneReportLagMs": 13,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28253,
+  "droneSurferDistanceMetres": 34.25682027196577,
+  "droneDisplacementMetres": 0.2349475483332202,
+  "previousDronePoint": "D953",
+  "droneNextBearingDeg": 220.603097507807,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_39",
+  "videoFrameTimestamp": "2026-11-04T16:18:44.388+10:00",
+  "videoFrameOffsetMs": -5.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 159.642
+}</description><Point><coordinates>153.42991,-27.95072,0</coordinates></Point></Placemark><Placemark><name>D954</name><description>{
+  "time_ms": 1793773124393,
+  "receivedTimestamp": "2026-11-04T16:18:44.393+10:00",
+  "sequence": 3094,
+  "latitude": -27.95072,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1642616,
+  "session": null,
+  "rssi": -88,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28258,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773124380,
+      "sourceLine": 28251,
+      "session": 1,
+      "cycleId": 4767
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 32.20693226626715,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 32.20693226626715,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.019939280464348088,
+      "submittedRightMps": 0.43379545999685837,
+      "event": "movement_cycle",
+      "timeMs": 1793773124380,
+      "sourceLine": 28252,
+      "session": 1,
+      "cycleId": 4767
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 32.20693226626715,
+      "event": "retreat_cycle",
+      "timeMs": 1793773124380,
+      "sourceLine": 28253,
+      "session": 1,
+      "cycleId": 4767
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:44.380+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:44.380+10:00",
+  "rideStateSourceLine": 28252,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:44.381+10:00",
+  "point": "S954",
+  "secondsFromRequestedTime": 502.757,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 506,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D954",
+  "droneLatitude": -27.95048018408856,
+  "droneLongitude": 153.42969106876075,
+  "droneReportedTimestamp": "2026-11-04T16:18:44.380+10:00",
+  "droneReportLagMs": 13,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28253,
+  "droneSurferDistanceMetres": 34.25682027196577,
+  "droneDisplacementMetres": 0.2349475483332202,
+  "previousDronePoint": "D953",
+  "droneNextBearingDeg": 220.603097507807,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_39",
+  "videoFrameTimestamp": "2026-11-04T16:18:44.388+10:00",
+  "videoFrameOffsetMs": -5.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 159.642
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42969106876075,-27.95048018408856,0</coordinates></Point></Placemark><Placemark><name>S954 — D954: 34.3 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42991,-27.95072,0 153.42989996565154,-27.950709008437393,0</coordinates></LineString><LineString><coordinates>153.42989175573007,-27.950700015340715,0 153.4298817213816,-27.950689023778107,0</coordinates></LineString><LineString><coordinates>153.42987351146013,-27.950680030681426,0 153.42986347711167,-27.950669039118818,0</coordinates></LineString><LineString><coordinates>153.4298552671902,-27.95066004602214,0 153.42984523284173,-27.950649054459532,0</coordinates></LineString><LineString><coordinates>153.42983702292025,-27.950640061362854,0 153.4298269885718,-27.950629069800247,0</coordinates></LineString><LineString><coordinates>153.42981877865031,-27.950620076703565,0 153.42980874430185,-27.950609085140957,0</coordinates></LineString><LineString><coordinates>153.42980053438038,-27.95060009204428,0 153.4297905000319,-27.950589100481672,0</coordinates></LineString><LineString><coordinates>153.42978229011044,-27.950580107384994,0 153.42977225576197,-27.950569115822386,0</coordinates></LineString><LineString><coordinates>153.4297640458405,-27.950560122725705,0 153.42975401149204,-27.950549131163097,0</coordinates></LineString><LineString><coordinates>153.42974580157056,-27.95054013806642,0 153.4297357672221,-27.95052914650381,0</coordinates></LineString><LineString><coordinates>153.42972755730062,-27.950520153407133,0 153.42971752295216,-27.950509161844526,0</coordinates></LineString><LineString><coordinates>153.42970931303068,-27.950500168747844,0 153.42969927868222,-27.950489177185236,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S956 · packet 3096</name><description>{
+  "time_ms": 1793773125394,
+  "receivedTimestamp": "2026-11-04T16:18:45.394+10:00",
+  "sequence": 3096,
+  "latitude": -27.95072,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1643616,
+  "session": null,
+  "rssi": -82,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28311,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773125329,
+      "sourceLine": 28306,
+      "session": 1,
+      "cycleId": 4776
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 31.893183591089247,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 31.893183591089247,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.005905089718094905,
+      "submittedRightMps": 0.3402664556818063,
+      "event": "movement_cycle",
+      "timeMs": 1793773125329,
+      "sourceLine": 28307,
+      "session": 1,
+      "cycleId": 4776
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 31.893183591089247,
+      "event": "retreat_cycle",
+      "timeMs": 1793773125330,
+      "sourceLine": 28308,
+      "session": 1,
+      "cycleId": 4776
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:45.330+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:45.329+10:00",
+  "rideStateSourceLine": 28307,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:45.330+10:00",
+  "point": "S956",
+  "secondsFromRequestedTime": 503.758,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 508,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D956",
+  "droneLatitude": -27.950483365918974,
+  "droneLongitude": 153.42968787454473,
+  "droneReportedTimestamp": "2026-11-04T16:18:45.330+10:00",
+  "droneReportLagMs": 64,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28308,
+  "droneSurferDistanceMetres": 34.18154528311216,
+  "droneDisplacementMetres": 0.17634567130646456,
+  "previousDronePoint": "D955",
+  "droneNextBearingDeg": 230.83082328346194,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_40",
+  "videoFrameTimestamp": "2026-11-04T16:18:45.389+10:00",
+  "videoFrameOffsetMs": -5.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 160.643
+}</description><Point><coordinates>153.42991,-27.95072,0</coordinates></Point></Placemark><Placemark><name>D956</name><description>{
+  "time_ms": 1793773125394,
+  "receivedTimestamp": "2026-11-04T16:18:45.394+10:00",
+  "sequence": 3096,
+  "latitude": -27.95072,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1643616,
+  "session": null,
+  "rssi": -82,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28311,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773125329,
+      "sourceLine": 28306,
+      "session": 1,
+      "cycleId": 4776
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 31.893183591089247,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 31.893183591089247,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.005905089718094905,
+      "submittedRightMps": 0.3402664556818063,
+      "event": "movement_cycle",
+      "timeMs": 1793773125329,
+      "sourceLine": 28307,
+      "session": 1,
+      "cycleId": 4776
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 31.893183591089247,
+      "event": "retreat_cycle",
+      "timeMs": 1793773125330,
+      "sourceLine": 28308,
+      "session": 1,
+      "cycleId": 4776
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:45.330+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:45.329+10:00",
+  "rideStateSourceLine": 28307,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:45.330+10:00",
+  "point": "S956",
+  "secondsFromRequestedTime": 503.758,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 508,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D956",
+  "droneLatitude": -27.950483365918974,
+  "droneLongitude": 153.42968787454473,
+  "droneReportedTimestamp": "2026-11-04T16:18:45.330+10:00",
+  "droneReportLagMs": 64,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28308,
+  "droneSurferDistanceMetres": 34.18154528311216,
+  "droneDisplacementMetres": 0.17634567130646456,
+  "previousDronePoint": "D955",
+  "droneNextBearingDeg": 230.83082328346194,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_40",
+  "videoFrameTimestamp": "2026-11-04T16:18:45.389+10:00",
+  "videoFrameOffsetMs": -5.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 160.643
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42968787454473,-27.950483365918974,0</coordinates></Point></Placemark><Placemark><name>S956 — D956: 34.2 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42991,-27.95072,0 153.42989981924998,-27.950709154271287,0</coordinates></LineString><LineString><coordinates>153.4298914895454,-27.950700280493248,0 153.42988130879536,-27.950689434764534,0</coordinates></LineString><LineString><coordinates>153.4298729790908,-27.950680560986495,0 153.42986279834076,-27.95066971525778,0</coordinates></LineString><LineString><coordinates>153.4298544686362,-27.950660841479745,0 153.42984428788614,-27.95064999575103,0</coordinates></LineString><LineString><coordinates>153.42983595818157,-27.950641121972993,0 153.42982577743155,-27.95063027624428,0</coordinates></LineString><LineString><coordinates>153.42981744772698,-27.95062140246624,0 153.42980726697695,-27.950610556737526,0</coordinates></LineString><LineString><coordinates>153.42979893727238,-27.950601682959487,0 153.42978875652233,-27.950590837230774,0</coordinates></LineString><LineString><coordinates>153.42978042681776,-27.950581963452734,0 153.42977024606773,-27.95057111772402,0</coordinates></LineString><LineString><coordinates>153.42976191636316,-27.95056224394598,0 153.4297517356131,-27.950551398217268,0</coordinates></LineString><LineString><coordinates>153.42974340590854,-27.95054252443923,0 153.42973322515851,-27.950531678710515,0</coordinates></LineString><LineString><coordinates>153.42972489545394,-27.95052280493248,0 153.42971471470392,-27.950511959203766,0</coordinates></LineString><LineString><coordinates>153.42970638499932,-27.950503085425726,0 153.4296962042493,-27.950492239697013,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S959 · packet 3099</name><description>{
+  "time_ms": 1793773126887,
+  "receivedTimestamp": "2026-11-04T16:18:46.887+10:00",
+  "sequence": 3099,
+  "latitude": -27.95073,
+  "longitude": 153.4299,
+  "accepted": true,
+  "senderMs": 1645116,
+  "session": null,
+  "rssi": -93,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28396,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773126815,
+      "sourceLine": 28391,
+      "session": 1,
+      "cycleId": 4790
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 31.413838561283455,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 31.413838561283455,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.011804554164906809,
+      "submittedRightMps": 0.2202334368347077,
+      "event": "movement_cycle",
+      "timeMs": 1793773126815,
+      "sourceLine": 28392,
+      "session": 1,
+      "cycleId": 4790
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 31.413838561283455,
+      "event": "retreat_cycle",
+      "timeMs": 1793773126816,
+      "sourceLine": 28393,
+      "session": 1,
+      "cycleId": 4790
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:46.816+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:46.815+10:00",
+  "rideStateSourceLine": 28392,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:46.816+10:00",
+  "point": "S959",
+  "secondsFromRequestedTime": 505.251,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 496,
+  "surferTravelSincePreviousMetres": 1.4836541260694336,
+  "surferSpeedSincePreviousKmh": 10.768457366632985,
+  "surferTravelBearingDeg": 221.45580033949102,
+  "dronePoint": "D959",
+  "droneLatitude": -27.95048662457771,
+  "droneLongitude": 153.42968299442353,
+  "droneReportedTimestamp": "2026-11-04T16:18:46.816+10:00",
+  "droneReportLagMs": 71,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28393,
+  "droneSurferDistanceMetres": 34.44845666270111,
+  "droneDisplacementMetres": 0.14862256879460709,
+  "previousDronePoint": "D958",
+  "droneNextBearingDeg": 251.12898718712148,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_42",
+  "videoFrameTimestamp": "2026-11-04T16:18:46.890+10:00",
+  "videoFrameOffsetMs": 3.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 162.145
+}</description><Point><coordinates>153.4299,-27.95073,0</coordinates></Point></Placemark><Placemark><name>D959</name><description>{
+  "time_ms": 1793773126887,
+  "receivedTimestamp": "2026-11-04T16:18:46.887+10:00",
+  "sequence": 3099,
+  "latitude": -27.95073,
+  "longitude": 153.4299,
+  "accepted": true,
+  "senderMs": 1645116,
+  "session": null,
+  "rssi": -93,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28396,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773126815,
+      "sourceLine": 28391,
+      "session": 1,
+      "cycleId": 4790
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 31.413838561283455,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 31.413838561283455,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.011804554164906809,
+      "submittedRightMps": 0.2202334368347077,
+      "event": "movement_cycle",
+      "timeMs": 1793773126815,
+      "sourceLine": 28392,
+      "session": 1,
+      "cycleId": 4790
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 31.413838561283455,
+      "event": "retreat_cycle",
+      "timeMs": 1793773126816,
+      "sourceLine": 28393,
+      "session": 1,
+      "cycleId": 4790
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:46.816+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:46.815+10:00",
+  "rideStateSourceLine": 28392,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:46.816+10:00",
+  "point": "S959",
+  "secondsFromRequestedTime": 505.251,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 496,
+  "surferTravelSincePreviousMetres": 1.4836541260694336,
+  "surferSpeedSincePreviousKmh": 10.768457366632985,
+  "surferTravelBearingDeg": 221.45580033949102,
+  "dronePoint": "D959",
+  "droneLatitude": -27.95048662457771,
+  "droneLongitude": 153.42968299442353,
+  "droneReportedTimestamp": "2026-11-04T16:18:46.816+10:00",
+  "droneReportLagMs": 71,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28393,
+  "droneSurferDistanceMetres": 34.44845666270111,
+  "droneDisplacementMetres": 0.14862256879460709,
+  "previousDronePoint": "D958",
+  "droneNextBearingDeg": 251.12898718712148,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_42",
+  "videoFrameTimestamp": "2026-11-04T16:18:46.890+10:00",
+  "videoFrameOffsetMs": 3.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 162.145
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42968299442353,-27.95048662457771,0</coordinates></Point></Placemark><Placemark><name>S959 — D959: 34.4 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.4299,-27.95073,0 153.4298900539111,-27.950718845293146,0</coordinates></LineString><LineString><coordinates>153.42988191620196,-27.95070971871481,0 153.42987197011306,-27.950698564007954,0</coordinates></LineString><LineString><coordinates>153.42986383240392,-27.950689437429617,0 153.42985388631502,-27.950678282722762,0</coordinates></LineString><LineString><coordinates>153.42984574860589,-27.95066915614443,0 153.42983580251698,-27.950658001437574,0</coordinates></LineString><LineString><coordinates>153.42982766480785,-27.950648874859237,0 153.42981771871894,-27.950637720152383,0</coordinates></LineString><LineString><coordinates>153.4298095810098,-27.950628593574045,0 153.4297996349209,-27.95061743886719,0</coordinates></LineString><LineString><coordinates>153.42979149721177,-27.950608312288857,0 153.42978155112286,-27.950597157582,0</coordinates></LineString><LineString><coordinates>153.42977341341373,-27.950588031003665,0 153.42976346732482,-27.95057687629681,0</coordinates></LineString><LineString><coordinates>153.4297553296157,-27.950567749718473,0 153.42974538352678,-27.95055659501162,0</coordinates></LineString><LineString><coordinates>153.42973724581765,-27.95054746843328,0 153.42972729972874,-27.950536313726428,0</coordinates></LineString><LineString><coordinates>153.4297191620196,-27.95052718714809,0 153.4297092159307,-27.950516032441236,0</coordinates></LineString><LineString><coordinates>153.42970107822157,-27.950506905862902,0 153.42969113213266,-27.950495751156048,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S961 · packet 3101</name><description>{
+  "time_ms": 1793773128116,
+  "receivedTimestamp": "2026-11-04T16:18:48.116+10:00",
+  "sequence": 3101,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1646346,
+  "session": null,
+  "rssi": -88,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28472,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773128077,
+      "sourceLine": 28465,
+      "session": 1,
+      "cycleId": 4802
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 31.286136672433685,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 31.286136672433685,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.021034510575402062,
+      "submittedRightMps": 0.78481788162823,
+      "event": "movement_cycle",
+      "timeMs": 1793773128077,
+      "sourceLine": 28466,
+      "session": 1,
+      "cycleId": 4802
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 31.286136672433685,
+      "event": "retreat_cycle",
+      "timeMs": 1793773128077,
+      "sourceLine": 28467,
+      "session": 1,
+      "cycleId": 4802
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "rideStateSourceLine": 28466,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "point": "S961",
+  "secondsFromRequestedTime": 506.48,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 356,
+  "surferTravelSincePreviousMetres": 0.9822414701856528,
+  "surferSpeedSincePreviousKmh": 9.932778911989748,
+  "surferTravelBearingDeg": 90.00000233115232,
+  "dronePoint": "D961",
+  "droneLatitude": -27.95048731476474,
+  "droneLongitude": 153.42968169431478,
+  "droneReportedTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "droneReportLagMs": 39,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28467,
+  "droneSurferDistanceMetres": 35.08700140098257,
+  "droneDisplacementMetres": 0.10063553993250238,
+  "previousDronePoint": "D960",
+  "droneNextBearingDeg": 226.92241293076745,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_43",
+  "videoFrameTimestamp": "2026-11-04T16:18:48.124+10:00",
+  "videoFrameOffsetMs": 8.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 163.379
+}</description><Point><coordinates>153.42991,-27.95073,0</coordinates></Point></Placemark><Placemark><name>D961</name><description>{
+  "time_ms": 1793773128116,
+  "receivedTimestamp": "2026-11-04T16:18:48.116+10:00",
+  "sequence": 3101,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1646346,
+  "session": null,
+  "rssi": -88,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28472,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773128077,
+      "sourceLine": 28465,
+      "session": 1,
+      "cycleId": 4802
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 31.286136672433685,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 31.286136672433685,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.021034510575402062,
+      "submittedRightMps": 0.78481788162823,
+      "event": "movement_cycle",
+      "timeMs": 1793773128077,
+      "sourceLine": 28466,
+      "session": 1,
+      "cycleId": 4802
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 31.286136672433685,
+      "event": "retreat_cycle",
+      "timeMs": 1793773128077,
+      "sourceLine": 28467,
+      "session": 1,
+      "cycleId": 4802
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "rideStateSourceLine": 28466,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "point": "S961",
+  "secondsFromRequestedTime": 506.48,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 356,
+  "surferTravelSincePreviousMetres": 0.9822414701856528,
+  "surferSpeedSincePreviousKmh": 9.932778911989748,
+  "surferTravelBearingDeg": 90.00000233115232,
+  "dronePoint": "D961",
+  "droneLatitude": -27.95048731476474,
+  "droneLongitude": 153.42968169431478,
+  "droneReportedTimestamp": "2026-11-04T16:18:48.077+10:00",
+  "droneReportLagMs": 39,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28467,
+  "droneSurferDistanceMetres": 35.08700140098257,
+  "droneDisplacementMetres": 0.10063553993250238,
+  "previousDronePoint": "D960",
+  "droneNextBearingDeg": 226.92241293076745,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_43",
+  "videoFrameTimestamp": "2026-11-04T16:18:48.124+10:00",
+  "videoFrameOffsetMs": 8.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 163.379
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42968169431478,-27.95048731476474,0</coordinates></Point></Placemark><Placemark><name>S961 — D961: 35.1 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42991,-27.95073,0 153.42989953598942,-27.950718876926718,0</coordinates></LineString><LineString><coordinates>153.42989097452624,-27.950709776230394,0 153.42988051051566,-27.95069865315711,0</coordinates></LineString><LineString><coordinates>153.42987194905248,-27.95068955246079,0 153.4298614850419,-27.95067842938751,0</coordinates></LineString><LineString><coordinates>153.4298529235787,-27.950669328691184,0 153.42984245956814,-27.950658205617902,0</coordinates></LineString><LineString><coordinates>153.42983389810493,-27.95064910492158,0 153.42982343409435,-27.950637981848296,0</coordinates></LineString><LineString><coordinates>153.42981487263117,-27.950628881151975,0 153.42980440862058,-27.950617758078693,0</coordinates></LineString><LineString><coordinates>153.42979584715738,-27.950608657382368,0 153.42978538314682,-27.950597534309086,0</coordinates></LineString><LineString><coordinates>153.42977682168362,-27.950588433612765,0 153.42976635767306,-27.950577310539483,0</coordinates></LineString><LineString><coordinates>153.42975779620986,-27.95056820984316,0 153.42974733219927,-27.950557086769876,0</coordinates></LineString><LineString><coordinates>153.4297387707361,-27.950547986073556,0 153.4297283067255,-27.950536863000274,0</coordinates></LineString><LineString><coordinates>153.42971974526233,-27.95052776230395,0 153.42970928125175,-27.950516639230667,0</coordinates></LineString><LineString><coordinates>153.42970071978854,-27.950507538534346,0 153.42969025577798,-27.95049641546106,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S963 · packet 3103</name><description>{
+  "time_ms": 1793773129116,
+  "receivedTimestamp": "2026-11-04T16:18:49.116+10:00",
+  "sequence": 3103,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1647346,
+  "session": null,
+  "rssi": -97,
+  "snr": 10.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28525,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773129021,
+      "sourceLine": 28520,
+      "session": 1,
+      "cycleId": 4811
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 30.959977510328386,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 30.959977510328386,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.03166595369040228,
+      "submittedRightMps": 0.7040389385421547,
+      "event": "movement_cycle",
+      "timeMs": 1793773129021,
+      "sourceLine": 28521,
+      "session": 1,
+      "cycleId": 4811
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 30.959977510328386,
+      "event": "retreat_cycle",
+      "timeMs": 1793773129021,
+      "sourceLine": 28522,
+      "session": 1,
+      "cycleId": 4811
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "rideStateSourceLine": 28521,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "point": "S963",
+  "secondsFromRequestedTime": 507.48,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 499,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D963",
+  "droneLatitude": -27.950489457048267,
+  "droneLongitude": 153.42967837374994,
+  "droneReportedTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "droneReportLagMs": 95,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28522,
+  "droneSurferDistanceMetres": 35.11456585126282,
+  "droneDisplacementMetres": 0.3046177183233904,
+  "previousDronePoint": "D962",
+  "droneNextBearingDeg": 234.94499088613108,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_44",
+  "videoFrameTimestamp": "2026-11-04T16:18:49.125+10:00",
+  "videoFrameOffsetMs": 9.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 164.38
+}</description><Point><coordinates>153.42991,-27.95073,0</coordinates></Point></Placemark><Placemark><name>D963</name><description>{
+  "time_ms": 1793773129116,
+  "receivedTimestamp": "2026-11-04T16:18:49.116+10:00",
+  "sequence": 3103,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1647346,
+  "session": null,
+  "rssi": -97,
+  "snr": 10.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28525,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773129021,
+      "sourceLine": 28520,
+      "session": 1,
+      "cycleId": 4811
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 30.959977510328386,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 30.959977510328386,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.03166595369040228,
+      "submittedRightMps": 0.7040389385421547,
+      "event": "movement_cycle",
+      "timeMs": 1793773129021,
+      "sourceLine": 28521,
+      "session": 1,
+      "cycleId": 4811
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 30.959977510328386,
+      "event": "retreat_cycle",
+      "timeMs": 1793773129021,
+      "sourceLine": 28522,
+      "session": 1,
+      "cycleId": 4811
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "rideStateSourceLine": 28521,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "point": "S963",
+  "secondsFromRequestedTime": 507.48,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 499,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D963",
+  "droneLatitude": -27.950489457048267,
+  "droneLongitude": 153.42967837374994,
+  "droneReportedTimestamp": "2026-11-04T16:18:49.021+10:00",
+  "droneReportLagMs": 95,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28522,
+  "droneSurferDistanceMetres": 35.11456585126282,
+  "droneDisplacementMetres": 0.3046177183233904,
+  "previousDronePoint": "D962",
+  "droneNextBearingDeg": 234.94499088613108,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_44",
+  "videoFrameTimestamp": "2026-11-04T16:18:49.125+10:00",
+  "videoFrameOffsetMs": 9.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 164.38
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42967837374994,-27.950489457048267,0</coordinates></Point></Placemark><Placemark><name>S963 — D963: 35.1 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42991,-27.95073,0 153.42989938379688,-27.95071897511471,0</coordinates></LineString><LineString><coordinates>153.4298906978125,-27.95070995475402,0 153.42988008160938,-27.950698929868736,0</coordinates></LineString><LineString><coordinates>153.42987139562499,-27.950689909508043,0 153.42986077942186,-27.950678884622757,0</coordinates></LineString><LineString><coordinates>153.4298520934375,-27.950669864262068,0 153.42984147723436,-27.95065883937678,0</coordinates></LineString><LineString><coordinates>153.42983279125,-27.95064981901609,0 153.42982217504687,-27.9506387941308,0</coordinates></LineString><LineString><coordinates>153.42981348906247,-27.95062977377011,0 153.42980287285934,-27.950618748884825,0</coordinates></LineString><LineString><coordinates>153.42979418687497,-27.950609728524135,0 153.42978357067184,-27.950598703638846,0</coordinates></LineString><LineString><coordinates>153.42977488468748,-27.950589683278157,0 153.42976426848435,-27.950578658392867,0</coordinates></LineString><LineString><coordinates>153.42975558249995,-27.950569638032178,0 153.42974496629682,-27.95055861314689,0</coordinates></LineString><LineString><coordinates>153.42973628031245,-27.9505495927862,0 153.42972566410933,-27.950538567900914,0</coordinates></LineString><LineString><coordinates>153.42971697812496,-27.95052954754022,0 153.42970636192183,-27.950518522654935,0</coordinates></LineString><LineString><coordinates>153.42969767593743,-27.950509502294246,0 153.4296870597343,-27.950498477408956,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S966 · packet 3106</name><description>{
+  "time_ms": 1793773130616,
+  "receivedTimestamp": "2026-11-04T16:18:50.616+10:00",
+  "sequence": 3106,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1648846,
+  "session": null,
+  "rssi": -78,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28612,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773130512,
+      "sourceLine": 28606,
+      "session": 1,
+      "cycleId": 4825
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.98902937911607,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.98902937911607,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.027754681442331997,
+      "submittedRightMps": 0.44802153677837886,
+      "event": "movement_cycle",
+      "timeMs": 1793773130513,
+      "sourceLine": 28607,
+      "session": 1,
+      "cycleId": 4825
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.98902937911607,
+      "event": "retreat_cycle",
+      "timeMs": 1793773130513,
+      "sourceLine": 28608,
+      "session": 1,
+      "cycleId": 4825
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:50.513+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:50.513+10:00",
+  "rideStateSourceLine": 28607,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.0,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:50.514+10:00",
+  "point": "S966",
+  "secondsFromRequestedTime": 508.98,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 501,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D966",
+  "droneLatitude": -27.95049696117453,
+  "droneLongitude": 153.42966848871046,
+  "droneReportedTimestamp": "2026-11-04T16:18:50.616+10:00",
+  "droneReportLagMs": 0,
+  "droneGpsAgeAtSurferReceiptMs": 320,
+  "droneFixMs": 922807292,
+  "droneSourceLine": 28613,
+  "droneSurferDistanceMetres": 35.13140681451077,
+  "droneDisplacementMetres": 0.406611220512156,
+  "previousDronePoint": "D965",
+  "droneNextBearingDeg": 214.59388956825836,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_45",
+  "videoFrameTimestamp": "2026-11-04T16:18:50.627+10:00",
+  "videoFrameOffsetMs": 11.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 165.881
+}</description><Point><coordinates>153.42991,-27.95073,0</coordinates></Point></Placemark><Placemark><name>D966</name><description>{
+  "time_ms": 1793773130616,
+  "receivedTimestamp": "2026-11-04T16:18:50.616+10:00",
+  "sequence": 3106,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1648846,
+  "session": null,
+  "rssi": -78,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28612,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773130512,
+      "sourceLine": 28606,
+      "session": 1,
+      "cycleId": 4825
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.98902937911607,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.98902937911607,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.027754681442331997,
+      "submittedRightMps": 0.44802153677837886,
+      "event": "movement_cycle",
+      "timeMs": 1793773130513,
+      "sourceLine": 28607,
+      "session": 1,
+      "cycleId": 4825
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.98902937911607,
+      "event": "retreat_cycle",
+      "timeMs": 1793773130513,
+      "sourceLine": 28608,
+      "session": 1,
+      "cycleId": 4825
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:50.513+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:50.513+10:00",
+  "rideStateSourceLine": 28607,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.0,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:50.514+10:00",
+  "point": "S966",
+  "secondsFromRequestedTime": 508.98,
+  "surferNextBearingDeg": null,
+  "sincePreviousReceivedMs": 501,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D966",
+  "droneLatitude": -27.95049696117453,
+  "droneLongitude": 153.42966848871046,
+  "droneReportedTimestamp": "2026-11-04T16:18:50.616+10:00",
+  "droneReportLagMs": 0,
+  "droneGpsAgeAtSurferReceiptMs": 320,
+  "droneFixMs": 922807292,
+  "droneSourceLine": 28613,
+  "droneSurferDistanceMetres": 35.13140681451077,
+  "droneDisplacementMetres": 0.406611220512156,
+  "previousDronePoint": "D965",
+  "droneNextBearingDeg": 214.59388956825836,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_45",
+  "videoFrameTimestamp": "2026-11-04T16:18:50.627+10:00",
+  "videoFrameOffsetMs": 11.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 165.881
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42966848871046,-27.95049696117453,0</coordinates></Point></Placemark><Placemark><name>S966 — D966: 35.1 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42991,-27.95073,0 153.42989893073258,-27.95071931905383,0</coordinates></LineString><LineString><coordinates>153.4298898740592,-27.950710580097876,0 153.42987880479177,-27.95069989915171,0</coordinates></LineString><LineString><coordinates>153.42986974811842,-27.950691160195756,0 153.429858678851,-27.950680479249588,0</coordinates></LineString><LineString><coordinates>153.4298496221776,-27.950671740293632,0 153.42983855291018,-27.950661059347464,0</coordinates></LineString><LineString><coordinates>153.42982949623683,-27.95065232039151,0 153.42981842696938,-27.950641639445344,0</coordinates></LineString><LineString><coordinates>153.42980937029603,-27.95063290048939,0 153.4297983010286,-27.95062221954322,0</coordinates></LineString><LineString><coordinates>153.42978924435522,-27.950613480587265,0 153.4297781750878,-27.950602799641096,0</coordinates></LineString><LineString><coordinates>153.42976911841444,-27.95059406068514,0 153.429758049147,-27.950583379738976,0</coordinates></LineString><LineString><coordinates>153.42974899247363,-27.95057464078302,0 153.4297379232062,-27.950563959836852,0</coordinates></LineString><LineString><coordinates>153.42972886653286,-27.950555220880897,0 153.4297177972654,-27.95054453993473,0</coordinates></LineString><LineString><coordinates>153.42970874059205,-27.950535800978773,0 153.42969767132462,-27.95052512003261,0</coordinates></LineString><LineString><coordinates>153.42968861465127,-27.950516381076653,0 153.4296775453838,-27.950505700130485,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S968 · packet 3108</name><description>{
+  "time_ms": 1793773131618,
+  "receivedTimestamp": "2026-11-04T16:18:51.618+10:00",
+  "sequence": 3108,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1649846,
+  "session": null,
+  "rssi": -89,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28671,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "surfer_correction",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": -0.4938262185658573,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 2000,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773131569,
+      "sourceLine": 28666,
+      "session": 1,
+      "cycleId": 4835
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.665819474239996,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.665819474239996,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": -0.011185115623258718,
+      "submittedRightMps": 0.33283775018197836,
+      "event": "movement_cycle",
+      "timeMs": 1793773131569,
+      "sourceLine": 28667,
+      "session": 1,
+      "cycleId": 4835
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.665819474239996,
+      "event": "retreat_cycle",
+      "timeMs": 1793773131569,
+      "sourceLine": 28668,
+      "session": 1,
+      "cycleId": 4835
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:51.569+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:51.569+10:00",
+  "rideStateSourceLine": 28667,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.0,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:51.571+10:00",
+  "point": "S968",
+  "secondsFromRequestedTime": 509.982,
+  "surferNextBearingDeg": 269.9999976688477,
+  "sincePreviousReceivedMs": 497,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D968",
+  "droneLatitude": -27.950501560011247,
+  "droneLongitude": 153.42966519817145,
+  "droneReportedTimestamp": "2026-11-04T16:18:51.569+10:00",
+  "droneReportLagMs": 49,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28668,
+  "droneSurferDistanceMetres": 34.97734141711336,
+  "droneDisplacementMetres": 0.23863988721517218,
+  "previousDronePoint": "D967",
+  "droneNextBearingDeg": 210.16915100801813,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_46",
+  "videoFrameTimestamp": "2026-11-04T16:18:51.628+10:00",
+  "videoFrameOffsetMs": 10.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 166.882
+}</description><Point><coordinates>153.42991,-27.95073,0</coordinates></Point></Placemark><Placemark><name>D968</name><description>{
+  "time_ms": 1793773131618,
+  "receivedTimestamp": "2026-11-04T16:18:51.618+10:00",
+  "sequence": 3108,
+  "latitude": -27.95073,
+  "longitude": 153.42991,
+  "accepted": true,
+  "senderMs": 1649846,
+  "session": null,
+  "rssi": -89,
+  "snr": 11.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28671,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "surfer_correction",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": -0.4938262185658573,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 2000,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773131569,
+      "sourceLine": 28666,
+      "session": 1,
+      "cycleId": 4835
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.665819474239996,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.665819474239996,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": -0.011185115623258718,
+      "submittedRightMps": 0.33283775018197836,
+      "event": "movement_cycle",
+      "timeMs": 1793773131569,
+      "sourceLine": 28667,
+      "session": 1,
+      "cycleId": 4835
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.665819474239996,
+      "event": "retreat_cycle",
+      "timeMs": 1793773131569,
+      "sourceLine": 28668,
+      "session": 1,
+      "cycleId": 4835
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:51.569+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:51.569+10:00",
+  "rideStateSourceLine": 28667,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.0,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:51.571+10:00",
+  "point": "S968",
+  "secondsFromRequestedTime": 509.982,
+  "surferNextBearingDeg": 269.9999976688477,
+  "sincePreviousReceivedMs": 497,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D968",
+  "droneLatitude": -27.950501560011247,
+  "droneLongitude": 153.42966519817145,
+  "droneReportedTimestamp": "2026-11-04T16:18:51.569+10:00",
+  "droneReportLagMs": 49,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28668,
+  "droneSurferDistanceMetres": 34.97734141711336,
+  "droneDisplacementMetres": 0.23863988721517218,
+  "previousDronePoint": "D967",
+  "droneNextBearingDeg": 210.16915100801813,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_46",
+  "videoFrameTimestamp": "2026-11-04T16:18:51.628+10:00",
+  "videoFrameOffsetMs": 10.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 166.882
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42966519817145,-27.950501560011247,0</coordinates></Point></Placemark><Placemark><name>S968 — D968: 35.0 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42991,-27.95073,0 153.4298987799162,-27.950719529833847,0</coordinates></LineString><LineString><coordinates>153.42988959984763,-27.95071096333427,0 153.4298783797638,-27.95070049316812,0</coordinates></LineString><LineString><coordinates>153.42986919969525,-27.95069192666854,0 153.42985797961143,-27.95068145650239,0</coordinates></LineString><LineString><coordinates>153.42984879954287,-27.950672890002814,0 153.42983757945905,-27.95066241983666,0</coordinates></LineString><LineString><coordinates>153.4298283993905,-27.950653853337084,0 153.42981717930667,-27.95064338317093,0</coordinates></LineString><LineString><coordinates>153.4298079992381,-27.950634816671354,0 153.4297967791543,-27.9506243465052,0</coordinates></LineString><LineString><coordinates>153.42978759908573,-27.950615780005624,0 153.4297763790019,-27.95060530983947,0</coordinates></LineString><LineString><coordinates>153.42976719893335,-27.950596743339894,0 153.42975597884953,-27.950586273173744,0</coordinates></LineString><LineString><coordinates>153.42974679878097,-27.950577706674164,0 153.42973557869715,-27.950567236508014,0</coordinates></LineString><LineString><coordinates>153.4297263986286,-27.950558670008434,0 153.42971517854477,-27.950548199842284,0</coordinates></LineString><LineString><coordinates>153.4297059984762,-27.950539633342707,0 153.4296947783924,-27.950529163176554,0</coordinates></LineString><LineString><coordinates>153.42968559832383,-27.950520596676977,0 153.42967437824,-27.950510126510824,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S970 · packet 3110</name><description>{
+  "time_ms": 1793773132996,
+  "receivedTimestamp": "2026-11-04T16:18:52.996+10:00",
+  "sequence": 3110,
+  "latitude": -27.95073,
+  "longitude": 153.4299,
+  "accepted": true,
+  "senderMs": 1650846,
+  "session": null,
+  "rssi": -88,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28749,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 1154,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773132947,
+      "sourceLine": 28744,
+      "session": 1,
+      "cycleId": 4848
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.297921136520653,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.297921136520653,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": -0.061513798503649846,
+      "submittedRightMps": 0.1955428980242739,
+      "event": "movement_cycle",
+      "timeMs": 1793773132947,
+      "sourceLine": 28745,
+      "session": 1,
+      "cycleId": 4848
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.297921136520653,
+      "event": "retreat_cycle",
+      "timeMs": 1793773132947,
+      "sourceLine": 28746,
+      "session": 1,
+      "cycleId": 4848
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:52.947+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:52.947+10:00",
+  "rideStateSourceLine": 28745,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:52.948+10:00",
+  "point": "S970",
+  "secondsFromRequestedTime": 511.36,
+  "surferNextBearingDeg": 221.4557976976913,
+  "sincePreviousReceivedMs": 881,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D970",
+  "droneLatitude": -27.950507163990004,
+  "droneLongitude": 153.42966145266803,
+  "droneReportedTimestamp": "2026-11-04T16:18:52.947+10:00",
+  "droneReportLagMs": 49,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28746,
+  "droneSurferDistanceMetres": 34.10247548096353,
+  "droneDisplacementMetres": 0.3823482706995344,
+  "previousDronePoint": "D969",
+  "droneNextBearingDeg": null,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_48",
+  "videoFrameTimestamp": "2026-11-04T16:18:52.995+10:00",
+  "videoFrameOffsetMs": -1.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 168.25
+}</description><Point><coordinates>153.4299,-27.95073,0</coordinates></Point></Placemark><Placemark><name>D970</name><description>{
+  "time_ms": 1793773132996,
+  "receivedTimestamp": "2026-11-04T16:18:52.996+10:00",
+  "sequence": 3110,
+  "latitude": -27.95073,
+  "longitude": 153.4299,
+  "accepted": true,
+  "senderMs": 1650846,
+  "session": null,
+  "rssi": -88,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28749,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 1154,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773132947,
+      "sourceLine": 28744,
+      "session": 1,
+      "cycleId": 4848
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "APPROACHING",
+      "reason": "moving_saved_route_aiming_surfer",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "allowed",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.297921136520653,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.297921136520653,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": -0.061513798503649846,
+      "submittedRightMps": 0.1955428980242739,
+      "event": "movement_cycle",
+      "timeMs": 1793773132947,
+      "sourceLine": 28745,
+      "session": 1,
+      "cycleId": 4848
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.297921136520653,
+      "event": "retreat_cycle",
+      "timeMs": 1793773132947,
+      "sourceLine": 28746,
+      "session": 1,
+      "cycleId": 4848
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:52.947+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:52.947+10:00",
+  "rideStateSourceLine": 28745,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -33.0,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:52.948+10:00",
+  "point": "S970",
+  "secondsFromRequestedTime": 511.36,
+  "surferNextBearingDeg": 221.4557976976913,
+  "sincePreviousReceivedMs": 881,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D970",
+  "droneLatitude": -27.950507163990004,
+  "droneLongitude": 153.42966145266803,
+  "droneReportedTimestamp": "2026-11-04T16:18:52.947+10:00",
+  "droneReportLagMs": 49,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28746,
+  "droneSurferDistanceMetres": 34.10247548096353,
+  "droneDisplacementMetres": 0.3823482706995344,
+  "previousDronePoint": "D969",
+  "droneNextBearingDeg": null,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_48",
+  "videoFrameTimestamp": "2026-11-04T16:18:52.995+10:00",
+  "videoFrameOffsetMs": -1.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 168.25
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42966145266803,-27.950507163990004,0</coordinates></Point></Placemark><Placemark><name>S970 — D970: 34.1 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.4299,-27.95073,0 153.4298890665806,-27.950719786682875,0</coordinates></LineString><LineString><coordinates>153.42988012105567,-27.9507114303325,0 153.42986918763629,-27.950701217015375,0</coordinates></LineString><LineString><coordinates>153.42986024211135,-27.950692860665,0 153.42984930869196,-27.950682647347875,0</coordinates></LineString><LineString><coordinates>153.42984036316702,-27.9506742909975,0 153.42982942974763,-27.950664077680376,0</coordinates></LineString><LineString><coordinates>153.4298204842227,-27.95065572133,0 153.4298095508033,-27.950645508012876,0</coordinates></LineString><LineString><coordinates>153.42980060527836,-27.9506371516625,0 153.42978967185897,-27.950626938345376,0</coordinates></LineString><LineString><coordinates>153.429780726334,-27.950618581995002,0 153.42976979291464,-27.950608368677877,0</coordinates></LineString><LineString><coordinates>153.42976084738967,-27.950600012327502,0 153.4297499139703,-27.950589799010377,0</coordinates></LineString><LineString><coordinates>153.42974096844534,-27.950581442660003,0 153.42973003502598,-27.950571229342877,0</coordinates></LineString><LineString><coordinates>153.42972108950102,-27.950562872992503,0 153.42971015608165,-27.950552659675377,0</coordinates></LineString><LineString><coordinates>153.4297012105567,-27.950544303325003,0 153.4296902771373,-27.950534090007878,0</coordinates></LineString><LineString><coordinates>153.42968133161236,-27.950525733657503,0 153.42967039819297,-27.950515520340378,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S973 · packet 3113</name><description>{
+  "time_ms": 1793773134348,
+  "receivedTimestamp": "2026-11-04T16:18:54.348+10:00",
+  "sequence": 3113,
+  "latitude": -27.95075,
+  "longitude": 153.42989,
+  "accepted": true,
+  "senderMs": 1652576,
+  "session": null,
+  "rssi": -78,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28829,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773134312,
+      "sourceLine": 28824,
+      "session": 1,
+      "cycleId": 4861
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "HOLDING",
+      "reason": "within_distance_and_angle_tolerance",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "not_checked",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.184976946262186,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.184976946262186,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.0,
+      "submittedRightMps": 0.0,
+      "event": "movement_cycle",
+      "timeMs": 1793773134313,
+      "sourceLine": 28825,
+      "session": 1,
+      "cycleId": 4861
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.184976946262186,
+      "event": "retreat_cycle",
+      "timeMs": 1793773134313,
+      "sourceLine": 28826,
+      "session": 1,
+      "cycleId": 4861
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "rideStateSourceLine": 28825,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "point": "S973",
+  "secondsFromRequestedTime": 512.712,
+  "surferNextBearingDeg": 90.00000233115274,
+  "sincePreviousReceivedMs": 499,
+  "surferTravelSincePreviousMetres": 1.1119492662446384,
+  "surferSpeedSincePreviousKmh": 8.022078874710818,
+  "surferTravelBearingDeg": 180.0,
+  "dronePoint": "D973",
+  "droneLatitude": -27.950509951055775,
+  "droneLongitude": 153.42966030280456,
+  "droneReportedTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "droneReportLagMs": 35,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28826,
+  "droneSurferDistanceMetres": 34.95012338134099,
+  "droneDisplacementMetres": 0.16100914918994064,
+  "previousDronePoint": "D972",
+  "droneNextBearingDeg": 183.68624496074605,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_49",
+  "videoFrameTimestamp": "2026-11-04T16:18:54.363+10:00",
+  "videoFrameOffsetMs": 15.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 169.618
+}</description><Point><coordinates>153.42989,-27.95075,0</coordinates></Point></Placemark><Placemark><name>D973</name><description>{
+  "time_ms": 1793773134348,
+  "receivedTimestamp": "2026-11-04T16:18:54.348+10:00",
+  "sequence": 3113,
+  "latitude": -27.95075,
+  "longitude": 153.42989,
+  "accepted": true,
+  "senderMs": 1652576,
+  "session": null,
+  "rssi": -78,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28829,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773134312,
+      "sourceLine": 28824,
+      "session": 1,
+      "cycleId": 4861
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "HOLDING",
+      "reason": "within_distance_and_angle_tolerance",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "not_checked",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.184976946262186,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.184976946262186,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.0,
+      "submittedRightMps": 0.0,
+      "event": "movement_cycle",
+      "timeMs": 1793773134313,
+      "sourceLine": 28825,
+      "session": 1,
+      "cycleId": 4861
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.184976946262186,
+      "event": "retreat_cycle",
+      "timeMs": 1793773134313,
+      "sourceLine": 28826,
+      "session": 1,
+      "cycleId": 4861
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "rideStateSourceLine": 28825,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "point": "S973",
+  "secondsFromRequestedTime": 512.712,
+  "surferNextBearingDeg": 90.00000233115274,
+  "sincePreviousReceivedMs": 499,
+  "surferTravelSincePreviousMetres": 1.1119492662446384,
+  "surferSpeedSincePreviousKmh": 8.022078874710818,
+  "surferTravelBearingDeg": 180.0,
+  "dronePoint": "D973",
+  "droneLatitude": -27.950509951055775,
+  "droneLongitude": 153.42966030280456,
+  "droneReportedTimestamp": "2026-11-04T16:18:54.313+10:00",
+  "droneReportLagMs": 35,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28826,
+  "droneSurferDistanceMetres": 34.95012338134099,
+  "droneDisplacementMetres": 0.16100914918994064,
+  "previousDronePoint": "D972",
+  "droneNextBearingDeg": 183.68624496074605,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_49",
+  "videoFrameTimestamp": "2026-11-04T16:18:54.363+10:00",
+  "videoFrameOffsetMs": 15.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 169.618
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42966030280456,-27.950509951055775,0</coordinates></Point></Placemark><Placemark><name>S973 — D973: 35.0 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.42989,-27.95075,0 153.42987947221187,-27.950738997756723,0</coordinates></LineString><LineString><coordinates>153.42987085856706,-27.950729995921314,0 153.42986033077892,-27.950718993678038,0</coordinates></LineString><LineString><coordinates>153.42985171713408,-27.95070999184263,0 153.42984118934598,-27.950698989599353,0</coordinates></LineString><LineString><coordinates>153.42983257570114,-27.950689987763944,0 153.429822047913,-27.950678985520668,0</coordinates></LineString><LineString><coordinates>153.4298134342682,-27.95066998368526,0 153.42980290648006,-27.950658981441983,0</coordinates></LineString><LineString><coordinates>153.42979429283523,-27.950649979606574,0 153.42978376504712,-27.950638977363294,0</coordinates></LineString><LineString><coordinates>153.42977515140228,-27.95062997552789,0 153.42976462361415,-27.95061897328461,0</coordinates></LineString><LineString><coordinates>153.42975600996934,-27.9506099714492,0 153.4297454821812,-27.950598969205924,0</coordinates></LineString><LineString><coordinates>153.42973686853637,-27.950589967370515,0 153.42972634074826,-27.95057896512724,0</coordinates></LineString><LineString><coordinates>153.42971772710342,-27.95056996329183,0 153.4297071993153,-27.950558961048554,0</coordinates></LineString><LineString><coordinates>153.42969858567048,-27.950549959213145,0 153.42968805788234,-27.95053895696987,0</coordinates></LineString><LineString><coordinates>153.4296794442375,-27.95052995513446,0 153.4296689164494,-27.950518952891183,0</coordinates></LineString></MultiGeometry></Placemark><Placemark><name>S975 · packet 3115</name><description>{
+  "time_ms": 1793773135351,
+  "receivedTimestamp": "2026-11-04T16:18:55.351+10:00",
+  "sequence": 3115,
+  "latitude": -27.95075,
+  "longitude": 153.4299,
+  "accepted": true,
+  "senderMs": 1653576,
+  "session": null,
+  "rssi": -80,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28885,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773135257,
+      "sourceLine": 28880,
+      "session": 1,
+      "cycleId": 4870
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "HOLDING",
+      "reason": "within_distance_and_angle_tolerance",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "not_checked",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.18261069524507,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.18261069524507,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.0,
+      "submittedRightMps": 0.0,
+      "event": "movement_cycle",
+      "timeMs": 1793773135257,
+      "sourceLine": 28881,
+      "session": 1,
+      "cycleId": 4870
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.18261069524507,
+      "event": "retreat_cycle",
+      "timeMs": 1793773135257,
+      "sourceLine": 28882,
+      "session": 1,
+      "cycleId": 4870
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "rideStateSourceLine": 28881,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "point": "S975",
+  "secondsFromRequestedTime": 513.715,
+  "surferNextBearingDeg": 41.455799741178176,
+  "sincePreviousReceivedMs": 504,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D975",
+  "droneLatitude": -27.950511003384534,
+  "droneLongitude": 153.42966027871412,
+  "droneReportedTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "droneReportLagMs": 94,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28882,
+  "droneSurferDistanceMetres": 35.50600945384294,
+  "droneDisplacementMetres": 0.05582181343827221,
+  "previousDronePoint": "D974",
+  "droneNextBearingDeg": 142.74727473320206,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_50",
+  "videoFrameTimestamp": "2026-11-04T16:18:55.364+10:00",
+  "videoFrameOffsetMs": 13.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 170.619
+}</description><Point><coordinates>153.4299,-27.95075,0</coordinates></Point></Placemark><Placemark><name>D975</name><description>{
+  "time_ms": 1793773135351,
+  "receivedTimestamp": "2026-11-04T16:18:55.351+10:00",
+  "sequence": 3115,
+  "latitude": -27.95075,
+  "longitude": 153.4299,
+  "accepted": true,
+  "senderMs": 1653576,
+  "session": null,
+  "rssi": -80,
+  "snr": 12.0,
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceLine": 28885,
+  "droneStatus": {
+    "aiming": {
+      "state": "AIMING",
+      "reason": "aiming",
+      "decision": "aligned_zero",
+      "aimingMode": "normal",
+      "submitted": true,
+      "submittedYawRate": 0.0,
+      "reverseBlocked": false,
+      "reverseBlockRemainingMs": 0,
+      "retainedTargetAiming": false,
+      "event": "aiming_cycle",
+      "timeMs": 1793773135257,
+      "sourceLine": 28880,
+      "session": 1,
+      "cycleId": 4870
+    },
+    "movement": {
+      "enabled": true,
+      "phase": "HOLDING",
+      "reason": "within_distance_and_angle_tolerance",
+      "paused": false,
+      "gpsMovementPaused": false,
+      "pathCheckStatus": "not_checked",
+      "pathBlockReason": "none",
+      "currentBoundaryDistanceM": 29.18261069524507,
+      "retreatBoundaryStatus": "inactive",
+      "retreatBoundaryBlocked": false,
+      "retreatBoundarySeawardDistanceM": 29.18261069524507,
+      "retreatActive": false,
+      "retreatCooldownRemainingMs": 0,
+      "rideRemainingMs": 0,
+      "submittedForwardMps": 0.0,
+      "submittedRightMps": 0.0,
+      "event": "movement_cycle",
+      "timeMs": 1793773135257,
+      "sourceLine": 28881,
+      "session": 1,
+      "cycleId": 4870
+    },
+    "retreat": {
+      "active": false,
+      "reason": "elapsed",
+      "boundaryStatus": "inactive",
+      "boundaryBlocked": false,
+      "boundarySeawardDistanceM": 29.18261069524507,
+      "event": "retreat_cycle",
+      "timeMs": 1793773135257,
+      "sourceLine": 28882,
+      "session": 1,
+      "cycleId": 4870
+    }
+  },
+  "firstWaveRideTimeMs": 1793773249013,
+  "waveRideStartTimesMs": [
+    1793773249013,
+    1793773707627,
+    1793773773783,
+    1793774271067
+  ],
+  "minimumDistanceMetres": 28.0,
+  "filmingSeparationMetres": 34.0,
+  "retreatStartedSincePreviousPacket": false,
+  "retreatStartTimestamps": "",
+  "retreatActive": false,
+  "retreatStateTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "waveRiding": false,
+  "rideStateTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "rideStateSourceLine": 28881,
+  "seawardBearingDeg": 90.0,
+  "gimbalBandConfig": {
+    "bufferMetres": 5,
+    "bands": [
+      {
+        "maxDistanceMetres": 10,
+        "pitchDegrees": -45
+      },
+      {
+        "maxDistanceMetres": 20,
+        "pitchDegrees": -40
+      },
+      {
+        "maxDistanceMetres": 33,
+        "pitchDegrees": -33
+      },
+      {
+        "maxDistanceMetres": 40,
+        "pitchDegrees": -30
+      },
+      {
+        "maxDistanceMetres": 50,
+        "pitchDegrees": -20
+      },
+      {
+        "maxDistanceMetres": null,
+        "pitchDegrees": -12
+      }
+    ]
+  },
+  "gimbalActiveBand": 3,
+  "gimbalTilting": false,
+  "gimbalTargetPitchDeg": -33.0,
+  "heightAboveTakeoffM": 9.1,
+  "gimbalTiltDeg": -32.9,
+  "gimbalReportedTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "point": "S975",
+  "secondsFromRequestedTime": 513.715,
+  "surferNextBearingDeg": 41.455799741178176,
+  "sincePreviousReceivedMs": 504,
+  "surferTravelSincePreviousMetres": 0.0,
+  "surferSpeedSincePreviousKmh": 0.0,
+  "surferTravelBearingDeg": null,
+  "dronePoint": "D975",
+  "droneLatitude": -27.950511003384534,
+  "droneLongitude": 153.42966027871412,
+  "droneReportedTimestamp": "2026-11-04T16:18:55.257+10:00",
+  "droneReportLagMs": 94,
+  "droneGpsAgeAtSurferReceiptMs": null,
+  "droneFixMs": null,
+  "droneSourceLine": 28882,
+  "droneSurferDistanceMetres": 35.50600945384294,
+  "droneDisplacementMetres": 0.05582181343827221,
+  "previousDronePoint": "D974",
+  "droneNextBearingDeg": 142.74727473320206,
+  "mapRideWindows": [
+    {
+      "id": "R1",
+      "number": 1,
+      "startMs": 1793773249013,
+      "timestamp": "2026-11-04T16:20:49.013+10:00",
+      "beforeSeconds": 125.0,
+      "afterSeconds": 125.0
+    }
+  ],
+  "fileIdPlayback": "644_2_50",
+  "videoFrameTimestamp": "2026-11-04T16:18:55.364+10:00",
+  "videoFrameOffsetMs": 13.0,
+  "videoId": "644",
+  "videoPlaybackSeconds": 170.619
+}</description><Style><IconStyle><color>ffff5500</color></IconStyle></Style><Point><coordinates>153.42966027871412,-27.950511003384534,0</coordinates></Point></Placemark><Placemark><name>S975 — D975: 35.5 m</name><description>Dashed pairing connector only; dash endpoints are drawing geometry, not additional GPS observations.</description><Style><LineStyle><color>ffff5500</color><width>2</width></LineStyle></Style><MultiGeometry><LineString><coordinates>153.4299,-27.95075,0 153.4298890127744,-27.950739045988456,0</coordinates></LineString><LineString><coordinates>153.4298800232262,-27.950730083615376,0 153.42986903600058,-27.950719129603836,0</coordinates></LineString><LineString><coordinates>153.42986004645235,-27.950710167230756,0 153.42984905922674,-27.950699213219213,0</coordinates></LineString><LineString><coordinates>153.42984006967853,-27.950690250846133,0 153.42982908245293,-27.95067929683459,0</coordinates></LineString><LineString><coordinates>153.42982009290472,-27.95067033446151,0 153.4298091056791,-27.95065938044997,0</coordinates></LineString><LineString><coordinates>153.42980011613088,-27.95065041807689,0 153.4297891289053,-27.950639464065347,0</coordinates></LineString><LineString><coordinates>153.42978013935706,-27.950630501692267,0 153.42976915213146,-27.950619547680724,0</coordinates></LineString><LineString><coordinates>153.42976016258325,-27.950610585307643,0 153.42974917535764,-27.950599631296104,0</coordinates></LineString><LineString><coordinates>153.4297401858094,-27.950590668923024,0 153.4297291985838,-27.95057971491148,0</coordinates></LineString><LineString><coordinates>153.4297202090356,-27.9505707525384,0 153.42970922181,-27.950559798526857,0</coordinates></LineString><LineString><coordinates>153.42970023226178,-27.950550836153777,0 153.42968924503617,-27.950539882142238,0</coordinates></LineString><LineString><coordinates>153.42968025548794,-27.950530919769157,0 153.42966926826233,-27.950519965757614,0</coordinates></LineString></MultiGeometry></Placemark></Document></kml>

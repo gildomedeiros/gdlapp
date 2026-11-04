@@ -86,6 +86,22 @@ class MapAppTests(unittest.TestCase):
         self.assertIn('Only 3 rides',invalid['message'])
         self.assertEqual(self.app.current['id'],job['id'])
 
+    def test_wave_detection_uses_snapshot_point_and_shared_output_cache(self):
+        job=self.run_request(self.request('timestamp',at='00:00:10',next=0))
+        snapshot=self.app.snapshot(job['id'])
+        with patch('surfer_wave_orientation.analyze_wave',return_value={'bearingDegrees':45}) as analyze,patch('telemetry_selected_frames.ffmpeg_path',return_value='ffmpeg'):
+            result=self.app.wave(snapshot,dict(point='S0',horizontalFov=74))
+            self.assertEqual(result['bearingDegrees'],45)
+            args=analyze.call_args.args
+            self.assertEqual(args[0]['time_ms'],10000)
+            self.assertEqual(args[3],snapshot['output']);self.assertEqual(args[4],snapshot['cache_output'])
+            with self.assertRaisesRegex(ValueError,'Unknown surfer'):self.app.wave(snapshot,dict(point='S999'))
+            self.assertEqual(analyze.call_count,1)
+        with patch('surfer_wave_orientation.ignore_wave',return_value={'key':'frame-key','ignored':True}) as ignore,patch('telemetry_selected_frames.ffmpeg_path') as ffmpeg:
+            self.assertTrue(self.app.wave(snapshot,dict(point='S0',action='ignore'))['ignored'])
+            self.assertEqual(ignore.call_args.args[0]['time_ms'],10000)
+            self.assertEqual(ignore.call_args.args[1],snapshot['cache_output'])
+            ffmpeg.assert_not_called()
     def test_cancel_does_not_publish_and_disallows_concurrent_selection(self):
         baseline=self.run_request(self.request('timestamp',at='00:00:10',next=0))
         entered=threading.Event();release=threading.Event()

@@ -1,0 +1,44 @@
+{
+  "bearingDegrees": 158.1,
+  "imageWidth": 3840,
+  "imageHeight": 2160,
+  "imageLine": [
+    [
+      1976.0,
+      1588.0
+    ],
+    [
+      2260.0,
+      1248.0
+    ]
+  ],
+  "supportSegments": 3,
+  "angularSpreadDegrees": 0.3,
+  "method": "whitewater outer-edge segments near projected surfer; perspective-corrected crest axis",
+  "version": 1,
+  "key": "307c6a029f91f88c72527539",
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceStamp": [
+    "C:\\Users\\gildo\\temp\\0411test\\100MEDIA\\DJI_0643.MP4",
+    3758563517,
+    1793772964000000000,
+    1793774829000000000
+  ],
+  "gpsTimestamp": "2026-11-04T16:14:03.829+10:00",
+  "frameTimestamp": "2026-11-04T16:14:03.837+10:00",
+  "point": "S27",
+  "latitude": -27.95104,
+  "longitude": 153.43001,
+  "horizontalFov": 74,
+  "pose": {
+    "yaw": 127.9,
+    "pitch": -29.900000000000002,
+    "roll": 0.0,
+    "height": 9.0,
+    "timestamp": "2026-11-04T16:14:03.800+10:00",
+    "sourceLine": 12112,
+    "headingSource": "aircraft heading + gimbal yaw relative to aircraft"
+  },
+  "status": "estimated crest axis (0\u2013180\u00b0); not wave travel direction",
+  "assumptions": "Horizontal FOV is an estimate; square pixels, level water at takeoff datum, no lens distortion. Marker is anchored at surfer GPS, not a mapped crest location."
+}

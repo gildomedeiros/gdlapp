@@ -15,6 +15,7 @@ def stamp_card(path, point, gap_red_ms=1000):
     """Render the same surfer tooltip data into the PNG, with readable wrapping."""
     from PIL import Image, ImageDraw, ImageFont
     from surfer_gps_map import make_svg
+    from surfer_drone_status import drone_status_color
 
     class CardParser(HTMLParser):
         card = None
@@ -59,6 +60,8 @@ def stamp_card(path, point, gap_red_ms=1000):
                     color, background, bold = green, '#e6f5e9', True
                 if line=='Ride detected: YES':
                     color, background, bold = '#8226a0', '#f5e8fa', True
+                status_color = drone_status_color(line)
+                if status_color: color, bold = status_color, True
                 if index in red:
                     color, bold = '#c40000', True
                 font = fonts[int(bold)]
@@ -215,6 +218,9 @@ def serve_map(points, output, video_folder, ffmpeg=None, gap_red_ms=1000):
                 return self.reply(403, b'{}')
             if self.path == '/':
                 return self.reply(200, (Path(output) / 'surfer-gps.html').read_bytes(), 'text/html; charset=utf-8')
+            if self.path == '/wave-results':
+                from surfer_wave_orientation import wave_results
+                return self.reply(200,json.dumps(wave_results(points,output)).encode())
             if self.path == '/fov-results':
                 results = []
                 identities = {(p.get('sourceFile'), p.get('receivedTimestamp'), p.get('videoFrameTimestamp')) for p in points}
@@ -231,7 +237,7 @@ def serve_map(points, output, video_folder, ffmpeg=None, gap_red_ms=1000):
             self.reply(404, b'{}')
 
         def do_POST(self):
-            if self.path not in ('/capture','/fov','/video-frame') or self.headers.get('Host') != address or self.headers.get('Origin') != 'http://' + address:
+            if self.path not in ('/capture','/fov','/video-frame','/wave') or self.headers.get('Host') != address or self.headers.get('Origin') != 'http://' + address:
                 return self.reply(403, b'{}')
             try:
                 length = int(self.headers.get('Content-Length', '0'))
@@ -241,6 +247,10 @@ def serve_map(points, output, video_folder, ffmpeg=None, gap_red_ms=1000):
                 point = points_by_id.get(request.get('point'))
                 if point is None:
                     raise ValueError('Unknown surfer point')
+                if self.path=='/wave':
+                    from surfer_wave_orientation import analyze_wave, ignore_wave
+                    result=ignore_wave(point,output) if request.get('action')=='ignore' else analyze_wave(point,request,video_folder,output,output,executable)
+                    return self.reply(200,json.dumps(result).encode())
                 if self.path=='/video-frame':
                     from surfer_video_frames import capture_video_frame
                     dest,result=capture_video_frame(point,request,video_folder,output,executable)

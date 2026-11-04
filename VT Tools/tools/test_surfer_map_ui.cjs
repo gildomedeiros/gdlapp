@@ -51,7 +51,7 @@ const dom=new JSDOM(fixtureHtml(),{
  beforeParse(window){
   window.prompt=()=>{throw Error('The shared-position text prompt must never open');};
   window.fetch=async(url,options)=>{
-   if(url.endsWith('/fov-results'))return {ok:true,json:async()=>[]};
+   if(url.endsWith('/fov-results')||url.endsWith('/wave-results'))return {ok:true,json:async()=>[]};
    assert(url.endsWith('/capture')||url.endsWith('/video-frame'));
    const request=JSON.parse(options.body),id=request.point,video=url.endsWith('/video-frame');
    const variant=request.variant||(video?'clean':'telemetry');captures.push({id,url,variant,step:request.step,videoTime:request.videoTime});
@@ -83,7 +83,10 @@ const arrow=(key,target=d.activeElement,extra={})=>{
 (async()=>{
  await settle();
  assert.deepEqual(errors,[]);
- assert.equal(d.querySelectorAll('#map-layers input').length,8);
+ assert.equal(d.querySelectorAll('#map-layers input').length,10);
+ assert.equal(d.getElementById('hide-seaward').checked,true,'Seaward filtering starts enabled');
+ assert.deepEqual(shown('.surfer-marker').map(n=>n.dataset.label),['S0','S3']);
+ toggle('hide-seaward',false); // Exercise the existing full-set controls below.
  const shared=marker('S0');
  assert(shared.dataset.pairs.includes('S1'));
  assert.equal(shared.querySelector('.ride-ring').dataset.rideState,'mixed');

@@ -343,6 +343,21 @@ class MapApp:
             snapshot['images'][url]=dest
             return dict(result,url=url)
 
+    def wave_results(self,snapshot):
+        from surfer_wave_orientation import wave_results
+        return wave_results(snapshot['points'].values(),snapshot['cache_output'])
+
+    def wave(self,snapshot,request):
+        from surfer_wave_orientation import analyze_wave, ignore_wave
+        from telemetry_selected_frames import ffmpeg_path
+        point=snapshot['points'].get(request.get('point'))
+        if point is None:raise ValueError('Unknown surfer position in this map.')
+        s=snapshot['settings']
+        with snapshot['lock']:
+            if request.get('action') == 'ignore':
+                return ignore_wave(point,snapshot['cache_output'])
+            return analyze_wave(point,request,s['video_folder'],snapshot['output'],snapshot['cache_output'],ffmpeg_path(s['ffmpeg'] or None))
+
     def capture(self,snapshot,request,detect=False):
         from surfer_map_capture import capture_frame, capture_variant
         from telemetry_selected_frames import ffmpeg_path
@@ -400,6 +415,7 @@ def create_server(app,port=0):
                 suffix=match[2]
                 if not suffix:return self.reply(200,(snapshot['output']/'surfer-gps.html').read_bytes(),'text/html; charset=utf-8')
                 if suffix=='fov-results':return self.reply(200,app.fov_results(snapshot))
+                if suffix=='wave-results':return self.reply(200,app.wave_results(snapshot))
                 if path in snapshot['images']:return self.reply(200,snapshot['images'][path].read_bytes(),'image/png')
                 if suffix.startswith('export/'):
                     name=suffix[len('export/'):]
@@ -422,10 +438,11 @@ def create_server(app,port=0):
                 path=urlsplit(self.path).path
                 if path=='/api/select':return self.reply(202,app.start(request))
                 if path=='/api/cancel':return self.reply(200,app.cancel(request.get('id')))
-                match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov|video-frame)',path)
+                match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov|video-frame|wave)',path)
                 if match:
                     snapshot=app.snapshot(match[1])
                     if not snapshot:return self.reply(410,dict(error='This map has expired. Generate the selection again.'))
+                    if match[2]=='wave':return self.reply(200,app.wave(snapshot,request))
                     if match[2]=='video-frame':return self.reply(200,app.video_frame(snapshot,request))
                     return self.reply(200,app.capture(snapshot,request,detect=match[2]=='fov'))
                 return self.reply(404,dict(error='Not found.'))
