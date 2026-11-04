@@ -9,8 +9,8 @@
     },
     {
       "path": "README.txt",
-      "bytes": 17325,
-      "sha256": "c96ba839a88f07e7c45ae838ffe6609d9f176aa813376177cd6cc06d27f0abeb"
+      "bytes": 18165,
+      "sha256": "c25899b3dc83bd25a5738a8c32de546610e05298fb056c5bd99649ada75535c4"
     },
     {
       "path": "Start Map.cmd",
@@ -103,6 +103,11 @@
       "sha256": "3fedf3517b78f740172e75e0ea89e1ffada6accefb2ffbf713571e39ebcf8d47"
     },
     {
+      "path": "tools/convert_wave_unet.py",
+      "bytes": 5752,
+      "sha256": "ce4511f25a06948d506ce5545ceb7ec40a99cc8055ba448c93513b980c93693a"
+    },
+    {
       "path": "tools/gopro_wifi_probe.md",
       "bytes": 3322,
       "sha256": "a44c1d0053dfc98deb2bb0de0f9ef916bcc2d0f12c445334cc6d1da0d8a5308e"
@@ -111,6 +116,21 @@
       "path": "tools/gopro_wifi_probe.py",
       "bytes": 6492,
       "sha256": "4f87853787d9dbe31b966c67a67fe18f8a579de67b0bcd397308f450d70bd2c1"
+    },
+    {
+      "path": "tools/models/WAVE_MODEL_README.txt",
+      "bytes": 2060,
+      "sha256": "2a2fe62076adcc3c35506ac07e174e22c3087d43340c43ce1a7564a913d8d256"
+    },
+    {
+      "path": "tools/models/wave_crest_unet.json",
+      "bytes": 762,
+      "sha256": "50bb059b5affae56ab6e644c19ab16d4dea94d4ff94f9a01ecf8ccd39d73c532"
+    },
+    {
+      "path": "tools/models/wave_crest_unet.onnx",
+      "bytes": 18841103,
+      "sha256": "297b7ba6058fb10b284b8b60752d98e7247f09d94093b2acfb0d71a5e89df087"
     },
     {
       "path": "tools/models/yolo11n-seg.pt",
@@ -204,8 +224,8 @@
     },
     {
       "path": "tools/surfer_map_waves.js",
-      "bytes": 8224,
-      "sha256": "19ec6d20486cab5c34b214fda7af02d80f676346e24b4c0e321c4b8cabcbf676"
+      "bytes": 8328,
+      "sha256": "4c5b4414ff898f55d7a13630c5525fca58d5418097c05b1d7b991bae214d28b9"
     },
     {
       "path": "tools/surfer_pitch_samples.py",
@@ -223,9 +243,14 @@
       "sha256": "47ebe7e20383055ff37155c3e7f0e79d2ad64ccc337199d9dab43600794b0760"
     },
     {
+      "path": "tools/surfer_wave_model.py",
+      "bytes": 2471,
+      "sha256": "f99afd12ee31666dce05054a46fe4cc567b513b7fadb1f36e521c9b96f87e0a7"
+    },
+    {
       "path": "tools/surfer_wave_orientation.py",
-      "bytes": 16317,
-      "sha256": "ab63a89e8ad1218df2e739665de40a6190870d41f90693b1a4f2e7c50da590ff"
+      "bytes": 18123,
+      "sha256": "768c9cbacf2234c9f10cd7225d523b00927c3eb91389067fd21481c1cb9abcfe"
     },
     {
       "path": "tools/telemetry_around.py",
@@ -279,8 +304,8 @@
     },
     {
       "path": "tools/test_surfer_map_browser.cjs",
-      "bytes": 38324,
-      "sha256": "b70dd6c78357e4669c424461444549ab6fcc2ac2d44c6976fdafc7859c884cc2"
+      "bytes": 38649,
+      "sha256": "9684ea55f90ad0bb91e32860106e0d394650dbd664d07a8c497fc7982c1bfe2e"
     },
     {
       "path": "tools/test_surfer_map_landmarks.py",
@@ -318,10 +343,15 @@
       "sha256": "b83887591dc5c28bac3b08c887af44159e45c5567bdc5d038dbc115c217fac52"
     },
     {
+      "path": "tools/test_surfer_wave_model.py",
+      "bytes": 3133,
+      "sha256": "3a6680dfee262fb3fc6c5d8dfd4670c3490fb0f738372bb7bfe25111bf628ee6"
+    },
+    {
       "path": "tools/test_surfer_wave_orientation.py",
-      "bytes": 13812,
-      "sha256": "43dedd1a4d19e7a7d9aa961e3b3aee45794f7e5805c1b5140ed757e1ca8f885b"
+      "bytes": 18015,
+      "sha256": "d61236a8eb9d16d61f5821161d95f6c917b385c0dd73c144b249ad00009da1bc"
     }
   ],
-  "updated": "2026-11-05: persistent crest rejection, hide switch, estimated water placement, clean-frame verification and contextual headings"
+  "updated": "2026-11-05: local Wave-by-Wave U-Net on W with original whitewater fallback; existing marks and controls retained"
 }

@@ -72,7 +72,11 @@ Ride detector markers:
   Unknown or missing detector state is shown as unknown, without a purple ring.
 
 CV wave crest orientations:
-  W detects bright whitewater outer edges and estimates a nearby crest axis.
+  W first runs the bundled Wave-by-Wave U-Net on the original clean frame.
+  It estimates a nearby crest axis from the model's breaking-water mask.
+  If the model cannot run or provides no reliable nearby edge, W uses the
+  previous whitewater detector. The status identifies Wave U-Net or Whitewater
+  fallback; no extra shortcut or command-line option is needed.
   It is an estimated breaking crest, not a classification of every wave/ripple.
   Check the magenta edge on the frame: foam boundaries are only a crest proxy.
   Only edges within 25% of image width of the surfer reference are candidates.
@@ -82,8 +86,15 @@ CV wave crest orientations:
   parallel foam cannot win simply by contributing more segments.
   Distant foam is rejected even if there is no local match. This detector does
   not identify unbroken crests from water shading; those may be unavailable.
-  After this update, estimates saved by the older detector are ignored; press W
-  to recalculate a frame. Old cache files remain on disk.
+  Existing kept marks remain visible. Press W to recalculate an older result
+  with the new model. Ignored marks stay ignored until explicitly retried.
+  The 19 MB model runs locally through OpenCV on CPU. No TensorFlow, downloads
+  or package changes are needed while using the map. The model is loaded on
+  first W, with serialized inference for concurrent requests.
+  Model source, pinned revision and checksums: tools/models/wave_crest_unet.json.
+  Source: https://github.com/fj23eslaonda/Wave_by_Wave_Identification
+  The upstream model targets breaking waves. A model result is not evidence
+  that a smooth unbroken crest was detected. Both methods may return unavailable.
   No line is added when edges are weak/ambiguous or camera telemetry is missing.
   Map projection uses fresh logged aircraft yaw + gimbal relative yaw, gimbal
   pitch/roll and a horizontal FOV estimate. The sidebar default is 74 degrees,

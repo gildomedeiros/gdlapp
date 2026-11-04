@@ -1,0 +1,8 @@
+[
+  "tools/surfer_wave_model.py",
+  "tools/test_surfer_wave_model.py",
+  "tools/convert_wave_unet.py",
+  "tools/models/wave_crest_unet.onnx",
+  "tools/models/wave_crest_unet.json",
+  "tools/models/WAVE_MODEL_README.txt"
+]

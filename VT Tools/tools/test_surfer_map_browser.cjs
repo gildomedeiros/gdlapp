@@ -69,7 +69,8 @@ async function main(){
    const index=Number(request.point.slice(1)),row={key:'wave-'+index,point:request.point,sourceFile:'fixture',
     gpsTimestamp:'1970-01-01T00:00:'+String(10+index)+'+00:00',frameTimestamp:'1970-01-01T00:00:'+String(10+index)+'+00:00',
     latitude:-27.95+(index<2?0:index*.0001),longitude:153.43,bearingDegrees:25+index*10,horizontalFov:request.horizontalFov,
-    imageWidth:960,imageHeight:540,imageLine:[[200,400],[650,200]],assumptions:'Estimated geometry.'};
+    imageWidth:960,imageHeight:540,imageLine:[[200,400],[650,200]],assumptions:'Estimated geometry.',
+    detector:index===0?'Wave U-Net':'Whitewater fallback',...(index===0?{}:{fallbackReason:'Wave U-Net found no reliable crest edge near the surfer'})};
    const angle=row.bearingDegrees*Math.PI/180,dlat=8*Math.cos(angle)/6371000*180/Math.PI,dlon=8*Math.sin(angle)/(6371000*Math.cos(-27.95*Math.PI/180))*180/Math.PI;
    row.crestEndpoints=[{latitude:row.latitude+.00015-dlat,longitude:row.longitude-dlon},{latitude:row.latitude+.00015+dlat,longitude:row.longitude+dlon}];
    savedWaves.set(row.key,row);return route.fulfill({json:row});
@@ -415,6 +416,7 @@ async function main(){
   const waves=frame.locator('#cv-wave-orientations > g');
   assert.equal(await waves.count(),1);assert.equal(waveCalls.at(-1).point,'S0');
   assert.equal(waveCalls.at(-1).horizontalFov,74);
+  assert.match(await frame.locator('#wave-status').textContent(),/Wave U-Net/);
   const bearing=await waves.first().locator('line').evaluate(n=>{
    const dx=Number(n.getAttribute('x2'))-Number(n.getAttribute('x1')),dy=Number(n.getAttribute('y2'))-Number(n.getAttribute('y1'));
    return (Math.atan2(dx,-dy)*180/Math.PI+180)%180;
@@ -429,6 +431,7 @@ async function main(){
   await dialog.waitFor({state:'visible'});await press('w');
   await frame.waitForFunction(()=>waveResults.size===2&&!captureBusy);
   assert.equal(await frame.locator('#frame-wave-overlay line').count(),1,'Show the detected image edge for visual checking');
+  assert.match(await frame.locator('#frame-status').textContent(),/Whitewater fallback/);
   await press('w');await frame.waitForFunction(()=>!captureBusy);
   assert.equal(await waves.count(),2,'Repeat W updates this frame, without another map line');
   await press('i');await frame.waitForFunction(()=>waveResults.size===1&&!captureBusy);

@@ -92,7 +92,7 @@ document.addEventListener('keydown',async e=>{
   const response=await fetch(mapApi('/wave'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id,horizontalFov})});
   const result=await response.json();if(!response.ok)throw Error(result.error||'Wave detection failed');
   locallyIgnoredWaves.delete(result.key);waveResults.set(result.key,result);drawWaves();drawWaveFrameOverlay();
-  waveMessage(id+': estimated crest '+result.bearingDegrees+'°. '+waveResults.size+' saved; magenta edge shown on its frame.');
+  waveMessage(id+': estimated crest '+result.bearingDegrees+'°'+(result.detector?' · '+result.detector:'')+'. '+waveResults.size+' saved; magenta edge shown on its frame.'+(result.fallbackReason?' '+result.fallbackReason+'.':''));
  }catch(error){waveMessage('Crest unavailable: '+error.message);}
  finally{captureBusy=false;}
 });

@@ -1,21 +1,54 @@
 {
-  "bearingDegrees": 16.7,
+  "bearingDegrees": 6.3,
   "imageWidth": 3840,
   "imageHeight": 2160,
   "imageLine": [
     [
-      1616.0,
-      324.0
+      2392.0,
+      300.0
     ],
     [
-      2008.0,
-      276.0
+      2632.0,
+      248.0
     ]
   ],
-  "supportSegments": 12,
-  "angularSpreadDegrees": 4.3,
-  "method": "whitewater outer-edge segments near projected surfer; perspective-corrected crest axis",
-  "version": 1,
+  "supportSegments": 5,
+  "angularSpreadDegrees": 4.5,
+  "projectedSurferImage": [
+    2061.28,
+    366.44
+  ],
+  "surferReferenceImage": [
+    2780.97,
+    520.63
+  ],
+  "surferReferenceMethod": "detected surfer water contact",
+  "searchRadiusPixels": 960.0,
+  "edgeDistancePixels": 310.67,
+  "method": "local whitewater outer-edge segments near surfer; perspective-corrected crest axis",
+  "detector": "Whitewater fallback",
+  "detectorId": "whitewater-v3",
+  "fallbackReason": "Wave U-Net found no reliable crest edge near the surfer",
+  "placementReference": "relative to detected surfer, registered to surfer GPS",
+  "crestEndpoints": [
+    {
+      "latitude": -27.95099274706225,
+      "longitude": 153.43008842711072
+    },
+    {
+      "latitude": -27.951045319047967,
+      "longitude": 153.4300818195514
+    }
+  ],
+  "crestLengthMetres": 5.88,
+  "consensusBearingDegrees": 10.3,
+  "version": 3,
+  "detectorRevision": 4,
+  "modelSignature": [
+    "wave-by-wave-unet-297b7ba6058f",
+    18841103,
+    1793802756649007100
+  ],
   "key": "7d453e494d18741ae8a58429",
   "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
   "sourceStamp": [
@@ -40,5 +73,6 @@
     "headingSource": "aircraft heading + gimbal yaw relative to aircraft"
   },
   "status": "estimated crest axis (0\u2013180\u00b0); not wave travel direction",
-  "assumptions": "Horizontal FOV is an estimate; square pixels, level water at takeoff datum, no lens distortion. Marker is anchored at surfer GPS, not a mapped crest location."
+  "inputFrame": "clean MP4 frame without telemetry",
+  "assumptions": "Estimated water position from image endpoints, logged camera pose and drone GPS. Horizontal FOV, square pixels, water at takeoff datum and no lens distortion are assumed."
 }

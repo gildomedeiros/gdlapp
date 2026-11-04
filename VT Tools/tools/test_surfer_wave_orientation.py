@@ -13,6 +13,9 @@ from surfer_wave_orientation import camera_axes, camera_pose, ground_points, det
 
 class WaveTests(unittest.TestCase):
     def setUp(self):
+        from surfer_wave_model import WaveModelUnavailable
+        self.model_patch=patch('surfer_wave_model.breaking_probabilities',side_effect=WaveModelUnavailable('Model unavailable in legacy checks'))
+        self.model_patch.start();self.addCleanup(self.model_patch.stop)
         self.reference_patch=patch('surfer_wave_orientation.surfer_reference',side_effect=lambda image,point,w,h:(point,'GPS projection'))
         self.reference_patch.start();self.addCleanup(self.reference_patch.stop)
         root=Path(__file__).resolve().parent.parent/'exports';root.mkdir(exist_ok=True)
@@ -136,6 +139,61 @@ class WaveTests(unittest.TestCase):
                 with self.assertRaises(ValueError):analyze_wave(self.point,request,self.root,self.root,self.root,'ffmpeg')
             with self.assertRaisesRegex(ValueError,'no mapped'):analyze_wave(dict(self.point,videoFrameTimestamp=None),{},self.root,self.root,self.root,'ffmpeg')
             capture.assert_not_called()
+
+    def test_learned_mask_is_used_even_when_pixels_do_not_pass_whitewater_threshold(self):
+        import cv2
+        from surfer_wave_model import MODEL_ID
+        frame=np.full((540,960,3),(130,115,40),dtype=np.uint8)
+        probability=np.zeros((540,960),dtype=np.float32)
+        cv2.fillPoly(probability,[np.array([[200,420],[760,150],[800,220],[250,490]])],.95)
+        path=self.root/'learned.png';cv2.imwrite(str(path),frame)
+        with patch('surfer_wave_model.breaking_probabilities',return_value=probability) as model:
+            result=detect_crest(path,self.point,dict(yaw=0,pitch=-40,roll=0,height=9),74)
+        model.assert_called_once()
+        self.assertEqual(result['detector'],'Wave U-Net')
+        self.assertEqual(result['detectorId'],MODEL_ID)
+        self.assertNotIn('fallbackReason',result)
+
+    def test_missing_model_and_empty_prediction_keep_original_detector_working(self):
+        import cv2
+        from surfer_wave_model import WaveModelUnavailable
+        frame=np.full((540,960,3),(130,115,40),dtype=np.uint8)
+        cv2.fillPoly(frame,[np.array([[200,420],[760,150],[800,220],[250,490]])],(245,245,245))
+        path=self.root/'fallback.png';cv2.imwrite(str(path),frame)
+        pose=dict(yaw=0,pitch=-40,roll=0,height=9)
+        with patch('surfer_wave_model.breaking_probabilities',side_effect=WaveModelUnavailable('Missing model')):
+            missing=detect_crest(path,self.point,pose,74)
+        with patch('surfer_wave_model.breaking_probabilities',return_value=np.zeros((540,960),dtype=np.float32)):
+            empty=detect_crest(path,self.point,pose,74)
+        self.assertEqual(missing['imageLine'],empty['imageLine'])
+        self.assertEqual(missing['detector'],'Whitewater fallback')
+        self.assertEqual(missing['fallbackReason'],'Missing model')
+        self.assertIn('no reliable',empty['fallbackReason'])
+
+    def test_model_also_rejects_distant_foam(self):
+        import cv2
+        frame=np.full((540,960,3),(130,115,40),dtype=np.uint8)
+        probability=np.zeros((540,960),dtype=np.float32)
+        cv2.fillPoly(probability,[np.array([[760,215],[945,245],[945,310],[760,280]])],.99)
+        path=self.root/'far-model.png';cv2.imwrite(str(path),frame)
+        with patch('surfer_wave_model.breaking_probabilities',return_value=probability),patch('surfer_wave_orientation.expected_surfer',return_value=np.array([519.,92.])):
+            with self.assertRaisesRegex(ValueError,'no reliable crest edge near the surfer'):
+                detect_crest(path,self.point,dict(yaw=135,pitch=-30,roll=0,height=9.1),74)
+
+    def test_existing_marks_restore_but_w_recomputes_with_new_model(self):
+        video=self.root/'DJI_0643.MP4';video.write_bytes(b'video')
+        result=dict(bearingDegrees=35.,imageWidth=960,imageHeight=540,imageLine=[[10,20],[50,30]])
+        with patch('surfer_map_capture.resolve_video',return_value=video),patch('surfer_map_capture.capture_frame',return_value=self.root/'frame.png') as capture,patch('surfer_wave_orientation.detect_crest',side_effect=lambda *a:dict(result)):
+            first=analyze_wave(self.point,{},self.root,self.root,self.root,'ffmpeg')
+            cache=self.root/'wave-orientations'/(first['key']+'.json')
+            legacy=dict(first);legacy.pop('detectorRevision');legacy.pop('modelSignature')
+            cache.write_text(json.dumps(legacy))
+            self.assertEqual(len(wave_results([self.point],self.root)),1,'Existing kept map marks survive the update')
+            analyze_wave(self.point,{},self.root,self.root,self.root,'ffmpeg')
+            self.assertEqual(capture.call_count,2,'W upgrades a legacy inference result')
+            with patch('surfer_wave_model.model_signature',return_value=['new installation']):
+                analyze_wave(self.point,{},self.root,self.root,self.root,'ffmpeg')
+            self.assertEqual(capture.call_count,3,'Model installation invalidates fallback cache')
 
     def test_crest_endpoints_stay_at_detected_water_position(self):
         # A camera at the origin facing north. Test crests beyond, across and

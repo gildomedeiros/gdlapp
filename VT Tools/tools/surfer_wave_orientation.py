@@ -13,6 +13,8 @@ from pathlib import Path
 import threading
 
 VERSION = 3
+# Keep the saved-line schema compatible; only W's inference cache is refreshed.
+DETECTOR_REVISION = 4
 
 # Local evidence only: a strong foam edge elsewhere in the frame must never
 # become the surfer's crest just because nothing suitable is nearby.
@@ -137,11 +139,37 @@ def detect_crest(image, point, pose, hfov):
     h, w = frame.shape[:2]
     projected = expected_surfer(point, w, h, hfov, pose)
     target, reference = surfer_reference(image, projected, w, h)
-    search_radius = w*CREST_SEARCH_RADIUS_FRACTION
+    from surfer_wave_model import breaking_probabilities, WaveModelUnavailable, MODEL_ID
+    try:
+        probabilities = breaking_probabilities(frame)
+        mask = (probabilities >= .5).astype('uint8')*255
+        result = crest_from_mask(mask, projected, target, reference, original_w, original_h, scale, pose, hfov)
+        result.update(detector='Wave U-Net', detectorId=MODEL_ID,
+                      method='Wave-by-Wave U-Net breaking-region edge near surfer; perspective-corrected crest axis')
+        return result
+    except WaveModelUnavailable as error:
+        fallback_reason = str(error)
+    except ValueError:
+        fallback_reason = 'Wave U-Net found no reliable crest edge near the surfer'
+    # Retain the original detector, with its existing locality/ambiguity checks.
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = ((hsv[:, :, 1] < 85) & (hsv[:, :, 2] > 175)).astype('uint8')*255
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3, 3), 'uint8'))
+    try:
+        result = crest_from_mask(mask, projected, target, reference, original_w, original_h, scale, pose, hfov)
+    except ValueError as error:
+        raise ValueError(f'{fallback_reason}. Whitewater fallback: {error}') from None
+    result.update(detector='Whitewater fallback', detectorId='whitewater-v3', fallbackReason=fallback_reason)
+    return result
+
+
+def crest_from_mask(mask, projected, target, reference, original_w, original_h, scale, pose, hfov):
+    """Shared selection/projection checks for learned and traditional masks."""
+    import cv2
+    import numpy as np
+    h, w = mask.shape
+    search_radius = w*CREST_SEARCH_RADIUS_FRACTION
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     contours = [c for c in contours if cv2.contourArea(c) >= w*h*.0006]
     edge = np.zeros_like(mask)
@@ -261,6 +289,7 @@ def wave_results(points, output):
 
 def analyze_wave(point, request, video_folder, output, cache_output, ffmpeg):
     from surfer_map_capture import capture_frame, resolve_video
+    from surfer_wave_model import model_signature
     hfov = request.get('horizontalFov', 74)
     if not finite(hfov) or not 20 <= hfov <= 120: raise ValueError('Horizontal FOV estimate must be 20–120 degrees.')
     if not point.get('videoFrameTimestamp'): raise ValueError('This surfer position has no mapped video frame.')
@@ -270,16 +299,20 @@ def analyze_wave(point, request, video_folder, output, cache_output, ffmpeg):
     dest = folder/(key+'.json')
     video = resolve_video(point, video_folder)
     stamp = [str(video.resolve()), video.stat().st_size, video.stat().st_mtime_ns, Path(point['sourceFile']).stat().st_mtime_ns]
+    signature = model_signature()
     try:
         cached = json.loads(dest.read_text(encoding='utf-8'))
-        if not cached.get('ignored') and cached.get('version') == VERSION and cached.get('horizontalFov') == hfov and cached.get('sourceStamp') == stamp:
+        if (not cached.get('ignored') and cached.get('version') == VERSION
+                and cached.get('detectorRevision') == DETECTOR_REVISION and cached.get('modelSignature') == signature
+                and cached.get('horizontalFov') == hfov and cached.get('sourceStamp') == stamp):
             return dict(cached, point=point['point'])
     except (OSError, ValueError): pass
     pose = camera_pose(point)
     clean = capture_frame(point, video_folder, output, ffmpeg, annotate=False)
     result = detect_crest(clean, point, pose, hfov)
     locate_crest(result, point, pose, hfov)
-    result.update(version=VERSION, key=key, sourceFile=point['sourceFile'], sourceStamp=stamp,
+    result.update(version=VERSION, detectorRevision=DETECTOR_REVISION, modelSignature=signature,
+                  key=key, sourceFile=point['sourceFile'], sourceStamp=stamp,
                   gpsTimestamp=point['receivedTimestamp'], frameTimestamp=point['videoFrameTimestamp'], point=point['point'],
                   latitude=point['latitude'], longitude=point['longitude'], horizontalFov=hfov, pose=pose,
                   status='estimated crest axis (0–180°); not wave travel direction',

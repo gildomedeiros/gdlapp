@@ -1,0 +1,78 @@
+{
+  "bearingDegrees": 1.1,
+  "imageWidth": 3840,
+  "imageHeight": 2160,
+  "imageLine": [
+    [
+      2404.0,
+      212.0
+    ],
+    [
+      2708.0,
+      140.0
+    ]
+  ],
+  "supportSegments": 5,
+  "angularSpreadDegrees": 3.1,
+  "projectedSurferImage": [
+    2052.41,
+    366.61
+  ],
+  "surferReferenceImage": [
+    2611.32,
+    515.82
+  ],
+  "surferReferenceMethod": "detected surfer water contact",
+  "searchRadiusPixels": 960.0,
+  "edgeDistancePixels": 343.42,
+  "method": "local whitewater outer-edge segments near surfer; perspective-corrected crest axis",
+  "detector": "Whitewater fallback",
+  "detectorId": "whitewater-v3",
+  "fallbackReason": "Wave U-Net found no reliable crest edge near the surfer",
+  "placementReference": "relative to detected surfer, registered to surfer GPS",
+  "crestEndpoints": [
+    {
+      "latitude": -27.95105462523556,
+      "longitude": 153.43011104032257
+    },
+    {
+      "latitude": -27.95114572681983,
+      "longitude": 153.43010899416993
+    }
+  ],
+  "crestLengthMetres": 10.13,
+  "consensusBearingDegrees": 1.2,
+  "version": 3,
+  "detectorRevision": 4,
+  "modelSignature": [
+    "wave-by-wave-unet-297b7ba6058f",
+    18841103,
+    1793802756649007100
+  ],
+  "key": "cf19448d3a8d67125538b8b1",
+  "sourceFile": "C:\\Users\\gildo\\temp\\0411test\\logs\\cam3_full_2026-11-04_161021_521_71bbac0f.jsonl",
+  "sourceStamp": [
+    "C:\\Users\\gildo\\temp\\0411test\\100MEDIA\\DJI_0644.MP4",
+    3758885929,
+    1793773288000000000,
+    1793774829000000000
+  ],
+  "gpsTimestamp": "2026-11-04T16:20:46.188+10:00",
+  "frameTimestamp": "2026-11-04T16:20:46.197+10:00",
+  "point": "S1186",
+  "latitude": -27.95094,
+  "longitude": 153.42999,
+  "horizontalFov": 74,
+  "pose": {
+    "yaw": 135.5,
+    "pitch": -29.900000000000002,
+    "roll": 0.0,
+    "height": 9.1,
+    "timestamp": "2026-11-04T16:20:46.160+10:00",
+    "sourceLine": 35301,
+    "headingSource": "aircraft heading + gimbal yaw relative to aircraft"
+  },
+  "status": "estimated crest axis (0\u2013180\u00b0); not wave travel direction",
+  "inputFrame": "clean MP4 frame without telemetry",
+  "assumptions": "Estimated water position from image endpoints, logged camera pose and drone GPS. Horizontal FOV, square pixels, water at takeoff datum and no lens distortion are assumed."
+}

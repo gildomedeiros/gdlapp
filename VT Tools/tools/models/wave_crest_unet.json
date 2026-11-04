@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/fj23eslaonda/Wave_by_Wave_Identification",
+  "revision": "3bfa552058f7ff12bfb7cab5f76501732b27a8aa",
+  "sourceSha256": {
+    "best_model_final.h5": "4fc3da13784dc494c6f45e6164799a88b5610568e28ac83c70f6ab952efeef46",
+    "model_final.json": "b1b7befa1562148ad82f800753fc48a444d7ea2c10e89957b41edd5766317056"
+  },
+  "modelSha256": "297b7ba6058fb10b284b8b60752d98e7247f09d94093b2acfb0d71a5e89df087",
+  "input": "1x1x512x512 grayscale float32, pixel values / 255",
+  "output": "Breaking-wave pixel probability; threshold 0.5",
+  "scope": "Breaking waves; not validated for unbroken crests or this drone footage",
+  "conversion": "Keras topology and weights converted to ONNX; TF SAME transpose padding preserved"
+}

@@ -8,7 +8,7 @@
     "recursive": false,
     "gap_red_ms": 1000.0
   },
-  "mode": "pitch",
+  "mode": "rides",
   "presets": {
     "rides": {
       "scope": "first",
@@ -27,7 +27,7 @@
       "distance_max": 40
     },
     "timestamp": {
-      "at": "16:13:50",
+      "at": "16:12:57",
       "next": 60,
       "auto_fov": false
     },
