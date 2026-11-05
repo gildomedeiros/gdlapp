@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Surfer map</title>
+<style>
+:root{font:14px Arial,sans-serif;color:#17324d;background:#f3f7fa;--border:#cbd7e2;--blue:#1c5c98}
+*{box-sizing:border-box}body{margin:0;height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:18px;padding:12px 18px;background:#17324d;color:white}
+h1{font-size:19px;margin:0}header span{font-size:12px;color:#d6e6f3}
+form{background:white;border-bottom:1px solid var(--border);padding:0 18px 10px;max-height:55vh;overflow:auto}
+details{border-bottom:1px solid #e1e8ef;padding:9px 0}summary{cursor:pointer;font-weight:bold}
+.fields{display:flex;flex-wrap:wrap;align-items:end;gap:10px 14px;padding-top:10px}
+label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:bold}
+label.check{flex-direction:row;align-items:center;min-height:34px;font-weight:normal}
+input,select,button{font:inherit}input,select{padding:7px 8px;border:1px solid #aebdca;border-radius:4px;background:white;color:#17324d;min-height:34px}
+input[type=number]{width:112px}input[type=checkbox]{min-height:0}input.path{width:min(380px,84vw)}input.time{width:255px}
+input.wide{width:200px}.hint{font-size:12px;color:#52677c;margin:8px 0 2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;padding-top:12px}.toolbar label{min-width:210px}
+button{border:1px solid #aebdca;border-radius:4px;background:#f4f7fa;color:#17324d;padding:8px 14px;cursor:pointer}
+button.primary{background:var(--blue);color:white;border-color:var(--blue);font-weight:bold}button:disabled{opacity:.55;cursor:default}
+fieldset{border:0;padding:0;margin:0}fieldset[hidden],[hidden]{display:none!important}
+.selection-panel{padding-top:0}.bottom-row{display:flex;align-items:center;gap:12px;padding-top:10px}
+#status{margin:0;font-size:13px;overflow-wrap:anywhere}#status.error{color:#a02424}#busy{width:100px;height:6px}
+#log-summary{font-size:12px;color:#52677c;margin:7px 0}#ride-catalog{max-height:120px;overflow:auto;font-size:12px;line-height:1.7;white-space:pre-line}
+#result-bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:8px 18px;font-size:12px}
+#result-summary{max-width:75%;line-height:1.4}#exports{display:flex;gap:10px;flex-wrap:wrap}a{color:var(--blue)}#video-status{font-size:12px;color:#52677c;padding:0 18px;margin:0 0 5px}
+#viewer{flex:1;min-height:350px;position:relative}iframe{border:0;width:100%;height:100%;background:white}
+#empty{display:grid;place-content:center;text-align:center;height:100%;padding:30px;color:#52677c}#empty strong{font-size:20px;color:#17324d;margin-bottom:10px}
+#subtitle-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:0 12px;margin-top:8px}
+#subtitle-fields label{min-height:28px}#subtitle-result{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+#subtitle-links{display:flex;flex-wrap:wrap;gap:6px 16px}#subtitle-issues{max-height:100px;overflow:auto;white-space:pre-line;color:#a02424}
+@media(max-width:750px){form{max-height:62vh}.path{max-width:85vw}header span{display:none}#result-bar{align-items:flex-start;flex-direction:column}#result-summary{max-width:100%}}
+</style>
+</head>
+<body>
+<header><h1>Surfer map</h1><span>Choose a selection. Keep the same server running.</span></header>
+<form id="selection-form">
+ <details id="data-settings"><summary>Data folders &amp; display settings</summary>
+  <div class="fields">
+   <label>Log folder<input class="path" name="folder" required placeholder="C:\Users\gildo\temp\311026" spellcheck="false"></label>
+   <label>Video / SRT folder<input class="path" name="video_folder" placeholder="E:\DCIM\100MEDIA" spellcheck="false"></label>
+   <label>Output folder<input class="path" name="output" required spellcheck="false"></label>
+  </div>
+  <div class="fields">
+   <label class="check"><input type="checkbox" name="recursive"> Include log subfolders</label>
+   <label>UTC offset<input class="wide" name="utc_offset" value="+10:00" required></label>
+   <label>Red gap threshold (ms)<input type="number" name="gap_red_ms" value="1000" min="0" step="any" required></label>
+   <label>FFmpeg path (optional)<input class="path" name="ffmpeg" placeholder="Locate automatically" spellcheck="false"></label>
+  </div>
+  <p class="hint">Folders are on this computer. Choices are remembered. Logs are reused until the files or folder settings change.</p>
+  <p id="log-summary"></p><details id="rides-found" hidden><summary>Logged ride numbers and times</summary><div id="ride-catalog"></div></details>
+ </details>
+ <div class="toolbar">
+  <label>Select positions by<select id="selection-mode" name="mode">
+   <option value="rides">Wave rides</option><option value="timestamp">Timestamp</option>
+   <option value="pitch">Pitch AND distance</option><option value="framing">Framing samples</option>
+  </select></label>
+  <button class="primary" id="apply" type="submit">Show rides</button>
+  <button id="cancel" type="button" hidden>Cancel</button>
+ </div>
+ <details id="selection-settings" open><summary>Selection settings</summary>
+ <fieldset class="selection-panel" data-mode="rides">
+  <div class="fields">
+   <label>Rides<select name="scope" id="ride-scope"><option value="first">First N rides</option><option value="all">All rides</option><option value="specific">Specific rides</option></select></label>
+   <label id="ride-count-label">Number of rides<input type="number" name="number_of_rides" min="1" step="1" value="3" required></label>
+   <label id="ride-numbers-label" hidden>Ride numbers<input name="ride_numbers" class="wide" placeholder="1, 3, 5" spellcheck="false"></label>
+   <label>Before start (s)<input type="number" name="before" min="0" step="any" required></label>
+   <label>After start (s)<input type="number" name="after" min="0" step="any" required></label>
+   <label>Granularity (s)<input type="number" name="interval" min="0" step="any" required></label>
+   <label>Maximum positions<input type="number" name="max_samples" min="1" step="1" placeholder="Unlimited"></label>
+   <label class="check"><input type="checkbox" name="auto_fov"> Detect framing automatically</label>
+  </div>
+  <p class="hint">Windows are relative to each logged ride start. Granularity 0 keeps every real packet. Use the map sidebar to inspect a ride or individual S position.</p>
+  <details><summary>Optional pitch / distance filters for these rides</summary><div class="fields">
+   <label class="check"><input type="checkbox" name="filter_pitch"> Filter pitch</label>
+   <label>Pitch minimum (°)<input type="number" name="pitch_min" min="-180" step="any"></label>
+   <label>Pitch maximum (°)<input type="number" name="pitch_max" min="-180" step="any"></label>
+   <label class="check"><input type="checkbox" name="filter_distance"> Filter distance</label>
+   <label>Distance minimum (m)<input type="number" name="distance_min" min="0" step="any"></label>
+   <label>Distance maximum (m)<input type="number" name="distance_max" min="0" step="any"></label>
+  </div></details>
+ </fieldset>
+ <fieldset class="selection-panel" data-mode="timestamp" hidden disabled>
+  <div class="fields">
+   <label>Timestamp<input class="time" name="at" placeholder="14:03:17.000 or full date and time" required spellcheck="false"></label>
+   <label>Following packets<input type="number" name="next" min="0" step="1" required></label>
+   <label class="check"><input type="checkbox" name="auto_fov"> Detect framing automatically</label>
+  </div>
+  <p class="hint">Starts at the last received packet at or before your time. Next 35 means up to 36 positions. Include a date when the logs span several days.</p>
+ </fieldset>
+ <fieldset class="selection-panel" data-mode="pitch" hidden disabled>
+  <div class="fields">
+   <label>Pitch minimum (°)<input type="number" name="pitch_min" min="-180" step="any" required></label>
+   <label>Pitch maximum (°)<input type="number" name="pitch_max" min="-180" step="any" required></label>
+   <label>Distance minimum (m)<input type="number" name="distance_min" min="0" step="any" required></label>
+   <label>Distance maximum (m)<input type="number" name="distance_max" min="0" step="any" required></label>
+   <label>Before start (s)<input type="number" name="before" min="0" step="any" required></label>
+   <label>After start (s)<input type="number" name="after" min="0" step="any" required></label>
+   <label>Sample interval (s)<input type="number" name="interval" min="0" step="any" required></label>
+   <label>Maximum positions<input type="number" name="max_samples" min="1" step="1" required></label>
+   <label class="check"><input type="checkbox" name="auto_fov"> Detect framing automatically</label>
+  </div>
+  <p class="hint">Both ranges must match; endpoints are included. Uses actual logged pitch and horizontal GPS distance, around ride starts only. Keeps pitch changes of at least 3° even inside the interval.</p>
+ </fieldset>
+ <fieldset class="selection-panel" data-mode="framing" hidden disabled>
+  <div class="fields">
+   <label>Distance band edges (m)<input class="wide" name="sample_bands" placeholder="0 20 30 40" required></label>
+   <label>Samples per combination<input type="number" name="sample_count" min="1" step="1" required></label>
+   <label>Before start (s)<input type="number" name="before" min="0" step="any" required></label>
+   <label>After start (s)<input type="number" name="after" min="0" step="any" required></label>
+   <label>Sample interval (s)<input type="number" name="interval" min="0" step="any" required></label>
+   <label>Maximum frame checks<input type="number" name="sample_max_checks" min="0" step="1" required></label>
+  </div>
+  <p class="hint">Finds TOP / MIDDLE / BOTTOM examples in each distance band, chronologically around rides. Missing combinations are allowed. Maximum checks 0 scans until quotas fill or candidates run out.</p>
+ </fieldset>
+ </details>
+ <details id="subtitle-settings"><summary>Export video subtitles</summary>
+  <p class="hint">Export all MP4s in the Video / SRT folder using all received GPS packets, regardless of map filters. Original videos and subtitles are kept. Each new SRT includes the original subtitle text plus your selected fields.</p>
+  <div class="toolbar">
+   <button type="button" id="subtitle-all">Select all</button><button type="button" id="subtitle-none">Clear all</button>
+   <button type="button" class="primary" id="subtitle-export" disabled>Export SRTs for all videos</button>
+  </div>
+  <fieldset id="subtitle-fields" aria-label="Subtitle data fields"></fieldset>
+  <p class="hint">Uses the last GPS received at or before each frame. GPS age updates every frame; red indicates an age beyond your Red gap threshold. Colours and bold match the card; SRT players may ignore styling and do not support the card’s background boxes.</p>
+  <p class="hint">Packet numbers identify records across the whole batch. Movement direction uses previous → current GPS, without looking ahead. Each MP4 needs its original SRT with recording timestamps.</p>
+  <div id="subtitle-result" hidden><p id="subtitle-summary"></p><nav id="subtitle-links" aria-label="Download subtitles"></nav><p id="subtitle-issues"></p></div>
+ </details>
+ <div class="bottom-row"><progress id="busy" hidden></progress><p id="status" role="status" aria-live="polite">Choose folders and a selection, then show the map.</p></div>
+</form>
+<div id="result-bar" hidden><span id="result-summary"></span><nav id="exports" aria-label="Export current selection"></nav></div>
+<p id="video-status" hidden></p>
+<main id="viewer"><div id="empty"><strong>Your map will appear here</strong><span>Choose wave rides, a timestamp, or pitch and distance above.</span></div><iframe id="map-frame" title="Interactive surfer map" hidden></iframe></main>
+<script>
+const form=document.getElementById('selection-form'), mode=document.getElementById('selection-mode');
+const panels=[...document.querySelectorAll('.selection-panel')];
+const statusLine=document.getElementById('status'), apply=document.getElementById('apply'), cancel=document.getElementById('cancel');
+const dataSettings=document.getElementById('data-settings'), frame=document.getElementById('map-frame');
+let jobId=null;
+const subtitleFields=document.getElementById('subtitle-fields'),subtitleExport=document.getElementById('subtitle-export');
+const labels={rides:'Show rides',timestamp:'Show positions',pitch:'Find positions',framing:'Find samples'};
+function setStatus(message,error=false){statusLine.textContent=message;statusLine.classList.toggle('error',error);}
+function rideScope(){
+ const scope=document.getElementById('ride-scope').value;
+ const count=document.getElementById('ride-count-label'),numbers=document.getElementById('ride-numbers-label');
+ count.hidden=scope!=='first';count.querySelector('input').disabled=scope!=='first';
+ numbers.hidden=scope!=='specific';numbers.querySelector('input').disabled=scope!=='specific';numbers.querySelector('input').required=scope==='specific';
+}
+function changeMode(openSettings=false){
+ panels.forEach(p=>{p.hidden=p.dataset.mode!==mode.value;p.disabled=p.hidden||!!jobId;});
+ apply.textContent=labels[mode.value];rideScope();
+ if(openSettings)document.getElementById('selection-settings').open=true;
+}
+function running(active){
+ apply.disabled=active;mode.disabled=active;
+ document.querySelectorAll('#data-settings input').forEach(n=>n.disabled=active);
+ panels.forEach(p=>p.disabled=active||p.hidden);
+ cancel.hidden=!active;cancel.disabled=false;document.getElementById('busy').hidden=!active;
+ subtitleFields.disabled=active;document.getElementById('subtitle-all').disabled=active;document.getElementById('subtitle-none').disabled=active;
+ subtitleExport.disabled=active||!subtitleFields.querySelector('input:checked');
+}
+function readSettings(){
+ const settings={};
+ for(const key of ['folder','video_folder','output','utc_offset','gap_red_ms','ffmpeg'])settings[key]=dataSettings.querySelector('[name="'+key+'"]').value;
+ settings.recursive=dataSettings.querySelector('[name="recursive"]').checked;
+ return settings;
+}
+function fillSubtitleFields(catalog,selected){
+ subtitleFields.replaceChildren();
+ for(const field of catalog){
+  const label=document.createElement('label');label.className='check';
+  const input=document.createElement('input');input.type='checkbox';input.value=field.id;input.checked=selected.includes(field.id);
+  label.append(input,document.createTextNode(field.label));subtitleFields.append(label);
+ }
+ subtitleExport.disabled=!subtitleFields.querySelector('input:checked');
+}
+function showSubtitleResult(result){
+ document.getElementById('subtitle-result').hidden=false;
+ const t=result.totals;
+ document.getElementById('subtitle-summary').textContent=t.exported+'/'+t.videos+' videos exported · '+t.frames+' frames · '+t.unavailable+' without earlier GPS · '+t.stale+' with old GPS. Saved in '+result.output;
+ const links=document.getElementById('subtitle-links');links.replaceChildren();
+ for(const file of result.exports){const a=document.createElement('a');a.textContent=file.name==='VT-subtitles.zip'?'Download all (ZIP)':file.name;a.href=file.url;a.download=file.name;links.append(a);}
+ document.getElementById('subtitle-issues').textContent=[...result.issues.map(row=>row.video+': '+row.reason),
+  ...(result.warnings||[]).map(row=>row.video+': '+row.message)].join('\n');
+}
+subtitleFields.onchange=()=>{subtitleExport.disabled=!!jobId||!subtitleFields.querySelector('input:checked');};
+for(const [id,checked] of [['subtitle-all',true],['subtitle-none',false]])document.getElementById(id).onclick=()=>{
+ subtitleFields.querySelectorAll('input').forEach(input=>input.checked=checked);subtitleFields.onchange();
+};
+subtitleExport.onclick=async()=>{
+ if(jobId)return;
+ const settings=readSettings(),fields=[...subtitleFields.querySelectorAll('input:checked')].map(input=>input.value);
+ try{
+  running(true);setStatus('Starting subtitle export for all videos…');
+  const job=await api('/api/subtitles',{settings,fields});await followJob(job.id);
+ }catch(error){setStatus(error.message,true);running(false);changeMode();dataSettings.open=true;}
+};
+function fill(container,values){
+ for(const [name,value] of Object.entries(values)){
+  const node=container.querySelector('[name="'+name+'"]');if(!node)continue;
+  if(node.type==='checkbox')node.checked=value===true;
+  else node.value=value===null?'':Array.isArray(value)?value.join(' '):String(value);
+ }
+}
+async function api(path,body){
+ const response=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const result=await response.json();if(!response.ok)throw Error(result.error||'Request failed.');return result;
+}
+function showLogs(logs){
+ if(!logs)return;
+ document.getElementById('log-summary').textContent=logs.packets+' packets · '+logs.rides.length+' rides · '+logs.first+' to '+logs.last;
+ document.getElementById('rides-found').hidden=!logs.rides.length;
+ document.getElementById('ride-catalog').textContent=logs.rides.map(r=>'Ride '+r.number+' — '+r.timestamp+' · '+r.source).join('\n');
+}
+function showResult(result){
+ document.getElementById('empty').hidden=true;frame.hidden=false;
+ frame.src=result.mapUrl;
+ document.getElementById('result-bar').hidden=false;
+ document.getElementById('result-summary').textContent=result.count+' positions · '+(result.label||result.description.split('. ')[0]);
+ document.getElementById('result-summary').title=result.description+'\nSaved in '+result.output;
+ const videoStatus=document.getElementById('video-status');
+ videoStatus.hidden=result.videoMapped===undefined||result.videoMapped===result.count;
+ videoStatus.textContent='Video frame mapping: '+(result.videoMapped||0)+'/'+result.count+'. '+((result.videoWarnings||[]).join(' ')||'Check the video/SRT folder and timestamp coverage to capture missing frames.');
+ const links=document.getElementById('exports');links.replaceChildren();
+ const names={'surfer-gps.html':'HTML','surfer-gps.csv':'CSV','surfer-gps.svg':'SVG','surfer-gps.kml':'KML','fov-samples.html':'Sample frames','fov-samples.xlsx':'Sample table'};
+ for(const file of result.exports){const a=document.createElement('a');a.textContent=names[file.name]||file.name;a.href=file.url;a.target='_blank';a.rel='noopener';links.append(a);}
+}
+async function followJob(id){
+ jobId=id;running(true);
+ try{
+  while(jobId===id){
+   const job=await api('/api/jobs/'+id);setStatus(job.message,job.status==='error');
+   if(job.status!=='running'){
+    if(job.status==='done'){
+     if(job.kind==='subtitles'){showSubtitleResult(job.result);document.getElementById('subtitle-settings').open=true;}
+     else{showResult(job.result);document.getElementById('selection-settings').open=false;}
+    }
+    const state=await api('/api/state');showLogs(state.logs);
+    break;
+   }
+   await new Promise(resolve=>setTimeout(resolve,600));
+  }
+ }catch(error){setStatus(error.message,true);}
+ finally{jobId=null;running(false);changeMode();}
+}
+form.addEventListener('invalid',e=>{const details=e.target.closest('details');if(details)details.open=true;},true);
+form.addEventListener('submit',async e=>{
+ e.preventDefault();if(jobId)return;
+ const values=Object.fromEntries(new FormData(form));
+ const settings={};for(const key of ['folder','video_folder','output','utc_offset','gap_red_ms','ffmpeg'])settings[key]=values[key];
+ settings.recursive=values.recursive==='on';
+ const selection={...values,auto_fov:values.auto_fov==='on',filter_pitch:values.filter_pitch==='on',filter_distance:values.filter_distance==='on'};
+ try{
+  running(true);setStatus('Starting selection…');
+  const job=await api('/api/select',{mode:mode.value,settings,selection});
+  dataSettings.open=false;
+  await followJob(job.id);
+ }catch(error){setStatus(error.message,true);running(false);changeMode();}
+});
+cancel.onclick=async()=>{
+ if(!jobId)return;cancel.disabled=true;
+ try{const job=await api('/api/cancel',{id:jobId});setStatus(job.message);}catch(error){setStatus(error.message,true);cancel.disabled=false;}
+};
+mode.onchange=()=>changeMode(true);document.getElementById('ride-scope').onchange=rideScope;
+(async()=>{
+ try{
+  const state=await api('/api/state');fill(dataSettings,state.config.settings);
+  fillSubtitleFields(state.subtitleFields||[],state.config.subtitle_fields||[]);
+  if(state.subtitleResult)showSubtitleResult(state.subtitleResult);
+  for(const panel of panels)fill(panel,state.config.presets[panel.dataset.mode]);
+  mode.value=state.config.mode;dataSettings.open=!state.config.settings.folder;changeMode();showLogs(state.logs);
+  if(state.current){showResult(state.current);document.getElementById('selection-settings').open=false;}
+  if(state.job?.status==='running')await followJob(state.job.id);
+  else if(state.job)setStatus(state.job.message,state.job.status==='error');
+ }catch(error){setStatus(error.message,true);}
+})();
+</script>
+</body>
+</html>

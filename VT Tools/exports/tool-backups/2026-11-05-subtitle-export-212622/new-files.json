@@ -1,0 +1,5 @@
+[
+  "tools/surfer_subtitles.py",
+  "tools/test_surfer_subtitles.py",
+  "tools/test_surfer_subtitles_browser.cjs"
+]

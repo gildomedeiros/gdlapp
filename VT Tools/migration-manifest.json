@@ -9,8 +9,8 @@
     },
     {
       "path": "README.txt",
-      "bytes": 18165,
-      "sha256": "c25899b3dc83bd25a5738a8c32de546610e05298fb056c5bd99649ada75535c4"
+      "bytes": 21191,
+      "sha256": "210841bb86886b5a199037329efea1e6bc60667f454ef2966568359617f0f604"
     },
     {
       "path": "Start Map.cmd",
@@ -164,13 +164,13 @@
     },
     {
       "path": "tools/surfer_map_app.html",
-      "bytes": 16308,
-      "sha256": "536990a10c757d89d1737afbd3d24b6dbe1ab04a7917148f5d18986960f03785"
+      "bytes": 21089,
+      "sha256": "fa63d94067ebbc42f63265a094a340a0d28ece5ced6e1b8b4d5b34c477be470b"
     },
     {
       "path": "tools/surfer_map_app.py",
-      "bytes": 29553,
-      "sha256": "8708adfbd22adf605ec74e979c1a3f495635a753d2ece6ad2f8d65f286c03bc4"
+      "bytes": 34382,
+      "sha256": "e875e3e414e5f4d0afbaf6f4bd8aee4327eacedec293de9db1c405bd6e5dfa91"
     },
     {
       "path": "tools/surfer_map_capture.py",
@@ -236,6 +236,16 @@
       "path": "tools/surfer_side_view.js",
       "bytes": 8364,
       "sha256": "f7d840aaca9cd09fae117fceaa3b0fd6af3a336dd5404b164c88173b0461a43e"
+    },
+    {
+      "path": "tools/surfer_subtitle_layout.py",
+      "bytes": 7106,
+      "sha256": "0180f260092f10e383edac14d22c50a54794a2a1d93d5a9167e9f6917610b63e"
+    },
+    {
+      "path": "tools/surfer_subtitles.py",
+      "bytes": 16316,
+      "sha256": "7d57eb5fef4f17cfdc8206303a81aeebeba3df2c476f84428d1bd2af7dc6debf"
     },
     {
       "path": "tools/surfer_video_frames.py",
@@ -338,6 +348,21 @@
       "sha256": "68ae6329b59bc28b3dd5b6b81a530b94a835589d1dbe356ef1a4d03af725dad9"
     },
     {
+      "path": "tools/test_surfer_subtitle_layout.py",
+      "bytes": 3245,
+      "sha256": "17cc350c8a2c33c231581fa5dd31500b2f2b76784856df3bca2f86a3f00733a5"
+    },
+    {
+      "path": "tools/test_surfer_subtitles.py",
+      "bytes": 12861,
+      "sha256": "3b9667874f38a3a8c028ef472f5349dd721f967dcf25643a3a8a16ef1d9885a7"
+    },
+    {
+      "path": "tools/test_surfer_subtitles_browser.cjs",
+      "bytes": 6146,
+      "sha256": "7113b35fb1730ef3c547bcee8ea6f52252e9ed09ef6ca0425fb2aa7423f3ad2c"
+    },
+    {
       "path": "tools/test_surfer_video_frames.py",
       "bytes": 5541,
       "sha256": "b83887591dc5c28bac3b08c887af44159e45c5567bdc5d038dbc115c217fac52"
@@ -353,5 +378,5 @@
       "sha256": "d61236a8eb9d16d61f5821161d95f6c917b385c0dd73c144b249ad00009da1bc"
     }
   ],
-  "updated": "2026-11-05: local Wave-by-Wave U-Net on W with original whitewater fallback; existing marks and controls retained"
+  "updated": "2026-11-05: 50% translucent ASS card and highlight fills; opaque readable text"
 }

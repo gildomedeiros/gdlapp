@@ -11,6 +11,7 @@ import re
 import threading
 from urllib.parse import urlsplit
 import uuid
+from surfer_subtitles import FIELDS, FIELD_IDS, validate_fields
 
 
 APP_DIR = Path(__file__).resolve().parent.parent / 'exports' / 'surfer-map-app'
@@ -23,7 +24,7 @@ class Cancelled(Exception):
 
 def defaults(app_dir):
     return dict(settings=dict(folder='', video_folder='E:/DCIM/100MEDIA', output=str(app_dir),
-                recursive=False, utc_offset='+10:00', gap_red_ms=1000, ffmpeg=''), mode='rides',
+                recursive=False, utc_offset='+10:00', gap_red_ms=1000, ffmpeg=''), mode='rides', subtitle_fields=list(FIELD_IDS),
         presets=dict(
             rides=dict(scope='first', number_of_rides=3, ride_numbers='', before=15, after=15, interval=0, max_samples='', auto_fov=False,
                        filter_pitch=False,pitch_min=-40,pitch_max=-34,filter_distance=False,distance_min=25,distance_max=40),
@@ -44,14 +45,8 @@ def number(value, name, minimum=0, integer=False):
     return int(n) if integer else n
 
 
-def normalize_request(request):
-    """Accept data only, never shell fragments or arbitrary Python arguments."""
-    if not isinstance(request, dict):raise ValueError('Expected a selection object.')
-    mode=request.get('mode')
-    if mode not in MODES:raise ValueError('Choose rides, timestamp, pitch/distance or framing samples.')
-    settings=request.get('settings', {})
-    selection=request.get('selection', {})
-    if not isinstance(settings, dict) or not isinstance(selection, dict):raise ValueError('Invalid settings.')
+def normalize_settings(settings):
+    if not isinstance(settings, dict):raise ValueError('Invalid settings.')
     s={}
     for key in ('folder','video_folder','output','utc_offset','ffmpeg'):
         value=settings.get(key, '')
@@ -63,6 +58,17 @@ def normalize_request(request):
     s['gap_red_ms']=number(settings.get('gap_red_ms',1000),'Gap highlight')
     from telemetry_around import offset_timezone
     offset_timezone(s['utc_offset'])
+    return s
+
+
+def normalize_request(request):
+    """Accept data only, never shell fragments or arbitrary Python arguments."""
+    if not isinstance(request, dict):raise ValueError('Expected a selection object.')
+    mode=request.get('mode')
+    if mode not in MODES:raise ValueError('Choose rides, timestamp, pitch/distance or framing samples.')
+    s=normalize_settings(request.get('settings', {}))
+    selection=request.get('selection', {})
+    if not isinstance(selection, dict):raise ValueError('Invalid settings.')
     q=dict(auto_fov=selection.get('auto_fov') is True)
     if mode=='timestamp':
         at=selection.get('at','')
@@ -118,6 +124,7 @@ class MapApp:
             self.config['settings'].update({k:v for k,v in saved.get('settings',{}).items() if k in self.config['settings']})
             for mode in MODES:self.config['presets'][mode].update(saved.get('presets',{}).get(mode,{}))
             if saved.get('mode') in MODES:self.config['mode']=saved['mode']
+            if 'subtitle_fields' in saved:self.config['subtitle_fields']=validate_fields(saved['subtitle_fields'])
         except (OSError,ValueError,TypeError,AttributeError):
             pass
         self.initial_selection=False
@@ -132,6 +139,7 @@ class MapApp:
         self.log_info=None
         self.cache_reads=0
         self.worker=None
+        self.subtitle_exports=OrderedDict()
 
     def seed_cli(self,args):
         supplied=getattr(args,'provided_options',set())
@@ -162,7 +170,9 @@ class MapApp:
 
     def state(self):
         with self.lock:
-            return dict(config=self.config,current=self.current,job=self.public_job(self.active),logs=self.log_info)
+            return dict(config=self.config,current=self.current,job=self.public_job(self.active),logs=self.log_info,
+                        subtitleFields=[dict(id=key,label=label) for key,label in FIELDS],
+                        subtitleResult=next(reversed(self.subtitle_exports.values()))['result'] if self.subtitle_exports else None)
 
     def public_job(self,ident):
         job=self.jobs.get(ident)
@@ -178,13 +188,64 @@ class MapApp:
         request=normalize_request(request)
         with self.lock:
             if self.active and self.jobs[self.active]['status']=='running':
-                raise ValueError('A selection is still running. Cancel it or wait for it to finish.')
+                raise ValueError('A job is still running. Cancel it or wait for it to finish.')
             ident=uuid.uuid4().hex
             self.jobs[ident]=dict(id=ident,status='running',message='Preparing selection…',cancel=threading.Event())
             self.active=ident
             self.worker=threading.Thread(target=self.run,args=(ident,request),daemon=True)
             self.worker.start()
             return self.public_job(ident)
+
+    def start_subtitles(self,request):
+        if not isinstance(request,dict):raise ValueError('Expected an export object.')
+        settings=normalize_settings(request.get('settings',{}))
+        fields=validate_fields(request.get('fields'))
+        if not Path(settings['video_folder']).is_dir() or not settings['video_folder']:
+            raise ValueError('Enter an existing video / SRT folder.')
+        with self.lock:
+            if self.active and self.jobs[self.active]['status']=='running':
+                raise ValueError('A job is still running. Cancel it or wait for it to finish.')
+            ident=uuid.uuid4().hex
+            self.jobs[ident]=dict(id=ident,kind='subtitles',status='running',message='Preparing subtitle export…',cancel=threading.Event())
+            self.active=ident
+            self.worker=threading.Thread(target=self.run_subtitles,args=(ident,settings,fields),daemon=True)
+            self.worker.start()
+            return self.public_job(ident)
+
+    def run_subtitles(self,ident,settings,fields):
+        output=Path(settings['output']).expanduser().resolve()/'subtitles'/ident
+        try:
+            from surfer_subtitles import PacketIndex,export_folder
+            packets,drones,_,tz=self.load_logs(settings,ident)
+            self.check_cancel(ident)
+            self.progress(ident,'Preparing all received GPS packets for subtitles…')
+            index=PacketIndex(packets,drones,fields,settings['gap_red_ms'])
+            report,files=export_folder(Path(settings['video_folder']).expanduser().resolve(),output,index,tz,
+                progress=lambda message:self.progress(ident,message),check_cancel=lambda:self.check_cancel(ident))
+            self.check_cancel(ident)
+            result=dict(output=str(output),totals=report['totals'],issues=[row for row in report['files'] if row['status']!='exported'],
+                        warnings=[dict(video=row['video'],message=row['warning']) for row in report['files'] if row.get('warning')],
+                        exports=[dict(name=p.name,url=f'/api/subtitles/{ident}/files/{i}') for i,p in enumerate(files)])
+            with self.lock:
+                self.config['settings']=dict(settings)
+                self.config['subtitle_fields']=fields
+                self.save_preferences()
+                self.subtitle_exports[ident]=dict(files=files,result=result)
+                while len(self.subtitle_exports)>12:self.subtitle_exports.popitem(last=False)
+                totals=report['totals']
+                self.jobs[ident].update(status='done',result=result,
+                    message=f'Subtitles ready: {totals["exported"]}/{totals["videos"]} videos exported; {totals["skipped"]} skipped. Current map kept.')
+                while len(self.jobs)>20:self.jobs.popitem(last=False)
+        except Cancelled:
+            with self.lock:self.jobs[ident].update(status='cancelled',message=f'Export cancelled. Completed files, if any, remain in {output}. Current map kept.')
+        except Exception as error:
+            with self.lock:self.jobs[ident].update(status='error',message=str(error) or type(error).__name__)
+
+    def save_preferences(self):
+        self.app_dir.mkdir(parents=True,exist_ok=True)
+        temp=self.preferences.with_suffix('.tmp')
+        temp.write_text(json.dumps(self.config,indent=2),encoding='utf-8')
+        temp.replace(self.preferences)
 
     def cancel(self,ident):
         with self.lock:
@@ -242,10 +303,7 @@ class MapApp:
             self.config['mode']=request['mode']
             self.config['settings']=dict(request['settings'])
             self.config['presets'][request['mode']].update(q)
-            self.app_dir.mkdir(parents=True,exist_ok=True)
-            temp=self.preferences.with_suffix('.tmp')
-            temp.write_text(json.dumps(self.config,indent=2),encoding='utf-8')
-            temp.replace(self.preferences)
+            self.save_preferences()
 
     def run(self,ident,request):
         try:
@@ -405,6 +463,18 @@ def create_server(app,port=0):
             path=urlsplit(self.path).path
             if path=='/':return self.reply(200,Path(__file__).with_suffix('.html').read_bytes(),'text/html; charset=utf-8')
             if path=='/api/state':return self.reply(200,app.state())
+            export_match=re.fullmatch(r'/api/subtitles/([a-f0-9]{32})/files/(\d{1,6})',path)
+            if export_match:
+                with app.lock:
+                    batch=app.subtitle_exports.get(export_match[1])
+                    files=batch['files'] if batch else []
+                    index=int(export_match[2])
+                    file=files[index] if index<len(files) else None
+                if file and file.is_file():
+                    from urllib.parse import quote
+                    kind='application/zip' if file.suffix=='.zip' else 'application/json; charset=utf-8' if file.suffix=='.json' else 'text/x-ssa; charset=utf-8' if file.suffix=='.ass' else 'application/x-subrip; charset=utf-8'
+                    return self.reply(200,file.read_bytes(),kind,download=quote(file.name,safe='._-'))
+                return self.reply(404,dict(error='Subtitle download not found.'))
             if path.startswith('/api/jobs/'):
                 with app.lock:job=app.public_job(path.rsplit('/',1)[1])
                 return self.reply(200 if job else 404,job or dict(error='Unknown job.'))
@@ -437,6 +507,7 @@ def create_server(app,port=0):
                 if not isinstance(request,dict):raise ValueError('Expected an object.')
                 path=urlsplit(self.path).path
                 if path=='/api/select':return self.reply(202,app.start(request))
+                if path=='/api/subtitles':return self.reply(202,app.start_subtitles(request))
                 if path=='/api/cancel':return self.reply(200,app.cancel(request.get('id')))
                 match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov|video-frame|wave)',path)
                 if match:

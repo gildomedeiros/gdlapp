@@ -1,18 +1,37 @@
 {
   "settings": {
-    "folder": "C:\\Users\\gildo\\temp\\0411test\\logs",
-    "video_folder": "C:\\Users\\gildo\\temp\\0411test\\100MEDIA",
-    "output": "C:\\Users\\gildo\\gdlapp\\VT Tools\\exports\\surfer-map-app0411",
+    "folder": "C:\\Users\\gildo\\temp\\0511 test\\logs",
+    "video_folder": "C:\\Users\\gildo\\temp\\0511 test\\100MEDIA",
+    "output": "C:\\Users\\gildo\\gdlapp\\VT Tools\\exports\\surfer-map-app0511",
     "utc_offset": "+10:00",
     "ffmpeg": "",
     "recursive": false,
     "gap_red_ms": 1000.0
   },
-  "mode": "rides",
+  "mode": "timestamp",
+  "subtitle_fields": [
+    "frame_time",
+    "gps_age",
+    "separation",
+    "movement",
+    "direction",
+    "ride",
+    "retreat",
+    "height",
+    "heading",
+    "tilt",
+    "aiming",
+    "come_to_me",
+    "lora",
+    "drone_displacement",
+    "video_playback",
+    "received",
+    "bands"
+  ],
   "presets": {
     "rides": {
       "scope": "first",
-      "number_of_rides": 3,
+      "number_of_rides": 14,
       "ride_numbers": "",
       "before": 20.0,
       "after": 20.0,
@@ -27,15 +46,15 @@
       "distance_max": 40
     },
     "timestamp": {
-      "at": "16:12:57",
-      "next": 60,
+      "at": "16:17:48",
+      "next": 600,
       "auto_fov": false
     },
     "pitch": {
       "pitch_min": -36.0,
       "pitch_max": -20.0,
-      "distance_min": 28.0,
-      "distance_max": 32.0,
+      "distance_min": 36.0,
+      "distance_max": 39.0,
       "before": 125.0,
       "after": 125.0,
       "interval": 1.0,

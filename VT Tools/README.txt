@@ -17,6 +17,8 @@ Folders:
 
 Included tools:
   surfer_gps_map.py          Map server and offline map exports.
+  surfer_subtitles.py        Non-destructive batch subtitle export from the map.
+  surfer_subtitle_layout.py  Fixed ASS card layout and compact SRT fallback.
   telemetry_around.py       Reports around timestamps or wave rides.
   telemetry_selected_frames.py  Extract frames from selected telemetry rows.
   telemetry_selected_kml.py     Export selected positions to KML.
@@ -35,6 +37,44 @@ Python:
 
 Verification, from this folder:
   python -m unittest discover -s tools -p "test_surfer_*.py" -q
+
+Export video subtitles (on the map page):
+  Open "Export video subtitles". Select individual card fields, Select all,
+  or Clear all, then "Export subtitles for all videos". Uses every MP4 directly in
+  the Video / SRT folder and all packets from the selected log folder. Map
+  selections, ride filters and hidden positions do not limit this export.
+  Every video needs an original same-stem SRT containing its per-frame recording
+  timestamps. Missing or malformed SRTs are reported and skipped; other videos
+  continue. MP4s are not decoded, edited or re-encoded.
+  Backward recording-clock steps are flagged in the report; each frame still
+  uses its own original recording timestamp, with original playback timing.
+  Each frame holds the latest GPS packet RECEIVED AT OR BEFORE that frame's
+  recording timestamp, never a future packet. GPS age is frame time minus GPS
+  receipt time, in seconds with millisecond precision. Before the first receipt,
+  GPS fields show unavailable. After the last receipt they remain held and age.
+  GPS age and received-packet gaps turn red above the Red gap threshold setting.
+  Packet numbers identify records across videos; map S labels are selection-local.
+  Movement direction uses previous-to-current GPS, without a future packet.
+  Each MP4 gets two subtitle files, with the same base name as the video:
+    DJI_xxxx.ass  The card: explicit top-left position, font size, translucent white panel,
+                  orange/green/purple highlights and selected-band emphasis.
+                  Panel and highlight fills are 50% transparent; text is opaque.
+                  Layout scales from a 1920x1080 reference canvas. Camera
+                  metadata remains in a smaller section under the selected data.
+    DJI_xxxx.srt  Compatibility fallback: explicit 28px font tags and top-left
+                  alignment hint. SRT styling still depends on player support.
+  Load the .ass file for the intended card appearance. SRT cannot specify a
+  consistent card layout. ASS players honour its embedded styles by default.
+  ASS uses centisecond timestamps: boundaries round up by at most 9 ms, without
+  overlaps or showing the next cue early. SRT keeps exact original timings.
+  New files: <Output folder>/subtitles/<unique batch>/DJI_xxxx.ass and .srt.
+  Original SRT cue text is retained and the chosen fields are appended.
+  Original SRTs and MP4s are never overwritten. Every run gets a new folder.
+  Download individual subtitles, the report, or the complete ZIP from the map page.
+  The current map remains open. Field choices are remembered after an export.
+  To play, load the new .ass as an external subtitle in your video player.
+  Browser integration check: node tools/test_surfer_subtitles_browser.cjs
+  (Playwright on NODE_PATH, optional PLAYWRIGHT_CHROMIUM_EXECUTABLE.)
 
 Migration:
   Reusable tools, model, FFmpeg and saved settings were copied from CAM3.
