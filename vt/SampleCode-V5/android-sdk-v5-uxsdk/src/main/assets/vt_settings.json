@@ -15,6 +15,7 @@
   "sidewaysSide": "left",
   "alignmentToleranceMetres": 3,
   "positioningAngleDegrees": 45,
+  "yawTargetOffsetDegrees": 0,
   "positioningAngleToleranceDegrees": 5,
   "extraPathClearanceMetres": 0,
   "routePlanningAllowanceMetres": 2,

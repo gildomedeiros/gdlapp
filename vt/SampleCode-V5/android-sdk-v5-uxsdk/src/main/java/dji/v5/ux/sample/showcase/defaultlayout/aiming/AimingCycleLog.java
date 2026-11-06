@@ -19,6 +19,7 @@ public final class AimingCycleLog {
                     "targetAgeMs",f==null ? null : at-f.time,"aircraftLatitude",in.lat,"aircraftLongitude",in.lon,
                     "aircraftHeadingDeg",in.heading,"aircraftFixMs",in.aircraftTime,"aircraftAgeMs",at-in.aircraftTime,
                     "distanceM",distance,"subjectBearingDeg",bearing,"relativeBearingDeg",YawAimingMath.shortestHeadingError(bearing,in.heading),
+                    "appliedYawOffset",session.appliedYawOffset,"targetAimingHeadingDeg",session.targetAimingHeadingDeg,
                     "targetSenderMs",f==null ? null : f.sampleTime,
                     "aimingMode",session.movement.returning() ? "return" : session.movement.approaching() && !session.movement.presetApproach() ? "approach"
                             : session.movement.riding ? "riding" : "normal",

@@ -118,6 +118,10 @@ public final class AimingSession {
     public final SurferYawController surferYaw=new SurferYawController();
     // VT 3.7: Immutable session snapshot, set by the adapter only while stopped before Start.
     public RotationSpeedCurve rotationCurve;
+    // VT 4.0.9: signed session snapshot, published with the rotation curve before Start.
+    public double configuredYawOffset;
+    // Per-cycle values describe the surfer aiming calculation, not navigation or sent motion.
+    public double appliedYawOffset, targetAimingHeadingDeg=Double.NaN;
     public long cycleId, cycleAt;
     public Inputs cycleInputs, cycleFinalInputs;
     public double cycleAngle=Double.NaN, cycleMultiplier=1, cycleRequestedYaw=Double.NaN;
@@ -286,6 +290,7 @@ public final class AimingSession {
         if(state==State.PAUSED) movement.advanceRideClock(port.now());
         // CAM3 v2.7: A fresh decision record each cycle, including cycles that issue no command.
         cycleRetainedTarget=false; cycleId++; cycleAt=port.now(); cycleInputs=null; cycleFinalInputs=null; cycleAngle=Double.NaN;
+        appliedYawOffset=0; targetAimingHeadingDeg=Double.NaN;
         cycleMultiplier=1; cycleRequestedYaw=Double.NaN; cycleRequestedForward=cycleRequestedRight=0; cycleDecision="no_command";
         try {
             if (state == State.STOPPING || state == State.RELEASE_UNCONFIRMED) {
@@ -418,7 +423,9 @@ public final class AimingSession {
                     double bearing=YawAimingMath.bearingToTarget(in.lat,in.lon,in.target.lat,in.target.lon);
                     // A single yaw owner: shortest route, then block opposite corrections.
                     // Never wrap a blocked correction into an almost-full-circle turn.
-                    cycleAngle=YawAimingMath.shortestHeadingError(bearing,in.heading);
+                    appliedYawOffset=configuredYawOffset;
+                    targetAimingHeadingDeg=appliedYawOffset==0 ? bearing : (bearing+appliedYawOffset+360)%360;
+                    cycleAngle=YawAimingMath.shortestHeadingError(targetAimingHeadingDeg,in.heading);
                     rate=surferYaw.calculate(cycleAngle,rate,Math.max(0.001,elapsed/1000.0),movement.riding,now,movement.settings().maxYawRate,movement.settings().yawAcceleration,rotationCurve);
                     cycleDecision=surferYaw.blocked ? "reverse_blocked"
                             : surferYaw.requestedDirection==0 ? "aligned_zero"

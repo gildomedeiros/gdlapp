@@ -246,3 +246,15 @@ $v408=@(Get-Content (Join-Path $output 'vt408-log.jsonl') | ForEach-Object { $_ 
 $row408=@($v408 | Where-Object event -eq 'movement_cycle')[0]
 if($row408.boundaryRecoveryFlow -ne 'return_to_central' -or [Math]::Abs($row408.currentBoundaryDistanceM+1) -gt .02 -or $row408.returnBoundaryStandOffMetres -ne 10 -or $row408.submittedForwardMps -eq 0 -or $row408.returnTargetLatitude -le 0){throw 'VT408 boundary recovery log validation failed'}
 Write-Output 'PASS: independent JSON parser verifies VT408 boundary recovery flow, distance, fixed target and submitted command'
+
+# VT 4.0.9: signed surfer framing, legacy configuration, yaw curves and per-cycle logs.
+& "$JavaHome/bin/javac.exe" -cp "$output;$gsonJar" -d $output (Join-Path (Split-Path $test) 'Vt409Test.java')
+if ($LASTEXITCODE -ne 0) { throw 'VT409 compile failed' }
+& "$JavaHome/bin/java.exe" -cp "$output;$gsonJar" 'dji.v5.ux.sample.showcase.defaultlayout.aiming.Vt409Test' (Join-Path $projectRoot 'SampleCode-V5/android-sdk-v5-uxsdk/src/main/assets') $output
+if ($LASTEXITCODE -ne 0) { throw 'VT409 tests failed' }
+$v409=@(Get-Content (Join-Path $output 'vt409-log.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+$header409=@($v409 | Where-Object event -eq 'session_start')[0]
+$rows409=@($v409 | Where-Object event -eq 'aiming_cycle')
+if($header409.version -ne '4.0.9-test' -or $rows409.Count -ne 5 -or $rows409[0].appliedYawOffset -ne 5 -or $rows409[0].subjectBearingDeg -ne 0 -or $rows409[0].targetAimingHeadingDeg -ne 5 -or $rows409[0].remainingAngleDeg -ne 5 -or $rows409[1].appliedYawOffset -ne -5 -or $rows409[1].targetAimingHeadingDeg -ne 355 -or $rows409[2].appliedYawOffset -ne 0 -or $null -ne $rows409[2].targetAimingHeadingDeg -or $rows409[3].appliedYawOffset -ne 0 -or $null -ne $rows409[3].targetAimingHeadingDeg -or $rows409[4].aimingMode -ne 'return' -or $rows409[4].appliedYawOffset -ne 0 -or $null -ne $rows409[4].targetAimingHeadingDeg){throw 'VT409 independent yaw-offset log validation failed'}
+Write-Output 'PASS: independent JSON parser verifies VT409 version, signed offsets, original/adjusted headings and inactive/navigation reset'
+

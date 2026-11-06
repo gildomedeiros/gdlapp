@@ -284,6 +284,7 @@ public final class YawAimingController implements AimingSession.Port {
                         // Disk access may take time; STOP/screen loss during it must still veto Start.
                         if(!foreground||!listening||intent.get()!=request)return;
                         retreatConfig=loaded.retreat;session.rotationCurve=loaded.rotation;
+                        session.configuredYawOffset=loaded.appliedYawOffset;
                         movementConfig=loaded.movement;positioningConfig=loaded.positioning;
                         fullLog.record("vt40_configuration","nextSession",session.sessionId()+1,"effectiveSettingsJson",loaded.settingsJson,"effectiveWaveLinesJson",loaded.waveLinesJson);
                         camera.prepareConfiguration(loaded,SharedConfigStorage.folder(appContext));

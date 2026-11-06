@@ -6,6 +6,7 @@ public final class VtSessionConfig {
     }
     public interface Reader {String read(String name)throws Exception;}
     public final ComeToMeSettings movement;
+    public final double appliedYawOffset;
     public final WaveLinePositioning positioning;
     public final String settingsJson,waveLinesJson;
     public final RetreatSettings retreat;
@@ -13,12 +14,12 @@ public final class VtSessionConfig {
     public final GimbalBandConfig gimbal;
     public final String retreatJson,rotationJson,gimbalJson;
     private VtSessionConfig(String r,String y,String g,RetreatSettings retreat,RotationSpeedCurve rotation,GimbalBandConfig gimbal) {
-        this(r,y,g,retreat,rotation,gimbal,null,null,null,null);
+        this(r,y,g,retreat,rotation,gimbal,null,null,null,null,0);
     }
     private VtSessionConfig(String r,String y,String g,RetreatSettings retreat,RotationSpeedCurve rotation,GimbalBandConfig gimbal,
-            ComeToMeSettings movement,WaveLinePositioning positioning,String settings,String waveLines) {
+            ComeToMeSettings movement,WaveLinePositioning positioning,String settings,String waveLines,double appliedYawOffset) {
         retreatJson=r;rotationJson=y;gimbalJson=g;this.retreat=retreat;this.rotation=rotation;this.gimbal=gimbal;
-        this.movement=movement;this.positioning=positioning;settingsJson=settings;waveLinesJson=waveLines;
+        this.movement=movement;this.positioning=positioning;settingsJson=settings;waveLinesJson=waveLines;this.appliedYawOffset=appliedYawOffset;
     }
     private static String read(Reader reader,String name)throws Exception {
         String s=reader.read(name);if(s==null)throw new IllegalArgumentException("No configuration folder selected. Use Configuration folder first.");return s;
@@ -37,7 +38,7 @@ public final class VtSessionConfig {
                 try{p=l.find(c.waveLineId);}catch(IllegalArgumentException missing){throw new WaveLineSetupRequired("The selected wave line is no longer available. Open Wave lines and select a saved wave line.");}
                 positioning=new WaveLinePositioning(p.geometry,p.id,c.mode,c.sidewaysSide,c.alignmentTolerance,result.retreat.enabled?result.retreat.minimumDistance:0,c.angle,c.angleTolerance,c.extraClearance,c.movement.excursionStop(),c.planningAllowance);
             }
-            return new VtSessionConfig(result.retreatJson,result.rotationJson,result.gimbalJson,result.retreat,result.rotation,result.gimbal,c.movement,positioning,settings,library);
+            return new VtSessionConfig(result.retreatJson,result.rotationJson,result.gimbalJson,result.retreat,result.rotation,result.gimbal,c.movement,positioning,settings,library,c.appliedYawOffset());
         }catch(WaveLineSetupRequired e){throw e;}catch(Exception e){throw new IllegalArgumentException("Cannot start: "+file+" — "+e.getMessage()+". Correct configuration or capture/select a wave line, then press Start.",e);}
     }
     public static VtSessionConfig load(Reader reader) {
