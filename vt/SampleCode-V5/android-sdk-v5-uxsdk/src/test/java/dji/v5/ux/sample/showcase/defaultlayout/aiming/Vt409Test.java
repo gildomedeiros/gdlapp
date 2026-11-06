@@ -27,17 +27,21 @@ public final class Vt409Test {
         JsonObject legacy=JsonParser.parseString(settings(-45,0,false)).getAsJsonObject();legacy.remove("yawTargetOffsetDegrees");
         near(0,load(legacy.toString()).appliedYawOffset,"old external settings still load");
         for(double angle:new double[]{-90,-45,-.1,0,.1,45,90}){
-            near(0,signed(angle,0),"zero magnitude preserves aiming");
-            near(angle==0?0:angle<0?5:-5,signed(angle,5),"sign from configured positioning angle");
+            for(double offset:new double[]{-5,0,5})
+                near(offset,signed(angle,offset),"configured sign independent of positioning angle "+angle);
         }
-        for(String bad:new String[]{"-1","181","1e309","null","\"5\"","true"}){
+        for(String bad:new String[]{"-181","181","-1e309","1e309","null","\"5\"","true"}){
             String raw=settings(-45,5,false).replace("\"yawTargetOffsetDegrees\":5.0","\"yawTargetOffsetDegrees\":"+bad);
             fails(()->load(raw),"invalid offset rejected: "+bad);
         }
         fails(()->load(settings(-45,5,false).replace("yawTargetOffsetDegrees","yawTargetOffestDegrees")),"misspelling remains rejected");
-        near(180,signed(-45,180),"largest meaningful heading offset accepted");
+        near(180,signed(-45,180),"positive endpoint accepted");
+        near(-180,signed(45,-180),"negative endpoint accepted");
+        JsonObject missingAngle=JsonParser.parseString(settings(0,-5,false)).getAsJsonObject();
+        missingAngle.remove("positioningAngleDegrees");
+        near(-5,load(missingAngle.toString()).appliedYawOffset,"offset independent of omitted positioning setting");
         VtSessionConfig old=load(settings(-45,5,false));
-        near(-5,load(settings(45,5,false)).appliedYawOffset,"next session adopts changed settings");
+        near(-5,load(settings(45,-5,false)).appliedYawOffset,"next session adopts configured negative offset");
         near(5,old.appliedYawOffset,"existing snapshot immutable");
 
         JsonObject enabled=JsonParser.parseString(settings(-45,5,true)).getAsJsonObject();enabled.addProperty("waveLineId","beach");
@@ -85,8 +89,8 @@ public final class Vt409Test {
         }
     }
     static void aiming(){
-        for(double angle:new double[]{-45,45,0}){
-            Port p=new Port(angle,5);p.start();double expected=angle<0?5:angle>0?-5:0;
+        for(double angle:new double[]{-45,45,0})for(double expected:new double[]{-5,0,5}){
+            Port p=new Port(angle,expected);p.start();
             near(expected,p.core.appliedYawOffset,"session applies configured sign");
             near(expected<0?355:expected,p.core.targetAimingHeadingDeg,"adjusted heading normalized");
             near(expected,p.core.cycleAngle,"controller error to adjusted target");
@@ -95,14 +99,14 @@ public final class Vt409Test {
         }
         Port p=new Port(-45,5);p.start();
         for(double h:new double[]{2,5,8}){p.tick(100,0,h,null);near(0,p.yaw,"normal tolerance around +5 at "+h);}
-        p=new Port(45,5);p.start();
+        p=new Port(45,-5);p.start();
         for(double h:new double[]{352,355,358}){p.tick(100,0,h,null);near(0,p.yaw,"normal tolerance around -5 at "+h);}
-        for(double angle:new double[]{-45,45}){
-            p=new Port(angle,5);p.start();
-            double east=angle<0?-Math.tan(Math.toRadians(1))*100:Math.tan(Math.toRadians(1))*100;
-            p.tick(100,east,angle<0?359:1,null);
-            near(angle<0?4:356,p.core.targetAimingHeadingDeg,"target wraps through north");
-            near(angle<0?5:-5,p.core.cycleAngle,"shortest route across north");
+        for(double offset:new double[]{5,-5}){
+            p=new Port(0,offset);p.start();
+            double east=offset>0?-Math.tan(Math.toRadians(1))*100:Math.tan(Math.toRadians(1))*100;
+            p.tick(100,east,offset>0?359:1,null);
+            near(offset>0?4:356,p.core.targetAimingHeadingDeg,"target wraps through north");
+            near(offset,p.core.cycleAngle,"shortest route across north");
         }
         // Compare zero-offset session outputs against the existing curve over a changing heading trace.
         p=new Port(-45,0);p.start();
@@ -169,7 +173,7 @@ public final class Vt409Test {
         Port right=new Port(-45,5);right.start();
         // Deliberately different observed input must not replace the actual decision snapshot.
         AimingCycleLog.record(log,right.core,ComeToMeTest.in(right.time,0,0,0,100,90),right.time,false,right.core.cycleId,right.yaw);
-        Port left=new Port(45,5);left.start();AimingCycleLog.record(log,left.core,left.in,left.time,false,left.core.cycleId,left.yaw);
+        Port left=new Port(-45,-5);left.start();AimingCycleLog.record(log,left.core,left.in,left.time,false,left.core.cycleId,left.yaw);
         right.tick(0,0,0,null);AimingCycleLog.record(log,right.core,right.in,right.time,false,right.core.cycleId,right.yaw);
         right.tick(100,0,0,"pilot_stick");AimingCycleLog.record(log,right.core,right.in,right.time,false,-1,0);
         AimingCycleLog.record(log,navigation.core,navigation.in,navigation.time,false,navigation.core.cycleId,navigation.yaw);

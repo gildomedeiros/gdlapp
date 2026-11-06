@@ -9,10 +9,9 @@ public final class VtSettingsConfig {
     private VtSettingsConfig(ComeToMeSettings movement,String mode,String id,String side,double tolerance,double angle,double angleTolerance,double extraClearance,double planningAllowance,double yawTargetOffsetDegrees) {
         this.movement=movement;this.mode=mode;waveLineId=id;sidewaysSide=side;alignmentTolerance=tolerance;this.angle=angle;this.angleTolerance=angleTolerance;this.extraClearance=extraClearance;this.planningAllowance=planningAllowance;this.yawTargetOffsetDegrees=yawTargetOffsetDegrees;
     }
-    /** VT 4.0.9: positive compass offset aims right, placing the surfer left of centre. */
+    /** VT 4.0.9: use the configured sign directly, independently of positioning angle. */
     public double appliedYawOffset() {
-        if(angle==0 || yawTargetOffsetDegrees==0)return 0;
-        return angle<0 ? yawTargetOffsetDegrees : -yawTargetOffsetDegrees;
+        return yawTargetOffsetDegrees;
     }
     private static double optional(JsonObject o,String k,double value,double lo,double hi) {
         return o.has(k)?VtJsonFields.number(o,k,lo,hi):value;
@@ -20,7 +19,7 @@ public final class VtSettingsConfig {
     public static VtSettingsConfig parse(String raw,RetreatSettings retreat) {
         JsonObject o=StrictConfigJson.object(raw);
         double angle=optional(o,"positioningAngleDegrees",45,-90,90);
-        double yawOffset=optional(o,"yawTargetOffsetDegrees",0,0,180);
+        double yawOffset=optional(o,"yawTargetOffsetDegrees",0,-180,180);
         double angleTolerance=optional(o,"positioningAngleToleranceDegrees",5,.1,45);
         double extra=optional(o,"extraPathClearanceMetres",0,0,50);
         double planningAllowance=optional(o,"routePlanningAllowanceMetres",2,0,50);
