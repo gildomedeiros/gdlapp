@@ -1,3 +1,21 @@
+## VTC 1.0.16 — automatic distance-band zoom
+
+In Setup / Optional Canon camera, set Automatic zoom to 1 to enable (default 0/off). Enter multiplier sequence such as `1.0, 1.2, 2.0` and switch interval (default 10 seconds, range 2–3600). Multipliers accept 0.5–3.0 in 0.1 increments; one entry holds continuously. All bands receive the multiplier, including below 40 m. Phase starts at the first entry after connection or automatic-zoom/sequence/interval/band changes. Camera polling and HTTP time can delay the actual switch; logs retain scheduled switch times.
+
+Band lower distances (m): 0, 40, 60, 100, 150, 200, 250, 300, 350, 400, 450.
+Default base optical zoom: 1, 1, 1.5, 2.5, 4, 5, 6.5, 8, 9.5, 10.5, 12.
+The 11 optical values are editable in the same order. Above 500 m retains the last band. After initial selection, 5 m hysteresis applies on either side of boundaries. Fresh accepted GPS and configured camera coordinates are required; stale GPS holds zoom. Automatic zoom operates while connected, independently of whether mount aiming is started.
+
+Provisional mapping: log interpolation between (1x, CCAPI 0), (6x, 89), (10x, 102), with the last segment extrapolated above 10x. This is an estimate authorized for testing, not a calibrated lens model. Optical requests are limited to 1–65x and CCAPI requests to camera-advertised min/max/step. Frame width estimate is distance * 1.648252 / optical zoom; video cropping/stabilisation is not accounted for. Existing configured hfov/KML sectors are unchanged and not replaced with these estimates.
+
+Zoom settings and Manual camera zoom (x) remain editable while connected. Other settings stay locked. Entering a manual x value logs an observation, never a camera command; the Log manual zoom observation button records the same value again. Turn automatic zoom off for manual calibration. Entries contain CCAPI readback/age, GPS distance/age, settings, and whether the pair qualifies as a current manual observation. Persisted manual values alone are not treated as new measurements.
+
+Camera HTTP runs on its own existing worker, with one operation at a time. A slow or failed zoom request cannot block the mount executor. POST responses are acknowledgements; subsequent GET readback confirms zoom. Pending requests get up to 5 seconds for readback before another command. Settings/network identity and GPS validity are checked again before POST; no unlimited command queue is created.
+
+Automatic JSONL logs under Download/VTC/logs include full settings, band boundaries/values, distance and GPS validity/age, nominal and selected band, hysteresis, active multiplier/index and next switch, requested optical/CCAPI values, ability limits and clamping, estimated requested/current frame widths, POST timing/response/errors, readback confirmation and reasons for skipped/delayed commands. Aiming telemetry retains the same timestamp scheme for correlation.
+
+Validation: automated policy tests cover every band, >500 m, near-distance multipliers, hysteresis, cycling/reset behavior, stale GPS/off mode, mapping anchors, camera limits, input validation and live-setting scope. Existing camera-worker isolation regression remains included. Physical camera zoom and UI behavior still require device testing.
+
 ## VTC 1.0.14 — lost Wi-Fi recovery
 
 - Stop retries can use the currently available single Wi-Fi network when the original Android network handle has disappeared. Only Stop and motor-status commands may use this recovery path; movement requires a new connection and calibration.

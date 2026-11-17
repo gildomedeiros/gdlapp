@@ -43,7 +43,7 @@ public final class VtcService extends Service {
         previousHandler=Thread.getDefaultUncaughtExceptionHandler();
         fatalHandler=(thread,failure)->{try{controller.fatalFailure(failure);}finally{if(previousHandler!=null)previousHandler.uncaughtException(thread,failure);}};
         Thread.setDefaultUncaughtExceptionHandler(fatalHandler);
-        camera=new CameraZoomReader(controller::settings,controller::cameraNetwork,log);
+        camera=new CameraZoomReader(controller::settings,controller::cameraNetwork,controller::zoomInput,log);
         log.settings("service_start",settings);
         final Settings migrated=settings;
         storage.execute(()->{try{setup.save(migrated.values);}catch(Exception e){log.error("settings_migration_save_failed",e);}});
@@ -54,7 +54,9 @@ public final class VtcService extends Service {
     }
     String setupStatus(){return loadError.isEmpty()?setup.status():loadError;}
     void saveSettings(Settings settings)throws Exception {
+        String previousManual=controller.settings().values.get("manualZoomX");
         controller.configure(settings);
+        if(!previousManual.equals(settings.values.get("manualZoomX")))camera.manualObservation("field_changed");
         storage.execute(()->{try{setup.save(settings.values);loadError="";}catch(Exception e){loadError="Settings save failed: "+e.getMessage();log.error("settings_save_failed",e);}});
     }
     void exit(Runnable finished){controller.exit(ok->main.post(()->{

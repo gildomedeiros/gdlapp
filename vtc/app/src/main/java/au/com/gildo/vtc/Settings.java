@@ -12,9 +12,18 @@ final class Settings {
     final double acquisitionTriggerDegrees,gotoMaxMove,maxPanningSpeed,gpsGapTimeout;
     final double magnitude,tiltOffset,window,minNet,consistency,supportChange,quietRate,quietSeconds,offsetRate,hfov,maxGpsSpeed;
     final int observations,supports;
+    final boolean autoZoom;
+    final double[] zoomMultipliers,zoomBands;
+    final double zoomSwitchSeconds,manualZoomX;
+    static boolean liveZoomKey(String key){return Arrays.asList("autoZoom","zoomMultipliers","zoomBands","zoomSwitchSeconds","manualZoomX").contains(key);}
+    boolean onlyZoomChanged(Settings next){
+        for(String key:values.keySet())if(!liveZoomKey(key)&&!values.get(key).equals(next.values.get(key)))return false;
+        return true;
+    }
     static LinkedHashMap<String,String> defaults() {
         LinkedHashMap<String,String> d=new LinkedHashMap<>();
         String[][] rows={
+            {"autoZoom","0"},{"zoomMultipliers","1.0"},{"zoomBands",ZoomPlan.DEFAULT_BANDS},{"zoomSwitchSeconds","10"},{"manualZoomX",""},
             {"mountHost",""},{"mountPort","11880"},{"receiverHost","192.168.4.1"},{"receivePort","5005"},{"receiverPort","5006"},
             {"latitude","-28.165513983264137"},{"longitude","153.55045722684628"},{"height",""},{"targetHeight","1"},
             {"landmarkLat",""},{"landmarkLon",""},{"landmarkHeight",""},{"panSign","1"},{"tiltSign","1"},
@@ -37,6 +46,11 @@ final class Settings {
             d.put(e.getKey(),e.getValue().trim());
         }
         values=Collections.unmodifiableMap(d);
+        autoZoom=integer("autoZoom",0,1)==1;
+        zoomMultipliers=ZoomPlan.parse(d.get("zoomMultipliers"),true);
+        zoomBands=ZoomPlan.parse(d.get("zoomBands"),false);
+        zoomSwitchSeconds=number("zoomSwitchSeconds",2,3600);
+        manualZoomX=optional("manualZoomX",1,65);
         mountHost=d.get("mountHost");receiverHost=d.get("receiverHost");
         cameraHost=d.get("cameraHost");cameraPort=integer("cameraPort",1,65535);
         if(!cameraHost.isEmpty()&&!ipv4(cameraHost))throw new IllegalArgumentException("Camera address must be an IPv4 address, or blank to disable");

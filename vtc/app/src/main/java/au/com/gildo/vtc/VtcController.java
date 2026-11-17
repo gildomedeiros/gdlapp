@@ -51,6 +51,13 @@ final class VtcController implements AutoCloseable {
     private volatile Network network;
     Network cameraNetwork(){return network;}
     Settings settings(){return s;}
+    ZoomPlan.Input zoomInput(){
+        Settings settings=s;GpsFeed feed=gps;GpsFeed.Fix fix=feed==null?null:feed.latest();
+        if(fix==null)return new ZoomPlan.Input(Double.NaN,-1,false);
+        long age=SystemClock.elapsedRealtime()-fix.receivedAt;
+        double distance=Geo.valid(settings.latitude,settings.longitude)?Geo.distance(settings.latitude,settings.longitude,fix.packet.lat,fix.packet.lon):Double.NaN;
+        return new ZoomPlan.Input(distance,age,fix.epoch==feed.continuity()&&age>=0&&age<=settings.gpsAge*1000&&Double.isFinite(distance));
+    }
     String liveGps(){GpsFeed f=gps;return f==null?"LoRa disconnected":f.display();}
     void retryLandmarkStorage(){landmarkStore.retry();}
     private Calibration calibration;
@@ -93,6 +100,7 @@ final class VtcController implements AutoCloseable {
         publish();
     }
     void configure(Settings settings) {
+        if((mount!=null||busy||stopping)&&s.onlyZoomChanged(settings)){s=settings;log.settings("zoom_settings_applied_live",s);publish();return;}
         if(mount!=null||busy||stopping){log.event("settings_blocked","Disconnect before changing settings");throw new IllegalStateException("Disconnect before changing settings");}
         s=settings;framing=new FramingEngine(s);planner=new AimPlanner(s);
         log.settings("settings_applied",s);publish();

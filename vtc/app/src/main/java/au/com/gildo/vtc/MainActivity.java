@@ -152,6 +152,16 @@ public final class MainActivity extends Activity {
         LinearLayout camera=card(p,"Optional Canon camera");
         field(camera,"cameraHost","Camera IPv4 address — blank disables polling");
         field(camera,"cameraPort","CCAPI HTTP port");
+        field(camera,"autoZoom","Automatic zoom (0 = off, 1 = on)");
+        text(camera,"Off leaves the camera zoom exactly as it is: no zoom commands, no band or multiplier adjustments. VTC continues reading and logging zoom.",13,MUTED,false);
+        field(camera,"zoomMultipliers","Multipliers (comma-separated; 0.5–3.0, increments 0.1)");
+        field(camera,"zoomSwitchSeconds","Switch multiplier every (seconds; 2–3600)");
+        field(camera,"zoomBands","Band optical zoom values (11 comma-separated values)");
+        text(camera,"Bands start at 0, 40, 60, 100, 150, 200, 250, 300, 350, 400 and 450 m. Above 500 m retains the final band. Multipliers apply to every band. Band hysteresis: 5 m. One multiplier holds; multiple values cycle in order. Switching is checked each camera poll, so response delays may delay a switch.",13,MUTED,false);
+        text(camera,"Zoom mapping and frame widths are provisional estimates from 1x=0, 6x=89 and 10x=102. Test and calibrate. Camera limits are enforced. Fresh GPS is required for automatic zoom.",13,MUTED,false);
+        field(camera,"manualZoomX","Manual camera zoom (×; optional observation, not a command)");
+        button(camera,"Log manual zoom observation",()->{if(autoSaveSettings())service.camera.manualObservation("user_record");});
+        text(camera,"Turn automatic zoom off, set the zoom on your camera and enter its displayed × value. The observation logs the latest CCAPI reading and its age. These fields can be edited while aiming.",13,MUTED,false);
         text(camera,"Reads zoom and synchronises the clock once per connection, independently of aiming. Camera errors do not stop tracking. Use the camera IP shown on your shared Wi-Fi network.",13,MUTED,false);
         LinearLayout site=card(p,"Camera site");
         field(site,"cameraCoordinates","Camera coordinates — latitude, longitude");
@@ -256,9 +266,11 @@ public final class MainActivity extends Activity {
     private boolean autoSaveSettings() {
         handler.removeCallbacks(autoSave);
         if(fillingSettings||service==null)return false;
-        if(lastView!=null&&(lastView.connected||lastView.busy))return true;
+        
         try {
             Settings next=readSettings();
+            if(lastView!=null&&(lastView.connected||lastView.busy)&&!settings.onlyZoomChanged(next))
+                throw new IllegalArgumentException("Only zoom settings can change while connected");
             if(!next.values.equals(settings.values)){service.saveSettings(next);settings=next;log.settings("settings_auto_saved",next);}
             setupMessage.setText("Saved automatically: Download/VTC/Settings/setup.json");return true;
         }catch(Exception e){setupMessage.setText("Not applied: "+e.getMessage()+". Last valid settings retained.");return false;}
@@ -316,7 +328,7 @@ public final class MainActivity extends Activity {
         for(Button b:landmarkButtons)b.setEnabled(v.canGoToLandmark);
         for(TextView t:landmarkStatuses)t.setText(v.lastLandmark);
         boolean editing=!v.connected&&!v.busy;
-        for(EditText input:fields.values())input.setEnabled(editing);
+        for(Map.Entry<String,EditText> entry:fields.entrySet())entry.getValue().setEnabled(editing||Settings.liveZoomKey(entry.getKey()));
         panSign.setEnabled(editing);tiltSign.setEnabled(editing);
         if(!v.connected){levelConfirmed.setChecked(false);directionsConfirmed.setChecked(false);}
         logStatus.setText(log.status()+"\n\n"+service.setupStatus());
@@ -327,7 +339,7 @@ public final class MainActivity extends Activity {
         text(parent,label,14,TEXT,false);
         EditText e=new EditText(this);e.setSingleLine();e.setTextSize(16);e.setTextColor(TEXT);e.setHintTextColor(MUTED);
         boolean coordinates=key.endsWith("Coordinates");
-        e.setInputType(key.endsWith("Host")||coordinates?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        e.setInputType(key.endsWith("Host")||coordinates||key.equals("zoomMultipliers")||key.equals("zoomBands")?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
         e.setHint(coordinates?"-28.165514, 153.550457":key.equals("height")||key.equals("landmarkHeight")?"Required before calibration":"");
         e.setOnFocusChangeListener((v,focused)->{if(!focused)log.record("settings_field_edited","field",key,"value",e.getText().toString(),"saved",false);});
         e.addTextChangedListener(new android.text.TextWatcher(){
