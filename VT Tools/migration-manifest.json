@@ -9,8 +9,8 @@
     },
     {
       "path": "README.txt",
-      "bytes": 21191,
-      "sha256": "210841bb86886b5a199037329efea1e6bc60667f454ef2966568359617f0f604"
+      "bytes": 24677,
+      "sha256": "ca98f6c97b99a0fc657322cd57a41c05c08e5c4b37a97a7371c9995b471ba2bc"
     },
     {
       "path": "Start Map.cmd",
@@ -144,8 +144,8 @@
     },
     {
       "path": "tools/surfer_drone_status.py",
-      "bytes": 11519,
-      "sha256": "322d1807352bcb4156194ce1f49dd61f25625ea612f8992c730fad420ac4ddfb"
+      "bytes": 12894,
+      "sha256": "3ab4834edef50635fc7b1b829c9b9f5ae4c5c63fbb719ab6baaeae77f7fcfe4c"
     },
     {
       "path": "tools/surfer_fov.py",
@@ -159,23 +159,23 @@
     },
     {
       "path": "tools/surfer_gps_map.py",
-      "bytes": 67918,
-      "sha256": "cd86706d750ad9fc3aec28ab24edf42a4b521cd965cac7219a31ff50b9f82cbf"
+      "bytes": 69957,
+      "sha256": "6f13602dbb763d578ef2cc3dffef9fc1c49d1fc6675b39311def8c34de79a31d"
     },
     {
       "path": "tools/surfer_map_app.html",
-      "bytes": 21089,
-      "sha256": "fa63d94067ebbc42f63265a094a340a0d28ece5ced6e1b8b4d5b34c477be470b"
+      "bytes": 26365,
+      "sha256": "6a1243b688da28e83f6950e1b80f173d8c8d365a0ccbbf830e6a53f836c04ca0"
     },
     {
       "path": "tools/surfer_map_app.py",
-      "bytes": 34382,
-      "sha256": "e875e3e414e5f4d0afbaf6f4bd8aee4327eacedec293de9db1c405bd6e5dfa91"
+      "bytes": 37709,
+      "sha256": "81ebf210381d3b0b3c2911585d2478d0f02ae0982cdea5592cdec9c22b4dc4b2"
     },
     {
       "path": "tools/surfer_map_capture.py",
-      "bytes": 15079,
-      "sha256": "cf51bf651ae4a75b35855138e1918d38a08e21164a82c68719b48ba38d6df9d7"
+      "bytes": 15104,
+      "sha256": "d1105e0b490a72928e5dcc54a4dafc83bdcee176ede3c05109ad98a8a07ce16a"
     },
     {
       "path": "tools/surfer_map_filters.js",
@@ -194,8 +194,8 @@
     },
     {
       "path": "tools/surfer_map_interactions.js",
-      "bytes": 20399,
-      "sha256": "c5cf2a8b8443b0f3e221e7bd1c32e19aab0c3d691ac2e7d11acbc9c58b84033e"
+      "bytes": 20709,
+      "sha256": "4c91869e36bb6405a8eb7e98a7c905e31f87f0497b64d25a39bc2130b8a533bc"
     },
     {
       "path": "tools/surfer_map_landmarks.js",
@@ -214,8 +214,8 @@
     },
     {
       "path": "tools/surfer_map_pair_hover.js",
-      "bytes": 5878,
-      "sha256": "6b103fde274d63702b4ff7ca84ba7113c441bf28ef5675a31ef9fc3e79ef9490"
+      "bytes": 5920,
+      "sha256": "d06ce520c71b0385969a6cd4ba464c002b4dfc5866fae4f75224fd4c3502a2c9"
     },
     {
       "path": "tools/surfer_map_scale.js",
@@ -244,8 +244,8 @@
     },
     {
       "path": "tools/surfer_subtitles.py",
-      "bytes": 16316,
-      "sha256": "7d57eb5fef4f17cfdc8206303a81aeebeba3df2c476f84428d1bd2af7dc6debf"
+      "bytes": 17345,
+      "sha256": "e27f63e65734119164a604d16efe28eb69786f18dc3334b8c41d888ef94c7d37"
     },
     {
       "path": "tools/surfer_video_frames.py",
@@ -288,6 +288,16 @@
       "sha256": "d1b8b5082699dbc1783abe3a0a9ff0d3d6fd5cc128b1ce624e7c952ed2acb928"
     },
     {
+      "path": "tools/test_surfer_camera_heading.py",
+      "bytes": 6341,
+      "sha256": "280f9f87954f685087bf4f79ce96b9957354cd2079c72aaa9e07de00a5abe869"
+    },
+    {
+      "path": "tools/test_surfer_camera_heading_browser.cjs",
+      "bytes": 1942,
+      "sha256": "39e9cd4be01e3710d8c181a63768ff5dc4513558dba675706c2f263530ca57b5"
+    },
+    {
       "path": "tools/test_surfer_downloads.py",
       "bytes": 3643,
       "sha256": "9504dbd0b88adbe4aa1eda7caa621078009e6801fe4bf35864b83345634f9f99"
@@ -299,8 +309,8 @@
     },
     {
       "path": "tools/test_surfer_drone_status.py",
-      "bytes": 7477,
-      "sha256": "c4163386485eb26be29114d29cc69fc3565fa35367ca2ef9b3e01ff1c1bd1e50"
+      "bytes": 11043,
+      "sha256": "47418e5fa98dddd8fb51c216836cb22d441dde0c5158b23d210e36b72b95e1db"
     },
     {
       "path": "tools/test_surfer_fov.py",
@@ -309,8 +319,8 @@
     },
     {
       "path": "tools/test_surfer_map_app.py",
-      "bytes": 9242,
-      "sha256": "4053a7b49b672fd00b8702cee201792c0432ed68d1dda8bc63a14d8403139670"
+      "bytes": 14088,
+      "sha256": "abbb8e88b8fd93f067b725e85d49cfa957d8ed26f7246c017bae1c930cfe385a"
     },
     {
       "path": "tools/test_surfer_map_browser.cjs",
@@ -354,13 +364,13 @@
     },
     {
       "path": "tools/test_surfer_subtitles.py",
-      "bytes": 12861,
-      "sha256": "3b9667874f38a3a8c028ef472f5349dd721f967dcf25643a3a8a16ef1d9885a7"
+      "bytes": 15861,
+      "sha256": "d13600c061c7143bc78f1c7205bc4c5d673ff1b857f70e31a65445cb975d9185"
     },
     {
       "path": "tools/test_surfer_subtitles_browser.cjs",
-      "bytes": 6146,
-      "sha256": "7113b35fb1730ef3c547bcee8ea6f52252e9ed09ef6ca0425fb2aa7423f3ad2c"
+      "bytes": 14501,
+      "sha256": "337e67b447483dcf0a8eda6c2ee2b61836562041610c1312cdc141369ad00970"
     },
     {
       "path": "tools/test_surfer_video_frames.py",
@@ -378,5 +388,5 @@
       "sha256": "d61236a8eb9d16d61f5821161d95f6c917b385c0dd73c144b249ad00009da1bc"
     }
   ],
-  "updated": "2026-11-05: 50% translucent ASS card and highlight fills; opaque readable text"
+  "updated": "2026-11-06: up to three timestamp ranges on one map, individual following counts, deduplicated positions and saved history"
 }

@@ -8,6 +8,7 @@ function updateDroneHeadingHover(){
   id=[tip.dataset.selectedPoint,pick.value,...ids].find(id=>ids.includes(id));
  }
  for(const ray of droneHeadingRays)ray.style.visibility=ray.dataset.pairs===id?'visible':'hidden';
+ updateYawSimulationView(id);
 }
 function clearDroneHeadingHover(){droneHeadingHover=null;updateDroneHeadingHover();}
 svg.querySelectorAll('.surfer-marker,.drone-marker,.pair-line').forEach(node=>{

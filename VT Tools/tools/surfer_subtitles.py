@@ -20,6 +20,11 @@ FIELDS = [
     ('direction', 'GPS movement direction (previous → current)'),
     ('ride', 'Ride detected'), ('retreat', 'Retreat state / minimum distance'),
     ('height', 'Drone height'), ('heading', 'Drone heading'),
+    ('sim_applied_offset', '[SIM] Applied offset / sideways / frame width'),
+    ('sim_offset_magnitude', '[SIM] Fixed offset magnitude / sideways / frame width'),
+    ('sim_yaw', '[SIM] Yaw evidence / desired offset / quiet time'),
+    ('sim_frame_width', '[SIM] Frame width assumptions / horizontal FOV'),
+    ('camera_heading_error', 'Camera heading error relative to surfer'),
     ('tilt', 'Gimbal tilt / active target'), ('tilt_reported', 'Gimbal report time'),
     ('aiming', 'Aiming status'), ('come_to_me', 'Come to Me status'),
     ('boundary', 'Boundary status'), ('lora', 'LoRa RSSI / SNR'),
@@ -31,9 +36,13 @@ FIELDS = [
     ('source', 'Source log / line'),
 ]
 FIELD_IDS = [key for key, _ in FIELDS]
+SIM_FIELD_IDS = [key for key in FIELD_IDS if key.startswith('sim_')]
 PREFIXES = {
+    'sim_applied_offset': 'appliedOffset[SIM]:', 'sim_offset_magnitude': 'offsetMagnitude[SIM]:',
+    'sim_yaw': 'Yaw[SIM]:', 'sim_frame_width': 'Frame width[SIM]:',
     'movement': 'Surfer since previous packet:', 'ride': 'Ride detected:',
     'retreat': 'Retreat active:', 'height': 'Drone height:', 'heading': 'Drone heading:',
+    'camera_heading_error': 'Camera heading error:',
     'tilt': 'Gimbal tilt:', 'tilt_reported': 'Gimbal reported:', 'aiming': 'Aiming:',
     'come_to_me': 'Come to Me:', 'boundary': 'Boundary:', 'lora': 'LoRa signal:',
     'drone_displacement': 'Drone displacement', 'packet': 'Packet:', 'received': 'Received:',
@@ -72,7 +81,7 @@ def style_card_line(line, red=False):
         if not piece:
             continue
         color, bold = NORMAL, False
-        if line.startswith(('Retreat active:', 'Gimbal tilt:')) or re.fullmatch(r'\[[^\]]+\]\[[^\]]+\] m', piece):
+        if line.startswith(('Retreat active:', 'Gimbal tilt:', 'Camera heading error:')) or re.fullmatch(r'\[[^\]]+\]\[[^\]]+\] m', piece):
             color, bold = ORANGE, True
         if line.startswith('Retreat active: YES') or '(selected)' in piece or piece.startswith('TILTING'):
             color, bold = GREEN, True
@@ -130,6 +139,29 @@ class PacketIndex:
         self.ambiguous = {t for t, names in sources.items() if len(names) > 1}
         self.gap_red_ms = gap_red_ms
         self.cache = {}
+        self.simulation_parameters = None
+
+    def add_yaw_simulation(self, params, utc_offset, progress=lambda _:None, check_cancel=lambda:None):
+        """Replay all source receipts once, then reuse the exact selected packet's row.
+
+        Receipt/source-line identity prevents sequence reuse or map labels from
+        attaching a different packet. Rendering never advances simulation time.
+        """
+        if not set(self.fields).intersection(SIM_FIELD_IDS):return
+        from surfer_yaw_sim import parameters,load_observations,replay_samples
+        self.simulation_parameters=parameters(params)
+        sources={}
+        for point in self.points:sources.setdefault(point['sourceFile'],{})[point['sourceLine']]=point
+        for source,by_line in sorted(sources.items()):
+            check_cancel();progress('Replaying yaw simulation: '+Path(source).name)
+            stat=Path(source).stat()
+            samples=load_observations(source,stat.st_size,stat.st_mtime_ns,utc_offset)
+            check_cancel()
+            for row in replay_samples(samples,self.simulation_parameters):
+                point=by_line.get(row['sourceLine'])
+                if point is not None and point['time_ms']==row['timeMs']:point['yawSimulation']=row
+            check_cancel()
+        self.cache.clear()
 
     def lookup(self, frame_ms):
         i = bisect_right(self.times, frame_ms) - 1
@@ -153,6 +185,13 @@ class PacketIndex:
         for key, prefix in PREFIXES.items():
             result[key] = [style_card_line(line, red=key == 'received' and (p.get('sincePreviousReceivedMs') or 0) > self.gap_red_ms)
                            for line in lines if line.startswith(prefix)] or [styled(prefix + ' unavailable')]
+        if set(self.fields).intersection(SIM_FIELD_IDS):
+            from surfer_yaw_sim import card_lines
+            simulation=p.get('yawSimulation')
+            for key in SIM_FIELD_IDS:
+                matching=[line for line in card_lines(simulation) if line.startswith(PREFIXES[key])]
+                reason=simulation['reason'] if simulation and not simulation['valid'] else 'no simulation result for this GPS receipt'
+                result[key]=[style_card_line(line) for line in matching] or [style_card_line(PREFIXES[key]+' unavailable ('+reason+')')]
         if not valid_coordinates(p):
             result['separation'] = [styled(f'GPS {p.get("sequence", "?")} | separation unavailable (invalid surfer coordinates)')]
             result['surfer_coordinates'] = [styled('Surfer: invalid or unavailable GPS coordinates')]
@@ -171,7 +210,8 @@ class PacketIndex:
         }
         output = []
         for key in self.fields:
-            output.extend(dynamic.get(key) or static.get(key) or [styled(dict(FIELDS)[key] + ': unavailable (' + reason + ')')])
+            missing=PREFIXES[key]+' unavailable ('+reason+')' if key in SIM_FIELD_IDS and reason else dict(FIELDS)[key]+': unavailable ('+str(reason)+')'
+            output.extend(dynamic.get(key) or static.get(key) or [style_card_line(missing)])
         return '\n'.join(output), age, reason
 
 
@@ -213,14 +253,30 @@ def read_cues(path, tz):
     return cues, sha256(raw).hexdigest()
 
 
-def export_folder(video_folder, output, index, tz, progress=lambda _: None, check_cancel=lambda: None):
+def subtitle_videos(video_folder, video_name=None):
+    """List MP4s in this folder, or select an exact listed filename (never a path)."""
+    if not video_folder or not Path(video_folder).expanduser().is_dir():
+        raise ValueError('Enter an existing video / SRT folder.')
+    if video_name is not None and not isinstance(video_name, str):
+        raise ValueError('Select All or an MP4 filename from the video folder.')
+    folder = Path(video_folder).expanduser()
+    videos = sorted((p for p in folder.iterdir() if p.is_file() and p.suffix.lower() == '.mp4'),
+                    key=lambda p: (p.name.casefold(), p.name))
+    if video_name:
+        videos = [p for p in videos if p.name == video_name]
+        if not videos:
+            raise ValueError('Selected video is no longer in this folder. Refresh files and select it again.')
+    return videos
+
+
+def export_folder(video_folder, output, index, tz, progress=lambda _: None, check_cancel=lambda: None, video_name=None):
     """One new folder per batch. Never open source MP4s/SRTs for writing."""
     from surfer_subtitle_layout import HEADER,AssWriter,card_events,compact_srt
     folder, output = Path(video_folder), Path(output)
     if not folder.is_dir():
         raise ValueError('Video folder does not exist: ' + str(folder))
     entries = [p for p in folder.iterdir() if p.is_file()]
-    videos = sorted((p for p in entries if p.suffix.lower() == '.mp4'), key=lambda p: p.name.casefold())
+    videos = subtitle_videos(folder, video_name)
     if not videos:
         raise ValueError('No MP4 files found in the selected video folder.')
     output.mkdir(parents=True, exist_ok=False)
@@ -229,9 +285,13 @@ def export_folder(video_folder, output, index, tz, progress=lambda _: None, chec
         if path.suffix.lower() == '.srt':
             srts.setdefault(path.stem.casefold(), []).append(path)
     report = dict(videoFolder=str(folder.resolve()), output=str(output.resolve()), fields=index.fields,
+                  selectedVideo=video_name or None,
                   timing='Each source SRT frame timestamp uses the last GPS receipt at or before that time. No future GPS.',
                   styling='ASS: fixed top-left card, explicit font size, 50% transparent white panel and card highlights; opaque text. SRT: compact fallback; styling depends on player support.',
                   assTiming='ASS uses centisecond timing; cue boundaries round up by at most 9 ms. SRT preserves original millisecond timing.',
+                  simulation=dict(parameters=index.simulation_parameters,
+                      timing='Full chronological source-log replay. Each frame holds the result from its last GPS receipt; no future GPS or interpolation.',
+                      frameWidth='Estimate at surfer depth, using configured horizontal FOV and logged pitch/height; water at takeoff level, zero camera roll.') if index.simulation_parameters is not None else None,
                   files=[], totals={})
     exports = []
     for n, video in enumerate(videos, 1):

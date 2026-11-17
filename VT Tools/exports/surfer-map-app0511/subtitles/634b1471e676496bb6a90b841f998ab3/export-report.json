@@ -1,0 +1,50 @@
+{
+  "videoFolder": "C:\\Users\\gildo\\temp\\0511 test\\100MEDIA",
+  "output": "C:\\Users\\gildo\\gdlapp\\VT Tools\\exports\\surfer-map-app0511\\subtitles\\634b1471e676496bb6a90b841f998ab3",
+  "fields": [
+    "frame_time",
+    "gps_age",
+    "separation",
+    "movement",
+    "direction",
+    "ride",
+    "retreat",
+    "height",
+    "heading",
+    "camera_heading_error",
+    "tilt",
+    "aiming",
+    "come_to_me",
+    "lora",
+    "drone_displacement",
+    "video_playback",
+    "received",
+    "bands"
+  ],
+  "selectedVideo": "DJI_0671.MP4",
+  "timing": "Each source SRT frame timestamp uses the last GPS receipt at or before that time. No future GPS.",
+  "styling": "ASS: fixed top-left card, explicit font size, 50% transparent white panel and card highlights; opaque text. SRT: compact fallback; styling depends on player support.",
+  "assTiming": "ASS uses centisecond timing; cue boundaries round up by at most 9 ms. SRT preserves original millisecond timing.",
+  "files": [
+    {
+      "video": "DJI_0671.MP4",
+      "status": "exported",
+      "subtitle": "DJI_0671.srt",
+      "cardSubtitle": "DJI_0671.ass",
+      "sourceSubtitle": "DJI_0671.SRT",
+      "sourceSha256": "abc702be0f22830b5faac0de9323d0d3ae2c2dcc38e2a3f394b5a436b871581e",
+      "frames": 1819,
+      "matched": 1819,
+      "unavailable": 0,
+      "stale": 0
+    }
+  ],
+  "totals": {
+    "videos": 1,
+    "exported": 1,
+    "skipped": 0,
+    "frames": 1819,
+    "unavailable": 0,
+    "stale": 0
+  }
+}

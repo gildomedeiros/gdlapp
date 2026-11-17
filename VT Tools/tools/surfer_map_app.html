@@ -29,6 +29,8 @@ fieldset{border:0;padding:0;margin:0}fieldset[hidden],[hidden]{display:none!impo
 #empty{display:grid;place-content:center;text-align:center;height:100%;padding:30px;color:#52677c}#empty strong{font-size:20px;color:#17324d;margin-bottom:10px}
 #subtitle-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:0 12px;margin-top:8px}
 #subtitle-fields label{min-height:28px}#subtitle-result{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+#subtitle-video{min-width:220px;max-width:min(420px,80vw)}#subtitle-video-status{margin:6px 0;font-size:12px}
+.timestamp-row{margin-bottom:8px}
 #subtitle-links{display:flex;flex-wrap:wrap;gap:6px 16px}#subtitle-issues{max-height:100px;overflow:auto;white-space:pre-line;color:#a02424}
 @media(max-width:750px){form{max-height:62vh}.path{max-width:85vw}header span{display:none}#result-bar{align-items:flex-start;flex-direction:column}#result-summary{max-width:100%}}
 </style>
@@ -82,12 +84,23 @@ fieldset{border:0;padding:0;margin:0}fieldset[hidden],[hidden]{display:none!impo
   </div></details>
  </fieldset>
  <fieldset class="selection-panel" data-mode="timestamp" hidden disabled>
-  <div class="fields">
-   <label>Timestamp<input class="time" name="at" placeholder="14:03:17.000 or full date and time" required spellcheck="false"></label>
-   <label>Following packets<input type="number" name="next" min="0" step="1" required></label>
-   <label class="check"><input type="checkbox" name="auto_fov"> Detect framing automatically</label>
+  <div class="fields timestamp-row">
+   <label>Timestamp 1<input class="time" name="at" placeholder="14:03:17.000 or full date and time" spellcheck="false"></label>
+   <label>Recent timestamps<select id="timestamp-recent" data-timestamp-input="at" disabled><option value="">No recent timestamps</option></select></label>
+   <label>Following packets<input type="number" name="next" min="0" step="1"></label>
   </div>
-  <p class="hint">Starts at the last received packet at or before your time. Next 35 means up to 36 positions. Include a date when the logs span several days.</p>
+  <div class="fields timestamp-row">
+   <label>Timestamp 2<input class="time" name="at2" placeholder="Optional" spellcheck="false"></label>
+   <label>Recent timestamps<select id="timestamp-recent-2" data-timestamp-input="at2" disabled><option value="">No recent timestamps</option></select></label>
+   <label>Following packets<input type="number" name="next2" min="0" step="1"></label>
+  </div>
+  <div class="fields timestamp-row">
+   <label>Timestamp 3<input class="time" name="at3" placeholder="Optional" spellcheck="false"></label>
+   <label>Recent timestamps<select id="timestamp-recent-3" data-timestamp-input="at3" disabled><option value="">No recent timestamps</option></select></label>
+   <label>Following packets<input type="number" name="next3" min="0" step="1"></label>
+  </div>
+  <label class="check"><input type="checkbox" name="auto_fov"> Detect framing automatically</label>
+  <p class="hint">Enter up to three timestamps; leave unused rows blank. Show positions combines their ranges on one map, with overlapping packets shown once. Each range starts at the last received packet at or before its time. Following 35 means up to 36 positions per row. Include a date when the logs span several days.</p>
  </fieldset>
  <fieldset class="selection-panel" data-mode="pitch" hidden disabled>
   <div class="fields">
@@ -116,12 +129,16 @@ fieldset{border:0;padding:0;margin:0}fieldset[hidden],[hidden]{display:none!impo
  </fieldset>
  </details>
  <details id="subtitle-settings"><summary>Export video subtitles</summary>
-  <p class="hint">Export all MP4s in the Video / SRT folder using all received GPS packets, regardless of map filters. Originals are kept. Each video gets an ASS subtitle with a compact top-left card and an SRT fallback, both named to match the video.</p>
+  <p class="hint">Choose one MP4 or All from the Video / SRT folder. Subtitles use all received GPS packets, regardless of map filters. Originals are kept. Each video gets an ASS subtitle with a compact top-left card and an SRT fallback, both named to match the video.</p>
   <div class="toolbar">
-   <button type="button" id="subtitle-all">Select all</button><button type="button" id="subtitle-none">Clear all</button>
-   <button type="button" class="primary" id="subtitle-export" disabled>Export subtitles for all videos</button>
+   <label>Video<select id="subtitle-video" disabled><option value="">All</option></select></label>
+   <button type="button" id="subtitle-refresh">Refresh files</button>
+   <button type="button" id="subtitle-all">Select all fields</button><button type="button" id="subtitle-none">Clear fields</button>
+   <button type="button" class="primary" id="subtitle-export" disabled>Export subtitles</button>
   </div>
+  <p id="subtitle-video-status" class="hint" role="status" aria-live="polite"></p>
   <fieldset id="subtitle-fields" aria-label="Subtitle data fields"></fieldset>
+  <p id="subtitle-simulation-info" class="hint" role="status">Simulation fields use the latest successful map Run / Update settings, or the defaults before a simulation is run.</p>
   <p class="hint">Load the .ass file for the card layout: fixed text size, a 50% transparent panel and coloured highlights. Text stays opaque. The .srt file is a compatibility fallback. GPS age updates every frame; red indicates an age beyond your Red gap threshold.</p>
   <p class="hint">Packet numbers identify records across the whole batch. Movement direction uses previous → current GPS, without looking ahead. Each MP4 needs its original SRT with recording timestamps.</p>
   <div id="subtitle-result" hidden><p id="subtitle-summary"></p><nav id="subtitle-links" aria-label="Download subtitles"></nav><p id="subtitle-issues"></p></div>
@@ -134,10 +151,28 @@ fieldset{border:0;padding:0;margin:0}fieldset[hidden],[hidden]{display:none!impo
 <script>
 const form=document.getElementById('selection-form'), mode=document.getElementById('selection-mode');
 const panels=[...document.querySelectorAll('.selection-panel')];
+const timestampRecents=[...document.querySelectorAll('[data-timestamp-input]')];
+function fillTimestampHistory(values){
+ for(const recent of timestampRecents){
+  const selected=recent.value;
+  recent.replaceChildren(new Option(values.length?'Choose a recent timestamp':'No recent timestamps',''));
+  for(const value of values)recent.add(new Option(value,value));
+  recent.disabled=values.length===0;
+  if(values.includes(selected))recent.value=selected;
+ }
+}
+for(const recent of timestampRecents){
+ const input=document.querySelector('[data-mode="timestamp"] [name="'+recent.dataset.timestampInput+'"]');
+ recent.onchange=()=>{if(recent.value){input.value=recent.value;input.focus();}};
+ input.addEventListener('input',()=>{recent.value='';});
+}
 const statusLine=document.getElementById('status'), apply=document.getElementById('apply'), cancel=document.getElementById('cancel');
 const dataSettings=document.getElementById('data-settings'), frame=document.getElementById('map-frame');
 let jobId=null;
 const subtitleFields=document.getElementById('subtitle-fields'),subtitleExport=document.getElementById('subtitle-export');
+const subtitleVideo=document.getElementById('subtitle-video'),subtitleRefresh=document.getElementById('subtitle-refresh');
+const subtitleVideoStatus=document.getElementById('subtitle-video-status');
+let controlsBusy=false,subtitleVideosLoading=false,subtitleVideosReady=false,subtitleVideoRequest=0,subtitleVideoFolder='';
 const labels={rides:'Show rides',timestamp:'Show positions',pitch:'Find positions',framing:'Find samples'};
 function setStatus(message,error=false){statusLine.textContent=message;statusLine.classList.toggle('error',error);}
 function rideScope(){
@@ -152,13 +187,59 @@ function changeMode(openSettings=false){
  if(openSettings)document.getElementById('selection-settings').open=true;
 }
 function running(active){
+ controlsBusy=active;
  apply.disabled=active;mode.disabled=active;
  document.querySelectorAll('#data-settings input').forEach(n=>n.disabled=active);
  panels.forEach(p=>p.disabled=active||p.hidden);
  cancel.hidden=!active;cancel.disabled=false;document.getElementById('busy').hidden=!active;
  subtitleFields.disabled=active;document.getElementById('subtitle-all').disabled=active;document.getElementById('subtitle-none').disabled=active;
- subtitleExport.disabled=active||!subtitleFields.querySelector('input:checked');
+ updateSubtitleControls();
 }
+function updateSubtitleControls(){
+ const active=controlsBusy||!!jobId;
+ subtitleVideo.disabled=active||subtitleVideosLoading||!subtitleVideosReady;
+ subtitleRefresh.disabled=active||subtitleVideosLoading;
+ subtitleExport.disabled=active||subtitleVideosLoading||!subtitleVideosReady||!subtitleFields.querySelector('input:checked')||
+  !subtitleVideo.selectedOptions.length||subtitleVideo.selectedOptions[0].disabled;
+}
+async function loadSubtitleVideos(){
+ const folder=dataSettings.querySelector('[name="video_folder"]').value.trim();
+ const selected=folder===subtitleVideoFolder?subtitleVideo.value:'';
+ const request=++subtitleVideoRequest;
+ subtitleVideosLoading=true;subtitleVideosReady=false;updateSubtitleControls();
+ subtitleVideoStatus.textContent='Loading MP4 files…';
+ try{
+  const result=await api('/api/subtitle-videos',{video_folder:folder});
+  if(request!==subtitleVideoRequest)return;
+  subtitleVideo.replaceChildren(new Option('All',''));
+  for(const name of result.videos)subtitleVideo.add(new Option(name,name));
+  subtitleVideoFolder=folder;subtitleVideosReady=result.videos.length>0;
+  subtitleVideoStatus.textContent=result.videos.length?result.videos.length+' MP4 files found.':'No MP4 files found in this folder.';
+  if(selected&& !result.videos.includes(selected)){
+   const missing=new Option('Choose a video — previous file unavailable','__missing__');missing.disabled=true;
+   subtitleVideo.add(missing);subtitleVideo.value=missing.value;
+   subtitleVideoStatus.textContent='The previous file is unavailable. Select All or another video.';
+  }else subtitleVideo.value=selected;
+  subtitleVideoStatus.classList.remove('error');
+ }catch(error){
+  if(request!==subtitleVideoRequest)return;
+  subtitleVideo.replaceChildren(new Option('All',''));
+  subtitleVideoStatus.textContent=error.message;subtitleVideoStatus.classList.add('error');
+ }finally{
+  if(request===subtitleVideoRequest){subtitleVideosLoading=false;updateSubtitleControls();}
+ }
+}
+subtitleVideo.onchange=updateSubtitleControls;
+subtitleRefresh.onclick=loadSubtitleVideos;
+dataSettings.querySelector('[name="video_folder"]').addEventListener('input',()=>{
+ subtitleVideoRequest++;subtitleVideosLoading=false;subtitleVideosReady=false;updateSubtitleControls();
+ subtitleVideoStatus.textContent='Refresh files for this video folder.';
+});
+dataSettings.querySelector('[name="video_folder"]').addEventListener('change',loadSubtitleVideos);
+document.getElementById('subtitle-settings').addEventListener('toggle',event=>{
+ if(event.target.open)refreshSubtitleSimulation();
+ if(event.target.open&&!subtitleVideosLoading&&!subtitleVideosReady)loadSubtitleVideos();
+});
 function readSettings(){
  const settings={};
  for(const key of ['folder','video_folder','output','utc_offset','gap_red_ms','ffmpeg'])settings[key]=dataSettings.querySelector('[name="'+key+'"]').value;
@@ -172,27 +253,41 @@ function fillSubtitleFields(catalog,selected){
   const input=document.createElement('input');input.type='checkbox';input.value=field.id;input.checked=selected.includes(field.id);
   label.append(input,document.createTextNode(field.label));subtitleFields.append(label);
  }
- subtitleExport.disabled=!subtitleFields.querySelector('input:checked');
+ updateSubtitleControls();
 }
+function showSubtitleSimulation(config){
+ const p=config?.yaw_simulation_parameters;
+ document.getElementById('subtitle-simulation-info').textContent=p?
+  '[SIM] '+(config.yaw_simulation_configured?'Latest successful map Run / Update':'Default settings')+': magnitude '+p.magnitude+'°, horizontal FOV '+p.horizontalFov+'° estimate, offset change limit '+p.slewRate+'°/s. Export replays the full logs and holds the last GPS result for each frame. Change settings in the map and Run / Update before exporting.':
+  'Simulation settings unavailable. Restart the map server to enable simulation subtitle fields.';
+}
+async function refreshSubtitleSimulation(){
+ try{showSubtitleSimulation((await api('/api/state')).config);}catch(error){document.getElementById('subtitle-simulation-info').textContent=error.message;}
+}
+window.addEventListener('message',event=>{
+ if(event.origin===location.origin&&event.source===frame.contentWindow&&event.data?.type==='yaw-simulation-updated')refreshSubtitleSimulation();
+});
 function showSubtitleResult(result){
  document.getElementById('subtitle-result').hidden=false;
  const t=result.totals;
- document.getElementById('subtitle-summary').textContent=t.exported+'/'+t.videos+' videos exported · '+t.frames+' frames · '+t.unavailable+' without earlier GPS · '+t.stale+' with old GPS. Saved in '+result.output;
+ document.getElementById('subtitle-summary').textContent=(result.video||'All videos')+' · '+t.exported+'/'+t.videos+' videos exported · '+t.frames+' frames · '+t.unavailable+' without earlier GPS · '+t.stale+' with old GPS. Saved in '+result.output+
+  (result.simulation?' · [SIM] magnitude '+result.simulation.parameters.magnitude+'°, HFOV '+result.simulation.parameters.horizontalFov+'° estimate.':'');
  const links=document.getElementById('subtitle-links');links.replaceChildren();
  for(const file of result.exports){const a=document.createElement('a');a.textContent=file.name==='VT-subtitles.zip'?'Download all (ZIP)':file.name+(file.name.endsWith('.ass')?' — card':file.name.endsWith('.srt')?' — fallback':'');a.href=file.url;a.download=file.name;links.append(a);}
  document.getElementById('subtitle-issues').textContent=[...result.issues.map(row=>row.video+': '+row.reason),
   ...(result.warnings||[]).map(row=>row.video+': '+row.message)].join('\n');
 }
-subtitleFields.onchange=()=>{subtitleExport.disabled=!!jobId||!subtitleFields.querySelector('input:checked');};
+subtitleFields.onchange=updateSubtitleControls;
 for(const [id,checked] of [['subtitle-all',true],['subtitle-none',false]])document.getElementById(id).onclick=()=>{
  subtitleFields.querySelectorAll('input').forEach(input=>input.checked=checked);subtitleFields.onchange();
 };
 subtitleExport.onclick=async()=>{
  if(jobId)return;
  const settings=readSettings(),fields=[...subtitleFields.querySelectorAll('input:checked')].map(input=>input.value);
+ const video=subtitleVideo.value;
  try{
-  running(true);setStatus('Starting subtitle export for all videos…');
-  const job=await api('/api/subtitles',{settings,fields});await followJob(job.id);
+  running(true);setStatus('Starting subtitle export for '+(video||'all videos')+'…');
+  const job=await api('/api/subtitles',{settings,fields,video});await followJob(job.id);
  }catch(error){setStatus(error.message,true);running(false);changeMode();dataSettings.open=true;}
 };
 function fill(container,values){
@@ -235,7 +330,7 @@ async function followJob(id){
      if(job.kind==='subtitles'){showSubtitleResult(job.result);document.getElementById('subtitle-settings').open=true;}
      else{showResult(job.result);document.getElementById('selection-settings').open=false;}
     }
-    const state=await api('/api/state');showLogs(state.logs);
+    const state=await api('/api/state');showLogs(state.logs);fillTimestampHistory(state.config.timestamp_history||[]);
     break;
    }
    await new Promise(resolve=>setTimeout(resolve,600));
@@ -265,7 +360,10 @@ mode.onchange=()=>changeMode(true);document.getElementById('ride-scope').onchang
 (async()=>{
  try{
   const state=await api('/api/state');fill(dataSettings,state.config.settings);
+  fillTimestampHistory(state.config.timestamp_history||[]);
   fillSubtitleFields(state.subtitleFields||[],state.config.subtitle_fields||[]);
+  showSubtitleSimulation(state.config);
+  loadSubtitleVideos();
   if(state.subtitleResult)showSubtitleResult(state.subtitleResult);
   for(const panel of panels)fill(panel,state.config.presets[panel.dataset.mode]);
   mode.value=state.config.mode;dataSettings.open=!state.config.settings.folder;changeMode();showLogs(state.logs);

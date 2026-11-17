@@ -1,5 +1,6 @@
 import io
 import json
+import re
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -7,7 +8,7 @@ from contextlib import redirect_stdout
 from datetime import timezone
 from pathlib import Path
 
-from surfer_drone_status import annotate_drone_status, drone_status_lines, status_record
+from surfer_drone_status import annotate_drone_status, drone_status_lines, drone_status_color, status_record
 from surfer_gps_map import load_packets, make_svg
 
 
@@ -19,8 +20,11 @@ class DroneStatusTests(unittest.TestCase):
         return dict(time_ms=t, sourceLine=line, session=session)
 
     def tracking(self, **fields):
-        return self.row('aiming_cycle', state='AIMING', reason='aiming', decision='riding_correction',
-                        submitted=True, submittedYawRate=-1.6, reverseBlocked=False, reverseBlockRemainingMs=2000, **fields)
+        values = dict(state='AIMING', reason='aiming', decision='riding_correction', rotationCurve='riding',
+                      remainingAngleDeg=-1.6, desiredYawRate=-1.6,
+                      submitted=True, submittedYawRate=-1.6, reverseBlocked=False, reverseBlockRemainingMs=2000)
+        values.update(fields)
+        return self.row('aiming_cycle', **values)
 
     def waiting(self, **fields):
         values=dict(line=2, phase='WAITING', reason='ride_detected', rideRemainingMs=8744,
@@ -35,7 +39,7 @@ class DroneStatusTests(unittest.TestCase):
 
     def test_screenshot_ride_wait_is_distinct_from_boundary_block(self):
         lines=self.lines([self.tracking(), self.waiting()])
-        self.assertEqual(lines, ['Aiming: AIMING — tracking surfer during ride · yaw -1.6°/s sent',
+        self.assertEqual(lines, ['Aiming: [AIMING] [tracking surfer] [riding] [error 1.6° left] [desired 1.6°/s left] [sent 1.6°/s left] [reversal blocked: no]',
             'Come to Me: WAITING — ride detected · 8.7 s left', 'Boundary: no block reported · 33.8 m seaward'])
         self.assertNotIn('2.0 s left',lines[0], 'Reverse timer is not a block while reverseBlocked=false')
 
@@ -90,7 +94,7 @@ class DroneStatusTests(unittest.TestCase):
     def test_stop_and_log_end_invalidate_active_state(self):
         records=[self.tracking(),self.waiting(),self.row('stop',t=1020,line=5,detail='session=1 reason=returning_home')]
         lines=self.lines(records)
-        self.assertEqual(lines[0],'Aiming: STOPPING — returning home')
+        self.assertEqual(lines[0],'Aiming: [STOPPING] [returning home]')
         self.assertEqual(lines[1],'Come to Me: unknown (no log)')
         self.assertEqual(self.lines(records+[self.row('session_end',t=1030,line=6)])[0],'Aiming: unknown (no log)')
 
@@ -109,9 +113,64 @@ class DroneStatusTests(unittest.TestCase):
         doc=ET.fromstring(make_svg(points[:1]))
         for kind in ('surfer-marker','drone-marker'):
             marker=next(n for n in doc.iter() if n.get('class')==kind)
-            self.assertIn('Aiming: AIMING — aligned',marker.get('data-detail'))
+            self.assertIn('Aiming: [AIMING] [aligned]',marker.get('data-detail'))
         pair=next(n for n in doc.iter() if n.get('class')=='pair-line')
-        self.assertIn('Aiming: AIMING — aligned',pair.get('data-compact'))
+        self.assertIn('Aiming: [AIMING] [aligned]',pair.get('data-compact'))
+
+    def test_actual_riding_values_remain_distinct_from_ramped_command(self):
+        line = self.lines([self.tracking(remainingAngleDeg=-6.326086781255526,
+            desiredYawRate=-6.326086781255526, submittedYawRate=-5.709905712376881)])[0]
+        self.assertEqual(line, 'Aiming: [AIMING] [tracking surfer] [riding] [error 6.33° left] '
+            '[desired 6.33°/s left] [sent 5.71°/s left] [reversal blocked: no]')
+        self.assertEqual(drone_status_color(line),'#08752e')
+
+    def test_explicit_profile_is_not_guessed_from_ride_or_filled_from_old_log(self):
+        line = self.lines([self.tracking(rotationCurve='normal', aimingMode='riding')])[0]
+        self.assertIn('[normal]',line)
+        self.assertNotIn('[riding]',line)
+        line = self.lines([self.tracking(),self.tracking(t=1020,line=2,rotationCurve=None,
+            remainingAngleDeg=None,desiredYawRate=float('nan'),submittedYawRate=None,reverseBlocked=None)])[0]
+        for part in ('[profile unavailable]','[error unavailable]','[desired unavailable]',
+                     '[sent unavailable]','[reversal blocked: unavailable]'):
+            self.assertIn(part,line)
+
+    def test_blocked_unsent_zero_and_direction(self):
+        line = self.lines([self.tracking(decision='reverse_blocked',reverseBlocked=True,
+            remainingAngleDeg=6.326,desiredYawRate=6.326,submittedYawRate=0)])[0]
+        self.assertIn('[error 6.33° right]',line)
+        self.assertIn('[desired 6.33°/s right]',line)
+        self.assertIn('[sent 0°/s]',line)
+        self.assertIn('[reversal blocked: yes · 2.0 s left]',line)
+        self.assertEqual(drone_status_color(line),'#a94700')
+        line = self.lines([self.tracking(submitted=False,submittedYawRate=6)])[0]
+        self.assertIn('[not sent]',line)
+        self.assertNotIn('[sent ',line)
+        line = self.lines([self.tracking(remainingAngleDeg=-.0001,desiredYawRate=-.0001,
+            submittedYawRate=0,retainedTargetAiming=True)])[0]
+        self.assertIn('[error 0°]',line)
+        self.assertIn('[desired 0°/s]',line)
+        self.assertIn('[last GPS target]',line)
+
+    def test_subtitle_uses_the_same_packet_status_and_keeps_translucent_style(self):
+        from test_surfer_subtitles import packet,drones,clock
+        from surfer_subtitles import PacketIndex
+        from surfer_subtitle_layout import card_events
+        p = packet(1045,sourceLine=99)
+        annotate_drone_status([p],[self.tracking(remainingAngleDeg=-6.326,
+            desiredYawRate=-6.326,submittedYawRate=-6.326)])
+        expected = drone_status_lines(p)[0]
+        index = PacketIndex([p],drones(),['aiming'])
+        text,age,_ = index.render(2545,clock(2545),'test.mp4','00:00:01,500')
+        self.assertEqual(age,1500)
+        self.assertIn(expected,text)  # Frame holds the last received GPS packet's fields.
+        self.assertIn('color="#08752e"',text)
+        ass = card_events(0,1000,text,'')
+        self.assertIn(r'\1a&H80&',ass)
+        displayed = ' '.join(re.sub(r'\{[^}]*\}', '', row.split(',',9)[9]).strip()
+                             for row in ass.splitlines() if row.startswith('Dialogue: 2,'))
+        for part in ('[riding]','[error 6.33° left]','[desired 6.33°/s left]',
+                     '[sent 6.33°/s left]','[reversal blocked: no]'):
+            self.assertIn(part,displayed)
 
 
 if __name__=='__main__': unittest.main()

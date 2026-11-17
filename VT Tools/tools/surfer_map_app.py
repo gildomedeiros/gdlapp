@@ -11,11 +11,48 @@ import re
 import threading
 from urllib.parse import urlsplit
 import uuid
-from surfer_subtitles import FIELDS, FIELD_IDS, validate_fields
+from surfer_subtitles import FIELDS, FIELD_IDS, SIM_FIELD_IDS, validate_fields, subtitle_videos
+from surfer_yaw_sim import parameters as yaw_parameters
 
 
 APP_DIR = Path(__file__).resolve().parent.parent / 'exports' / 'surfer-map-app'
 MODES = ('rides', 'timestamp', 'pitch', 'framing')
+TIMESTAMP_HISTORY_LIMIT = 20
+
+
+def clean_timestamp_history(values):
+    if not isinstance(values, list):return []
+    history=[]
+    for value in values:
+        if not isinstance(value,str):continue
+        value=value.strip()
+        if value and len(value)<=80 and value not in history:history.append(value)
+        if len(history)==TIMESTAMP_HISTORY_LIMIT:break
+    return history
+
+
+def timestamp_ranges(selection):
+    return [(i,selection['at'+suffix],selection['next'+suffix])
+            for i,suffix in ((1,''),(2,'2'),(3,'3')) if selection.get('at'+suffix)]
+
+
+def select_timestamp_ranges(packets, selection, tz):
+    from surfer_gps_map import select_packets
+    order={(p['sourceFile'],p['sourceLine']):i for i,p in enumerate(packets)}
+    merged,targets={},[]
+    for row,at,count in timestamp_ranges(selection):
+        try:
+            target,points=select_packets([dict(p) for p in packets],at,count,tz)
+        except ValueError as error:
+            raise ValueError(f'Timestamp {row}: {error}') from error
+        targets.append(target)
+        for point in points:merged.setdefault((point['sourceFile'],point['sourceLine']),point)
+    target=min(targets)
+    points=[merged[key] for key in sorted(merged,key=order.__getitem__)]
+    for i,point in enumerate(points):
+        point['point']=f'S{i}'
+        point['secondsFromRequestedTime']=round((point['time_ms']-target)/1000,3)
+    return target,points
 
 
 class Cancelled(Exception):
@@ -24,11 +61,12 @@ class Cancelled(Exception):
 
 def defaults(app_dir):
     return dict(settings=dict(folder='', video_folder='E:/DCIM/100MEDIA', output=str(app_dir),
-                recursive=False, utc_offset='+10:00', gap_red_ms=1000, ffmpeg=''), mode='rides', subtitle_fields=list(FIELD_IDS),
+                recursive=False, utc_offset='+10:00', gap_red_ms=1000, ffmpeg=''), mode='rides', timestamp_history=[], subtitle_fields=list(FIELD_IDS), subtitle_fields_version=3,
+                yaw_simulation_parameters=yaw_parameters(), yaw_simulation_configured=False,
         presets=dict(
             rides=dict(scope='first', number_of_rides=3, ride_numbers='', before=15, after=15, interval=0, max_samples='', auto_fov=False,
                        filter_pitch=False,pitch_min=-40,pitch_max=-34,filter_distance=False,distance_min=25,distance_max=40),
-            timestamp=dict(at='', next=35, auto_fov=False),
+            timestamp=dict(at='', next=35, at2='', next2=35, at3='', next3=35, auto_fov=False),
             pitch=dict(pitch_min=-40, pitch_max=-34, distance_min=25, distance_max=40,
                        before=125, after=125, interval=1, max_samples=10, auto_fov=False),
             framing=dict(sample_bands='0 20 30 40', sample_count=3, before=5, after=20,
@@ -71,9 +109,12 @@ def normalize_request(request):
     if not isinstance(selection, dict):raise ValueError('Invalid settings.')
     q=dict(auto_fov=selection.get('auto_fov') is True)
     if mode=='timestamp':
-        at=selection.get('at','')
-        if not isinstance(at,str) or not at.strip():raise ValueError('Enter a timestamp.')
-        q.update(at=at.strip(), next=number(selection.get('next',35),'Following packets',integer=True))
+        for row,suffix in ((1,''),(2,'2'),(3,'3')):
+            at=selection.get('at'+suffix,'')
+            if not isinstance(at,str):raise ValueError(f'Timestamp {row} must be text.')
+            q['at'+suffix]=at.strip()
+            q['next'+suffix]=number(selection.get('next'+suffix,35),f'Following packets for timestamp {row}',integer=True) if at.strip() else 35
+        if not timestamp_ranges(q):raise ValueError('Enter at least one timestamp.')
     else:
         for field in ('before','after','interval'):
             q[field]=number(selection.get(field),field.capitalize())
@@ -124,7 +165,20 @@ class MapApp:
             self.config['settings'].update({k:v for k,v in saved.get('settings',{}).items() if k in self.config['settings']})
             for mode in MODES:self.config['presets'][mode].update(saved.get('presets',{}).get(mode,{}))
             if saved.get('mode') in MODES:self.config['mode']=saved['mode']
-            if 'subtitle_fields' in saved:self.config['subtitle_fields']=validate_fields(saved['subtitle_fields'])
+            self.config['timestamp_history']=clean_timestamp_history(saved.get('timestamp_history',
+                [self.config['presets']['timestamp'].get('at'+suffix,'') for suffix in ('','2','3')]))
+            if 'subtitle_fields' in saved:
+                fields=validate_fields(saved['subtitle_fields'])
+                # Include the requested new row once for existing installations.
+                # Later explicit deselection persists after its migration version.
+                if saved.get('subtitle_fields_version',1)==1:
+                    fields=validate_fields(fields+['camera_heading_error'])
+                if saved.get('subtitle_fields_version',1)<3:
+                    fields=validate_fields(fields+SIM_FIELD_IDS)
+                self.config['subtitle_fields']=fields
+            if 'yaw_simulation_parameters' in saved:
+                self.config['yaw_simulation_parameters']=yaw_parameters(saved['yaw_simulation_parameters'])
+                self.config['yaw_simulation_configured']=saved.get('yaw_simulation_configured') is True
         except (OSError,ValueError,TypeError,AttributeError):
             pass
         self.initial_selection=False
@@ -152,7 +206,7 @@ class MapApp:
         self.initial_selection=bool(args.folder and (args.get_fov_samples or args.all_rides or args.number_of_rides is not None or args.pitch_range or args.at))
         if not self.initial_selection:return
         q['auto_fov']=args.auto_fov
-        if mode=='timestamp':q.update(at=args.at,next=args.next)
+        if mode=='timestamp':q.update(at=args.at,next=args.next,at2='',at3='')
         else:
             q.update(before=args.sample_before,after=args.sample_after,interval=args.sample_interval)
             if mode in ('rides','pitch'):q['max_samples']=args.max_samples
@@ -202,17 +256,22 @@ class MapApp:
         fields=validate_fields(request.get('fields'))
         if not Path(settings['video_folder']).is_dir() or not settings['video_folder']:
             raise ValueError('Enter an existing video / SRT folder.')
+        video_name=request.get('video')
+        if video_name is not None and not isinstance(video_name,str):
+            raise ValueError('Select All or an MP4 filename from the video folder.')
+        if video_name:subtitle_videos(settings['video_folder'],video_name)
         with self.lock:
             if self.active and self.jobs[self.active]['status']=='running':
                 raise ValueError('A job is still running. Cancel it or wait for it to finish.')
             ident=uuid.uuid4().hex
             self.jobs[ident]=dict(id=ident,kind='subtitles',status='running',message='Preparing subtitle export…',cancel=threading.Event())
             self.active=ident
-            self.worker=threading.Thread(target=self.run_subtitles,args=(ident,settings,fields),daemon=True)
+            simulation=yaw_parameters(self.config['yaw_simulation_parameters'])
+            self.worker=threading.Thread(target=self.run_subtitles,args=(ident,settings,fields,video_name,simulation),daemon=True)
             self.worker.start()
             return self.public_job(ident)
 
-    def run_subtitles(self,ident,settings,fields):
+    def run_subtitles(self,ident,settings,fields,video_name=None,simulation=None):
         output=Path(settings['output']).expanduser().resolve()/'subtitles'/ident
         try:
             from surfer_subtitles import PacketIndex,export_folder
@@ -220,10 +279,12 @@ class MapApp:
             self.check_cancel(ident)
             self.progress(ident,'Preparing all received GPS packets for subtitles…')
             index=PacketIndex(packets,drones,fields,settings['gap_red_ms'])
-            report,files=export_folder(Path(settings['video_folder']).expanduser().resolve(),output,index,tz,
+            index.add_yaw_simulation(simulation,settings['utc_offset'],
                 progress=lambda message:self.progress(ident,message),check_cancel=lambda:self.check_cancel(ident))
+            report,files=export_folder(Path(settings['video_folder']).expanduser().resolve(),output,index,tz,
+                progress=lambda message:self.progress(ident,message),check_cancel=lambda:self.check_cancel(ident),video_name=video_name)
             self.check_cancel(ident)
-            result=dict(output=str(output),totals=report['totals'],issues=[row for row in report['files'] if row['status']!='exported'],
+            result=dict(output=str(output),totals=report['totals'],video=video_name or None,simulation=report['simulation'],issues=[row for row in report['files'] if row['status']!='exported'],
                         warnings=[dict(video=row['video'],message=row['warning']) for row in report['files'] if row.get('warning')],
                         exports=[dict(name=p.name,url=f'/api/subtitles/{ident}/files/{i}') for i,p in enumerate(files)])
             with self.lock:
@@ -303,11 +364,13 @@ class MapApp:
             self.config['mode']=request['mode']
             self.config['settings']=dict(request['settings'])
             self.config['presets'][request['mode']].update(q)
+            if request['mode']=='timestamp':
+                self.config['timestamp_history']=clean_timestamp_history([at for _,at,_ in timestamp_ranges(q)]+self.config['timestamp_history'])
             self.save_preferences()
 
     def run(self,ident,request):
         try:
-            from surfer_gps_map import select_packets,pair_drones,add_video_playback,write_outputs
+            from surfer_gps_map import pair_drones,add_video_playback,write_outputs
             from surfer_pitch_samples import run_log_samples,annotate_ride_windows
             s,q,mode=request['settings'],request['selection'],request['mode']
             packets,drones,prepared,tz=self.load_logs(s,ident)
@@ -326,10 +389,12 @@ class MapApp:
                 points,_,description=run_log_samples(packets,drones,a,tz,all_rides=mode=='rides',prepared_points=prepared,timeline_data=timeline)
                 target=points[0]['time_ms'] if points else None
             elif mode=='timestamp':
-                target,points=select_packets([dict(p) for p in packets],q['at'],q['next'],tz)
+                target,points=select_timestamp_ranges(packets,q,tz)
                 pair_drones(points,drones)
                 add_video_playback(points,s['video_folder'],tz,timeline)
-                description=f'Timestamp {q["at"]}; starting packet plus {q["next"]} following packets. {len(points)} actual positions.'
+                ranges=timestamp_ranges(q)
+                timestamp_label=' | '.join(f'{at} · next {count} packets' for _,at,count in ranges)
+                description=f'{len(ranges)} timestamp range(s): {timestamp_label}. {len(points)} actual positions in receipt order; overlapping packets appear once.'
             else:
                 from surfer_fov_samples import run_samples
                 a.sample_count=q['sample_count'];a.sample_bands=q['sample_bands'];a.sample_seed=0;a.sample_max_checks=q['sample_max_checks']
@@ -358,7 +423,7 @@ class MapApp:
                         videoMapped=sum(p.get('videoFrameTimestamp') is not None for p in points),videoWarnings=timeline[1],
                         exports=[dict(name=name,url=f'/maps/{ident}/export/{name}') for name in
                             ('surfer-gps.html','surfer-gps.csv','surfer-gps.svg','surfer-gps.kml','fov-samples.html','fov-samples.xlsx') if (output/name).is_file()])
-            if mode=='timestamp':result['label']=f'{q["at"]} · next {q["next"]} packets'
+            if mode=='timestamp':result['label']=timestamp_label
             elif mode=='pitch':result['label']=f'Pitch {q["pitch_min"]:g} to {q["pitch_max"]:g}° AND distance {q["distance_min"]:g}–{q["distance_max"]:g} m · {q["before"]:g}s before / {q["after"]:g}s after rides'
             elif mode=='framing':result['label']=description
             else:
@@ -416,6 +481,25 @@ class MapApp:
                 return ignore_wave(point,snapshot['cache_output'])
             return analyze_wave(point,request,s['video_folder'],snapshot['output'],snapshot['cache_output'],ffmpeg_path(s['ffmpeg'] or None))
 
+    def yaw_simulation(self,snapshot,request):
+        from surfer_yaw_sim import run_for_points,csv_bytes
+        with snapshot['lock']:
+            result=run_for_points(snapshot['points'],request.get('parameters'),snapshot['settings']['utc_offset'])
+            token=uuid.uuid4().hex
+            # Keep CSV on disk, retaining only selected-point rows in memory.
+            folder=snapshot['output']/'yaw-simulation';folder.mkdir(exist_ok=True)
+            csv_path=folder/(token+'.csv');csv_path.write_bytes(csv_bytes(result))
+            result.pop('rows')
+            result.update(token=token,csvUrl=f'/maps/{snapshot["id"]}/yaw-simulation/{token}.csv')
+            runs=snapshot.setdefault('yaw_simulations',OrderedDict())
+            runs[token]=dict(result=result,csv_path=csv_path)
+            while len(runs)>8:runs.popitem(last=False)
+        with self.lock:
+            self.config['yaw_simulation_parameters']=dict(result['parameters'])
+            self.config['yaw_simulation_configured']=True
+            self.save_preferences()
+        return result
+
     def capture(self,snapshot,request,detect=False):
         from surfer_map_capture import capture_frame, capture_variant
         from telemetry_selected_frames import ffmpeg_path
@@ -432,8 +516,19 @@ class MapApp:
                 estimator=FovEstimator(Path(__file__).with_name('models')/'yolo11n-seg.pt')
                 return estimator.classify_person(dest,point,snapshot['cache_output'])
             variant=request.get('variant','telemetry')
-            dest=capture_variant(point,s['video_folder'],snapshot['output'],ffmpeg_path(s['ffmpeg'] or None),s['gap_red_ms'],variant)
+            token=request.get('yawSimulation') if variant=='telemetry' else None
+            output=snapshot['output']
+            if token:
+                if not isinstance(token,str):raise ValueError('Invalid simulation token.')
+                run=snapshot.get('yaw_simulations',{}).get(token)
+                if not run:raise ValueError('Simulation expired. Run / Update again.')
+                row=run['result']['points'].get(point['point'])
+                if row is None:raise ValueError('No simulation result for this GPS receipt.')
+                point=dict(point,yawSimulation=row)
+                output=output/'yaw-simulation'/token
+            dest=capture_variant(point,s['video_folder'],output,ffmpeg_path(s['ffmpeg'] or None),s['gap_red_ms'],variant)
             suffix='' if variant=='telemetry' else '-'+variant
+            if token:suffix+='-sim-'+token
             url=f'/maps/{snapshot["id"]}/frames/{point["point"]}{suffix}.png'
             snapshot['images'][url]=dest
             return dict(url=url,filename=dest.name,variant=variant,timestamp=point['videoFrameTimestamp'],saved=str(dest))
@@ -486,6 +581,11 @@ def create_server(app,port=0):
                 if not suffix:return self.reply(200,(snapshot['output']/'surfer-gps.html').read_bytes(),'text/html; charset=utf-8')
                 if suffix=='fov-results':return self.reply(200,app.fov_results(snapshot))
                 if suffix=='wave-results':return self.reply(200,app.wave_results(snapshot))
+                simulation=re.fullmatch(r'yaw-simulation/([a-f0-9]{32})\.csv',suffix)
+                if simulation:
+                    with snapshot['lock']:run=snapshot.get('yaw_simulations',{}).get(simulation[1])
+                    if run:return self.reply(200,run['csv_path'].read_bytes(),'text/csv; charset=utf-8',download='yaw-offset-replay.csv')
+                    return self.reply(404,dict(error='Simulation expired. Run / Update again.'))
                 if path in snapshot['images']:return self.reply(200,snapshot['images'][path].read_bytes(),'image/png')
                 if suffix.startswith('export/'):
                     name=suffix[len('export/'):]
@@ -507,12 +607,17 @@ def create_server(app,port=0):
                 if not isinstance(request,dict):raise ValueError('Expected an object.')
                 path=urlsplit(self.path).path
                 if path=='/api/select':return self.reply(202,app.start(request))
+                if path=='/api/subtitle-videos':
+                    folder=request.get('video_folder')
+                    if not isinstance(folder,str):raise ValueError('Enter an existing video / SRT folder.')
+                    return self.reply(200,dict(videos=[p.name for p in subtitle_videos(folder)]))
                 if path=='/api/subtitles':return self.reply(202,app.start_subtitles(request))
                 if path=='/api/cancel':return self.reply(200,app.cancel(request.get('id')))
-                match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov|video-frame|wave)',path)
+                match=re.fullmatch(r'/maps/([a-f0-9]{32})/(capture|fov|video-frame|wave|yaw-simulation)',path)
                 if match:
                     snapshot=app.snapshot(match[1])
                     if not snapshot:return self.reply(410,dict(error='This map has expired. Generate the selection again.'))
+                    if match[2]=='yaw-simulation':return self.reply(200,app.yaw_simulation(snapshot,request))
                     if match[2]=='wave':return self.reply(200,app.wave(snapshot,request))
                     if match[2]=='video-frame':return self.reply(200,app.video_frame(snapshot,request))
                     return self.reply(200,app.capture(snapshot,request,detect=match[2]=='fov'))

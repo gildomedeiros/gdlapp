@@ -66,12 +66,12 @@ function positionDescription(p){
          Number.isFinite(p.pitch)?p.pitch.toFixed(1)+'°':null].filter(Boolean).join(' · ');
 }
 function filteredDetails(marker,pointId=null){
- let included=false;
- return marker.dataset.detail.split('\n').map((text,index)=>{
+ let included=false,id=null;
+ return marker.dataset.detail.split('\n').flatMap((text,index)=>{
   const header=text.match(/^(S\d+)(?: ↔|:)/)||text.match(/^D\d+ ↔ (S\d+)/);
-  if(header)included=visiblePairs.has(header[1])&&(!pointId||header[1]===pointId);
-  return included?{text,index}:null;
- }).filter(Boolean);
+  if(header){id=header[1];included=visiblePairs.has(id)&&(!pointId||id===pointId);}
+  return included?yawSimulationDetailLines([{text,index}],id):[];
+ });
 }
 function updateMarker(marker){
  const ids=marker.dataset.pairs.split(' ').filter(id=>visiblePairs.has(id));
@@ -105,6 +105,7 @@ function updateMarker(marker){
 function updatePairs(){
  clearDetails();clearMeasurement();
  visiblePairs=new Set(pairChecks.filter(c=>c.checked&&eligiblePairs.has(c.dataset.pair)).map(c=>c.dataset.pair));
+ updateKmlExportSelection();
  applyLayerVisibility();
  pairMarkers.forEach(updateMarker);
  const single=visiblePairs.size===1?[...visiblePairs][0]:null;
@@ -175,6 +176,7 @@ function changeRide(resetSelection=true, refit=true){
  updatePairs();if(refit)fitRide();
 }
 function initializeMapFilters(){
+ initializeKmlExport();
  hideSeaward?.addEventListener('change',()=>changeRide(false,false));
  hideSlowSpeed?.addEventListener('change',()=>changeRide(false,false));
  rideHighlight?.addEventListener('change',updateHighlights);

@@ -54,7 +54,7 @@ def stamp_card(path, point, gap_red_ms=1000):
                 if not chunk:
                     continue
                 color, background, bold = normal_color, None, False
-                if line.startswith(('Retreat active:', 'Gimbal tilt:')) or re.fullmatch(r'\[[^\]]+\]\[[^\]]+\] m', chunk):
+                if line.startswith(('Retreat active:', 'Gimbal tilt:', 'Camera heading error:')) or re.fullmatch(r'\[[^\]]+\]\[[^\]]+\] m', chunk):
                     color, background, bold = orange, '#fff0dc', True
                 if line.startswith('Retreat active: YES ') or '(selected)' in chunk or chunk.startswith('TILTING'):
                     color, background, bold = green, '#e6f5e9', True
@@ -84,6 +84,9 @@ def stamp_card(path, point, gap_red_ms=1000):
     if height > frame.height - 2 * margin:
         raise ValueError('Frame is too small to fit the full telemetry card.')
     panel = Image.new('RGB', (width, height), 'white')
+    if point.get('yawSimulation'):
+        # A translucent backdrop keeps the scene visible while text stays opaque.
+        panel = Image.blend(frame.crop((margin,margin,margin+width,margin+height)),panel,.55)
     draw = ImageDraw.Draw(panel)
     draw.rounded_rectangle((0, 0, width-1, height-1), radius=7, outline='#9baaba')
     for x, y, length, text, font, color, background in runs:

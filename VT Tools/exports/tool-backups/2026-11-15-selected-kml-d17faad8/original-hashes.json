@@ -1,0 +1,9 @@
+{
+  "README.txt": "ca98f6c97b99a0fc657322cd57a41c05c08e5c4b37a97a7371c9995b471ba2bc",
+  "tools/surfer_gps_map.py": "6f13602dbb763d578ef2cc3dffef9fc1c49d1fc6675b39311def8c34de79a31d",
+  "tools/surfer_map_filters.py": "c516c5bbb6b5a1a4c232e12998c5f75c0d2b3a8a5b14843fffcdccd915b0ba10",
+  "tools/surfer_map_filters.js": "675d161ba72008fd479c3ea527caea42110d02eed3bbe412a0ba0fdc3aff72ae",
+  "tools/surfer_map_kml.js": null,
+  "tools/test_surfer_map_kml.cjs": null,
+  "tools/test_surfer_map_browser.cjs": "9684ea55f90ad0bb91e32860106e0d394650dbd664d07a8c497fc7982c1bfe2e"
+}

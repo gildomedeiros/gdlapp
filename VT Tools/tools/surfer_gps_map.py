@@ -89,6 +89,7 @@ def load_packets(folder, recursive, tz):
     ride_states = {}
     seaward_states = {}
     heading_states = {}
+    camera_heading_states = {}
     distance_settings = {'minimumDistanceMetres': {}, 'filmingSeparationMetres': {}}
     paths = sorted(folder.rglob('*.jsonl') if recursive else folder.glob('*.jsonl'))
     for path in paths:
@@ -114,6 +115,9 @@ def load_packets(folder, recursive, tz):
                     heading_states.setdefault(source, []).append((t, line_no, r.get('session'),
                         r.get('aircraftYawDeg') if r.get('event') == 'orientation_cycle' else None,
                         r.get('aircraftAttitudeFresh'), r.get('aircraftAttitudeAgeMs')))
+                    camera_heading_states.setdefault(source, []).append((t, line_no, r.get('session'),
+                        r.get('gimbalYawDeg') if r.get('event') == 'orientation_cycle' else None,
+                        r.get('gimbalAttitudeFresh'), r.get('gimbalAttitudeAgeMs')))
                 if r.get('event') in ('movement_cycle', 'session_start', 'session_end'):
                     riding=r.get('riding') if r.get('event')=='movement_cycle' and isinstance(r.get('riding'),bool) else None
                     ride_states.setdefault(source,[]).append((t,line_no,riding,r.get('session')))
@@ -174,6 +178,7 @@ def load_packets(folder, recursive, tz):
     mark_ride_active(packets, ride_states, tz)
     mark_seaward_bearing(packets, seaward_states)
     mark_drone_heading(packets, heading_states, tz)
+    mark_drone_heading(packets, camera_heading_states, tz, prefix='cameraHeading')
     for source,states in gimbal_states.items():
         states.sort()
     gimbal_times={source:[s[0] for s in states] for source,states in gimbal_states.items()}
@@ -204,12 +209,16 @@ def load_packets(folder, recursive, tz):
     return packets, drones
 
 
-def mark_drone_heading(packets, sources, tz):
-    """Attach only the latest prior fresh aircraft yaw from the same log/session."""
+def mark_drone_heading(packets, sources, tz, *, prefix='droneHeading'):
+    """Attach only the latest prior fresh yaw from the same log/session.
+
+    Aircraft and camera use separate logged yaw and freshness; never substitute
+    aircraft yaw or gimbal-relative yaw for the camera's absolute yaw.
+    """
     indexed={source:sorted(rows,key=lambda r:(r[0],r[1])) for source,rows in sources.items()}
     keys={source:[(r[0],r[1]) for r in rows] for source,rows in indexed.items()}
     for p in packets:
-        p.update(droneHeadingDeg=None, droneHeadingTimestamp=None, droneHeadingSourceLine=None)
+        p.update({prefix+'Deg':None, prefix+'Timestamp':None, prefix+'SourceLine':None})
         source=p['sourceFile'];rows=indexed.get(source,[])
         index=bisect.bisect_right(keys.get(source,[]),(p['time_ms'],p.get('sourceLine',math.inf)))-1
         if index<0:continue
@@ -218,7 +227,9 @@ def mark_drone_heading(packets, sources, tz):
         if fresh is not True or any(not isinstance(v,(int,float)) or isinstance(v,bool) or not math.isfinite(v) for v in (heading,age)):continue
         total_age=age+p['time_ms']-time
         if age<0 or not 0<=total_age<=1500:continue
-        p.update(droneHeadingDeg=heading%360,droneHeadingTimestamp=datetime.fromtimestamp(time/1000,tz).isoformat(timespec='milliseconds'),droneHeadingSourceLine=line)
+        p.update({prefix+'Deg':heading%360,
+                  prefix+'Timestamp':datetime.fromtimestamp(time/1000,tz).isoformat(timespec='milliseconds'),
+                  prefix+'SourceLine':line})
 
 
 def mark_ride_active(packets, states, tz):
@@ -425,8 +436,41 @@ def lora_signal_text(p):
     return f'LoRa signal: RSSI {value("rssi", "dBm")} · SNR {value("snr", "dB")}'
 
 
+def camera_heading_error(p):
+    """GPS bearing minus logged absolute camera yaw, wrapped to [-180, 180).
+
+    Positive means the camera points left of the surfer and needs a clockwise
+    correction. This is a telemetry estimate using a shared north reference.
+    """
+    heading=p.get('cameraHeadingDeg')
+    if not isinstance(heading,(int,float)) or isinstance(heading,bool) or not math.isfinite(heading):
+        return None
+    for key,limit in [('latitude',90),('longitude',180),('droneLatitude',90),('droneLongitude',180)]:
+        value=p.get(key)
+        if not isinstance(value,(int,float)) or isinstance(value,bool) or not math.isfinite(value) or abs(value)>limit:
+            return None
+    if pair_distance(p)<1e-6:
+        return None  # No bearing for coincident positions.
+    bearing=travel_bearing(p['droneLatitude'],p['droneLongitude'],p['latitude'],p['longitude'])
+    return (bearing-heading+180)%360-180
+
+
+def camera_heading_error_text(p):
+    error=camera_heading_error(p)
+    label='Camera heading error: '
+    if error is None:
+        return label+'unavailable'
+    magnitude=f'{abs(error):.1f}'
+    if magnitude=='0.0':
+        return label+'0.0° — aligned with surfer'
+    if magnitude=='180.0':
+        return label+'180.0° — opposite surfer'
+    return label+f'{magnitude}° {"left" if error>0 else "right"} of surfer'
+
+
 def position_detail_lines(p):
     """One set of fields for both markers, the connection and saved frames."""
+    from surfer_yaw_sim import card_lines
     distance = pair_distance(p)
     header = (f'{p["point"]} ↔ {p.get("dronePoint", "?")} | [{distance:.1f}][{setting_text(p, "filmingSeparationMetres")}] m horizontal'
               if distance is not None else f'{p["point"]}: no prior drone GPS')
@@ -443,6 +487,8 @@ def position_detail_lines(p):
         f'Surfer since previous packet: {travel_text} | {speed_text}',
         f'Arrow direction: {bearing:.1f}° toward next received GPS' if bearing is not None else 'Arrow direction: next coordinates unchanged or unavailable',
         ride_text(p), retreat_text(p), f'Drone height: {height_text} above takeoff', f'Drone heading: {heading_text}',
+        *card_lines(p.get('yawSimulation')),
+        camera_heading_error_text(p),
         gimbal_tilt_text(p), f'Gimbal reported: {p.get("gimbalReportedTimestamp") or "unavailable"}',
         *drone_status_lines(p), lora_signal_text(p),
         f'Drone displacement from {p.get("previousDronePoint", "?")}: {displacement:.2f} m' if displacement is not None else 'Drone displacement: unavailable (no previous paired drone position)',
@@ -607,10 +653,12 @@ def write_outputs(points, target, output, tz, gap_red_ms=1000, boundary=None, se
         drone=html.escape(str(p.get('dronePoint','no drone')))
         badge=' <strong class="ride-badge" title="Ride detected at this GPS receipt">RIDE</strong>' if p.get('waveRiding') is True else ''
         pair_controls+=f'<label class="pair-option" title="Ctrl + left-click this position to capture its frame"><input type="checkbox" data-pair="{label}" checked> {label} ↔ {drone}{badge}<small class="pair-metadata"></small></label>'
-    pair_controls+='</div><p>Show/hide applies to the selected ride. Hover a surfer, drone or connection line and press Enter to preview its frame. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details>'
+    pair_controls+='</div><div id="selected-kml-controls"><label style="display:block;margin-top:8px"><input id="kml-include-wave" type="checkbox" checked> Include wave line</label><button id="download-selected-kml" type="button" disabled>Download KML</button><p id="selected-kml-status" role="status" aria-live="polite"></p></div><p>Show/hide applies to the selected ride. Hover a surfer, drone or connection line and press Enter to preview its frame. Hover or focus a marker and press Delete to hide its shown pairs. Use checkboxes to show several positions. Ctrl + left-click a position to capture its frame.</p></details>'
     reference_controls=''.join(f'<label><input id="hide-{kind}" type="checkbox"> Hide {label}</label>' for kind,label in [('wave-line','wave line'),('boundary-line','boundary line'),('start-point','start point')])
     pair_controls=pair_controls.replace('</fieldset><fieldset id="surfer-highlights">',reference_controls+'</fieldset><p><span style="color:#007d98">Wave line</span> · <span style="color:#c52b34">Boundary line</span> · <span style="color:#7036a5">Start (surfer)</span></p><fieldset id="surfer-highlights">',1)
     if not landmarks:pair_controls+='<p>No logged wave line, boundary or start point is available at these positions.</p>'
+    from surfer_yaw_sim import panel_html
+    pair_controls+=panel_html()
     script='''<script>
 const svg=document.querySelector('#map svg');
 const svgNS='http://www.w3.org/2000/svg';
@@ -655,6 +703,7 @@ let referenceX=400,referenceY=410,referenceAngle=0,referenceDrag=null;
 const unitsPerMetre=Number(svg.dataset.unitsPerMetre);
 __MAP_LANDMARK_SCRIPT__
 __MAP_PAIR_HOVER_SCRIPT__
+__MAP_YAW_SIM_SCRIPT__
 __MAP_WAVE_SCRIPT__
 __MAP_SCALE_SCRIPT__
 function drawReference(){reference.setAttribute('transform','translate('+referenceX+' '+referenceY+') rotate('+referenceAngle+') scale('+unitsPerMetre+')');}
@@ -690,8 +739,10 @@ svg.addEventListener('dblclick',reset);
 initializeMapFilters();
 </script>'''
     from surfer_map_filters import map_filter_data
-    filter_data=dict(map_filter_data(points),initialRide=initial_ride)
+    filter_data=dict(map_filter_data(points),initialRide=initial_ride,
+                     waveLines=[ref for ref in landmarks if ref['kind']=='wave'])
     filter_js=Path(__file__).with_name('surfer_map_filters.js').read_text(encoding='utf-8').replace('MAP_FILTER_DATA',json.dumps(filter_data).replace('<','\\u003c'))
+    filter_js+='\n'+Path(__file__).with_name('surfer_map_kml.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_FILTER_SCRIPT__',filter_js)
     interaction_js=Path(__file__).with_name('surfer_map_interactions.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_INTERACTION_SCRIPT__',interaction_js)
@@ -701,6 +752,7 @@ initializeMapFilters();
     script=script.replace('__MAP_LANDMARK_SCRIPT__',landmark_js)
     pair_hover_js=Path(__file__).with_name('surfer_map_pair_hover.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_PAIR_HOVER_SCRIPT__',pair_hover_js)
+    script=script.replace('__MAP_YAW_SIM_SCRIPT__',Path(__file__).with_name('surfer_map_yaw_sim.js').read_text(encoding='utf-8'))
     script=script.replace('__MAP_WAVE_SCRIPT__',Path(__file__).with_name('surfer_map_waves.js').read_text(encoding='utf-8')+'\n'+Path(__file__).with_name('surfer_map_headings.js').read_text(encoding='utf-8'))
     scale_js=Path(__file__).with_name('surfer_map_scale.js').read_text(encoding='utf-8')
     script=script.replace('__MAP_SCALE_SCRIPT__',scale_js)

@@ -8,14 +8,29 @@ import json, tempfile, threading
 from unittest.mock import patch
 from surfer_map_app import MapApp,create_server
 from test_surfer_subtitles import packet,drones,source_srt
+from surfer_drone_status import status_record
 root=Path.cwd().parent/'exports';root.mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='subtitle-browser-',dir=root) as directory:
     folder=Path(directory);log=folder/'flight.jsonl';log.write_text('',encoding='utf-8')
     video=folder/'videos';video.mkdir()
+    (folder/'empty').mkdir()
     (video/'DJI_0001.MP4').write_bytes(b'test video')
     (video/'DJI_0002.mp4').write_bytes(b'no SRT test')
     (video/'DJI_0001.SRT').write_text(source_srt([999,1000,2501,3000]),encoding='utf-8',newline='')
-    rows=[packet(1000,sourceFile=str(log)),packet(3000,2,sourceFile=str(log))]
+    rows=[packet(1000,sourceFile=str(log)),packet(3000,2,sourceFile=str(log)),packet(5000,3,sourceFile=str(log))]
+    records=[]
+    for p in rows:
+        t=p['time_ms']
+        records.extend([dict(event='aiming_cycle',epochMs=t-10,session=1,aircraftLatitude=-27.9502,aircraftLongitude=153.43,aircraftAgeMs=0,rotationCurve='riding'),
+            dict(event='orientation_cycle',epochMs=t-9,session=1,aircraftYawDeg=41.5,aircraftAttitudeFresh=True,aircraftAttitudeAgeMs=0,
+                 gimbalPitchDeg=-32.9,gimbalAttitudeFresh=True,gimbalAttitudeAgeMs=0,heightAboveTakeoffM=10.4,heightFresh=True,heightAgeMs=0),
+            dict(event='lora_packet',epochMs=t,sequence=p['sequence'],accepted=True,latitude=p['latitude'],longitude=p['longitude'])])
+        p['sourceLine']=len(records)
+        p['cameraHeadingDeg']=151.3
+        p['droneStatus']={'aiming':status_record(dict(event='aiming_cycle',state='AIMING',
+            decision='riding_correction',rotationCurve='riding',remainingAngleDeg=-6.326,
+            desiredYawRate=-6.326,submitted=True,submittedYawRate=-5.71,reverseBlocked=False),p['time_ms'],0)}
+    log.write_text('\n'.join(json.dumps(r) for r in records),encoding='utf-8')
     app=MapApp(app_dir=folder/'app')
     settings=dict(app.config['settings'],folder=str(folder),video_folder=str(video),output=str(folder/'output'),utc_offset='+00:00')
     with patch('surfer_gps_map.load_packets',return_value=(rows,drones(str(log)))):
@@ -43,12 +58,41 @@ async function main(){
   const page=await browser.newPage({viewport:{width:1500,height:1000}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(url);
-  await page.waitForFunction(()=>document.querySelectorAll('#subtitle-fields input').length===24);
+  await page.waitForFunction(()=>document.querySelectorAll('#subtitle-fields input').length===29);
   await page.locator('#map-frame').waitFor({state:'visible'});
   const map=await page.locator('#map-frame').getAttribute('src');
+  const expected='Aiming: [AIMING] [tracking surfer] [riding] [error 6.33° left] [desired 6.33°/s left] [sent 5.71°/s left] [reversal blocked: no]';
+  const mapFrame=page.frameLocator('#map-frame');
+  await mapFrame.locator('.surfer-marker').first().hover();
+  const statusLine=mapFrame.locator('#tooltip span').filter({hasText:expected});
+  await statusLine.waitFor({state:'visible'});
+  assert.equal(await statusLine.evaluate(n=>getComputedStyle(n).color),'rgb(8, 117, 46)');
+  await page.mouse.move(1490,990);
+  await mapFrame.locator('body').press('Escape');
+  await mapFrame.locator('#tooltip').waitFor({state:'hidden'});
+  // Focus invokes the same floating label as pointer hover without relying on
+  // a thin SVG stroke's position inside the scrolling application iframe.
+  await mapFrame.locator('.pair-line').first().focus();
+  const hover=mapFrame.locator('#pair-line-hover');await hover.waitFor({state:'visible'});
+  assert((await hover.textContent()).includes(expected));
+  assert.equal(await hover.locator('text').filter({hasText:expected}).locator('tspan').first().getAttribute('fill'),'#08752e');
+  await mapFrame.locator('.drone-marker').first().hover({force:true});
+  await statusLine.waitFor({state:'visible'});
+  assert.equal(await page.locator('#subtitle-fields input[value="camera_heading_error"]').isChecked(),true);
+  await mapFrame.locator('#yaw-sim-panel>summary').click();
+  await mapFrame.locator('#yaw-sim-enabled').check();
+  await mapFrame.locator('#yaw-sim-panel details>summary').click();
+  await mapFrame.locator('[data-yaw-param="magnitude"]').fill('8');
+  await mapFrame.locator('[data-yaw-param="horizontalFov"]').fill('90');
+  await mapFrame.locator('#yaw-sim-run').click();
+  await page.waitForFunction(()=>document.getElementById('subtitle-simulation-info').textContent.includes('magnitude 8°'));
   await page.locator('#subtitle-settings summary').click();
+  assert.match(await page.locator('#subtitle-simulation-info').textContent(),/Latest successful map Run \/ Update.*magnitude 8°.*FOV 90°/);
+  await page.waitForFunction(()=>document.querySelectorAll('#subtitle-video option').length===3);
+  assert.deepEqual(await page.locator('#subtitle-video option').allTextContents(),['All','DJI_0001.MP4','DJI_0002.mp4']);
+  assert.equal(await page.locator('#subtitle-video').inputValue(),'');
   await page.locator('#subtitle-none').click();assert.equal(await page.locator('#subtitle-export').isDisabled(),true);
-  await page.locator('#subtitle-all').click();assert.equal(await page.locator('#subtitle-fields input:checked').count(),24);
+  await page.locator('#subtitle-all').click();assert.equal(await page.locator('#subtitle-fields input:checked').count(),29);
   await page.locator('#subtitle-export').click();
   await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Subtitles ready:'),null,{timeout:20000});
   assert.equal(await page.locator('#map-frame').getAttribute('src'),map);
@@ -59,25 +103,100 @@ async function main(){
   assert.equal(response.status(),200);
   const cardHref=await page.locator('#subtitle-links a').filter({hasText:'DJI_0001.ass'}).getAttribute('href');
   const card=await page.request.get(url+cardHref);assert.equal(card.headers()['content-type'],'text/x-ssa; charset=utf-8');
-  assert.match(await card.text(),/PlayResX: 1920/);
+  const ass=await card.text();assert.match(ass,/PlayResX: 1920/);
+  const displayed=ass.split('\n').filter(line=>line.startsWith('Dialogue: 2,')).map(line=>line.split(',').slice(9).join(',').replace(/\{[^}]*\}/g,'').trim()).join(' ');
+  for(const part of ['[riding]','[error 6.33° left]','[desired 6.33°/s left]','[sent 5.71°/s left]','[reversal blocked: no]'])assert(displayed.includes(part));
   const text=await response.text();
+  assert.match(text,/<font color="#7838a5"[^>]*><b>appliedOffset\[SIM\]: \+0\.00° \[0S0\]/);
+  assert.match(text,/offsetMagnitude\[SIM\]: 8\.00° \(fixed\)/);
+  assert.match(text,/m sideways \/ ≈[\d.]+ m frame width/);
+  assert.match(text,/Frame width\[SIM\]: HFOV 90° estimate/);
+  assert.match(ass,/\\c&Ha53878&\\b1/);
+  assert(displayed.includes('appliedOffset[SIM]:'));
+  assert(displayed.includes('offsetMagnitude[SIM]: 8.00° (fixed)'));
+  assert(text.includes(expected));
+  assert.match(text,/Camera heading error:/);
   assert.match(text,/GPS age: 1.501 s/);assert.match(text,/face="Arial" size="28"/);assert.match(text,/color="#08752e"[^>]*><b>TILTING/);assert.match(text,/original saved note/);
   await page.locator('#subtitle-none').click();
   await page.locator('#subtitle-fields input[value="gps_age"]').check();
   await page.locator('#subtitle-fields input[value="packet"]').check();
+  await page.locator('#subtitle-video').selectOption('DJI_0001.MP4');
   await page.locator('#subtitle-export').click();
   await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Subtitles ready:')&&!document.getElementById('subtitle-export').disabled,null,{timeout:20000});
   const secondLink=await page.locator('#subtitle-links a').filter({hasText:'DJI_0001.srt'}).getAttribute('href');
   const selectedText=await (await page.request.get(url+secondLink)).text();
-  assert.match(selectedText,/Packet: 2/);assert.doesNotMatch(selectedText,/Gimbal tilt:/);
-  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#subtitle-fields input').length===24);
+  assert.match(await page.locator('#subtitle-summary').textContent(),/DJI_0001.MP4 · 1\/1 videos exported/);
+  assert.equal(await page.locator('#subtitle-issues').textContent(),'');
+  assert.equal(await page.locator('#map-frame').getAttribute('src'),map);
+  assert.match(selectedText,/Packet: 2/);assert.doesNotMatch(selectedText,/Gimbal tilt:/);assert.doesNotMatch(selectedText,/Camera heading error:/);
+  assert.doesNotMatch(selectedText,/appliedOffset\[SIM\]/);
+  await page.locator('#subtitle-video').selectOption('DJI_0002.mp4');
+  await page.locator('#subtitle-export').click();
+  await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Subtitles ready:')&&!document.getElementById('subtitle-export').disabled,null,{timeout:20000});
+  assert.match(await page.locator('#subtitle-summary').textContent(),/DJI_0002.mp4 · 0\/1 videos exported/);
+  assert.equal(await page.locator('#subtitle-links a').filter({hasText:'DJI_0001'}).count(),0);
+  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#subtitle-fields input').length===29);
   assert.equal(await page.locator('#subtitle-fields input:checked').count(),2);
   assert.equal(await page.locator('#map-frame').getAttribute('src'),map);
   await page.locator('#subtitle-settings summary').click();
   await page.locator('#subtitle-all').click();
+  await page.waitForFunction(()=>document.querySelectorAll('#subtitle-video option').length===3);
+  assert.equal(await page.locator('#subtitle-video').inputValue(),'');
+  await page.locator('#subtitle-video').selectOption('DJI_0001.MP4');
+  await page.locator('#subtitle-refresh').click();
+  await page.waitForFunction(()=>!document.getElementById('subtitle-export').disabled);
+  assert.equal(await page.locator('#subtitle-video').inputValue(),'DJI_0001.MP4');
+  await page.locator('#data-settings > summary').click();
+  const videoInput=page.locator('#data-settings [name="video_folder"]');
+  const videoFolder=await videoInput.inputValue();
+  await videoInput.fill(require('node:path').join(require('node:path').dirname(videoFolder),'empty'));
+  await videoInput.dispatchEvent('change');
+  await page.waitForFunction(()=>document.getElementById('subtitle-video-status').textContent.includes('No MP4 files'));
+  assert.equal(await page.locator('#subtitle-export').isDisabled(),true);
+  await videoInput.fill(videoFolder);await videoInput.dispatchEvent('change');
+  await page.waitForFunction(()=>!document.getElementById('subtitle-export').disabled);
+  assert.deepEqual(await page.locator('#subtitle-video option').allTextContents(),['All','DJI_0001.MP4','DJI_0002.mp4']);
+  await page.locator('#data-settings > summary').click();
   await page.screenshot({path:require('node:path').join(__dirname,'../subtitle-export-ui.png'),fullPage:true});
+  await page.locator('#selection-mode').selectOption('timestamp');
+  const at=page.locator('[data-mode="timestamp"] [name="at"]');
+  const history=page.locator('#timestamp-recent');
+  assert.deepEqual(await history.locator('option').allTextContents(),['Choose a recent timestamp','00:00:01']);
+  await at.fill('00:00:03');await page.locator('#apply').click();
+  await page.waitForFunction(()=>!document.getElementById('apply').disabled&&document.querySelector('#timestamp-recent option:nth-child(2)')?.value==='00:00:03');
+  assert.deepEqual(await history.locator('option').allTextContents(),['Choose a recent timestamp','00:00:03','00:00:01']);
+  const latestMap=await page.locator('#map-frame').getAttribute('src');
+  await page.locator('#selection-settings > summary').click();
+  await history.selectOption('00:00:01');assert.equal(await at.inputValue(),'00:00:01');
+  assert.equal(await page.locator('#map-frame').getAttribute('src'),latestMap,'Selecting history fills input without changing the map');
+  await page.locator('#apply').click();
+  await page.waitForFunction(()=>!document.getElementById('apply').disabled&&document.querySelector('#timestamp-recent option:nth-child(2)')?.value==='00:00:01');
+  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#timestamp-recent option').length===3);
+  assert.deepEqual(await history.locator('option').allTextContents(),['Choose a recent timestamp','00:00:01','00:00:03']);
+  await page.locator('#selection-settings > summary').click();
+  assert.equal(await page.locator('.timestamp-row').count(),3);
+  await page.locator('#timestamp-recent-2').selectOption('00:00:03');
+  const at2=page.locator('[data-mode="timestamp"] [name="at2"]'),at3=page.locator('[data-mode="timestamp"] [name="at3"]');
+  assert.equal(await at2.inputValue(),'00:00:03');assert.equal(await at.inputValue(),'00:00:01');
+  await page.locator('[data-mode="timestamp"] [name="next2"]').fill('0');
+  await at3.fill('00:00:05');await page.locator('[data-mode="timestamp"] [name="next3"]').fill('0');
+  await page.locator('#apply').click();
+  await page.waitForFunction(()=>!document.getElementById('apply').disabled&&document.getElementById('result-summary').textContent.startsWith('3 positions'));
+  await page.waitForFunction(()=>document.getElementById('map-frame').contentDocument?.querySelectorAll('.surfer-marker').length===3);
+  assert.equal(await mapFrame.locator('.surfer-marker').count(),3);
+  assert.equal(await mapFrame.locator('.pair-line').count(),3);
+  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#timestamp-recent-3 option').length===4);
+  assert.equal(await at2.inputValue(),'00:00:03');assert.equal(await at3.inputValue(),'00:00:05');
+  await page.locator('#selection-settings > summary').click();
+  await page.locator('#selection-settings').screenshot({path:require('node:path').join(__dirname,'../three-timestamps-ui.png')});
+  await page.locator('#timestamp-recent-3').selectOption('00:00:01');
+  await page.locator('[data-mode="timestamp"] [name="next3"]').fill('1');
+  await page.locator('#apply').click();
+  await page.waitForFunction(()=>!document.getElementById('apply').disabled&&document.getElementById('result-summary').textContent.startsWith('2 positions'));
+  await page.waitForFunction(()=>document.getElementById('map-frame').contentDocument?.querySelectorAll('.surfer-marker').length===2);
+  assert.equal(await mapFrame.locator('.surfer-marker').count(),2);
   assert.deepEqual(errors,[]);
-  console.log('PASS: 24 fields, all/clear selection, real batch SRT downloads, styles, saved choices and current map retained.');
+  console.log('PASS: three timestamp rows combine ranges, deduplicate overlaps, select recent values independently and persist; existing map/subtitle flows still pass.');
  }finally{
   if(browser)await browser.close();
   child.stdin.end('\n');

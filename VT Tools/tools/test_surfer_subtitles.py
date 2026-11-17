@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
-from surfer_subtitles import FIELD_IDS, PacketIndex, export_folder, read_cues, style_card_line, validate_fields
+from surfer_subtitles import FIELD_IDS, PacketIndex, export_folder, read_cues, style_card_line, validate_fields, subtitle_videos
 from surfer_map_app import Cancelled, MapApp, create_server
 
 
@@ -126,6 +126,37 @@ class SubtitleTests(unittest.TestCase):
             source.write_text(body,encoding='utf-8')
             with self.assertRaises(ValueError):read_cues(source,timezone.utc)
 
+    def test_one_video_selection_excludes_every_other_video_from_exports_and_zip(self):
+        for name in ('DJI_1.MP4','DJI_2.mp4'):
+            (self.video/name).write_bytes(b'original video')
+            (self.video/Path(name).with_suffix('.SRT')).write_text(source_srt([1000]),encoding='utf-8',newline='')
+        (self.video/'not-video.txt').write_text('unchanged',encoding='utf-8')
+        (self.video/'directory.mp4').mkdir()
+        originals={p.name:p.read_bytes() for p in self.video.iterdir() if p.is_file()}
+        self.assertEqual([p.name for p in subtitle_videos(self.video)],['DJI_1.MP4','DJI_2.mp4'])
+        index=PacketIndex([packet(1000)],drones(),['gps_age'])
+        report,files=export_folder(self.video,self.root/'selected',index,timezone.utc,video_name='DJI_2.mp4')
+        self.assertEqual(report['selectedVideo'],'DJI_2.mp4')
+        self.assertEqual(report['totals']['videos'],1)
+        self.assertEqual(report['totals']['exported'],1,report)
+        self.assertEqual([row['video'] for row in report['files']],['DJI_2.mp4'])
+        with ZipFile(files[0]) as zipped:
+            self.assertEqual(set(zipped.namelist()),{'DJI_2.srt','DJI_2.ass','export-report.json'})
+        self.assertEqual(originals,{p.name:p.read_bytes() for p in self.video.iterdir() if p.is_file()})
+        all_report,_=export_folder(self.video,self.root/'all',index,timezone.utc,video_name='')
+        self.assertIsNone(all_report['selectedVideo'])
+        self.assertEqual(all_report['totals']['exported'],2)
+
+    def test_invalid_or_disappeared_selection_never_falls_back_to_all(self):
+        (self.video/'x.mp4').write_bytes(b'video')
+        index=PacketIndex([packet(1000)],drones(),['gps_age'])
+        for selected in ('missing.mp4','../x.mp4',str(self.video/'x.mp4'),['x.mp4'],True):
+            with self.subTest(selected=selected),self.assertRaises(ValueError):
+                export_folder(self.video,self.root/'invalid',index,timezone.utc,video_name=selected)
+            self.assertFalse((self.root/'invalid').exists())
+        (self.video/'x.mp4').unlink()
+        with self.assertRaises(ValueError):subtitle_videos(self.video,'x.mp4')
+
     def test_recording_clock_steps_are_reported_and_each_frame_keeps_its_clock(self):
         (self.video/'x.mp4').write_bytes(b'video')
         (self.video/'x.srt').write_text(source_srt([1000,1170,1000,2000]),encoding='utf-8',newline='')
@@ -151,18 +182,23 @@ class SubtitleTests(unittest.TestCase):
 
     def test_app_export_uses_full_log_and_keeps_map_and_preferences(self):
         (self.video/'x.mp4').write_bytes(b'video');(self.video/'x.srt').write_text(source_srt([2000]),encoding='utf-8',newline='')
+        (self.video/'y.MP4').write_bytes(b'video');(self.video/'y.srt').write_text(source_srt([2000]),encoding='utf-8',newline='')
         log=self.root/'flight.jsonl';log.write_text('',encoding='utf-8')
         rows=[packet(1000,sourceFile=str(log)),packet(2000,2,sourceFile=str(log))]
         app=MapApp(app_dir=self.root/'app')
         app.current={'mapUrl':'unchanged','id':'old'}
         settings=dict(app.config['settings'],folder=str(self.root),video_folder=str(self.video),output=str(self.root/'exports'),utc_offset='+00:00')
         with patch('surfer_gps_map.load_packets',return_value=(rows,drones(str(log)))):
-            job=app.start_subtitles(dict(settings=settings,fields=['packet','gps_age']))
+            with self.assertRaises(ValueError):app.start_subtitles(dict(settings=settings,fields=['packet'],video='../x.mp4'))
+            job=app.start_subtitles(dict(settings=settings,fields=['packet','gps_age'],video='x.mp4'))
             app.worker.join(10)
         job=app.public_job(job['id'])
         self.assertEqual(job['status'],'done',job)
         self.assertEqual(app.current,{'mapUrl':'unchanged','id':'old'})
         self.assertEqual(app.state()['subtitleResult'],job['result'])
+        self.assertEqual(job['result']['video'],'x.mp4')
+        self.assertEqual(job['result']['totals']['videos'],1)
+        self.assertFalse((Path(job['result']['output'])/'y.srt').exists())
         self.assertIn('Packet: 2',(Path(job['result']['output'])/'x.srt').read_text(encoding='utf-8'))
         self.assertNotIn('point',rows[0])
         self.assertEqual(MapApp(app_dir=self.root/'app').config['subtitle_fields'],['gps_age','packet'])
@@ -170,6 +206,10 @@ class SubtitleTests(unittest.TestCase):
         thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         try:
             url='http://'+server.address
+            listing=Request(url+'/api/subtitle-videos',data=json.dumps(dict(video_folder=str(self.video))).encode(),
+                headers={'Content-Type':'application/json','Origin':url})
+            with urlopen(listing) as response:
+                self.assertEqual(json.load(response)['videos'],['x.mp4','y.MP4'])
             with urlopen(url+job['result']['exports'][0]['url']) as response:
                 self.assertEqual(response.headers['Content-Type'],'application/zip')
                 self.assertTrue(response.read().startswith(b'PK'))

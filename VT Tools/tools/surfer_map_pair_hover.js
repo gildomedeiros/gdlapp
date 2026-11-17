@@ -24,7 +24,7 @@ function showPairHover(line,event){
   activePairLine=line;line.classList.add('pair-hover');
   pairHoverLayer.dataset.point=line.dataset.pairs;
   const red=new Set((line.dataset.redLines||'').split(',').filter(Boolean).map(Number));
-  for(const [index,text] of line.dataset.compact.split('\n').entries()){
+  for(const {index,text} of yawSimulationDetailLines(line.dataset.compact.split('\n').map((text,index)=>({text,index})),line.dataset.pairs)){
    const row=document.createElementNS(svgNS,'text');
    row.style.whiteSpace='pre';
    row.setAttribute('font-family','Arial');row.setAttribute('stroke','#f3f7fa');
@@ -45,7 +45,7 @@ function showPairHover(line,event){
     });
    }else{
     const color=droneStatusColor(text)||(text==='Ride detected: YES'?'#8226a0':text.startsWith('Retreat active: YES')?'#08752e':
-     text.startsWith('Retreat active: NO')||text.startsWith('Gimbal tilt:')&&!text.endsWith('unavailable')?'#a94700':'#17324d');
+     text.startsWith('Retreat active: NO')||text.startsWith('Camera heading error:')||text.startsWith('Gimbal tilt:')&&!text.endsWith('unavailable')?'#a94700':'#17324d');
     pairHoverSpan(row,text,color,color!=='#17324d');
    }
    pairHoverLayer.append(row);

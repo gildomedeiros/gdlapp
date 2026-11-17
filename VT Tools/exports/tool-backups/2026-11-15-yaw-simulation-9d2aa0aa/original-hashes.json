@@ -1,0 +1,15 @@
+{
+  "README.txt": "791d66b4d75f140930043a20ce20d9e8e0b4b321d9bbf1d2beb3d15fb0f49d15",
+  "tools/surfer_yaw_sim.py": null,
+  "tools/surfer_map_yaw_sim.js": null,
+  "tools/test_surfer_yaw_sim.py": null,
+  "tools/test_surfer_yaw_sim_browser.cjs": null,
+  "tools/surfer_gps_map.py": "18805cbcb1ec5544b3dbe22f158e14fd178d4da9e04654f83c16a65595a255e6",
+  "tools/surfer_map_app.py": "81ebf210381d3b0b3c2911585d2478d0f02ae0982cdea5592cdec9c22b4dc4b2",
+  "tools/surfer_map_filters.js": "b202cebb8b3b92455b4f399b8ef8ca206c39771a58c725e78623bd1f864bff4a",
+  "tools/surfer_map_interactions.js": "4c91869e36bb6405a8eb7e98a7c905e31f87f0497b64d25a39bc2130b8a533bc",
+  "tools/surfer_map_pair_hover.js": "d06ce520c71b0385969a6cd4ba464c002b4dfc5866fae4f75224fd4c3502a2c9",
+  "tools/surfer_map_headings.js": "de8e6f258adae51dcc3b303a4dc49465ec6fda82eb47e83fc8780c5b0bbbc1b3",
+  "tools/surfer_map_capture.py": "d1105e0b490a72928e5dcc54a4dafc83bdcee176ede3c05109ad98a8a07ce16a",
+  "tools/surfer_drone_status.py": "3ab4834edef50635fc7b1b829c9b9f5ae4c5c63fbb719ab6baaeae77f7fcfe4c"
+}

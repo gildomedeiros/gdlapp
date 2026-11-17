@@ -240,7 +240,7 @@ async function main(){
   assert.equal(await hoverField('Gimbal tilt:').textContent(),'Gimbal tilt: -32.2° — TILTING → -30° (command active)');
   assert.equal(await frame.locator('#tooltip').evaluate(n=>n.hidden),true,'Do not open the full marker card for a line');
   assert.deepEqual((await pairLabel.locator('text').allTextContents()).filter(text=>/^(Aiming|Come to Me|Boundary):/.test(text)),[
-   'Aiming: AIMING — tracking surfer during ride · yaw -1.6°/s sent',
+   'Aiming: [AIMING] [tracking surfer] [profile unavailable] [error unavailable] [desired unavailable] [sent 1.6°/s left] [reversal blocked: unavailable]',
    'Come to Me: WAITING — ride detected · 8.7 s left','Boundary: no block reported · 33.8 m seaward']);
   assert.equal(await hoverField('LoRa signal:').textContent(),'LoRa signal: RSSI -85 dBm · SNR 7.5 dB');
   assert.equal(await pairLabel.locator('tspan').filter({hasText:'(selected)'}).getAttribute('fill'),'#08752e');

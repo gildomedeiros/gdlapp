@@ -1,0 +1,8 @@
+{
+  "README.txt": "75ac0a34eba06d1b6af7b2ef6c8907f13cf2ea7fb370ade792dea9e6a9868673",
+  "tools/surfer_yaw_sim.py": "4c31ea98fb99be4afc2d453829de47de4274a58258cdc742e8564581de0989f1",
+  "tools/surfer_drone_status.py": "e17eff03b2b540e03af03ce9e5eb6b58638f1f5a722f6acdadfad9f70798a1c5",
+  "tools/surfer_map_interactions.js": "8b4d732680e970b06949c8618e09291d9d5dc5f912917aa3f1f32c3ab79239a2",
+  "tools/test_surfer_yaw_sim.py": "d0597f820dd8999f09485b62a7cc22d75e16e3a0164a6b004dba8f660db7db44",
+  "tools/test_surfer_yaw_sim_browser.cjs": "55b34328b8171a7bc07a9a6b4abad8242d274eafc1cff5bd916b4f4b5026a365"
+}

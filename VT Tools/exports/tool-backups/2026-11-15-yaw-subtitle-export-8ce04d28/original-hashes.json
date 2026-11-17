@@ -1,0 +1,10 @@
+{
+  "README.txt": "04489283dcf1bd0d665d760ca5594dc873674cbc4bbb9b70a8aec6283d2ec8f0",
+  "tools/surfer_subtitles.py": "e27f63e65734119164a604d16efe28eb69786f18dc3334b8c41d888ef94c7d37",
+  "tools/surfer_map_app.py": "c527a2cfd240e4bcb580e6efdeeb3cca7867bb2dcde89efb4a92c9ac4e9ebbf7",
+  "tools/surfer_map_app.html": "6a1243b688da28e83f6950e1b80f173d8c8d365a0ccbbf830e6a53f836c04ca0",
+  "tools/surfer_map_yaw_sim.js": "1b99bbee249c1fa75bb39dde318106765806f08fd7580ca64f1db35190e2c915",
+  "tools/test_surfer_subtitles_browser.cjs": "337e67b447483dcf0a8eda6c2ee2b61836562041610c1312cdc141369ad00970",
+  "tools/test_surfer_subtitle_simulation.py": null,
+  "tools/test_surfer_camera_heading.py": "280f9f87954f685087bf4f79ce96b9957354cd2079c72aaa9e07de00a5abe869"
+}

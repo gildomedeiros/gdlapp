@@ -1,0 +1,178 @@
+[
+  {
+    "latitude": -27.95098,
+    "longitude": 153.42897,
+    "session": null,
+    "time_ms": 1793948276934,
+    "sourceLine": 16,
+    "sourceFile": "C:\\Users\\gildo\\temp\\0611 test\\logs\\cam3_full_2026-11-06_165756_736_7bf92951.jsonl",
+    "kind": "start",
+    "label": "Start (surfer)",
+    "pairs": [
+      "S0",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "S9",
+      "S10",
+      "S11",
+      "S12",
+      "S13",
+      "S14",
+      "S15"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\0611 test\\logs\\cam3_full_2026-11-06_165756_736_7bf92951.jsonl",
+    "session": 1,
+    "kind": "boundary",
+    "label": "Boundary line",
+    "latitude": -27.950905419491132,
+    "longitude": 153.42915711694613,
+    "bearingDegrees": 0.0,
+    "pairs": [
+      "S0",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "S9",
+      "S10",
+      "S11",
+      "S12",
+      "S13",
+      "S14",
+      "S15"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\0611 test\\logs\\cam3_full_2026-11-06_165756_736_7bf92951.jsonl",
+    "session": 1,
+    "kind": "wave",
+    "label": "Wave line \u00b7 seaworld",
+    "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+    "pointA": {
+      "latitude": -27.950620000000008,
+      "longitude": 153.42910000000006
+    },
+    "pointB": {
+      "latitude": -27.951079999999997,
+      "longitude": 153.42910000000006
+    },
+    "pairs": [
+      "S0",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "S9",
+      "S10",
+      "S11",
+      "S12",
+      "S13",
+      "S14",
+      "S15"
+    ]
+  },
+  {
+    "latitude": -27.951,
+    "longitude": 153.42898,
+    "session": null,
+    "time_ms": 1793950342635,
+    "sourceLine": 38,
+    "sourceFile": "C:\\Users\\gildo\\temp\\0611 test\\logs\\cam3_full_2026-11-06_173221_950_6ca16e23.jsonl",
+    "kind": "start",
+    "label": "Start (surfer)",
+    "pairs": [
+      "S16",
+      "S17",
+      "S18",
+      "S19",
+      "S20",
+      "S21",
+      "S22",
+      "S23",
+      "S24",
+      "S25",
+      "S26",
+      "S27",
+      "S28",
+      "S29",
+      "S30",
+      "S31"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\0611 test\\logs\\cam3_full_2026-11-06_173221_950_6ca16e23.jsonl",
+    "session": 1,
+    "kind": "boundary",
+    "label": "Boundary line",
+    "latitude": -27.950931197467884,
+    "longitude": 153.42913878997643,
+    "bearingDegrees": 0.0,
+    "pairs": [
+      "S16",
+      "S17",
+      "S18",
+      "S19",
+      "S20",
+      "S21",
+      "S22",
+      "S23",
+      "S24",
+      "S25",
+      "S26",
+      "S27",
+      "S28",
+      "S29",
+      "S30",
+      "S31"
+    ]
+  },
+  {
+    "sourceFile": "C:\\Users\\gildo\\temp\\0611 test\\logs\\cam3_full_2026-11-06_173221_950_6ca16e23.jsonl",
+    "session": 1,
+    "kind": "wave",
+    "label": "Wave line \u00b7 seaworld",
+    "waveLineId": "a3b59e80-0b62-4962-bd5c-e6f79c205536",
+    "pointA": {
+      "latitude": -27.950620000000008,
+      "longitude": 153.42910000000006
+    },
+    "pointB": {
+      "latitude": -27.951079999999997,
+      "longitude": 153.42910000000006
+    },
+    "pairs": [
+      "S16",
+      "S17",
+      "S18",
+      "S19",
+      "S20",
+      "S21",
+      "S22",
+      "S23",
+      "S24",
+      "S25",
+      "S26",
+      "S27",
+      "S28",
+      "S29",
+      "S30",
+      "S31"
+    ]
+  }
+]

@@ -9,6 +9,115 @@ Open the printed local address. Select logs/videos, rides, timestamp, pitch AND
 distance or framing samples in the browser. Keep the console open while using
 the map; Ctrl+C stops the server.
 
+Export selected GPS positions:
+  Under Choose positions, tick the pairs to keep and click Download KML.
+  The download includes each checked surfer position and its paired drone GPS,
+  within the active ride, seaward and speed filters. Map layer visibility does
+  not remove either half of an exported pair. Original S/D labels are retained.
+  Include wave line starts checked and adds the logged wave line(s) associated
+  with those pairs. Uncheck it to export only the positions. No matching wave
+  line or drone GPS is invented when the log does not contain one.
+  The count beside the button shows what will be exported. KML uses original
+  latitude/longitude, with points clamped to ground and timestamps preserved.
+
+Automatic yaw-offset simulation (optional):
+  After Show positions, open Automatic yaw offset [SIM] in the map sidebar,
+  tick Enable simulation and click Run / Update. Change Simulation settings
+  and run again to compare tuning; no video rescan is needed.
+  Every accepted GPS receipt in each source log is replayed chronologically,
+  including packets before/between/after the selected map points. Filtering,
+  hovering and changing the checked map points do not recompute the history.
+  New map selections require another Run / Update; simulation starts disabled.
+
+  Position cards, connection hover and captured-frame cards share these lines:
+    appliedOffset[SIM]: +5.00 degrees [S00]  = intended surfer left
+    appliedOffset[SIM]: +0.00 degrees [0S0]  = centred
+    appliedOffset[SIM]: -5.00 degrees [00S]  = intended surfer right
+    offsetMagnitude[SIM]: 5.00 degrees (fixed)
+  appliedOffset is the signed applied value, including smoothing.
+  offsetMagnitude is the configured magnitude; it stays fixed through ramps,
+  reversals and recentering, and changes only when you change the setting.
+  Both rows also show, for example, "approx 1.5 m sideways / approx 50 m frame
+  width". These values are calculated for each receipt and each offset angle.
+  Sideways = horizontal GPS distance * abs(sin(offset)). Frame width is at the
+  surfer's optical depth, not the entire water footprint, whose width varies
+  from top to bottom. Width uses fresh logged camera pitch and drone height,
+  assumes zero camera roll and water at takeoff elevation, and assumes yaw has
+  aligned to the simulated target. With downward-negative pitch:
+    depth = distance*cos(offset)*cos(pitch) - height*sin(pitch)
+    width = 2*depth*tan(horizontalFov/2)
+  Horizontal FOV estimate is editable under Simulation settings. Its initial
+  74 degrees is uncalibrated; use the effective lens/zoom/crop horizontal FOV
+  for better estimates. Missing/stale pitch or height displays "frame width
+  unavailable" while a valid sideways estimate can still be shown. This is
+  not confirmation that the surfer fits vertically or is actually in frame.
+  These brackets describe framing once aligned to the simulated target; they
+  are not a measurement of the surfer's location in the recorded picture.
+  Frame previews captured while enabled include a translucent telemetry card.
+  Clean/enhanced downloads and original videos are unaffected.
+
+  SRT/ASS subtitle export also has four selectable [SIM] fields: applied offset
+  (with bracket, sideways metres and frame width), fixed offset magnitude (with
+  sideways metres and frame width), yaw evidence, and frame-width assumptions.
+  They are selected initially, including once when upgrading older preferences;
+  later deselection is remembered. Simulation rows use the same purple bold
+  text as the cards. ASS preserves the existing translucent card layout; SRT
+  contains matching colour/bold tags, subject to the player's SRT support.
+  Export uses the last successful map Run / Update settings (saved across server
+  restarts), or the defaults before any simulation is run. The export panel
+  identifies which settings apply. Settings are captured when export starts;
+  later simulator changes cannot alter an in-progress export. Complete settings
+  and timing assumptions are included in export-report.json.
+  All source logs are replayed before frame matching, without map filters or
+  selected point restrictions. A frame uses the simulation result belonging to
+  its last GPS receipt at or before the frame timestamp; values remain held
+  between receipts while GPS age increases. No future packet, interpolation or
+  extra simulation tick is used. Before the first receipt, or for invalid GPS,
+  affected fields show unavailable. Unchecking all [SIM] fields skips replay.
+
+  Hover a surfer, drone or connection to compare centred (grey), fixed-offset
+  (orange) and automatic-offset (purple) target rays with logged heading (red).
+  The sidebar also shows target/error values, evidence, ride state and profile.
+  Hide drone headings also hides these contextual simulation rays.
+  Download replay CSV includes every receipt, validity/reason, full settings,
+  direction evidence, quiet time, offsets, targets/errors and logged ride flag.
+  Summary durations use the preceding valid sample over each short interval;
+  missing/invalid intervals are unknown, and separate sessions are not joined.
+
+  Experimental defaults: magnitude 5 degrees; 1.5 s observation window; at
+  least 3 observations spanning the whole window; net change 3 degrees;
+  consistency 80%; at least two changes of 0.5 degrees in the winning direction;
+  quiet below 1 degree/s for 3 s; offset slew 2 degrees/s. Windowing adds latency.
+  The extra consistency/support thresholds are newly specified defaults.
+  Maximum receipt gap and maximum drone sensor age both default to 1.5 s.
+  GPS receipt times are used; the sender's actual GPS fix age is unavailable.
+  Repeated coordinates in a NEW accepted packet count as zero movement.
+  Duplicate/rejected packets do not add evidence. Missing/invalid GPS breaks
+  evidence and quiet timing, freezes offset, and rebuilds on fresh data.
+  Session boundaries reset the replay; north wrap and drone translation count.
+  The simulator reads yawTargetOffsetDegrees for the signed fixed baseline;
+  where absent (including 4.0.8 logs), the labelled editable fallback is 0.
+  positioningAngleDegrees and yaw commands never determine offset direction.
+  This version compares targets/errors against recorded heading and motion.
+  It does not predict a changed flight path, simulate yaw commands, change VT,
+  or establish that the experimental thresholds are suitable for flight.
+
+Recent timestamps:
+  Timestamp selection has three rows, each with its own recent-time dropdown
+  and Following packets count. Fill one, two or three rows and click Show
+  positions. Blank rows are ignored. Ranges are combined in receipt order on
+  one map; the same received packet is shown once even if ranges overlap.
+  Following 0 selects just the last packet at or before that row's timestamp.
+  GPS movement/speed remains based on consecutive received packets, including
+  those between the displayed ranges. All three rows are saved in preferences.
+  An explicit command-line --at starts a single range, ignoring saved extra rows.
+  In Timestamp selection, Recent timestamps keeps the last 20 distinct times
+  used with Show positions, newest first. Choosing one fills the Timestamp box;
+  click Show positions to apply it. Reusing a time moves it to the top.
+  The list is saved with the server preferences and survives restarts. Existing
+  installations start with their last saved timestamp. Invalid selections are
+  not added. Times with a date and fractional seconds are kept as entered.
+
 Folders:
   tools                     Reusable scripts, map HTML/JavaScript and Python tests.
   tools/models              Local person/surfboard detection model.
@@ -39,9 +148,12 @@ Verification, from this folder:
   python -m unittest discover -s tools -p "test_surfer_*.py" -q
 
 Export video subtitles (on the map page):
-  Open "Export video subtitles". Select individual card fields, Select all,
-  or Clear all, then "Export subtitles for all videos". Uses every MP4 directly in
-  the Video / SRT folder and all packets from the selected log folder. Map
+  Open "Export video subtitles". Choose one MP4 in the Video selector or All
+  (the default). Refresh files rescans the Video / SRT folder; changing that
+  folder also refreshes the list. Select individual card fields, Select all
+  fields, or Clear fields, then "Export subtitles". Only the chosen video is
+  exported; All uses every MP4 directly in that folder. Both use all packets
+  from the selected log folder. A missing selected file never falls back to All. Map
   selections, ride filters and hidden positions do not limit this export.
   Every video needs an original same-stem SRT containing its per-frame recording
   timestamps. Missing or malformed SRTs are reported and skipped; other videos
@@ -304,7 +416,36 @@ Drone heading:
   plus receipt delay at most 1.5 seconds). Missing/stale readings get no ray.
   Cards, connection hover text and saved telemetry also show Drone heading.
 
+Camera heading error:
+  Camera heading error is also shown on both position cards, connection hover
+  labels, captured frames and the translucent ASS video card. For example:
+  "Camera heading error: 6.3° left of surfer" means the camera points left of
+  the GPS bearing to the surfer. A rightward correction would face that bearing.
+  Uses the shortest signed angle between paired GPS bearing and gimbalYawDeg,
+  assuming a shared north reference. This is a telemetry estimate, not an image
+  measurement. Aircraft heading and gimbal-relative yaw are never substituted.
+  Only prior, fresh camera yaw from the same log/session is used (sensor age
+  plus receipt delay at most 1.5 seconds); missing/stale/invalid yaw or invalid
+  coordinates show unavailable. Video subtitles retain the last GPS packet's
+  field values until the next receipt, with GPS age shown separately.
+  The new selectable subtitle field is enabled once for older saved preferences.
+  Restart the server, apply the map selection again, and recapture/re-export
+  frames/subtitles to include it. Original videos and existing exports stay intact.
+
 Drone controller status:
+  Aiming uses compact tags in position cards, connection hover labels, captured
+  frames and translucent video cards, for example:
+  Aiming: [AIMING] [tracking surfer] [riding] [error 6.33° left]
+  [desired 6.33°/s left] [sent 5.71°/s left] [reversal blocked: no]
+  The profile is the logged rotationCurve, not inferred from the visible ride.
+  Error is the controller's remainingAngleDeg (toward the surfer while tracking;
+  toward the navigation heading while aligning for approach/return). It differs
+  from the separate camera heading error. Desired is the logged desiredYawRate;
+  sent is submittedYawRate, which can differ due to acceleration or blocking.
+  Values are rounded to two decimals and labelled left/right; missing values
+  show unavailable. A reversal block is orange and includes its remaining time.
+  The existing Aiming subtitle checkbox includes these tags. Restart the server,
+  apply the map selection again and regenerate frames/subtitles to see updates.
   Surfer/drone cards, connection hover labels and captured telemetry frames
   include Aiming, Come to Me and Boundary status. These identify controller
   state and the current reason (ride wait, retreat cooldown, route/clearance

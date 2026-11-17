@@ -2,6 +2,7 @@
 from contextlib import ExitStack, redirect_stdout, redirect_stderr
 from datetime import datetime, timezone
 import io
+import json
 from pathlib import Path
 import tempfile
 import threading
@@ -9,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from surfer_gps_map import main
-from surfer_map_app import MapApp, normalize_request
+from surfer_map_app import MapApp, normalize_request, TIMESTAMP_HISTORY_LIMIT
 
 
 class MapAppTests(unittest.TestCase):
@@ -139,6 +140,76 @@ class MapAppTests(unittest.TestCase):
         for request in cases:
             with self.subTest(request=request),self.assertRaises(ValueError):normalize_request(request)
         self.load.assert_not_called()
+
+    def test_timestamp_history_reuses_entries_and_survives_restart(self):
+        for at in ('00:00:10.000','00:00:20',' 00:00:10.000 '):
+            job=self.run_request(self.request('timestamp',at=at,next=0))
+            self.assertEqual(job['status'],'done',job)
+        expected=['00:00:10.000','00:00:20']
+        self.assertEqual(self.app.state()['config']['timestamp_history'],expected)
+        invalid=self.run_request(self.request('timestamp',at='not a timestamp',next=0))
+        self.assertEqual(invalid['status'],'error')
+        self.assertEqual(self.app.config['timestamp_history'],expected)
+        reloaded=MapApp(app_dir=self.folder/'app')
+        self.assertEqual(reloaded.config['timestamp_history'],expected)
+        self.assertEqual(reloaded.config['presets']['timestamp']['at'],'00:00:10.000')
+
+    def test_timestamp_history_limit_and_existing_preferences_migration(self):
+        self.app.remember(normalize_request(self.request('timestamp',at='00:00:10',next=0)))
+        saved=json.loads(self.app.preferences.read_text(encoding='utf-8'))
+        saved.pop('timestamp_history')
+        self.app.preferences.write_text(json.dumps(saved),encoding='utf-8')
+        reloaded=MapApp(app_dir=self.folder/'app')
+        self.assertEqual(reloaded.config['timestamp_history'],['00:00:10'])
+        for second in range(25):
+            reloaded.remember(normalize_request(self.request('timestamp',at=f'00:00:{second:02d}',next=0)))
+        self.assertEqual(len(reloaded.config['timestamp_history']),TIMESTAMP_HISTORY_LIMIT)
+        self.assertEqual(reloaded.config['timestamp_history'],[f'00:00:{s:02d}' for s in range(24,4,-1)])
+        self.assertEqual(MapApp(app_dir=self.folder/'app').config['timestamp_history'],reloaded.config['timestamp_history'])
+
+    def test_three_timestamp_ranges_merge_overlap_and_keep_real_packet_movement(self):
+        job=self.run_request(self.request('timestamp',at='00:00:20',next=2,
+            at2='00:00:10',next2=1,at3='00:00:21',next3=2))
+        self.assertEqual(job['status'],'done',job)
+        points=list(self.app.snapshot(job['id'])['points'].values())
+        self.assertEqual([p['time_ms'] for p in points],[10000,11000,20000,21000,22000,23000])
+        self.assertEqual([p['point'] for p in points],[f'S{i}' for i in range(6)])
+        self.assertEqual([p['dronePoint'] for p in points],[f'D{i}' for i in range(6)])
+        self.assertEqual(points[2]['sincePreviousReceivedMs'],1000,'Use the actual previous packet at 19s, not the other displayed range at 11s')
+        self.assertEqual(points[2]['secondsFromRequestedTime'],10)
+        self.assertEqual(self.load.call_count,1)
+        self.assertTrue(all('point' not in p for p in self.packets))
+        reloaded=MapApp(app_dir=self.folder/'app')
+        self.assertEqual(reloaded.config['timestamp_history'],['00:00:20','00:00:10','00:00:21'])
+        self.assertEqual(reloaded.config['presets']['timestamp']['next2'],1)
+        self.assertEqual(reloaded.config['presets']['timestamp']['at3'],'00:00:21')
+
+    def test_optional_timestamp_rows_and_duplicate_single_positions(self):
+        job=self.run_request(self.request('timestamp',at='',at2='00:00:10',next2=0,at3=''))
+        self.assertEqual(job['status'],'done',job)
+        self.assertEqual(job['result']['count'],1)
+        job=self.run_request(self.request('timestamp',at='00:00:10',next=0,
+            at2='00:00:10',next2=0,at3='00:00:10',next3=0))
+        self.assertEqual(job['status'],'done',job)
+        self.assertEqual(job['result']['count'],1)
+        self.assertEqual(self.app.config['timestamp_history'],['00:00:10'])
+        saved_id=self.app.current['id']
+        invalid=self.run_request(self.request('timestamp',at='00:00:20',next=0,at2='',at3='bad time'))
+        self.assertEqual(invalid['status'],'error')
+        self.assertIn('Timestamp 3:',invalid['message'])
+        self.assertEqual(self.app.current['id'],saved_id)
+        self.assertEqual(self.app.config['timestamp_history'],['00:00:10'])
+        for fields in [dict(at='',at2='',at3=''),dict(at='00:00:10',at2='00:00:20',next2=-1),
+                       dict(at='00:00:10',at3=['00:00:20'])]:
+            with self.assertRaises(ValueError):normalize_request(self.request('timestamp',**fields))
+
+    def test_explicit_cli_timestamp_does_not_reuse_optional_saved_rows(self):
+        from argparse import Namespace
+        self.app.config['presets']['timestamp'].update(at2='00:00:20',at3='00:00:30')
+        self.app.seed_cli(Namespace(provided_options={'--at'},folder=str(self.folder),at='00:00:10',next=0,
+            get_fov_samples=False,all_rides=False,number_of_rides=None,pitch_range=None,auto_fov=False))
+        preset=self.app.config['presets']['timestamp']
+        self.assertEqual((preset['at'],preset['at2'],preset['at3']),('00:00:10','',''))
 
     def test_start_server_with_no_required_selection_and_offline_requires_folder(self):
         for argv in [['surfer_gps_map.py'],['surfer_gps_map.py','--serve']]:

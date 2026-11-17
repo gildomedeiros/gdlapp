@@ -1,0 +1,4 @@
+[
+  "tools/test_surfer_camera_heading.py",
+  "tools/test_surfer_camera_heading_browser.cjs"
+]

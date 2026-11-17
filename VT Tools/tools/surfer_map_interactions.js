@@ -1,11 +1,12 @@
 // Position cards remain interactive so a shared coordinate needs no typed ID.
 let detailsPinned=false, detailsHideTimer=null;
 function droneStatusColor(text){
+ if(/^(appliedOffset|offsetMagnitude|Yaw|Frame width)\[SIM\]:/.test(text))return '#7838a5';
  if(!/^(Aiming|Come to Me|Boundary):/.test(text))return null;
  if(/BLOCKED|STOPPED|RELEASE UNCONFIRMED/.test(text))return '#c40000';
- if(/PAUSED|WAITING|suspended|slowing|cooldown/.test(text))return '#a94700';
+ if(/PAUSED|WAITING|suspended|slowing|cooldown|reversal blocked: yes/.test(text))return '#a94700';
  if(text.includes('unknown'))return '#64748b';
- if(/^(Aiming: AIMING|Come to Me: APPROACHING|Come to Me: RETURNING)/.test(text))return '#08752e';
+ if(/^(Aiming: (\[AIMING\]|AIMING)|Come to Me: APPROACHING|Come to Me: RETURNING)/.test(text))return '#08752e';
  return '#17324d';
 }
 function cancelDetailsHide(){clearTimeout(detailsHideTimer);detailsHideTimer=null;}
@@ -58,8 +59,9 @@ function showDetails(marker,e,pin=false,pointId=null){
   }
   const line=document.createElement('span');line.textContent=text;
   const statusColor=droneStatusColor(text);
-  if(statusColor){line.style.color=statusColor;line.style.fontWeight='bold';line.title='Latest logged controller state at this GPS receipt. Sent rates are commands, not measured motion.';}
-  if(text.startsWith('Retreat active:')||text.startsWith('Gimbal tilt:'))line.classList.add('key-field');
+  if(statusColor){line.style.color=statusColor;line.style.fontWeight='bold';line.title=text.includes('[SIM]')?'Full-log target replay. Brackets show intended framing, not measured video position.':'Latest logged controller state at this GPS receipt. Sent rates are commands, not measured motion.';}
+  if(text.startsWith('Retreat active:')||text.startsWith('Gimbal tilt:')||text.startsWith('Camera heading error:'))line.classList.add('key-field');
+  if(text.startsWith('Camera heading error:'))line.title='Camera pointing direction relative to the logged surfer position. Uses GPS bearing and fresh logged gimbal yaw, assuming a shared north reference; not an image measurement.';
   if(text.startsWith('Ride detected:')){
    line.title='Latest logged movement_cycle.riding at this GPS receipt; before/after ride windows do not change this state.';
    if(text==='Ride detected: YES')line.className='ride-badge';
@@ -321,7 +323,7 @@ async function capturePoint(id,{advanceSelection=false}={}){
  captureBusy=true;setCaptureStatus('Capturing '+id+'…');
  if(fromViewer){setFrameStatus('Loading '+id+'…');captureDialog.setAttribute('aria-busy','true');}
  try{
-  const response=await fetch(mapApi('/capture'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id})});
+  const response=await fetch(mapApi('/capture'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point:id,yawSimulation:yawSimulationToken()})});
   const result=await response.json();if(!response.ok)throw Error(result.error||'Capture failed');
   // Closing the viewer while extraction runs must not reopen it or change the
   // map selection when the late response arrives.

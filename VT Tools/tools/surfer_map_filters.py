@@ -30,6 +30,12 @@ def map_filter_data(points):
             ride['points'].append(point['point'])
             offsets[window['id']] = (point['time_ms']-window['startMs'])/1000
         rows.append(dict(id=point['point'], time=point['receivedTimestamp'],
+                         latitude=point.get('latitude'), longitude=point.get('longitude'),
+                         droneId=point.get('dronePoint'), droneLatitude=point.get('droneLatitude'),
+                         droneLongitude=point.get('droneLongitude'), droneTime=point.get('droneReportedTimestamp'),
+                         sourceFile=point['sourceFile'], sourceLine=point.get('sourceLine'),
+                         droneSourceLine=point.get('droneSourceLine'), sequence=point.get('sequence'),
+                         retreatActive=point.get('retreatActive'),
                          distance=point.get('droneSurferDistanceMetres'), pitch=point.get('gimbalTiltDeg'),
                          offsets=offsets, accepted=point.get('accepted'), waveRiding=point.get('waveRiding'),
                          speedKmh=point.get('surferSpeedSincePreviousKmh'),

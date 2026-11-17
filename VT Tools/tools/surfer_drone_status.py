@@ -5,6 +5,7 @@ import re
 STATUS_MAX_AGE_MS = 1000
 STATUS_FIELDS = {
     'aiming_cycle': ('state', 'reason', 'decision', 'aimingMode', 'submitted', 'submittedYawRate',
+                     'rotationCurve', 'remainingAngleDeg', 'desiredYawRate',
                      'reverseBlocked', 'reverseBlockRemainingMs', 'retainedTargetAiming'),
     'movement_cycle': ('enabled', 'phase', 'reason', 'paused', 'gpsMovementPaused', 'pathCheckStatus',
                        'pathBlockReason', 'currentBoundaryDistanceM', 'retreatBoundaryStatus',
@@ -117,22 +118,49 @@ def current_movement_block(movement, aiming):
     return None
 
 
+def rotation_value(value, unit):
+    """Signed controller values, with directions matching the logged yaw command."""
+    if not number(value):
+        return 'unavailable'
+    magnitude = round(abs(value), 2)
+    amount = f'{magnitude:.2f}'.rstrip('0').rstrip('.')
+    direction = '' if magnitude == 0 else ' right' if value > 0 else ' left'
+    return amount + unit + direction
+
+
+def aiming_status_line(point, aiming):
+    state = aiming.get('state') or 'unknown'
+    reason = aiming.get('decision') if state == 'AIMING' else aiming.get('reason')
+    description = 'tracking surfer' if reason == 'riding_correction' else words(reason or aiming.get('reason'))
+    parts = [state.replace('_', ' '), description]
+    if state == 'AIMING':
+        # Use the explicitly selected curve, not the ride flag or a guessed mode.
+        profile = aiming.get('rotationCurve')
+        parts += [profile if profile in ('normal', 'riding') else 'profile unavailable',
+                  'error ' + rotation_value(aiming.get('remainingAngleDeg'), '°'),
+                  'desired ' + rotation_value(aiming.get('desiredYawRate'), '°/s')]
+    if aiming.get('submitted') is True:
+        parts.append('sent ' + rotation_value(aiming.get('submittedYawRate'), '°/s'))
+    elif aiming.get('submitted') is False and reason != 'no_command':
+        parts.append('not sent')
+    elif state == 'AIMING' and reason != 'no_command':
+        parts.append('sent unavailable')
+    if state == 'AIMING':
+        blocked = aiming.get('reverseBlocked')
+        status = 'yes' if blocked is True else 'no' if blocked is False else 'unavailable'
+        remaining = timer(point, aiming, 'reverseBlockRemainingMs') if blocked is True else None
+        parts.append('reversal blocked: ' + status + (' · ' + remaining if remaining else ''))
+    if aiming.get('retainedTargetAiming') is True:
+        parts.append('last GPS target')
+    return 'Aiming: ' + ' '.join('[' + part + ']' for part in parts)
+
+
 def drone_status_lines(point):
     aiming, aiming_missing = fresh_status(point, 'aiming')
     movement, movement_missing = fresh_status(point, 'movement')
     retreat, _ = fresh_status(point, 'retreat')
     if aiming:
-        state = aiming.get('state') or 'unknown'
-        reason = aiming.get('decision') if state == 'AIMING' else aiming.get('reason')
-        text = f'Aiming: {state.replace("_", " ")} — {words(reason or aiming.get("reason"))}'
-        if aiming.get('submitted') is True and number(aiming.get('submittedYawRate')):
-            text += f' · yaw {aiming["submittedYawRate"]:.1f}°/s sent'
-        elif aiming.get('submitted') is False and reason != 'no_command':
-            text += ' · no command sent'
-        if aiming.get('reverseBlocked') is True:
-            remaining = timer(point, aiming, 'reverseBlockRemainingMs')
-            if remaining: text += ' · '+remaining
-        if aiming.get('retainedTargetAiming') is True: text += ' · last GPS target'
+        text = aiming_status_line(point, aiming)
     else:
         text = 'Aiming: '+aiming_missing
     lines = [text]
@@ -187,10 +215,11 @@ def drone_status_lines(point):
 
 
 def drone_status_color(text):
+    if text.startswith(('appliedOffset[SIM]:','offsetMagnitude[SIM]:','Yaw[SIM]:','Frame width[SIM]:')):return '#7838a5'
     if not text.startswith(('Aiming:', 'Come to Me:', 'Boundary:')):
         return None
     if any(word in text for word in ('BLOCKED', 'STOPPED', 'RELEASE UNCONFIRMED')): return '#c40000'
-    if any(word in text for word in ('PAUSED', 'WAITING', 'suspended', 'slowing', 'cooldown')): return '#a94700'
+    if any(word in text for word in ('PAUSED', 'WAITING', 'suspended', 'slowing', 'cooldown', 'reversal blocked: yes')): return '#a94700'
     if 'unknown' in text: return '#64748b'
-    if text.startswith(('Aiming: AIMING', 'Come to Me: APPROACHING', 'Come to Me: RETURNING')): return '#08752e'
+    if text.startswith(('Aiming: [AIMING]', 'Aiming: AIMING', 'Come to Me: APPROACHING', 'Come to Me: RETURNING')): return '#08752e'
     return '#17324d'
