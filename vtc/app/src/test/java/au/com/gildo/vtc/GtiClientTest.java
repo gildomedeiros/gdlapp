@@ -1,0 +1,220 @@
+package au.com.gildo.vtc;
+
+import org.junit.Test;
+import java.io.IOException;
+import java.util.*;
+import static org.junit.Assert.*;
+
+public class GtiClientTest {
+    @Test public void uncertainInitializationStillMarksTheSavedReferenceAsInvalid() {
+        Wire wire=new Wire(){@Override public String exchange(String c)throws IOException {
+            if(c.startsWith(":f")){commands.add(c);return "=000\r";}
+            return super.exchange(c);
+        }};
+        wire.fail=":F1";GtiClient mount=new GtiClient(wire);
+        assertThrows(IOException.class,mount::connect);assertTrue(mount.initializedDuringConnect);
+        assertEquals(0,wire.starts());
+    }
+    @Test public void initializationIsExposedSoSavedMotorReferencesCanBeInvalidated()throws Exception {
+        Wire wire=new Wire(){
+            final boolean[] initialized={false,false};
+            @Override public String exchange(String c)throws IOException {
+                int axis=c.charAt(2)-'1';
+                if(c.startsWith(":f")&&!initialized[axis]){commands.add(c);return "=000\r";}
+                if(c.startsWith(":F"))initialized[axis]=true;
+                return super.exchange(c);
+            }
+        };
+        GtiClient mount=new GtiClient(wire);mount.connect();
+        assertTrue(mount.initializedDuringConnect);assertNotNull(mount.position());
+        GtiClient existing=new GtiClient(wire);existing.connect();assertFalse(existing.initializedDuringConnect);
+    }
+    @Test public void resetDetectedDuringPositionReadInvalidatesTheReferenceWithoutReinitializing()throws Exception {
+        java.util.concurrent.atomic.AtomicBoolean reset=new java.util.concurrent.atomic.AtomicBoolean();
+        Wire wire=new Wire(){@Override public String exchange(String c)throws IOException {
+            if(reset.get()&&c.startsWith(":f")){commands.add(c);return "=000\r";}
+            return super.exchange(c);
+        }};
+        GtiClient mount=new GtiClient(wire);mount.connect();reset.set(true);
+        assertThrows(IOException.class,mount::position);assertTrue(mount.referenceLost);
+        assertFalse(wire.sent(":F"));assertEquals(0,wire.starts());
+    }
+    static class Wire implements GtiClient.Transport {
+        final List<String> commands=new ArrayList<>();
+        final int[] pos={0xfffff0,8000000},target={0,0};
+        final boolean[] moving={false,false};
+        int cpr=360000;
+        String fail="",badAck="",rejected="";
+        Runnable afterTarget=()->{};
+        java.util.function.IntConsumer afterPositionRead=axis->{};
+        public String exchange(String c)throws IOException {
+            commands.add(c);char op=c.charAt(1);int axis=c.charAt(2)-'1';
+            if(c.startsWith(fail)&&!fail.isEmpty())throw new IOException("Simulated lost response");
+            if(!rejected.isEmpty()&&c.startsWith(rejected))return "!2\r";
+            if(!badAck.isEmpty()&&c.startsWith(badAck))return "=000080\r";
+            switch(op) {
+                case 'a':return "="+GtiClient.encode24(cpr)+"\r";
+                case 'e':return "=030401\r";
+                case 'f':return moving[axis]?"=011\r":"=001\r";
+                case 'j':
+                    String result="="+GtiClient.encode24(pos[axis])+"\r";
+                    afterPositionRead.accept(axis);
+                    return result;
+                case 'S':target[axis]=GtiClient.decode24(c.substring(3,c.length()-1));afterTarget.run();break;
+                // Actual 0336C5 field response before J; do not mirror the S setter.
+                case 'h':return "=000080\r";
+                case 'J':moving[axis]=true;break;
+                case 'L':moving[axis]=false;break;
+                default:break;
+            }
+            return "=\r";
+        }
+        public void close(){}
+        long starts(){return commands.stream().filter(c->c.startsWith(":J")).count();}
+        boolean sent(String prefix){return commands.stream().anyMatch(c->c.startsWith(prefix));}
+    }
+    @Test public void startsOnlyAfterBothFiniteTargetsAreAcknowledged()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();GtiClient.Position here=g.position();
+        g.begin();g.move(here,.25,-.1,()->true);
+        assertTrue(w.sent(":G120"));assertTrue(w.sent(":G221"));
+        assertEquals(GtiClient.wrap24(here.pan+250),w.target[0]);assertEquals(here.tilt-100,w.target[1]);
+        assertEquals(2,w.starts());
+        assertTrue(w.commands.indexOf(":S2"+GtiClient.encode24(w.target[1])+"\r")<w.commands.indexOf(":J1\r"));
+        assertFalse(w.sent(":h"));
+        assertFalse(w.sent(":I"));assertFalse(w.sent(":G110"));assertFalse(w.sent(":G111"));
+        g.stop();assertFalse(w.moving[0]);assertFalse(w.moving[1]);
+    }
+    @Test public void unexpectedSetterPayloadPreventsStartAndStopsBothAxes()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.badAck=":S1";
+        assertThrows(IOException.class,()->g.move(g.position(),.25,0,()->true));
+        assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void targetTimeoutNeverFallsThroughToStart()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.fail=":S1";
+        assertThrows(IOException.class,()->g.move(g.position(),.25,0,()->true));
+        assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void uiStopBetweenTargetAndStartCancelsMovement()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.afterTarget=g::cancel;
+        assertThrows(IOException.class,()->g.move(g.position(),.25,.25,()->true));
+        assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void staleInputBeforeSecondStartStopsFirstAxisToo()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();
+        assertThrows(IOException.class,()->g.move(g.position(),.25,.25,()->w.starts()==0));
+        assertEquals(1,w.starts());assertFalse(w.moving[0]);assertTrue(w.sent(":L2"));
+    }
+    @Test public void missingFirstStopAcknowledgementStillAttemptsSecondAxis()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.fail=":L1";
+        assertThrows(IOException.class,g::stop);assertTrue(w.sent(":L2"));
+    }
+    @Test public void refusesMovingMountAtConnection() {
+        Wire w=new Wire();w.moving[0]=true;GtiClient g=new GtiClient(w);
+        assertThrows(IOException.class,g::connect);assertEquals(0,w.starts());
+    }
+    @Test public void physicalCommandBoundAndInvalidNumbers()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();
+        assertThrows(IOException.class,()->g.move(g.position(),10.01,0,()->true));
+        assertThrows(IOException.class,()->g.move(g.position(),Double.NaN,0,()->true));
+        assertEquals(0,w.starts());
+    }
+    @Test public void secondTargetTimeoutPreventsEitherAxisStarting()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.fail=":S2";
+        assertThrows(IOException.class,()->g.move(g.position(),.25,.25,()->true));
+        assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void recorded0336C5PositionUsesFiniteDestinationWithoutPrestartTargetReadback()throws Exception {
+        Wire w=new Wire();w.cpr=2073600;w.pos[0]=0x8004D3;w.pos[1]=0x80076F;
+        assertEquals("=000080\r",w.exchange(":h1\r"));w.commands.clear();
+        GtiClient g=new GtiClient(w);g.connect();g.begin();g.move(g.position(),-.25,-.25,()->true);
+        assertTrue(w.sent(":G121"));assertTrue(w.sent(":G221"));
+        assertTrue(w.sent(":S133FF7F"));assertEquals(0x7FFF33,w.target[0]);
+        assertEquals(0x8001CF,w.target[1]);assertEquals(2,w.starts());
+        assertFalse(w.sent(":h"));assertFalse(w.sent(":I"));
+        assertTrue(w.commands.indexOf(":S2CF0180\r")<w.commands.indexOf(":J1\r"));
+    }
+    @Test public void rejectedTargetAndModeCommandsNeverStart()throws Exception {
+        for(String rejected:new String[]{":G1",":S1",":S2"}) {
+            Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.rejected=rejected;
+            assertThrows(IOException.class,()->g.move(g.position(),.25,.25,()->true));
+            assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+        }
+    }
+    @Test public void lostSecondStartReplyStillStopsBothAxes()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.fail=":J2";
+        assertThrows(IOException.class,()->g.move(g.position(),.25,.25,()->true));
+        assertTrue(w.sent(":J1"));assertFalse(w.moving[0]);assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void recordedDecelerationPositionIsNotTreatedAsStoppedArrival()throws Exception {
+        Wire w=new Wire();w.cpr=2073600;w.pos[0]=8331991;w.pos[1]=8337437;
+        GtiClient g=new GtiClient(w);g.connect();w.moving[0]=true;
+        // 1.0.2 read 8331991 during the last part of the move, then "stopped".
+        // The next position was 8331814, within 4 counts of target 8331818.
+        w.afterPositionRead=axis->{if(axis==0){w.moving[0]=false;w.pos[0]=8331814;}};
+        GtiClient.Position inFlight=g.position();
+        assertEquals(8331991,inFlight.pan);
+        assertEquals("001",inFlight.panStatus);
+        assertEquals("011",inFlight.panStatusBefore);
+        assertTrue("The earlier running status must prevent an arrival check",inFlight.moving);
+        assertThrows(IOException.class,()->g.move(inFlight,-.25,0,()->true));
+        assertEquals(0,w.starts());
+        GtiClient.Position settled=g.position();
+        assertFalse(settled.moving);assertEquals(8331814,settled.pan);
+        assertEquals(-4,GtiClient.deltaCounts(settled.pan,8331818,w.cpr));
+    }
+    @Test public void tiltStoppingDuringReadAlsoRequiresAnotherPositionSample()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.moving[1]=true;
+        int earlierTilt=w.pos[1];
+        w.afterPositionRead=axis->{if(axis==1){w.moving[1]=false;w.pos[1]=earlierTilt-50;}};
+        GtiClient.Position changing=g.position();
+        assertTrue(changing.moving);assertEquals(earlierTilt,changing.tilt);
+        assertEquals("011",changing.tiltStatusBefore);assertEquals("001",changing.tiltStatus);
+        assertFalse(g.position().moving);
+    }
+    @Test public void motionStartingDuringPositionReadCannotAppearStopped()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();
+        w.afterPositionRead=axis->{if(axis==0)w.moving[0]=true;};
+        GtiClient.Position p=g.position();
+        assertEquals("001",p.panStatusBefore);assertEquals("011",p.panStatus);assertTrue(p.moving);
+        assertThrows(IOException.class,()->g.move(p,.25,0,()->true));assertEquals(0,w.starts());
+    }
+    @Test public void missingStatusAfterCounterReadCannotProduceAStoppedSample()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();
+        w.afterPositionRead=axis->{if(axis==1)w.fail=":f2";};
+        assertThrows(IOException.class,g::position);assertEquals(0,w.starts());
+    }
+    @Test public void largeGotoUsesFastFiniteTargetsOnBothAxes()throws Exception {
+        Wire w=new Wire();w.cpr=2073600;w.pos[0]=w.pos[1]=0x800000;
+        GtiClient g=new GtiClient(w);g.connect();g.goTo(g.position(),-37,-9,()->true);
+        assertTrue(w.sent(":G101"));assertTrue(w.sent(":G201"));
+        assertEquals(8175488,w.target[0]);assertEquals(8336768,w.target[1]);assertEquals(2,w.starts());
+        assertFalse(w.sent(":I"));assertFalse(w.sent(":G110"));assertFalse(w.sent(":G210"));
+        assertTrue(w.commands.indexOf(":S2"+GtiClient.encode24(w.target[1])+"\r")<w.commands.indexOf(":J1\r"));
+    }
+    @Test public void smallAxisUsesSlowModeEvenDuringLargeGoto()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();g.goTo(g.position(),20,-.2,()->true);
+        assertTrue(w.sent(":G100"));assertTrue(w.sent(":G221"));assertEquals(2,w.starts());
+    }
+    @Test public void largeGotoStillHasAHardBoundAndCancellation()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();
+        assertThrows(IOException.class,()->g.goTo(g.position(),46,0,()->true));
+        assertThrows(IOException.class,()->g.goTo(g.position(),Double.NaN,0,()->true));
+        w.afterTarget=g::cancel;
+        assertThrows(IOException.class,()->g.goTo(g.position(),37,9,()->true));
+        assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void failedLargeGotoTargetDoesNotStartEitherAxis()throws Exception {
+        Wire w=new Wire();GtiClient g=new GtiClient(w);g.connect();w.fail=":S2";
+        assertThrows(IOException.class,()->g.goTo(g.position(),37,9,()->true));
+        assertEquals(0,w.starts());assertTrue(w.sent(":L1"));assertTrue(w.sent(":L2"));
+    }
+    @Test public void codecAndDeltaRespect24BitAndRevolutionWrap()throws Exception {
+        assertEquals(0x123456,GtiClient.decode24("563412"));
+        assertEquals("563412",GtiClient.encode24(0x123456));
+        assertEquals(40,GtiClient.deltaCounts(24,0xfffff0,360000));
+        assertEquals(-40,GtiClient.deltaCounts(0xfffff0,24,360000));
+        assertEquals(20,GtiClient.deltaCounts(10,359990,360000));
+        assertThrows(IOException.class,()->GtiClient.decode24("FFFF"));
+    }
+}
+

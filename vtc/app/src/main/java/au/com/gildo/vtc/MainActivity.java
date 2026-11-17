@@ -1,0 +1,396 @@
+package au.com.gildo.vtc;
+
+import android.app.*;
+import android.content.*;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
+import android.os.*;
+import android.provider.DocumentsContract;
+import android.text.InputType;
+import android.view.*;
+import android.widget.*;
+import org.json.JSONObject;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+
+public final class MainActivity extends Activity {
+    private static final int BACKGROUND=Color.rgb(16,29,40),CARD=Color.rgb(28,44,57),TEXT=Color.rgb(234,243,247),MUTED=Color.rgb(166,186,200),ACCENT=Color.rgb(84,214,176);
+    private final Map<String,EditText> fields=new LinkedHashMap<>();
+    private final List<Button> manualButtons=new ArrayList<>();
+    private final List<Button> landmarkButtons=new ArrayList<>();
+    private final List<TextView> landmarkStatuses=new ArrayList<>();
+    private final ExecutorService files=Executors.newSingleThreadExecutor();
+    private final Handler handler=new Handler(Looper.getMainLooper());
+    private Settings settings;
+    private SessionLog log;
+    private VtcService service;
+    private boolean bound,screenVisible,fillingSettings;
+    private final Runnable autoSave=this::autoSaveSettings;
+    private TextView cameraInfo;
+    private final VtcController.Listener listener=this::render;
+    private final ServiceConnection serviceConnection=new ServiceConnection(){
+        public void onServiceConnected(ComponentName name,IBinder binder){
+            service=((VtcService.LocalBinder)binder).service();controller=service.controller;log=service.log;settings=controller.settings();
+            buildUi();fillSettings(settings);setupMessage.setText(service.setupStatus());showPage(0);service.attach(listener);controller.foreground(screenVisible);refreshLogStatus();refreshTelemetry();
+        }
+        public void onServiceDisconnected(ComponentName name){controller=null;service=null;handler.removeCallbacksAndMessages(null);
+            TextView error=new TextView(MainActivity.this);error.setText("VTC service interrupted. Reopen VTC, reconnect and validate calibration.");setContentView(error);}
+    };
+    private VtcController controller;
+    private LinearLayout root,body;
+    private View[] pages;
+    private TextView state,message,connections,mountInfo,gpsInfo,aimInfo,frameInfo,calibrationInfo,setupMessage,logStatus;
+    private Button connect,disconnect,start,calibrate;
+    private Spinner panSign,tiltSign,manualStep;
+    private CheckBox levelConfirmed,directionsConfirmed;
+    private String exportSettingsText;
+    private int page;
+    private VtcController.View lastView;
+
+    @Override public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        TextView loading=new TextView(this);loading.setText("Starting VTC service…");setContentView(loading);
+        Intent intent=new Intent(this,VtcService.class);startForegroundService(intent);
+        bound=bindService(intent,serviceConnection,Context.BIND_AUTO_CREATE);
+        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},104);
+        if(Build.VERSION.SDK_INT<29&&checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!=android.content.pm.PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},103);
+    }
+    private void buildUi() {
+        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BACKGROUND);
+        root.setPadding(dp(16),dp(12),dp(16),dp(8));setContentView(root);
+        root.setOnApplyWindowInsetsListener((v,insets)->{
+            root.setPadding(dp(16)+insets.getSystemWindowInsetLeft(),dp(8)+insets.getSystemWindowInsetTop(),dp(16)+insets.getSystemWindowInsetRight(),dp(8)+insets.getSystemWindowInsetBottom());
+            return insets;
+        });
+        text(root,"VTC  "+SessionLog.VERSION,26,ACCENT,true);
+        text(root,"GPS-guided shore camera mount",13,MUTED,false);
+        state=text(root,"DISCONNECTED",18,TEXT,true);
+        connections=text(root,"GTi: Disconnected\nLoRa: Disconnected\nCalibration: Required",13,TEXT,false);
+        message=text(root,"Set up the site and connect.",14,MUTED,false);
+        LinearLayout nav=row(root);
+        String[] labels={"Track","Calibrate","Setup","Logs"};
+        for(int i=0;i<labels.length;i++){final int n=i;button(nav,labels[i],()->showPage(n));}
+        body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);
+        root.addView(body,new LinearLayout.LayoutParams(-1,0,1));
+        pages=new View[]{trackPage(),calibrationPage(),settingsPage(),logsPage()};
+        Button stop=button(root,"STOP MOUNT",()->controller.stop("User Stop"));
+        stop.setTextColor(Color.WHITE);
+        stop.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(158,48,56)));
+        text(root,"Background aiming • independent watchdog",12,MUTED,false);
+    }
+    private LinearLayout scrollPage() {
+        LinearLayout p=new LinearLayout(this);p.setOrientation(LinearLayout.VERTICAL);p.setPadding(0,dp(8),0,dp(12));return p;
+    }
+    private View scroll(LinearLayout content){ScrollView s=new ScrollView(this);s.setFillViewport(true);s.addView(content);return s;}
+    private View trackPage() {
+        LinearLayout p=scrollPage();
+        LinearLayout r=row(p);connect=button(r,"Connect",()->{if(autoSaveSettings())controller.connect();});disconnect=button(r,"Disconnect",()->controller.disconnect());
+        start=button(p,"START AIMING",()->controller.start());start.setTextColor(ACCENT);
+        landmarkButtons.add(button(p,"GO TO LAST LANDMARK",()->controller.goToLandmark()));
+        landmarkStatuses.add(text(p,"Loading last saved landmark",13,MUTED,false));
+        text(p,"Returns both axes to the last saved landmark and stays there. No surfer GPS is needed. Returning does not validate calibration.",13,MUTED,false);
+        text(p,"Start can wait for a target outside the limits. While aiming, a target outside the configured range or pan/tilt limits pauses new movements. Fresh GPS back inside the limits resumes aiming automatically. Stop cancels automatic resume.",13,MUTED,false);
+        text(p,"Large errors trigger GoTo to a saved position. New GPS does not change that move. After arrival, live GPS aiming resumes. Stop cancels both. Switching apps or locking the screen keeps aiming active.",14,MUTED,false);
+        LinearLayout a=card(p,"Aim / next steps");aimInfo=text(a,"Checking settings and connection",16,TEXT,false);
+        LinearLayout f=card(p,"Automatic framing");frameInfo=text(f,"Automatic",15,TEXT,false);
+        LinearLayout g=card(p,"Surfer GPS");gpsInfo=text(g,"Disconnected",15,TEXT,false);
+        cameraInfo=text(card(p,"Camera zoom / clock"),"Camera disabled",14,MUTED,false);
+        LinearLayout m=card(p,"Mount");mountInfo=text(m,"Disconnected",14,MUTED,false);
+        button(p,"STOP & EXIT VTC",()->service.exit(()->{finishAndRemoveTask();}));
+        return scroll(p);
+    }
+    private View calibrationPage() {
+        LinearLayout p=scrollPage();
+        landmarkButtons.add(button(p,"GO TO LAST LANDMARK",()->controller.goToLandmark()));
+        landmarkStatuses.add(text(p,"Loading last saved landmark",13,MUTED,false));
+        text(p,"Each successful calibration saves the landmark position across app restarts. Return, check alignment on the camera, then validate calibration. Recalibrate after moving the setup or restarting the mount.",13,MUTED,false);
+        text(p,"1. Level the mount and secure the camera.\n2. Check that Right and Up move the camera in those directions.\n3. Centre the exact configured landmark point using the camera screen.\n4. Tap Calibrate here.",15,TEXT,false);
+        text(p,"Before calibration, manual positioning uses moves of at most 1°. Go to last landmark is also available when a compatible saved position exists.",13,MUTED,false);
+        manualStep=spinner(p,new String[]{"0.1° move","0.5° move","1° move"});
+        LinearLayout pan=row(p);
+        manualButtons.add(button(pan,"← Left",()->nudge(1,-1)));
+        manualButtons.add(button(pan,"Right →",()->nudge(1,1)));
+        LinearLayout tilt=row(p);
+        manualButtons.add(button(tilt,"↓ Down",()->nudge(2,-1)));
+        manualButtons.add(button(tilt,"Up ↑",()->nudge(2,1)));
+        levelConfirmed=new CheckBox(this);levelConfirmed.setText("Mount is level and camera is secure");p.addView(levelConfirmed);
+        directionsConfirmed=new CheckBox(this);directionsConfirmed.setText("Right / Up directions have been checked");p.addView(directionsConfirmed);
+        calibrate=button(p,"CALIBRATE HERE",()->{
+            log.record("calibration_requested","levelConfirmed",levelConfirmed.isChecked(),"directionsConfirmed",directionsConfirmed.isChecked(),"form",formValues());
+            if(!levelConfirmed.isChecked()||!directionsConfirmed.isChecked()){
+                log.event("calibration_blocked","Confirm levelling and axis directions first");
+                toast("Confirm levelling and axis directions first");return;
+            }
+            controller.calibrate();
+        });
+        levelConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","level","checked",checked));
+        directionsConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","directions","checked",checked));
+        calibrationInfo=text(card(p,"Reference"),"Not calibrated",15,TEXT,false);
+        text(p,"Calibration is valid only for this connection. Recalibrate after moving the tripod, releasing a clutch, adjusting the camera, or restarting the mount. Disconnect VTC before making those changes.",14,MUTED,false);
+        return scroll(p);
+    }
+    private void nudge(int axis,int direction){double[] steps={.1,.5,1};controller.nudge(axis,direction*steps[manualStep.getSelectedItemPosition()]);}
+    private View settingsPage() {
+        LinearLayout p=scrollPage();
+        setupMessage=text(p,"Valid edits save automatically while disconnected. Heights use the same water-level reference.",14,ACCENT,false);
+        LinearLayout connection=card(p,"Network");
+        text(connection,"Join Wi-Fi in Android first. The GTi and LoRa receiver must both be reachable on it. Close SynScan and other LoRa viewers.",13,MUTED,false);
+        field(connection,"mountHost","GTi IPv4 address");
+        field(connection,"mountPort","GTi UDP port");
+        field(connection,"receiverHost","LoRa receiver IPv4 address");
+        field(connection,"receiverPort","LoRa control / source UDP port");
+        field(connection,"receivePort","Phone receiving UDP port");
+        button(connection,"Open Wi-Fi settings",()->startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)));
+
+        LinearLayout camera=card(p,"Optional Canon camera");
+        field(camera,"cameraHost","Camera IPv4 address — blank disables polling");
+        field(camera,"cameraPort","CCAPI HTTP port");
+        text(camera,"Reads zoom and synchronises the clock once per connection, independently of aiming. Camera errors do not stop tracking. Use the camera IP shown on your shared Wi-Fi network.",13,MUTED,false);
+        LinearLayout site=card(p,"Camera site");
+        field(site,"cameraCoordinates","Camera coordinates — latitude, longitude");
+        text(site,"Paste the coordinate pair copied from Google Maps, e.g. -28.165514, 153.550457",13,MUTED,false);
+        field(site,"height","Lens height above water (m)");
+        field(site,"targetHeight","Aim height on surfer above water (m)");
+
+        LinearLayout reference=card(p,"Landmark");
+        text(reference,"Enter the coordinates and height of the exact point you will centre. Use the same water level as the camera height.",13,MUTED,false);
+        field(reference,"landmarkCoordinates","Landmark coordinates — latitude, longitude");
+        field(reference,"landmarkHeight","Landmark height above water (m)");
+        text(reference,"Pan direction",14,TEXT,false);
+        panSign=spinner(reference,new String[]{"Positive motor count turns right (+1)","Negative motor count turns right (-1)"});
+        text(reference,"Tilt direction",14,TEXT,false);
+        tiltSign=spinner(reference,new String[]{"Positive motor count tilts up (+1)","Negative motor count tilts up (-1)"});
+
+        LinearLayout frame=card(p,"Framing");
+        text(frame,"Always automatic. Magnitude 0 means no horizontal offset.",13,MUTED,false);
+        field(frame,"magnitude","Automatic offset magnitude (°)");
+        field(frame,"tiltOffset","Vertical offset (°; + up)");
+        field(frame,"hfov","Manual horizontal field of view (°)");
+        text(frame,"An automatic +offset aims right and places the surfer left. At 530 m, 1° is about 9 m. 6.48° field of view corresponds to about 60 m width. Update this value when changing zoom; The zoom readout does not yet calculate field of view automatically.",13,MUTED,false);
+
+        LinearLayout limits=card(p,"Movement limits");
+        text(limits,"Pan limits are relative to the calibrated landmark. Tilt limits are angles above / below horizontal. Set them to clear your tripod and cables.",13,MUTED,false);
+        field(limits,"panMin","Left limit from landmark (°)");
+        field(limits,"panMax","Right limit from landmark (°)");
+        field(limits,"tiltMin","Minimum tilt (°)");
+        field(limits,"tiltMax","Maximum tilt (°)");
+        field(limits,"rangeMin","Minimum surfer range (m)");
+        field(limits,"rangeMax","Maximum surfer range (m)");
+
+        LinearLayout acquire=card(p,"GoTo for large aiming errors");
+        field(acquire,"acquisitionTriggerDegrees","Acquisition trigger angle (°)");
+        field(acquire,"gotoMaxMove","Maximum GoTo movement per leg (°; 1–45)");
+        text(acquire,"Default: 3° error triggers fast native GoTo. The target position and framing are saved once and held until arrival, even if surfer GPS changes or stops. Larger turns use legs toward the same saved position. Live GPS aiming resumes after arrival.",13,MUTED,false);
+
+        LinearLayout advanced=card(p,"Advanced aiming");
+        text(advanced,"Continuous speed decreases near the target. Stop at tolerance; restart beyond 1.5× tolerance. GoTo uses the mount’s native speed.",13,MUTED,false);
+        field(advanced,"maxPanningSpeed","Maximum panning speed (°/s; 0.01–0.5)");
+        text(advanced,"Also caps continuous tilt. This build uses low-speed mode so same-direction rate updates do not require stops. Larger errors use GoTo.",13,MUTED,false);
+        field(advanced,"gpsGapTimeout","Keep panning without GPS for (s since last accepted packet)");
+        field(advanced,"panTolerance","Pan aiming tolerance (°)");
+        field(advanced,"tiltTolerance","Tilt aiming tolerance (°)");
+        field(advanced,"reverseSeconds","Direction reversal hold (s)");
+        field(advanced,"gpsAge","Maximum GPS age / evidence gap (s)");
+        field(advanced,"maxGpsSpeed","Reject GPS jumps above (m/s)");
+
+        LinearLayout auto=card(p,"Automatic offset detection");
+        field(auto,"window","Direction observation window (s)");
+        field(auto,"observations","Minimum GPS observations");
+        field(auto,"minNet","Minimum net bearing change (°)");
+        field(auto,"consistency","Direction consistency (0.5–1)");
+        field(auto,"supports","Minimum separate supporting changes");
+        field(auto,"supportChange","Minimum supporting change (°)");
+        field(auto,"quietRate","Quiet total angular travel rate (°/s)");
+        field(auto,"quietSeconds","Continuous quiet before centring (s)");
+        field(auto,"offsetRate","Applied offset transition rate (°/s)");
+
+        LinearLayout filesRow=row(p);
+        button(filesRow,"Export setup",this::exportSetup);
+        button(filesRow,"Import setup",()->{
+            if(lastView!=null&&(lastView.connected||lastView.busy)){toast("Disconnect before importing settings");return;}
+            Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);intent.setType("application/json");intent.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(intent,102);
+        });
+        return scroll(p);
+    }
+    private View logsPage() {
+        LinearLayout p=scrollPage();
+        logStatus=text(p,"Opening automatic full log in Download/VTC/logs",14,TEXT,false);
+        text(p,"Full logging is always on. Each session writes directly to Download/VTC/logs and flushes continuously. The file is available while VTC is running; no Save or Export is needed.",15,TEXT,false);
+        text(p,"A matching KML updates automatically in Download/VTC/logs: camera position, surfer points/track, timestamped camera heading and tilt, field-of-view sector, and saved GoTo targets. Open it in Google Earth and use the time slider. Aiming lines are calculated from calibration and motor positions; they do not verify the camera image.",14,MUTED,false);
+        text(p,"Records include all saved settings and edits, button actions, calibration checks and failures, raw GPS datagrams, parsed telemetry, mount commands/replies, motor positions, aiming/framing decisions, and a status snapshot every second—even while waiting for calibration.",14,MUTED,false);
+        text(p,"If public storage fails, VTC keeps a private recovery copy and automatically retries writing the full session to Download/VTC/logs. Storage errors and dropped-record counts appear here.",14,MUTED,false);
+        text(p,"Verification\n• Build and automated checks cover software logic.\n• Landmark accuracy, motor directions, backlash and tracking smoothness need a hardware check.\n• No guarantee of a mount communication-loss watchdog is assumed. Continuous movement needs Stop. The independent watchdog attempts Stop on a control stall; lost power, force-stop or lost Wi-Fi can prevent it.\n• Aiming continues when switching apps or locking the screen. Use Stop in VTC or its notification. Force-stop/process termination ends the service; reconnect and validate calibration after a new service session.",14,MUTED,false);
+        return scroll(p);
+    }
+    private void fillSettings(Settings s) {
+        fillingSettings=true;
+        for(Map.Entry<String,EditText> e:fields.entrySet())if(s.values.containsKey(e.getKey()))e.getValue().setText(s.values.get(e.getKey()));
+        fields.get("cameraCoordinates").setText(Coordinates.display(s.values.get("latitude"),s.values.get("longitude")));
+        fields.get("landmarkCoordinates").setText(Coordinates.display(s.values.get("landmarkLat"),s.values.get("landmarkLon")));
+        panSign.setSelection(s.panSign>0?0:1);tiltSign.setSelection(s.tiltSign>0?0:1);
+        fillingSettings=false;
+    }
+    private Map<String,String> formValues() {
+        Map<String,String> values=new LinkedHashMap<>();
+        for(Map.Entry<String,EditText> e:fields.entrySet())values.put(e.getKey(),e.getValue().getText().toString());
+        values.put("panSign",panSign.getSelectedItemPosition()==0?"1":"-1");
+        values.put("tiltSign",tiltSign.getSelectedItemPosition()==0?"1":"-1");
+        return values;
+    }
+    private Settings readSettings() {
+        Map<String,String> values=formValues();
+        String[] camera=Coordinates.parse(values.remove("cameraCoordinates"));
+        String[] landmark=Coordinates.parse(values.remove("landmarkCoordinates"));
+        values.put("latitude",camera[0]);values.put("longitude",camera[1]);
+        values.put("landmarkLat",landmark[0]);values.put("landmarkLon",landmark[1]);
+        return new Settings(values);
+    }
+    private void scheduleSave(){if(!fillingSettings){handler.removeCallbacks(autoSave);handler.postDelayed(autoSave,600);}}
+    private boolean autoSaveSettings() {
+        handler.removeCallbacks(autoSave);
+        if(fillingSettings||service==null)return false;
+        if(lastView!=null&&(lastView.connected||lastView.busy))return true;
+        try {
+            Settings next=readSettings();
+            if(!next.values.equals(settings.values)){service.saveSettings(next);settings=next;log.settings("settings_auto_saved",next);}
+            setupMessage.setText("Saved automatically: Download/VTC/Settings/setup.json");return true;
+        }catch(Exception e){setupMessage.setText("Not applied: "+e.getMessage()+". Last valid settings retained.");return false;}
+    }
+    private void exportSetup() {
+        try {
+            Settings next=readSettings();
+            exportSettingsText=new JSONObject(next.values).toString(2);
+            createDocument("VTC-setup.json","application/json");
+        }catch(Exception e){toast(e.getMessage());}
+    }
+    private void createDocument(String name,String type) {
+        Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType(type);intent.putExtra(Intent.EXTRA_TITLE,name);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,DocumentsContract.buildDocumentUri("com.android.externalstorage.documents","primary:Download/VTC/Settings"));
+        startActivityForResult(intent,101);
+    }
+    @Override protected void onActivityResult(int request,int result,Intent data) {
+        super.onActivityResult(request,result,data);
+        if(result!=RESULT_OK||data==null||data.getData()==null)return;
+        Uri uri=data.getData();
+        if(request==101) {
+            String content=exportSettingsText;
+            files.execute(()->{
+                try {
+                    try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){if(out==null)throw new IOException("Cannot open destination");out.write(content.getBytes(StandardCharsets.UTF_8));}
+                    log.event("settings_exported",uri.toString());
+                    runOnUiThread(()->toast("Export saved"));
+                }catch(Exception e){log.error("settings_export_failed",e);runOnUiThread(()->toast("Export failed: "+e.getMessage()));}
+            });
+        }else if(request==102) {
+            files.execute(()->{
+                try(InputStream in=getContentResolver().openInputStream(uri)) {
+                    if(in==null)throw new IOException("Cannot open setup file");
+                    ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buffer=new byte[4096];int count;
+                    while((count=in.read(buffer))!=-1){out.write(buffer,0,count);if(out.size()>32768)throw new IOException("Setup file is too large");}
+                    JSONObject json=new JSONObject(out.toString(StandardCharsets.UTF_8.name()));Map<String,String> input=new LinkedHashMap<>();
+                    Iterator<String> keys=json.keys();while(keys.hasNext()){String key=keys.next();input.put(key,json.getString(key));}
+                    Settings imported=new Settings(input);
+                    log.settings("import_for_review",imported);
+                    runOnUiThread(()->{fillSettings(imported);autoSaveSettings();showPage(2);});
+                }catch(Exception e){log.error("settings_import_failed",e);runOnUiThread(()->toast("Import failed: "+e.getMessage()));}
+            });
+        }
+    }
+    private void render(VtcController.View v) {
+        if(isDestroyed())return;lastView=v;
+        state.setText(v.state);state.setTextColor(v.tracking?ACCENT:
+            v.state.equals("CONNECTION CLOSED")||v.state.equals("AIMING STOPPED")?Color.rgb(255,132,132):TEXT);
+        connections.setText(v.connections);
+        message.setText(v.message);mountInfo.setText(v.mount);gpsInfo.setText(controller.liveGps());aimInfo.setText(v.aim);frameInfo.setText(v.framing);calibrationInfo.setText(v.calibration);
+        connect.setEnabled(!v.connected&&!v.busy);disconnect.setEnabled(v.connected||v.busy);
+        start.setEnabled(v.canStart);
+        calibrate.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
+        for(Button b:manualButtons)b.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
+        for(Button b:landmarkButtons)b.setEnabled(v.canGoToLandmark);
+        for(TextView t:landmarkStatuses)t.setText(v.lastLandmark);
+        boolean editing=!v.connected&&!v.busy;
+        for(EditText input:fields.values())input.setEnabled(editing);
+        panSign.setEnabled(editing);tiltSign.setEnabled(editing);
+        if(!v.connected){levelConfirmed.setChecked(false);directionsConfirmed.setChecked(false);}
+        logStatus.setText(log.status()+"\n\n"+service.setupStatus());
+        cameraInfo.setText(service.camera.status());
+    }
+    private void showPage(int index){page=index;body.removeAllViews();body.addView(pages[index],new LinearLayout.LayoutParams(-1,-1));log.record("ui_page","index",index);}
+    private void field(LinearLayout parent,String key,String label) {
+        text(parent,label,14,TEXT,false);
+        EditText e=new EditText(this);e.setSingleLine();e.setTextSize(16);e.setTextColor(TEXT);e.setHintTextColor(MUTED);
+        boolean coordinates=key.endsWith("Coordinates");
+        e.setInputType(key.endsWith("Host")||coordinates?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        e.setHint(coordinates?"-28.165514, 153.550457":key.equals("height")||key.equals("landmarkHeight")?"Required before calibration":"");
+        e.setOnFocusChangeListener((v,focused)->{if(!focused)log.record("settings_field_edited","field",key,"value",e.getText().toString(),"saved",false);});
+        e.addTextChangedListener(new android.text.TextWatcher(){
+            public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            public void onTextChanged(CharSequence s,int start,int before,int count){}
+            public void afterTextChanged(android.text.Editable text){scheduleSave();}
+        });
+        parent.addView(e,new LinearLayout.LayoutParams(-1,-2));fields.put(key,e);
+    }
+    private LinearLayout card(LinearLayout parent,String title) {
+        LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.VERTICAL);c.setPadding(dp(14),dp(12),dp(14),dp(14));
+        GradientDrawable bg=new GradientDrawable();bg.setColor(CARD);bg.setCornerRadius(dp(12));c.setBackground(bg);
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,dp(10),0,dp(4));parent.addView(c,lp);
+        text(c,title,18,ACCENT,true);return c;
+    }
+    private LinearLayout row(LinearLayout parent){LinearLayout r=new LinearLayout(this);r.setOrientation(LinearLayout.HORIZONTAL);parent.addView(r,new LinearLayout.LayoutParams(-1,-2));return r;}
+    private Button button(LinearLayout parent,String label,Runnable action) {
+        Button b=new Button(this);b.setText(label);b.setAllCaps(false);b.setTextSize(14);b.setMinHeight(dp(48));
+        b.setOnClickListener(v->{log.record("ui_action","button",label,"page",page);action.run();});
+        parent.addView(b,parent.getOrientation()==LinearLayout.HORIZONTAL?new LinearLayout.LayoutParams(0,-2,1):new LinearLayout.LayoutParams(-1,-2));return b;
+    }
+    private TextView text(LinearLayout parent,String value,int size,int color,boolean bold) {
+        TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);t.setPadding(0,dp(3),0,dp(5));t.setLineSpacing(dp(2),1);
+        if(bold)t.setTypeface(null,Typeface.BOLD);parent.addView(t,new LinearLayout.LayoutParams(-1,-2));return t;
+    }
+    private Spinner spinner(LinearLayout p,String[] entries){
+        Spinner s=new Spinner(this);s.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,entries));
+        s.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onItemSelected(AdapterView<?> parent,View view,int position,long id){log.record("ui_selection","options",entries,"selectedIndex",position,"selectedValue",entries[position]);scheduleSave();}
+            public void onNothingSelected(AdapterView<?> parent){}
+        });
+        p.addView(s,new LinearLayout.LayoutParams(-1,dp(52)));return s;
+    }
+    private int dp(float value){return (int)(value*getResources().getDisplayMetrics().density+.5f);}
+    private void toast(String text){Toast.makeText(this,text,Toast.LENGTH_LONG).show();}
+    private void refreshTelemetry(){
+        if(isDestroyed()||service==null)return;
+        if(screenVisible&&controller!=null)gpsInfo.setText(controller.liveGps());
+        handler.postDelayed(this::refreshTelemetry,250);
+    }
+    private void refreshLogStatus(){
+        if(isDestroyed()||service==null)return;
+        logStatus.setText(log.status()+"\n\n"+service.setupStatus());
+        cameraInfo.setText(service.camera.status());
+        if(!screenVisible){handler.postDelayed(this::refreshLogStatus,1000);return;}
+        VtcController.View v=lastView;
+        log.record("ui_status_snapshot","page",page,"form",formValues(),
+            "levelConfirmed",levelConfirmed.isChecked(),"directionsConfirmed",directionsConfirmed.isChecked(),
+            "state",v==null?null:v.state,"message",v==null?null:v.message,"aim",v==null?null:v.aim,
+            "connections",v==null?null:v.connections,
+            "mount",v==null?null:v.mount,"gps",controller==null?null:controller.liveGps(),"calibration",v==null?null:v.calibration,
+            "startEnabled",start.isEnabled(),"calibrateEnabled",calibrate.isEnabled(),"logStatus",log.status());
+        handler.postDelayed(this::refreshLogStatus,1000);
+    }
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] grants){
+        super.onRequestPermissionsResult(request,permissions,grants);
+        if(request==103&&log!=null)log.record("storage_permission_result","permissions",permissions,"grants",grants);
+    }
+    @Override protected void onResume(){super.onResume();screenVisible=true;if(log!=null)log.event("activity_resume","foreground");if(controller!=null)controller.foreground(true);}
+    @Override protected void onPause(){if(service!=null)autoSaveSettings();screenVisible=false;if(log!=null)log.record("activity_pause","form",formValues());if(controller!=null)controller.foreground(false);super.onPause();}
+    @Override protected void onDestroy(){
+        if(service!=null)service.detach(listener);if(bound)unbindService(serviceConnection);
+        files.shutdown();handler.removeCallbacksAndMessages(null);super.onDestroy();
+    }
+}
+
