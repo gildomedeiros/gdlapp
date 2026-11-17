@@ -1,0 +1,70 @@
+{
+  "mountPort": "11880",
+  "manualZoomX": "",
+  "consistency": "0.8",
+  "panSign": "1",
+  "minNet": "0.3",
+  "gpsGapTimeout": "3",
+  "quietSeconds": "3",
+  "receivePort": "5005",
+  "longitude": "153.391901",
+  "height": "2",
+  "maxPanningSpeed": "3",
+  "panMax": "90",
+  "offsetRate": "0",
+  "targetHeight": "1",
+  "maxGpsSpeed": "20",
+  "reverseSeconds": "2",
+  "tiltMax": "20",
+  "landmarkLon": "153.391734",
+  "latitude": "-28.081578",
+  "rangeMin": "10",
+  "cameraPort": "8080",
+  "landmarkHeight": "1",
+  "receiverHost": "192.168.4.1",
+  "tiltSign": "-1",
+  "hfov": "6.48",
+  "gpsAge": "2",
+  "observations": "3",
+  "mountHost": "192.168.4.3",
+  "supports": "2",
+  "quietRate": "0.08",
+  "panMin": "-90",
+  "cameraHost": "192.168.4.4",
+  "supportChange": "0.03",
+  "zoomSwitchSeconds": "10",
+  "receiverPort": "5006",
+  "tiltMin": "-45",
+  "gotoMaxMove": "45",
+  "landmarkLat": "-28.080320",
+  "rangeMax": "2000",
+  "tiltOffset": "0",
+  "window": "1.5",
+  "panToleranceMetres": "2.00",
+  "tiltToleranceMetres": "0.50",
+  "magnitudeMetres": "12.51",
+  "acquisitionTriggerMetres": "7.49",
+  "schemaVersion": "2",
+  "aimingUnits": "metres",
+  "migrationReferenceMetres": "143",
+  "zoom_scales": [
+    1.0
+  ],
+  "autoFit": "0",
+  "desiredFrameWidthMetres": "40",
+  "wideFrameFactor": "1.648",
+  "zoomMapping": [
+    {
+      "zoomX": 1,
+      "ccapiValue": 0
+    },
+    {
+      "zoomX": 6,
+      "ccapiValue": 89
+    },
+    {
+      "zoomX": 10,
+      "ccapiValue": 102
+    }
+  ]
+}

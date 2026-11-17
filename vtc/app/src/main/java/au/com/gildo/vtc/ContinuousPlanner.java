@@ -11,11 +11,12 @@ final class ContinuousPlanner {
         return Math.max(tolerance*RESTART_FACTOR,Math.max(LOW_SPEED_CAP*RESPONSE_SECONDS,maximum*HIGH_RETURN_SECONDS));
     }
     static double highEntryError(double tolerance,double maximum){return highReturnError(tolerance,maximum)+HIGH_ENTRY_MARGIN;}
-    double rate(int axis,double error,double tolerance,double maximum) {
+    double rate(int axis,double error,double tolerance,double maximum) {return rate(axis,error,tolerance,maximum,tolerance*RESTART_FACTOR);}
+    double rate(int axis,double error,double tolerance,double maximum,double restartTolerance) {
         if(!Double.isFinite(error))throw new IllegalArgumentException("Invalid pointing error");
         int i=axis-1;
         if(Math.abs(error)<=tolerance){correcting[i]=high[i]=false;return 0;}
-        if(!correcting[i]&&Math.abs(error)<=tolerance*RESTART_FACTOR)return 0;
+        if(!correcting[i]&&Math.abs(error)<=restartTolerance)return 0;
         correcting[i]=true;
         if(maximum>LOW_SPEED_CAP){
             if(high[i]&&Math.abs(error)<=highReturnError(tolerance,maximum))high[i]=false;

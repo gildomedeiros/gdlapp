@@ -46,7 +46,7 @@ public class AimPlannerTest {
         p.sent(1,1,1000);
         assertFalse(p.shouldGoTo(-37,-9,1500));assertTrue(p.shouldGoTo(-37,-9,3000));
         Settings old=new Settings(Map.of("panTolerance","3","magnitude","0"));
-        assertEquals(3,old.acquisitionTriggerDegrees,0);assertEquals(45,old.gotoMaxMove,0);
+        assertEquals(3,old.acquisitionDegrees(143),1e-10);assertEquals(45,old.gotoMaxMove,0);
         assertFalse(new AimPlanner(old).shouldGoTo(3,0,1000));
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("gotoMaxMove","46")));
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("gotoThreshold","NaN")));

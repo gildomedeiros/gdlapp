@@ -14,18 +14,17 @@ public class ZoomPlanTest {
         for(double distance:new double[]{10,150,500}){
             ZoomPlan.Decision off=at(p,settings("autoZoom","0","zoomMultipliers","1,2"),distance,20000);
             assertFalse(off.enabled);assertEquals(-1,off.target);
-            assertEquals("Automatic zoom off",off.fields.get("reason"));
+            assertEquals("Auto-fit off",off.fields.get("reason"));
         }
     }
-    @Test public void everyAgreedBandIncludingAbove500(){
-        Settings s=settings();double[] distances={20,50,80,120,170,220,270,320,370,420,470,600};
-        double[] base={1,1,1.5,2.5,4,5,6.5,8,9.5,10.5,12,12};
-        for(int i=0;i<distances.length;i++)assertEquals(base[i],number(at(new ZoomPlan(),s,distances[i],0),"baseOpticalZoom"),0);
-    }
-    @Test public void appliesMultiplierBelow40AndClampsAtWideEnd(){
-        assertEquals(2,number(at(new ZoomPlan(),settings("zoomMultipliers","2.0"),20,0),"requestedOpticalZoom"),0);
-        ZoomPlan.Decision d=at(new ZoomPlan(),settings("zoomMultipliers","0.5"),20,0);
-        assertEquals(0,d.target);assertEquals(true,d.fields.get("clamped"));
+    @Test public void widthTracksDistanceAndScalesBelow40(){
+        for(double distance:new double[]{40,100,200,250,300,500}){
+            ZoomPlan.Decision d=at(new ZoomPlan(),settings(),distance,0);
+            assertEquals(1.648*distance/40,number(d,"requestedOpticalZoom"),1e-10);
+            assertEquals(40,number(d,"estimatedFrameWidthM"),1.0);
+        }
+        assertEquals(1.648,number(at(new ZoomPlan(),settings("zoom_scales","2"),20,0),"requestedOpticalZoom"),1e-10);
+        ZoomPlan.Decision d=at(new ZoomPlan(),settings(),10,0);assertEquals(0,d.target);assertEquals(true,d.fields.get("clamped"));
     }
     @Test public void cyclesEnteredValuesAndSingleValueHolds(){
         ZoomPlan p=new ZoomPlan();Settings s=settings("zoomMultipliers","1.0, 1.2, 2.0","zoomSwitchSeconds","10");
@@ -36,13 +35,11 @@ public class ZoomPlanTest {
         assertEquals(2,number(at(p,settings("zoomMultipliers","2"),200,40000),"multiplier"),0);
         assertEquals(2,number(at(p,settings("zoomMultipliers","2"),200,90000),"multiplier"),0);
     }
-    @Test public void hysteresisPreventsBoundaryChatterInBothDirections(){
-        ZoomPlan p=new ZoomPlan();Settings s=settings();
-        assertEquals(1.5,number(at(p,s,90,0),"baseOpticalZoom"),0);
-        assertEquals(1.5,number(at(p,s,104,1000),"baseOpticalZoom"),0);
-        assertEquals(2.5,number(at(p,s,105,2000),"baseOpticalZoom"),0);
-        assertEquals(2.5,number(at(p,s,96,3000),"baseOpticalZoom"),0);
-        assertEquals(1.5,number(at(p,s,94,4000),"baseOpticalZoom"),0);
+    @Test public void widthDeadbandPreventsTinyAdjustments(){
+        Settings s=settings();ZoomPlan p=new ZoomPlan();ZoomPlan.Input gps=new ZoomPlan.Input(200,0,true);
+        ZoomPlan.Decision d=p.decide(s,gps,0,0,201,1);
+        assertTrue(ZoomPlan.withinWidth(s,gps,d,d.target));
+        assertFalse(ZoomPlan.withinWidth(s,new ZoomPlan.Input(250,0,true),d,d.target));
     }
     @Test public void staleGpsAndOffNeverCommand(){
         ZoomPlan p=new ZoomPlan();Settings s=settings();

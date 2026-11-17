@@ -17,7 +17,7 @@ final class CameraZoomReader implements AutoCloseable {
     private final Supplier<ZoomPlan.Input> input;
     private final ZoomPlan planner=new ZoomPlan();
     private volatile ZoomSample sample;
-    private volatile String zoomStatus="Automatic zoom off";
+    private volatile String zoomStatus="Auto-fit off";
     private String zoomConnection="";
     private int pendingTarget=-1;private long pendingAt;
     private static final class ZoomSample {
@@ -76,7 +76,7 @@ final class CameraZoomReader implements AutoCloseable {
             log.record("camera_zoom_response","url",url,"elapsedMs",receivedAt-began,"body",body,"zoom",zoom);
             if(pendingTarget>=0&&zoom==pendingTarget){log.record("camera_zoom_confirmed","requestedCcapi",pendingTarget,"readbackCcapi",zoom,"elapsedMs",receivedAt-pendingAt);pendingTarget=-1;}
             if(ability!=null)controlZoom(wifi,s,url,zoom,ability.getInt("min"),ability.getInt("max"),ability.getInt("step"));
-            else {zoomStatus="Automatic zoom waiting for camera limits";log.record("camera_zoom_skipped","reason","Camera ability missing");}
+            else {zoomStatus="Auto-fit waiting for camera limits";log.record("camera_zoom_skipped","reason","Camera ability missing");}
             String clockKey=url+"@"+wifi.toString();
             if(!clockKey.equals(clockConnection)){clockConnection=clockKey;clockDone=false;clockAttempt=0;clockStatus="Clock awaiting synchronisation";}
             if(!clockDone&&(clockAttempt==0||SystemClock.elapsedRealtime()-clockAttempt>=60000))syncClock(wifi,s);
@@ -106,16 +106,16 @@ final class CameraZoomReader implements AutoCloseable {
         long now=SystemClock.elapsedRealtime();ZoomPlan.Input gps=input.get();
         ZoomPlan.Decision decision=planner.decide(s,gps,now,min,max,step);
         decision.fields.put("currentCcapi",current);decision.fields.put("currentCcapiAgeMs",now-receivedAt);
-        decision.fields.put("estimatedCurrentOpticalZoom",ZoomPlan.optical(current));
-        decision.fields.put("estimatedCurrentFrameWidthM",Double.isFinite(gps.distance)?ZoomPlan.width(gps.distance,ZoomPlan.optical(current)):null);
+        decision.fields.put("estimatedCurrentOpticalZoom",s.zoomMapping.optical(current));
+        decision.fields.put("estimatedCurrentFrameWidthM",Double.isFinite(gps.distance)?gps.distance*s.wideFrameFactor/s.zoomMapping.optical(current):null);
         String action;
         if(!decision.enabled){action=String.valueOf(decision.fields.get("reason"));pendingTarget=-1;}
-        else if(current==decision.target)action="Already at requested zoom";
+        else if(current==decision.target||ZoomPlan.withinWidth(s,gps,decision,current))action="Within 5% width tolerance or at nearest zoom position";
         else if(pendingTarget>=0&&now-pendingAt<5000)action="Waiting for previous zoom readback (up to 5 seconds)";
         else action="Send zoom";
         decision.fields.put("action",action);decision.fields.put("pendingCcapi",pendingTarget<0?null:pendingTarget);
         log.record("zoom_decision","decision",decision.fields);
-        zoomStatus=!decision.enabled?action:"Band "+decision.fields.get("bandStartM")+" m · multiplier "+decision.fields.get("multiplier")+
+        zoomStatus=!decision.enabled?action:"Auto-fit "+decision.fields.get("effectiveFrameWidthMetres")+" m · estimated "+decision.fields.get("estimatedFrameWidthM")+" m · "+(Boolean.TRUE.equals(decision.fields.get("clamped"))?"lens/camera limit · ":"")+
             " · requested "+decision.fields.get("limitedOpticalZoom")+"× (estimated) · "+action;
         if(!action.equals("Send zoom"))return;
         if(closed||settings.get()!=s||network.get()!=wifi){log.record("camera_zoom_skipped","reason","Settings or network changed before command");return;}

@@ -13,6 +13,7 @@ final class ZoomPlan {
         Input(double distance,long ageMs,boolean valid){this.distance=distance;this.ageMs=ageMs;this.valid=valid;}
     }
     static double[] parse(String text,boolean multipliers){
+        text=text.trim();if(multipliers&&text.startsWith("[")){Object parsed=ConfigJson.parse(text);if(!(parsed instanceof List))throw new IllegalArgumentException("zoom_scales must be an array");text=((List<?>)parsed).stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));}
         String[] parts=text.split(",",-1);
         if(parts.length<1||parts.length>(multipliers?20:11)||(!multipliers&&parts.length!=11))
             throw new IllegalArgumentException(multipliers?"Enter 1 to 20 comma-separated multipliers":"Enter 11 band zoom values in distance order");
@@ -27,47 +28,44 @@ final class ZoomPlan {
         }
         return result;
     }
-    static double raw(double optical){
-        if(optical<=1)return 0;
-        return optical<=6?89*Math.log(optical)/Math.log(6):89+13*Math.log(optical/6)/Math.log(10.0/6);
-    }
-    static double optical(double raw){return raw<=89?Math.exp(raw*Math.log(6)/89):6*Math.exp((raw-89)*Math.log(10.0/6)/13);}
-    static double width(double distance,double optical){return distance*1.64825201164/optical;}
-    private String key="";private long began;private int band=-1;
-    void reset(){key="";band=-1;}
+    static double raw(double optical){return new ZoomMapping(ZoomMapping.DEFAULT).raw(optical);}
+    static double optical(double raw){return new ZoomMapping(ZoomMapping.DEFAULT).optical(raw);}
+    static double width(double distance,double optical){return distance*1.648/optical;}
+    private String key="";private long began;
+    void reset(){key="";}
     static final class Decision {
         final Map<String,Object> fields;final int target;final boolean enabled;
         Decision(Map<String,Object> fields,int target,boolean enabled){this.fields=fields;this.target=target;this.enabled=enabled;}
     }
+    static boolean withinWidth(Settings s,Input gps,Decision d,int current){
+        if(!d.enabled||!gps.valid)return false;
+        double desired=((Number)d.fields.get("effectiveFrameWidthMetres")).doubleValue();
+        return Math.abs(gps.distance*s.wideFrameFactor/s.zoomMapping.optical(current)-desired)<=desired*.05;
+    }
     Decision decide(Settings s,Input input,long now,int min,int max,int step){
-        String next=s.autoZoom+"/"+s.values.get("zoomMultipliers")+"/"+s.zoomSwitchSeconds+"/"+s.values.get("zoomBands");
-        if(!next.equals(key)){key=next;began=now;band=-1;}
+        String next=s.autoZoom+"/"+s.values.get("zoom_scales")+"/"+s.zoomSwitchSeconds+"/"+s.desiredFrameWidthMetres+"/"+s.wideFrameFactor+"/"+s.values.get("zoomMapping");
+        if(!next.equals(key)){key=next;began=now;}
         Map<String,Object> f=new LinkedHashMap<>();
-        f.put("automaticZoom",s.autoZoom);f.put("settings",s.values);f.put("bandStartsM",STARTS);f.put("bandOpticalZoom",s.zoomBands);
-        f.put("mapping",MAPPING);f.put("hysteresisM",HYSTERESIS);f.put("gpsValid",input.valid);f.put("gpsAgeMs",input.ageMs);
-        f.put("distanceM",Double.isFinite(input.distance)?input.distance:null);
-        int phase=(int)(((now-began)/(long)(s.zoomSwitchSeconds*1000))%s.zoomMultipliers.length);
-        double multiplier=s.zoomMultipliers[phase];
-        f.put("multiplierIndex",phase);f.put("multiplier",multiplier);f.put("multipliers",s.zoomMultipliers);
+        f.put("autoFit",s.autoZoom);f.put("settings",ConfigJson.structured(s.values));
+        f.put("mapping",ConfigJson.parse(s.values.get("zoomMapping")));f.put("mappingMethod","log interpolation / end-segment extrapolation");
+        f.put("gpsValid",input.valid);f.put("gpsAgeMs",input.ageMs);f.put("distanceM",Double.isFinite(input.distance)?input.distance:null);
+        int phase=(int)((Math.max(0,now-began)/(long)(s.zoomSwitchSeconds*1000))%s.zoomMultipliers.length);
+        double scale=s.zoomMultipliers[phase],desired=s.desiredFrameWidthMetres/scale;
+        f.put("multiplierIndex",phase);f.put("multiplier",scale);f.put("zoom_scales",s.zoomMultipliers);
+        f.put("desiredFrameWidthMetres",s.desiredFrameWidthMetres);f.put("effectiveFrameWidthMetres",desired);f.put("wideFrameFactor",s.wideFrameFactor);f.put("widthToleranceFraction",.05);
         f.put("nextSwitchMonoMs",s.zoomMultipliers.length==1?null:began+((now-began)/(long)(s.zoomSwitchSeconds*1000)+1)*(long)(s.zoomSwitchSeconds*1000));
-        if(!s.autoZoom||!input.valid||!Double.isFinite(input.distance)||input.distance<0){
-            f.put("reason",!s.autoZoom?"Automatic zoom off":"No fresh valid GPS; holding zoom");return new Decision(f,-1,false);
+        if(!s.autoZoom||!input.valid||!Double.isFinite(input.distance)||input.distance<=0){
+            f.put("reason",!s.autoZoom?"Auto-fit off":"No fresh valid GPS; holding zoom");return new Decision(f,-1,false);
         }
-        int nominal=0;for(int i=1;i<STARTS.length;i++)if(input.distance>=STARTS[i])nominal=i;
-        if(band<0)band=nominal;
-        while(band<STARTS.length-1&&input.distance>=STARTS[band+1]+HYSTERESIS)band++;
-        while(band>0&&input.distance<STARTS[band]-HYSTERESIS)band--;
-        double requested=s.zoomBands[band]*multiplier,limited=Math.max(1,Math.min(65,requested));
+        double requested=s.wideFrameFactor*input.distance/desired,limited=Math.max(1,Math.min(65,requested));
         if(min<0||max<min||step<1)throw new IllegalArgumentException("Invalid camera zoom ability");
-        int target=min+(int)Math.round((raw(limited)-min)/step)*step;
-        target=Math.max(min,Math.min(min+((max-min)/step)*step,target));
-        f.put("bandIndex",band);f.put("nominalBandIndex",nominal);f.put("hysteresisHeld",band!=nominal);
-        f.put("bandStartM",STARTS[band]);f.put("bandEndM",band==STARTS.length-1?null:STARTS[band+1]);
-        f.put("above500m",input.distance>500);f.put("baseOpticalZoom",s.zoomBands[band]);f.put("requestedOpticalZoom",requested);
-        f.put("limitedOpticalZoom",limited);f.put("unroundedCcapi",raw(limited));f.put("requestedCcapi",target);
+        double raw=s.zoomMapping.raw(limited);
+        int last=min+((max-min)/step)*step;
+        int target=(int)Math.max(min,Math.min(last,min+Math.round((raw-min)/step)*(double)step));
+        f.put("requestedOpticalZoom",requested);f.put("limitedOpticalZoom",limited);f.put("unroundedCcapi",raw);f.put("requestedCcapi",target);
         f.put("cameraMin",min);f.put("cameraMax",max);f.put("cameraStep",step);
-        f.put("clamped",limited!=requested||raw(limited)<min||raw(limited)>max);
-        f.put("estimatedFrameWidthM",width(input.distance,limited));f.put("reason","Distance band and multiplier");
-        return new Decision(f,target,true);
+        f.put("clamped",limited!=requested||raw<min||raw>last);
+        f.put("estimatedFrameWidthM",input.distance*s.wideFrameFactor/s.zoomMapping.optical(target));
+        f.put("reason","GPS distance and desired frame width");return new Decision(f,target,true);
     }
 }

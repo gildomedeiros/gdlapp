@@ -34,7 +34,7 @@ final class FixedGoto {
     double[] nextMove(double currentPan,double currentTilt) {
         if(!calibration.allowed(currentPan,currentTilt))throw new IllegalArgumentException("Mount is outside the pan/tilt sector");
         // Work in the landmark-relative sector, never wrap a long move through a limit.
-        return new double[]{step(pan-currentPan,landmark?.03:settings.panTolerance),step(tilt-currentTilt,landmark?.03:settings.tiltTolerance)};
+        return new double[]{step(pan-currentPan,landmark?.03:settings.panToleranceDegrees(range)),step(tilt-currentTilt,landmark?.03:settings.tiltToleranceDegrees(range))};
     }
     private double step(double error,double tolerance) {
         return Math.abs(error)<=tolerance?0:Math.copySign(Math.min(settings.gotoMaxMove,Math.abs(error)),error);
@@ -53,6 +53,8 @@ final class FixedGoto {
         out.put("sourceReceivedAtMs",sourceReceivedAt);out.put("capturedAtMs",capturedAt);
         out.put("rangeM",range);out.put("bearingDegrees",bearing);out.put("headingDegrees",heading);
         out.put("panFromLandmarkDegrees",pan);out.put("tiltDegrees",tilt);out.put("framingOffsetDegrees",offset);
+        out.put("panToleranceMetres",settings.panTolerance);out.put("tiltToleranceMetres",settings.tiltTolerance);
+        out.put("panToleranceDegrees",settings.panToleranceDegrees(range));out.put("tiltToleranceDegrees",settings.tiltToleranceDegrees(range));
         out.put("maxMoveDegrees",settings.gotoMaxMove);return out;
     }
 }

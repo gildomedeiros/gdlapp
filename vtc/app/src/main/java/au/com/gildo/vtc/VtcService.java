@@ -38,7 +38,15 @@ public final class VtcService extends Service {
         if(wifi!=null){wifiLock=wifi.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF,"VTC:device-wifi");wifiLock.setReferenceCounted(false);}
         log=new SessionLog(this);setup=new PublicSettingsStore(this,"vtc_setup","setup.json",log);
         Settings settings;
-        try{settings=new Settings(setup.load());}catch(Exception e){settings=new Settings(Collections.emptyMap());loadError="Settings could not be loaded: "+e.getMessage();log.error("settings_load_failed",e);}
+        try{
+            Map<String,String> loaded=setup.load();
+            if(!loaded.isEmpty()&&!loaded.containsKey("schemaVersion")){
+                try{new PublicSettingsStore(this,"vtc_setup_pre_117","setup-before-1.0.17.json",log).save(loaded);}
+                catch(Exception backup){log.error("settings_legacy_backup_failed",backup);}
+                log.record("settings_units_migration","referenceDistanceMetres",143,"from","degrees","to","metres");
+            }
+            settings=new Settings(loaded);
+        }catch(Exception e){settings=new Settings(Collections.emptyMap());loadError="Settings could not be loaded: "+e.getMessage();log.error("settings_load_failed",e);}
         controller=new VtcController(this,settings,log,v->main.post(()->update(v)));
         previousHandler=Thread.getDefaultUncaughtExceptionHandler();
         fatalHandler=(thread,failure)->{try{controller.fatalFailure(failure);}finally{if(previousHandler!=null)previousHandler.uncaughtException(thread,failure);}};

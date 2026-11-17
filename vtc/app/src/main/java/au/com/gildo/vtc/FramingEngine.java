@@ -9,6 +9,11 @@ final class FramingEngine {
         Observation(long t,double b){time=t;bearing=b;}
     }
     private final Settings settings;
+    private double range=AimUnits.REFERENCE;
+    void distance(double metres){
+        if(!Double.isFinite(metres)||metres<=0)throw new IllegalArgumentException("Invalid framing distance");
+        range=metres;if(direction!=0)desired=direction*settings.magnitudeDegrees(range);
+    }
     private final ArrayDeque<Observation> observations=new ArrayDeque<>();
     private long lastObservation=-1,quietSince=-1,lastTick=-1,sequence=-1,sender=-1;
     private boolean available;
@@ -51,7 +56,7 @@ final class FramingEngine {
         boolean ready=observations.size()>=settings.observations&&span>=settings.window;
         boolean trend=ready&&Math.abs(net)>=settings.minNet&&consistency>=settings.consistency&&supporting>=settings.supports;
         boolean quiet=ready&&travel/span<settings.quietRate;
-        if(trend){direction=sign;desired=sign*settings.magnitude;quietSince=-1;reason=sign>0?"Right trend → surfer left":"Left trend → surfer right";}
+        if(trend){direction=sign;desired=sign*settings.magnitudeDegrees(range);quietSince=-1;reason=sign>0?"Right trend → surfer left":"Left trend → surfer right";}
         else if(quiet) {
             if(quietSince<0)quietSince=now;
             reason="Quiet; holding framing";
@@ -59,13 +64,14 @@ final class FramingEngine {
         }else{quietSince=-1;reason=ready?"Uncertain; holding framing":"Building direction evidence";}
     }
     double tick(long now) {
-        if(lastTick<0){lastTick=now;return applied;}
+        if(lastTick<0){lastTick=now;if(settings.offsetRate!=0)return applied;}
         long elapsed=now-lastTick;lastTick=now;
         if(elapsed<0){unavailable(now);return applied;}
         if(!available||lastObservation<0||now-lastObservation>settings.gpsAge*1000) {
             if(available)unavailable(now);
             return applied;
         }
+        if(settings.offsetRate==0){applied=desired;return applied;}
         // Do not catch up after a stalled control loop.
         double dt=Math.min(elapsed,500)/1000.0,limit=settings.offsetRate*dt;
         applied+=Math.max(-limit,Math.min(limit,desired-applied));

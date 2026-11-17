@@ -152,16 +152,19 @@ public final class MainActivity extends Activity {
         LinearLayout camera=card(p,"Optional Canon camera");
         field(camera,"cameraHost","Camera IPv4 address — blank disables polling");
         field(camera,"cameraPort","CCAPI HTTP port");
-        field(camera,"autoZoom","Automatic zoom (0 = off, 1 = on)");
-        text(camera,"Off leaves the camera zoom exactly as it is: no zoom commands, no band or multiplier adjustments. VTC continues reading and logging zoom.",13,MUTED,false);
-        field(camera,"zoomMultipliers","Multipliers (comma-separated; 0.5–3.0, increments 0.1)");
-        field(camera,"zoomSwitchSeconds","Switch multiplier every (seconds; 2–3600)");
-        field(camera,"zoomBands","Band optical zoom values (11 comma-separated values)");
-        text(camera,"Bands start at 0, 40, 60, 100, 150, 200, 250, 300, 350, 400 and 450 m. Above 500 m retains the final band. Multipliers apply to every band. Band hysteresis: 5 m. One multiplier holds; multiple values cycle in order. Switching is checked each camera poll, so response delays may delay a switch.",13,MUTED,false);
+        field(camera,"autoFit","Auto-fit (0 = off, 1 = on)");
+        text(camera,"Off leaves the camera zoom exactly as it is: no zoom commands, no automatic adjustments. VTC continues reading and logging zoom.",13,MUTED,false);
+        field(camera,"zoom_scales","Zoom scales (comma-separated; 0.5–3.0, increments 0.1)");
+        field(camera,"zoomSwitchSeconds","Seconds per zoom scale (2–3600)");
+        field(camera,"desiredFrameWidthMetres","Desired frame width (metres; 1–10000)");
+        field(camera,"wideFrameFactor","Wide frame factor (0.01–10; default 1.648)");
+        field(camera,"zoomMapping","Zoom mapping JSON: zoomX / ccapiValue points");
+        fields.get("zoomMapping").setSingleLine(false);fields.get("zoomMapping").setMinLines(8);fields.get("zoomMapping").setGravity(Gravity.TOP);
+        text(camera,"Auto-fit calculates zoom from GPS distance and desired width. Scale 1 uses that width; scale 2 halves it. One scale holds; multiple scales cycle. Mapping points must increase in zoomX and ccapiValue, beginning at 1x. Uses logarithmic interpolation/extrapolation. Adjustments allow 5% width error to avoid zoom chatter; checked on the independent camera poll (at least 2 seconds apart).",13,MUTED,false);
         text(camera,"Zoom mapping and frame widths are provisional estimates from 1x=0, 6x=89 and 10x=102. Test and calibrate. Camera limits are enforced. Fresh GPS is required for automatic zoom.",13,MUTED,false);
         field(camera,"manualZoomX","Manual camera zoom (×; optional observation, not a command)");
         button(camera,"Log manual zoom observation",()->{if(autoSaveSettings())service.camera.manualObservation("user_record");});
-        text(camera,"Turn automatic zoom off, set the zoom on your camera and enter its displayed × value. The observation logs the latest CCAPI reading and its age. These fields can be edited while aiming.",13,MUTED,false);
+        text(camera,"Turn Auto-fit off, set the zoom on your camera and enter its displayed × value. The observation logs the latest CCAPI reading and its age. These fields can be edited while aiming.",13,MUTED,false);
         text(camera,"Reads zoom and synchronises the clock once per connection, independently of aiming. Camera errors do not stop tracking. Use the camera IP shown on your shared Wi-Fi network.",13,MUTED,false);
         LinearLayout site=card(p,"Camera site");
         field(site,"cameraCoordinates","Camera coordinates — latitude, longitude");
@@ -180,7 +183,7 @@ public final class MainActivity extends Activity {
 
         LinearLayout frame=card(p,"Framing");
         text(frame,"Always automatic. Magnitude 0 means no horizontal offset.",13,MUTED,false);
-        field(frame,"magnitude","Automatic offset magnitude (°)");
+        field(frame,"magnitudeMetres","Automatic horizontal offset magnitude (m)");
         field(frame,"tiltOffset","Vertical offset (°; + up)");
         field(frame,"hfov","Optional horizontal field of view (°; blank if unknown)");
         text(frame,"An automatic +offset aims right and places the surfer left. Field of view is optional: it only estimates frame width and draws the KML viewing sector. It does not restrict offsets or control aiming. Leave blank if unknown. Camera zoom is not converted into field of view automatically.",13,MUTED,false);
@@ -195,17 +198,17 @@ public final class MainActivity extends Activity {
         field(limits,"rangeMax","Maximum surfer range (m)");
 
         LinearLayout acquire=card(p,"GoTo for large aiming errors");
-        field(acquire,"acquisitionTriggerDegrees","Acquisition trigger angle (°)");
+        field(acquire,"acquisitionTriggerMetres","Acquisition trigger pointing error (m)");
         field(acquire,"gotoMaxMove","Maximum GoTo movement per leg (°; 1–45)");
-        text(acquire,"Default: 3° error triggers fast native GoTo. The target position and framing are saved once and held until arrival, even if surfer GPS changes or stops. Larger turns use legs toward the same saved position. Live GPS aiming resumes after arrival.",13,MUTED,false);
+        text(acquire,"Pointing error in metres is converted using current surfer distance. Default: about 7.49 m triggers fast native GoTo. The target position and framing are saved once and held until arrival, even if surfer GPS changes or stops. Larger turns use legs toward the same saved position. Live GPS aiming resumes after arrival.",13,MUTED,false);
 
         LinearLayout advanced=card(p,"Advanced aiming");
-        text(advanced,"Low-speed correction varies up to 0.5°/s. High-speed catch-up holds the configured maximum, then returns to low speed near the target. Stop at tolerance; restart beyond 1.5× tolerance.",13,MUTED,false);
+        text(advanced,"Low-speed correction varies up to 0.5°/s. High-speed catch-up holds the configured maximum, then returns to low speed near the target. Tolerances are metres at the surfer distance. Stop within tolerance; restart beyond 1.5× that metre tolerance.",13,MUTED,false);
         field(advanced,"maxPanningSpeed","Maximum panning speed (°/s; 0.01–5)");
         text(advanced,"Also caps tilt. AZ-GTi commands are capped at 3.34°/s (800× sidereal). High-speed catch-up uses one fixed rate. Switching modes or reversing still requires Stop/Start. Default remains 0.5°/s.",13,MUTED,false);
         field(advanced,"gpsGapTimeout","Keep panning without GPS for (s since last accepted packet)");
-        field(advanced,"panTolerance","Pan aiming tolerance (°)");
-        field(advanced,"tiltTolerance","Tilt aiming tolerance (°)");
+        field(advanced,"panToleranceMetres","Pan aiming tolerance (m)");
+        field(advanced,"tiltToleranceMetres","Tilt aiming tolerance (vertical m at surfer distance)");
         field(advanced,"reverseSeconds","Direction reversal hold (s)");
         field(advanced,"gpsAge","Maximum GPS age / evidence gap (s)");
         field(advanced,"maxGpsSpeed","Reject GPS jumps above (m/s)");
@@ -219,7 +222,7 @@ public final class MainActivity extends Activity {
         field(auto,"supportChange","Minimum supporting change (°)");
         field(auto,"quietRate","Quiet total angular travel rate (°/s)");
         field(auto,"quietSeconds","Continuous quiet before centring (s)");
-        field(auto,"offsetRate","Applied offset transition rate (°/s)");
+        field(auto,"offsetRate","Offset transition rate (°/s; 0 = immediate, default 0)");
 
         LinearLayout filesRow=row(p);
         button(filesRow,"Export setup",this::exportSetup);
@@ -239,9 +242,10 @@ public final class MainActivity extends Activity {
         text(p,"Verification\n• Build and automated checks cover software logic.\n• Landmark accuracy, motor directions, backlash and tracking smoothness need a hardware check.\n• No guarantee of a mount communication-loss watchdog is assumed. Continuous movement needs Stop. The independent watchdog attempts Stop on a control stall; lost power, force-stop or lost Wi-Fi can prevent it.\n• Aiming continues when switching apps or locking the screen. Use Stop in VTC or its notification. Force-stop/process termination ends the service; reconnect and validate calibration after a new service session.",14,MUTED,false);
         return scroll(p);
     }
+    private String prettyBands(String json){try{return new org.json.JSONArray(json).toString(2);}catch(Exception e){return json;}}
     private void fillSettings(Settings s) {
         fillingSettings=true;
-        for(Map.Entry<String,EditText> e:fields.entrySet())if(s.values.containsKey(e.getKey()))e.getValue().setText(s.values.get(e.getKey()));
+        for(Map.Entry<String,EditText> e:fields.entrySet())if(s.values.containsKey(e.getKey()))e.getValue().setText(e.getKey().equals("zoom_scales")?s.values.get(e.getKey()).replace("[", "").replace("]", ""):e.getKey().equals("zoomMapping")?prettyBands(s.values.get(e.getKey())):s.values.get(e.getKey()));
         fields.get("cameraCoordinates").setText(Coordinates.display(s.values.get("latitude"),s.values.get("longitude")));
         fields.get("landmarkCoordinates").setText(Coordinates.display(s.values.get("landmarkLat"),s.values.get("landmarkLon")));
         panSign.setSelection(s.panSign>0?0:1);tiltSign.setSelection(s.tiltSign>0?0:1);
@@ -255,7 +259,7 @@ public final class MainActivity extends Activity {
         return values;
     }
     private Settings readSettings() {
-        Map<String,String> values=formValues();
+        Map<String,String> values=new LinkedHashMap<>(settings.values);values.putAll(formValues());
         String[] camera=Coordinates.parse(values.remove("cameraCoordinates"));
         String[] landmark=Coordinates.parse(values.remove("landmarkCoordinates"));
         values.put("latitude",camera[0]);values.put("longitude",camera[1]);
@@ -278,7 +282,7 @@ public final class MainActivity extends Activity {
     private void exportSetup() {
         try {
             Settings next=readSettings();
-            exportSettingsText=new JSONObject(next.values).toString(2);
+            exportSettingsText=new JSONObject(ConfigJson.structured(next.values)).toString(2);
             createDocument("VTC-setup.json","application/json");
         }catch(Exception e){toast(e.getMessage());}
     }
@@ -306,8 +310,7 @@ public final class MainActivity extends Activity {
                     if(in==null)throw new IOException("Cannot open setup file");
                     ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buffer=new byte[4096];int count;
                     while((count=in.read(buffer))!=-1){out.write(buffer,0,count);if(out.size()>32768)throw new IOException("Setup file is too large");}
-                    JSONObject json=new JSONObject(out.toString(StandardCharsets.UTF_8.name()));Map<String,String> input=new LinkedHashMap<>();
-                    Iterator<String> keys=json.keys();while(keys.hasNext()){String key=keys.next();input.put(key,json.getString(key));}
+                    Map<String,String> input=ConfigJson.settings(out.toString(StandardCharsets.UTF_8.name()));
                     Settings imported=new Settings(input);
                     log.settings("import_for_review",imported);
                     runOnUiThread(()->{fillSettings(imported);autoSaveSettings();showPage(2);});
@@ -339,7 +342,7 @@ public final class MainActivity extends Activity {
         text(parent,label,14,TEXT,false);
         EditText e=new EditText(this);e.setSingleLine();e.setTextSize(16);e.setTextColor(TEXT);e.setHintTextColor(MUTED);
         boolean coordinates=key.endsWith("Coordinates");
-        e.setInputType(key.endsWith("Host")||coordinates||key.equals("zoomMultipliers")||key.equals("zoomBands")?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        e.setInputType(key.endsWith("Host")||coordinates||key.equals("zoom_scales")||key.equals("zoomMapping")?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
         e.setHint(coordinates?"-28.165514, 153.550457":key.equals("height")||key.equals("landmarkHeight")?"Required before calibration":"");
         e.setOnFocusChangeListener((v,focused)->{if(!focused)log.record("settings_field_edited","field",key,"value",e.getText().toString(),"saved",false);});
         e.addTextChangedListener(new android.text.TextWatcher(){

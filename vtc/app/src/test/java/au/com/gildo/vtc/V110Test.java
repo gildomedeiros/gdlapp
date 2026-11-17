@@ -100,9 +100,9 @@ public class V110Test {
     }
     @Test public void oldSetupMigratesWithoutRetainingObsoleteControls(){
         Settings s=new Settings(Map.of("gotoThreshold","4","maxStep","3","waitForGoto","0","framing","FIXED","fixedOffset","-1"));
-        assertEquals(4,s.acquisitionTriggerDegrees,0);
+        assertEquals(4,s.acquisitionDegrees(143),1e-10);
         for(String k:List.of("gotoThreshold","maxStep","waitForGoto","framing","fixedOffset"))assertFalse(s.values.containsKey(k));
-        assertEquals(5,new Settings(Map.of("gotoThreshold","4","acquisitionTriggerDegrees","5")).acquisitionTriggerDegrees,0);
+        assertEquals(5,new Settings(Map.of("gotoThreshold","4","acquisitionTriggerDegrees","5")).acquisitionDegrees(143),1e-10);
     }
     @Test public void zeroMagnitudeAlwaysProducesZeroOffset(){
         FramingEngine f=new FramingEngine(new Settings(Map.of("magnitude","0")));

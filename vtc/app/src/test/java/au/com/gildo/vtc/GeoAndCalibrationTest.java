@@ -47,7 +47,7 @@ public class GeoAndCalibrationTest {
     @Test public void invalidSetupCannotArm() {
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("magnitude","NaN")));
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("panSign","0")));
-        assertEquals(5,new Settings(Map.of("framing","AUTO","magnitude","5")).magnitude,0);
+        assertEquals(5,new Settings(Map.of("framing","AUTO","magnitude","5")).magnitudeDegrees(143),1e-10);
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("height","")).calibrationReady());
         assertThrows(IllegalArgumentException.class,()->configured("landmarkLat","-28.165513983264137","landmarkLon","153.55045722684628").calibrationReady());
         assertThrows(IllegalArgumentException.class,()->configured("mountHost","192.168.4.1").connectionReady());

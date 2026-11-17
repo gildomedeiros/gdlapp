@@ -10,7 +10,7 @@ import java.util.*;
 
 /** Always-on, structured full diagnostics. No save/export step. */
 final class SessionLog implements AutoCloseable {
-    static final String VERSION="1.0.16";
+    static final String VERSION="1.0.18";
     private final AutomaticLogWriter writer;
     private final AutomaticKmlWriter kml;
     private long record;
@@ -44,7 +44,7 @@ final class SessionLog implements AutoCloseable {
         all[fields.length+2]="stackTrace";all[fields.length+3]=text.toString();
         record(type,all);
     }
-    void settings(String reason,Settings settings){record("settings_snapshot","reason",reason,"settings",settings.values);}
+    void settings(String reason,Settings settings){record("settings_snapshot","reason",reason,"settings",ConfigJson.structured(settings.values));}
     String status() {
         String path="Download/VTC/logs/"+name;
         String failure=writer.error();

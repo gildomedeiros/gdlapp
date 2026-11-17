@@ -8,9 +8,9 @@ import static org.junit.Assert.*;
 public class V108Test {
     @Test public void legacyStepMigratesAwayAndAcquisitionAngleIsRetained(){
         Settings s=new Settings(Map.of("maxStep","3","gotoThreshold","4"));
-        assertEquals(4,s.acquisitionTriggerDegrees,0);assertFalse(s.values.containsKey("maxStep"));
+        assertEquals(4,s.acquisitionDegrees(143),1e-10);assertFalse(s.values.containsKey("maxStep"));
         assertEquals(.5,s.maxPanningSpeed,0);
-        assertEquals(0,new Settings(Map.of("acquisitionTriggerDegrees","0")).acquisitionTriggerDegrees,0);
+        assertEquals(0,new Settings(Map.of("acquisitionTriggerDegrees","0")).acquisitionDegrees(143),1e-10);
     }
     @Test public void overshootWaitsForReversalThenCorrectsWithoutResettingPlanner(){
         AimPlanner p=new AimPlanner(new Settings(Collections.emptyMap()));p.sent(1,.25,1000);

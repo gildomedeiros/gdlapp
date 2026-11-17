@@ -27,9 +27,7 @@ final class PublicSettingsStore {
             if(in!=null){
                 ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] b=new byte[4096];int n;
                 while((n=in.read(b))!=-1){bytes.write(b,0,n);if(bytes.size()>131072)throw new IOException("Settings file too large");}
-                JSONObject json=new JSONObject(bytes.toString(StandardCharsets.UTF_8.name()));
-                Map<String,String> values=new LinkedHashMap<>();Iterator<String> keys=json.keys();
-                while(keys.hasNext()){String k=keys.next();values.put(k,json.getString(k));}
+                Map<String,String> values=ConfigJson.settings(bytes.toString(StandardCharsets.UTF_8.name()));
                 cache(values,false);error="";return values;
             }
         }catch(Exception e){error=e.toString();log.error("settings_public_read_failed",e,"path",DIR+name);}
@@ -41,7 +39,7 @@ final class PublicSettingsStore {
     synchronized void retry(){
         if(!cache.getBoolean(DIRTY,false))return;
         try(OutputStream out=openWrite()){
-            out.write(new JSONObject(cached()).toString(2).getBytes(StandardCharsets.UTF_8));out.flush();
+            out.write(new JSONObject(ConfigJson.structured(cached())).toString(2).getBytes(StandardCharsets.UTF_8));out.flush();
         }catch(Exception e){error=e.toString();log.error("settings_public_write_failed",e,"path",DIR+name);return;}
         if(!cache.edit().putBoolean(DIRTY,false).commit()){
             error="Public file saved; could not clear recovery marker";log.event("settings_recovery_marker_failed",DIR+name);return;

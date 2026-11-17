@@ -408,8 +408,12 @@ final class VtcController implements AutoCloseable {
             fix=freshFix();now=SystemClock.elapsedRealtime();
             if(fix==null||fix.epoch!=continuity)return;
             if(!targetWait.waiting())observe(fix);
-            double offset=targetWait.waiting()?framing.applied:framing.tick(now);
             double distance=Geo.distance(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
+            double calculationRange=Math.max(.001,distance);
+            framing.distance(calculationRange);planner.distance(calculationRange);
+            double offset=targetWait.waiting()?framing.applied:framing.tick(now);
+            double panTolerance=s.panToleranceDegrees(calculationRange),tiltTolerance=s.tiltToleranceDegrees(calculationRange);
+            double acquisitionDegrees=s.acquisitionDegrees(calculationRange);
             double bearing=Geo.bearing(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
             double targetHeading=Geo.wrap(bearing+offset),targetPan=calibration.targetPan(targetHeading);
             double targetTilt=Geo.elevation(distance,s.height,s.targetHeight)+s.tiltOffset;
@@ -439,13 +443,17 @@ final class VtcController implements AutoCloseable {
             log.record("aim_cycle","gps",gpsSnapshot(fix),"rangeM",distance,"bearingDegrees",bearing,
                 "targetHeadingDegrees",targetHeading,"targetPanDegrees",targetPan,"targetTiltDegrees",targetTilt,
                 "cameraHeadingDegrees",calibration.heading(here.pan),"panFromLandmarkDegrees",pan,"tiltDegrees",tilt,
-                "panErrorDegrees",panError,"tiltErrorDegrees",tiltError,"framing",framingSnapshot(now),"moving",here.moving);
+                "panErrorDegrees",panError,"tiltErrorDegrees",tiltError,
+                "panToleranceMetres",s.panTolerance,"tiltToleranceMetres",s.tiltTolerance,"magnitudeMetres",s.magnitude,
+                "panToleranceDegrees",panTolerance,"tiltToleranceDegrees",tiltTolerance,"magnitudeDegrees",s.magnitudeDegrees(calculationRange),
+                "acquisitionTriggerMetres",s.acquisitionTriggerMetres,"acquisitionTriggerDegrees",acquisitionDegrees,"offsetRate",s.offsetRate,
+                "framing",framingSnapshot(now),"moving",here.moving);
             if(pendingMove){publishThrottled();return;}
             if(planner.shouldGoTo(panError,tiltError,now)) {
                 fixedGoto=new FixedGoto(calibration,fix.packet,fix.receivedAt,now,offset);
                 framing.holdForGoto(now);gps.clearObservations();
                 log.record("goto_captured","target",fixedGoto.snapshot(),"panErrorDegrees",panError,"tiltErrorDegrees",tiltError,
-                    "acquisitionTriggerDegrees",s.acquisitionTriggerDegrees,"gpsAgeAtCaptureMs",now-fix.receivedAt);
+                    "acquisitionTriggerDegrees",acquisitionDegrees,"acquisitionTriggerMetres",s.acquisitionTriggerMetres,"gpsAgeAtCaptureMs",now-fix.receivedAt);
                 if(here.moving||mount.continuous()) {
                     mount.stop();panRate=tiltRate=0;continuousPlanner.reset();
                     log.event("goto_transition_stop","Continuous movement stopped; captured destination retained");
@@ -453,22 +461,23 @@ final class VtcController implements AutoCloseable {
                 }
                 advanceFixedGoto(here,now);publishThrottled();return;
             }
-            double pr=continuousPlanner.rate(1,panError,s.panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED));
-            double tr=continuousPlanner.rate(2,tiltError,s.tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED));
+            double pr=continuousPlanner.rate(1,panError,panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED),AimUnits.degrees(s.panTolerance*1.5,calculationRange));
+            double tr=continuousPlanner.rate(2,tiltError,tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED),AimUnits.degrees(s.tiltTolerance*1.5,calculationRange));
             boolean panReverse=planner.reversalBlocked(1,pr,now),tiltReverse=planner.reversalBlocked(2,tr,now);
             if(panReverse)pr=0;if(tiltReverse)tr=0;
             pr=ContinuousPlanner.limitRate(pr,pan,s.panMin,s.panMax);
             tr=ContinuousPlanner.limitRate(tr,tilt,s.tiltMin,s.tiltMax);
             log.record("continuous_decision","panErrorDegrees",panError,"tiltErrorDegrees",tiltError,
                 "panRateDegreesPerSecond",pr,"tiltRateDegreesPerSecond",tr,"panReversalBlocked",panReverse,"tiltReversalBlocked",tiltReverse,
-                "panTolerance",s.panTolerance,"tiltTolerance",s.tiltTolerance,"restartFactor",ContinuousPlanner.RESTART_FACTOR,
+                "panToleranceDegrees",panTolerance,"tiltToleranceDegrees",tiltTolerance,"panToleranceMetres",s.panTolerance,"tiltToleranceMetres",s.tiltTolerance,"restartFactor",ContinuousPlanner.RESTART_FACTOR,"panRestartMetres",s.panTolerance*1.5,"tiltRestartMetres",s.tiltTolerance*1.5,
+                "panRestartDegrees",AimUnits.degrees(s.panTolerance*1.5,calculationRange),"tiltRestartDegrees",AimUnits.degrees(s.tiltTolerance*1.5,calculationRange),
                 "responseSeconds",ContinuousPlanner.RESPONSE_SECONDS,"maximumPanningSpeed",s.maxPanningSpeed,"effectiveMaximumPanningSpeed",Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED),
                 "highSpeedPolicy","FIXED_MAXIMUM",
                 "highSpeedPan",Math.abs(pr)>GtiClient.LOW_SPEED_LIMIT,"highSpeedTilt",Math.abs(tr)>GtiClient.LOW_SPEED_LIMIT,
-                "panHighEntryErrorDegrees",ContinuousPlanner.highEntryError(s.panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
-                "panHighReturnErrorDegrees",ContinuousPlanner.highReturnError(s.panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
-                "tiltHighEntryErrorDegrees",ContinuousPlanner.highEntryError(s.tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
-                "tiltHighReturnErrorDegrees",ContinuousPlanner.highReturnError(s.tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)));
+                "panHighEntryErrorDegrees",ContinuousPlanner.highEntryError(panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
+                "panHighReturnErrorDegrees",ContinuousPlanner.highReturnError(panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
+                "tiltHighEntryErrorDegrees",ContinuousPlanner.highEntryError(tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
+                "tiltHighReturnErrorDegrees",ContinuousPlanner.highReturnError(tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)));
             if(sendRates(pr,tr,now,false))lastRateFixAt=fix.receivedAt;
             state="AIMING";message=panReverse||tiltReverse?"Direction reversal hold":pr==0&&tr==0?"Within aiming tolerance / restart boundary":Math.abs(pr)>.5||Math.abs(tr)>.5?"High-speed catch-up at fixed maximum":"Low-speed correction";
             publishThrottled();
@@ -496,6 +505,7 @@ final class VtcController implements AutoCloseable {
     }
     private void observe(GpsFeed.Fix f) {
         if(f.receivedAt<lastFrameAt||(f.packet.sequence==lastFramePacket&&f.packet.senderMs==lastFrameSender))return;
+        framing.distance(Math.max(.001,Geo.distance(s.latitude,s.longitude,f.packet.lat,f.packet.lon)));
         framing.observe(f.packet.sequence,f.packet.senderMs,f.receivedAt,Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon));
         log.record("framing_observation","gps",gpsSnapshot(f),"bearingDegrees",Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon),"framing",framingSnapshot(f.receivedAt));
         lastFramePacket=f.packet.sequence;lastFrameSender=f.packet.senderMs;lastFrameAt=f.receivedAt;
@@ -601,7 +611,7 @@ final class VtcController implements AutoCloseable {
         if(p!=null)mountText+="\nMotor counts "+p.pan+" / "+p.tilt+(p.moving?" · last reported moving":" · last reported stopped");
         if(poller.waiting())mountText+="\nStatus unavailable — checking automatically";
         String calText=cal==null?"Calibration required each connection":String.format(Locale.US,"Landmark %.2f° true · elevation %.2f°\nPan sector %+.1f° to %+.1f° from landmark\nTilt %.1f° to %.1f°",cal.bearing,cal.elevation,s.panMin,s.panMax,s.tiltMin,s.tiltMax);
-        String frame=String.format(Locale.US,"%s · magnitude %.2f°\nDesired %+.2f° · applied %+.2f°\n%s\nWindow change %+.2f° · consistency %.0f%% · supports %d",
+        String frame=String.format(Locale.US,"%s · magnitude %.2f m\nDesired %+.2f° · applied %+.2f°\n%s\nWindow change %+.2f° · consistency %.0f%% · supports %d",
             "AUTO",s.magnitude,framing.desired,framing.applied,framing.reason,framing.net,100*framing.consistency,framing.supporting);
         List<String> blockers=blockers();
         String readiness=blockers.isEmpty()?"Ready — tap Start aiming":String.join("\n",blockers);
