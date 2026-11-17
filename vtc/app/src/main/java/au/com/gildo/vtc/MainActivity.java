@@ -172,8 +172,8 @@ public final class MainActivity extends Activity {
         text(frame,"Always automatic. Magnitude 0 means no horizontal offset.",13,MUTED,false);
         field(frame,"magnitude","Automatic offset magnitude (°)");
         field(frame,"tiltOffset","Vertical offset (°; + up)");
-        field(frame,"hfov","Manual horizontal field of view (°)");
-        text(frame,"An automatic +offset aims right and places the surfer left. At 530 m, 1° is about 9 m. 6.48° field of view corresponds to about 60 m width. Update this value when changing zoom; The zoom readout does not yet calculate field of view automatically.",13,MUTED,false);
+        field(frame,"hfov","Optional horizontal field of view (°; blank if unknown)");
+        text(frame,"An automatic +offset aims right and places the surfer left. Field of view is optional: it only estimates frame width and draws the KML viewing sector. It does not restrict offsets or control aiming. Leave blank if unknown. Camera zoom is not converted into field of view automatically.",13,MUTED,false);
 
         LinearLayout limits=card(p,"Movement limits");
         text(limits,"Pan limits are relative to the calibrated landmark. Tilt limits are angles above / below horizontal. Set them to clear your tripod and cables.",13,MUTED,false);
@@ -190,9 +190,9 @@ public final class MainActivity extends Activity {
         text(acquire,"Default: 3° error triggers fast native GoTo. The target position and framing are saved once and held until arrival, even if surfer GPS changes or stops. Larger turns use legs toward the same saved position. Live GPS aiming resumes after arrival.",13,MUTED,false);
 
         LinearLayout advanced=card(p,"Advanced aiming");
-        text(advanced,"Continuous speed decreases near the target. Stop at tolerance; restart beyond 1.5× tolerance. GoTo uses the mount’s native speed.",13,MUTED,false);
-        field(advanced,"maxPanningSpeed","Maximum panning speed (°/s; 0.01–0.5)");
-        text(advanced,"Also caps continuous tilt. This build uses low-speed mode so same-direction rate updates do not require stops. Larger errors use GoTo.",13,MUTED,false);
+        text(advanced,"Low-speed correction varies up to 0.5°/s. High-speed catch-up holds the configured maximum, then returns to low speed near the target. Stop at tolerance; restart beyond 1.5× tolerance.",13,MUTED,false);
+        field(advanced,"maxPanningSpeed","Maximum panning speed (°/s; 0.01–5)");
+        text(advanced,"Also caps tilt. AZ-GTi commands are capped at 3.34°/s (800× sidereal). High-speed catch-up uses one fixed rate. Switching modes or reversing still requires Stop/Start. Default remains 0.5°/s.",13,MUTED,false);
         field(advanced,"gpsGapTimeout","Keep panning without GPS for (s since last accepted packet)");
         field(advanced,"panTolerance","Pan aiming tolerance (°)");
         field(advanced,"tiltTolerance","Tilt aiming tolerance (°)");

@@ -27,6 +27,7 @@ final class GpsFeed implements AutoCloseable {
     private volatile long continuity;
     private volatile long lastReceiverAt=-1;
     private volatile boolean socketOpen,ended;
+    private volatile String connectionError="";
     private volatile String status="Waiting for LoRa GPS";
     GpsFeed(Network network,Settings s,SessionLog log){this.network=network;this.s=s;this.log=log;}
     void start(){Thread t=new Thread(this::receive,"vtc-gps");t.setDaemon(true);t.start();}
@@ -50,6 +51,7 @@ final class GpsFeed implements AutoCloseable {
         return connectionStatus()+"\n"+status+"\nGPS for aiming: "+(fresh?"FRESH":"UNAVAILABLE")+"\n"+accepted+"\n\n"+activity.display(now);
     }
     String connectionStatus() {
+        if(!connectionError.isEmpty())return connectionError;
         if(ended)return "Disconnected";
         if(!socketOpen)return "Opening receiver connection";
         long now=SystemClock.elapsedRealtime();
@@ -119,7 +121,9 @@ final class GpsFeed implements AutoCloseable {
                 }
             }
         }catch(Exception e){
-            if(running){log.error("gps_socket_error",e,"running",true);invalidate("LoRa connection failed: "+e.getMessage());}
+            if(running){connectionError=LoRaConnectionError.describe(e,s.receivePort);
+                log.error("gps_socket_error",e,"running",true,"receivePort",s.receivePort,"userMessage",connectionError);
+                invalidate(connectionError);}
             else log.record("gps_socket_close_result","requestedClose",true,"result",e.toString());
         }
         finally{socket=null;socketOpen=false;ended=true;log.event("gps_socket_closed","Receiver ended");}

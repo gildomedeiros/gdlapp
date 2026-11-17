@@ -38,6 +38,7 @@ final class VtcController implements AutoCloseable {
     private final ContinuousPlanner continuousPlanner=new ContinuousPlanner();
     private volatile boolean stopping,stopUnconfirmed;
     private volatile Runnable afterStop;
+    private final StopCompletion stopCompletion=new StopCompletion();
     private volatile long lastAcceptedAt=-1;
     private volatile double panRate,tiltRate;
     private volatile long lastRatesAt;
@@ -117,7 +118,8 @@ final class VtcController implements AutoCloseable {
                 }
                 if(wifi==null)throw new IOException("Join the Wi-Fi network used by the mount and receiver");
                 log.record("network_selected","network",wifi.toString(),"linkProperties",String.valueOf(manager.getLinkProperties(wifi)));
-                candidate=new GtiClient(new GtiUdpTransport(wifi,s.mountHost,s.mountPort,log));
+                candidate=new GtiClient(new GtiUdpTransport(manager,wifi,s.mountHost,s.mountPort,log));
+                candidate.stop(); // Verify both axes stopped before initializing a new session.
                 candidate.connect();
                 if(candidate.initializedDuringConnect)invalidateLastLandmark("Mount motor reference was reset; calibrate to save a new landmark");
                 if(!valid(token)){candidate.close();return;}
@@ -214,9 +216,15 @@ final class VtcController implements AutoCloseable {
         });
     }
     void stop(String why) { emergencyStop(why,null); }
-    void disconnect(){emergencyStop("User disconnect",()->{cleanup();state="DISCONNECTED";message="Disconnected; both axes stopped";publish();});}
-    void exit(java.util.function.Consumer<Boolean> completed){
-        emergencyStop("Exit VTC",()->{cleanup();completed.accept(true);});
+    synchronized void disconnect(){
+        stopCompletion.request(ok->{cleanup();stopUnconfirmed=false;state="DISCONNECTED";
+            message=ok?"Disconnected; both axes stopped":"Disconnected; mount stop NOT confirmed. Check mount power before reconnecting.";
+            log.record("disconnect_complete","stopConfirmed",ok);publish();});
+        emergencyStop("User disconnect",null);
+    }
+    synchronized void exit(java.util.function.Consumer<Boolean> completed){
+        stopCompletion.request(ok->{cleanup();stopUnconfirmed=false;log.record("exit_complete","stopConfirmed",ok);completed.accept(ok);});
+        emergencyStop("Exit VTC",null);
     }
     private synchronized void emergencyStop(String why,Runnable afterConfirmed) {
         if(closed)return;
@@ -236,12 +244,12 @@ final class VtcController implements AutoCloseable {
                 try {
                     clearFixedGoto(why);pendingMove=false;panRate=tiltRate=0;
                     continuousPlanner.reset();framing.reset();planner.reset();poller.reset();targetWait.reset();gpsWaiting=false;
-                    if(ok){stopUnconfirmed=false;position=current==null?null:current.position();watchdog.reset(SystemClock.elapsedRealtime());
+                    if(ok){stopUnconfirmed=false;position=null;watchdog.reset(SystemClock.elapsedRealtime());
                         state=current==null?"DISCONNECTED":calibration==null?"CONNECTED":"CALIBRATED";message=why+"; both axes stopped";
                         Runnable next=afterStop;afterStop=null;if(next!=null)next.run();
-                    }else {stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop unconfirmed. Keep VTC open and retry Stop; check mount power/Wi-Fi.";}
+                    }else {stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop unconfirmed. Reconnect Wi-Fi and retry Stop, or Disconnect / Exit. Mount stop is not confirmed.";}
                 }catch(Exception e){stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop verification failed: "+e.getMessage();log.error("stop_verification_error",e);}
-                finally{stopping=false;publish();}
+                finally{stopping=false;if(stopCompletion.pending())afterStop=null;stopCompletion.complete(ok);publish();}
             });
         });
     }
@@ -259,7 +267,7 @@ final class VtcController implements AutoCloseable {
                 if(!confirmed){active=false;stopUnconfirmed=true;state="STOP UNCONFIRMED";message="GPS timeout: Stop unconfirmed; retry Stop.";}
                 else{state=active?"WAITING GPS":"CALIBRATED";message=active?"GPS timeout; aiming resumes when usable GPS returns":"Both axes stopped";
                     Runnable next=afterStop;afterStop=null;if(next!=null)next.run();}
-                stopping=false;publish();
+                stopping=false;if(stopCompletion.pending())afterStop=null;stopCompletion.complete(confirmed);publish();
             });
         });
     }
@@ -417,8 +425,9 @@ final class VtcController implements AutoCloseable {
                     "rangeM",distance,"targetPanDegrees",targetPan,"targetTiltDegrees",targetTilt);
             }
             double panError=targetPan-pan,tiltError=targetTilt-tilt;
-            aimText=String.format(Locale.US,"Range %.1f m · bearing %.2f°\nCamera %.2f° / tilt %.2f°\nAim %.2f° / tilt %.2f°\nError pan %+.2f° · tilt %+.2f°\nEstimated frame width %.1f m",
-                distance,bearing,calibration.heading(here.pan),tilt,targetHeading,targetTilt,panError,tiltError,2*distance*Math.tan(Math.toRadians(s.hfov/2)));
+            aimText=String.format(Locale.US,"Range %.1f m · bearing %.2f°\nCamera %.2f° / tilt %.2f°\nAim %.2f° / tilt %.2f°\nError pan %+.2f° · tilt %+.2f°",
+                distance,bearing,calibration.heading(here.pan),tilt,targetHeading,targetTilt,panError,tiltError);
+            if(Double.isFinite(s.hfov))aimText+=String.format(Locale.US,"\nEstimated frame width %.1f m",2*distance*Math.tan(Math.toRadians(s.hfov/2)));
             log.record("aim_cycle","gps",gpsSnapshot(fix),"rangeM",distance,"bearingDegrees",bearing,
                 "targetHeadingDegrees",targetHeading,"targetPanDegrees",targetPan,"targetTiltDegrees",targetTilt,
                 "cameraHeadingDegrees",calibration.heading(here.pan),"panFromLandmarkDegrees",pan,"tiltDegrees",tilt,
@@ -436,8 +445,8 @@ final class VtcController implements AutoCloseable {
                 }
                 advanceFixedGoto(here,now);publishThrottled();return;
             }
-            double pr=continuousPlanner.rate(1,panError,s.panTolerance,s.maxPanningSpeed);
-            double tr=continuousPlanner.rate(2,tiltError,s.tiltTolerance,s.maxPanningSpeed);
+            double pr=continuousPlanner.rate(1,panError,s.panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED));
+            double tr=continuousPlanner.rate(2,tiltError,s.tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED));
             boolean panReverse=planner.reversalBlocked(1,pr,now),tiltReverse=planner.reversalBlocked(2,tr,now);
             if(panReverse)pr=0;if(tiltReverse)tr=0;
             pr=ContinuousPlanner.limitRate(pr,pan,s.panMin,s.panMax);
@@ -445,9 +454,15 @@ final class VtcController implements AutoCloseable {
             log.record("continuous_decision","panErrorDegrees",panError,"tiltErrorDegrees",tiltError,
                 "panRateDegreesPerSecond",pr,"tiltRateDegreesPerSecond",tr,"panReversalBlocked",panReverse,"tiltReversalBlocked",tiltReverse,
                 "panTolerance",s.panTolerance,"tiltTolerance",s.tiltTolerance,"restartFactor",ContinuousPlanner.RESTART_FACTOR,
-                "responseSeconds",ContinuousPlanner.RESPONSE_SECONDS,"maximumPanningSpeed",s.maxPanningSpeed);
+                "responseSeconds",ContinuousPlanner.RESPONSE_SECONDS,"maximumPanningSpeed",s.maxPanningSpeed,"effectiveMaximumPanningSpeed",Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED),
+                "highSpeedPolicy","FIXED_MAXIMUM",
+                "highSpeedPan",Math.abs(pr)>GtiClient.LOW_SPEED_LIMIT,"highSpeedTilt",Math.abs(tr)>GtiClient.LOW_SPEED_LIMIT,
+                "panHighEntryErrorDegrees",ContinuousPlanner.highEntryError(s.panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
+                "panHighReturnErrorDegrees",ContinuousPlanner.highReturnError(s.panTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
+                "tiltHighEntryErrorDegrees",ContinuousPlanner.highEntryError(s.tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)),
+                "tiltHighReturnErrorDegrees",ContinuousPlanner.highReturnError(s.tiltTolerance,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED)));
             if(sendRates(pr,tr,now,false))lastRateFixAt=fix.receivedAt;
-            state="AIMING";message=panReverse||tiltReverse?"Direction reversal hold":pr==0&&tr==0?"Within aiming tolerance / restart boundary":"Continuous speed-controlled aiming";
+            state="AIMING";message=panReverse||tiltReverse?"Direction reversal hold":pr==0&&tr==0?"Within aiming tolerance / restart boundary":Math.abs(pr)>.5||Math.abs(tr)>.5?"High-speed catch-up at fixed maximum":"Low-speed correction";
             publishThrottled();
         }catch(CancellationException e){log.event("mount_poll_cancelled","Stop or disconnect took priority");}
         catch(Exception e){
@@ -574,6 +589,7 @@ final class VtcController implements AutoCloseable {
         if(f!=null)gpsText+=String.format(Locale.US,"\nAge %.1f s · seq %d\n%.7f, %.7f\nSatellites %d · HDOP %.2f · RSSI %d · SNR %.1f",
             (SystemClock.elapsedRealtime()-f.receivedAt)/1000.0,f.packet.sequence,f.packet.lat,f.packet.lon,f.packet.satellites,f.packet.hdop,f.packet.rssi,f.packet.snr);
         String mountText=m==null?"GTi disconnected":s.mountHost+":"+s.mountPort+"\nFirmware "+m.firmware;
+        if(m!=null)mountText+=String.format(Locale.US,"\nPan speed cap %.2f°/s · effective %.2f°/s",s.maxPanningSpeed,Math.min(s.maxPanningSpeed,GtiClient.MAX_SLEW_SPEED));
         if(p!=null)mountText+="\nMotor counts "+p.pan+" / "+p.tilt+(p.moving?" · last reported moving":" · last reported stopped");
         if(poller.waiting())mountText+="\nStatus unavailable — checking automatically";
         String calText=cal==null?"Calibration required each connection":String.format(Locale.US,"Landmark %.2f° true · elevation %.2f°\nPan sector %+.1f° to %+.1f° from landmark\nTilt %.1f° to %.1f°",cal.bearing,cal.elevation,s.panMin,s.panMax,s.tiltMin,s.tiltMax);

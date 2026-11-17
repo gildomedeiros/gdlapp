@@ -13,7 +13,7 @@ public class GeoAndCalibrationTest {
         return new Settings(m);
     }
     @Test public void knownPointDangerToGroyneGeometry() {
-        Settings s=configured();
+        Settings s=configured("hfov","6.48");
         double range=Geo.distance(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon);
         assertEquals(529.7,range,.5);
         assertTrue(Geo.bearing(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon)>120);
@@ -47,7 +47,7 @@ public class GeoAndCalibrationTest {
     @Test public void invalidSetupCannotArm() {
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("magnitude","NaN")));
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("panSign","0")));
-        assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("framing","AUTO","magnitude","5")));
+        assertEquals(5,new Settings(Map.of("framing","AUTO","magnitude","5")).magnitude,0);
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("height","")).calibrationReady());
         assertThrows(IllegalArgumentException.class,()->configured("landmarkLat","-28.165513983264137","landmarkLon","153.55045722684628").calibrationReady());
         assertThrows(IllegalArgumentException.class,()->configured("mountHost","192.168.4.1").connectionReady());

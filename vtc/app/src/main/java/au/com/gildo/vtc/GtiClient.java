@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.CancellationException;
 import java.util.function.BooleanSupplier;
 
-/** Serialized transactions; cancellable finite GoTo and low-speed continuous slewing. */
+/** Serialized transactions; cancellable finite GoTo and continuous slewing with explicit high-speed transitions. */
 final class GtiClient implements AutoCloseable {
     interface Transport extends AutoCloseable { String exchange(String command)throws IOException; void close(); }
     static final class Position {
@@ -21,6 +21,11 @@ final class GtiClient implements AutoCloseable {
     }
     final int[] cpr=new int[2];
     String firmware="";
+    static final double MAX_SLEW_SPEED=800.0*360/86164.0905;
+    static final double LOW_SPEED_LIMIT=.5;
+    static double effectiveRate(double requested){return Math.copySign(Math.min(Math.abs(requested),MAX_SLEW_SPEED),requested);}
+    private final int[] highRatio=new int[2];
+    private final boolean[] highMode=new boolean[2];
     private final Object ioGate=new Object();
     private final int[] timer=new int[2],period=new int[2],slewDirection=new int[2];
     private volatile boolean continuous;
@@ -29,7 +34,7 @@ final class GtiClient implements AutoCloseable {
         synchronized(ioGate){guard(permitted);ack(op,axis,data);}
     }
     static int stepPeriod(int frequency,int resolution,double speed)throws IOException {
-        if(frequency<=0||resolution<360||!Double.isFinite(speed)||Math.abs(speed)>.5||speed==0)
+        if(frequency<=0||resolution<360||!Double.isFinite(speed)||Math.abs(speed)>5||speed==0)
             throw new IOException("Invalid continuous speed or mount timer");
         double value=frequency*360.0/(resolution*Math.abs(speed));
         // Ceil keeps actual quantized rate at or below the requested maximum.
@@ -46,7 +51,8 @@ final class GtiClient implements AutoCloseable {
     }
     void rates(double pan,double tilt,BooleanSupplier permitted)throws IOException {
         double[] rates={pan,tilt};
-        for(double r:rates)if(!Double.isFinite(r)||Math.abs(r)>.5)throw new IOException("Continuous rate must be at most 0.5 degrees/s");
+        for(double r:rates)if(!Double.isFinite(r)||Math.abs(r)>5)throw new IOException("Continuous rate must be at most 5 degrees/s");
+        rates[0]=effectiveRate(pan);rates[1]=effectiveRate(tilt);
         try {
             for(int i=0;i<2;i++) {
                 guard(permitted);int axis=i+1,dir=rates[i]>0?1:rates[i]<0?-1:0;
@@ -55,17 +61,24 @@ final class GtiClient implements AutoCloseable {
                     continue;
                 }
                 if(timer[i]==0){timer[i]=decode24(command('b',axis,""));if(timer[i]<=0)throw new IOException("Invalid GTi timer frequency");}
-                int next=stepPeriod(timer[i],cpr[i],rates[i]);
+                boolean high=Math.abs(rates[i])>LOW_SPEED_LIMIT;
+                if(high&&highRatio[i]==0){
+                    String ratio=command('g',axis,"");
+                    if(!ratio.matches("[0-9A-Fa-f]{2}"))throw new IOException("Invalid GTi high-speed ratio");
+                    highRatio[i]=Integer.parseInt(ratio,16);
+                    if(highRatio[i]<1)throw new IOException("Invalid GTi high-speed ratio");
+                }
+                int next=stepPeriod(timer[i],cpr[i],rates[i]/(high?highRatio[i]:1));
                 // Reconcile our last command with actual motor status before updating.
                 String f=positionStatus(axis);boolean moving=running(f);
                 if(moving&&slewDirection[i]==0)throw new IOException("Unexpected motor movement before continuous start");
-                if(moving&&dir!=slewDirection[i]) {
+                if(moving&&(dir!=slewDirection[i]||highMode[i]!=high||(high&&period[i]!=next))) {
                     stopAxis(axis,permitted);moving=false;
                 }
-                if(!moving){motionAck('G',axis,"1"+(dir>0?"0":"1"),permitted);period[i]=0;}
+                if(!moving){motionAck('G',axis,(high?"3":"1")+(dir>0?"0":"1"),permitted);period[i]=0;}
                 if(period[i]!=next){motionAck('I',axis,encode24(next),permitted);period[i]=next;}
                 if(!moving){motionAck('J',axis,"",permitted);}
-                slewDirection[i]=dir;
+                slewDirection[i]=dir;highMode[i]=high;
             }
             continuous=slewDirection[0]!=0||slewDirection[1]!=0;
         }catch(IOException e){try{requestStop();}catch(IOException stop){e.addSuppressed(stop);}throw e;}
@@ -176,7 +189,7 @@ final class GtiClient implements AutoCloseable {
     void requestStop()throws IOException {
         cancelled.set(true);IOException failure=null;
         for(int a=1;a<=2;a++)try{ack('L',a,"");}catch(IOException e){if(failure==null)failure=e;else failure.addSuppressed(e);}
-        continuous=false;java.util.Arrays.fill(slewDirection,0);java.util.Arrays.fill(period,0);
+        continuous=false;java.util.Arrays.fill(slewDirection,0);java.util.Arrays.fill(period,0);java.util.Arrays.fill(highMode,false);
         if(failure!=null)throw failure;
     }
     private void guard(BooleanSupplier permitted)throws IOException {

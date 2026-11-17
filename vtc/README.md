@@ -1,3 +1,46 @@
+## VTC 1.0.14 — lost Wi-Fi recovery
+
+- Stop retries can use the currently available single Wi-Fi network when the original Android network handle has disappeared. Only Stop and motor-status commands may use this recovery path; movement requires a new connection and calibration.
+- Explicit Disconnect and Exit complete after the bounded Stop attempts even if confirmation fails. Logs retain `stopConfirmed: false`; Disconnect shows an unconfirmed-stop message and Exit shows a warning. Closing the app does not guarantee a physical stop when the mount cannot be reached.
+- New connections verify both axes stopped before initializing the session. Removed the redundant encoder read after a confirmed Stop, which could otherwise turn a successful Stop into another failure.
+- Regression tests cover failed/successful Stop completion and rejection of movement commands on the recovery network. Physical Wi-Fi-loss testing remains required.
+
+# VTC 1.0.13
+
+Removed the validation coupling horizontal framing magnitude and pan tolerance to field of view. A 3° automatic magnitude and 1° pan tolerance now save normally, including with the previous 6.48° field-of-view value. Magnitude retains its existing 0–30° range; motor sector and other aiming limits remain enforced.
+
+Horizontal field of view is optional and defaults to blank for new settings. Existing saved values are retained and can be cleared. It is used only for the estimated frame width and KML viewing sector. With the field blank, VTC omits the width estimate and sector polygon; camera position, surfer data, heading/tilt lines and aiming continue normally. It does not control zoom or aiming, and the camera zoom readout does not calculate it automatically. The older FOV validation/default described below is superseded.
+
+Valid settings still autosave while disconnected. Rejected edits from an older build were not applied; enter the desired magnitude/tolerances again after installing. Pan/tilt tolerance defaults are unchanged by this fix.
+
+## Previous release documentation
+
+# VTC 1.0.12
+
+High-speed catch-up now uses the configured maximum directly (subject to the existing 800× sidereal AZ-GTi command cap, about 3.34°/s). It does not recalculate intermediate high-speed rates from each pointing error. The existing driver skips unchanged timer periods, so a run of same-direction high-speed corrections retains its rate without repeated Stop/Start commands.
+
+Low-speed correction still uses error / 2 seconds, capped at 0.5°/s or the configured maximum if lower. The internal switch-down error is `max(1°, effective maximum × 0.5 seconds, aiming tolerance × 1.5)`. High speed starts only above that angle plus 0.25°, providing hysteresis. For a 3°/s maximum and ordinary tolerances: start high-speed catch-up above **1.75°**, hold **3°/s**, switch back to low-speed at **1.5° or below**. This early-return margin is a heuristic, not a prediction of the surfer's velocity or a guarantee against overshoot with GPS/command latency. No new settings are added.
+
+The same policy applies independently to tilt. Normal tolerance stops, reversal blocking and fixed-target GoTo at `acquisitionTriggerDegrees` retain priority. Thus a lower acquisition trigger can invoke GoTo before high-speed catch-up begins. GPS gaps still hold the last rate until timeout, subject to motor-sector limits. Sector limiting now switches straight from maximum high speed to low speed instead of generating changing high-speed rates near a boundary.
+
+Mode changes, reversals, GoTo and explicit/safety stops can still pause movement. This change removes repeated *same-direction high-speed rate-change* stops; it does not promise continuous footage in every condition. Default maximum remains 0.5°/s; saved settings remain unchanged. The effective rate and switch thresholds are logged in `continuous_decision`.
+
+## Previous release documentation
+
+The changing-high-speed policy described below for 1.0.11 is superseded by the fixed-maximum policy above.
+
+# VTC 1.0.11
+
+`maxPanningSpeed` now accepts **0.01–5°/s**. The default remains **0.5°/s**, and existing saved values are retained. This setting also caps tilt. The effective AZ-GTi command ceiling is **800× sidereal = approximately 3.34°/s**, exposed on the Mount card and in `continuous_decision` logs; a setting of 5 is not a promise of physical 5°/s.
+
+Above the existing 0.5°/s low-speed boundary, VTC reads the per-axis `g` high-speed ratio, calculates the scaled timer period and uses native G3 slewing. It confirms Stop before entering/leaving that mode, changing direction, or changing a running high-speed period. An unchanged high-speed rate continues without Stop/Start or redundant setters. Low-speed same-direction updates remain uninterrupted. This follows SkyWatcher's protocol requirement that high-speed timer periods cannot be changed while running; higher speed settings can therefore reintroduce pauses.
+
+Reference: [SkyWatcher command set](https://inter-static.skywatcher.com/downloads/skywatcher_motor_controller_command_set.pdf), [SkyWatcher sample implementation](https://github.com/skywatcher-pacific/skywatcher_open/blob/master/BasicApi_CS/Mount_Skywatcher.cs), [AZ-GTi driver range](https://drivers.indilib.org/mounts/generic/azgti/azgti/).
+
+All 1.0.10 tracking, GPS timeout, framing, watchdog, settings, camera and logging rules remain. The 0.5°/s setting ceiling and low-speed-only description in the historical notes below are superseded. High-speed behaviour has software tests but is not yet verified on the physical mount.
+
+## Previous release documentation
+
 # VTC 1.0.10
 
 Android shore-camera aiming for the AZ-GTi and VT LoRa receiver. Package `au.com.gildo.vtc`; installs over VTC, separately from VTC-Test. No camera recording, zoom movement or preview in this release.

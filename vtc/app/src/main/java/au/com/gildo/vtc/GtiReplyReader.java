@@ -10,10 +10,11 @@ final class GtiReplyReader {
     static int timeoutMs(String command) {
         // A field status reply took about 806 ms. Keep waiting on that original
         // read transaction rather than timing out at 700 ms and sending Stop.
-        return "abefjh".indexOf(command.charAt(1))>=0?1500:700;
+        return "abefgjh".indexOf(command.charAt(1))>=0?1500:700;
     }
     static String expected(String command) {
         char op=command.charAt(1);
+        if(op=='g')return "two hexadecimal high-speed-ratio digits";
         if(op=='f')return "three hexadecimal status digits";
         if("abejh".indexOf(op)>=0)return "six hexadecimal value digits";
         if("FGSIJKL".indexOf(op)>=0)return "empty acknowledgement";
@@ -24,6 +25,7 @@ final class GtiReplyReader {
         // Explicit motor-controller errors must reach GtiClient immediately.
         if(reply.startsWith("!"))return true;
         char op=command.charAt(1);
+        if(op=='g')return reply.matches("=[0-9A-Fa-f]{2}\r");
         if(op=='f')return reply.matches("=[0-9A-Fa-f]{3}\r");
         if("abejh".indexOf(op)>=0)return reply.matches("=[0-9A-Fa-f]{6}\r");
         if("FGSIJKL".indexOf(op)>=0)return reply.equals("=\r");

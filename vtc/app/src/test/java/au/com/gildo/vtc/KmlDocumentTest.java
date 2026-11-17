@@ -26,7 +26,7 @@ public class KmlDocumentTest {
         Map<String,Object> out=new LinkedHashMap<>();out.put("event",type);out.put("epochMs",at);
         for(int n=0;n<data.length;n+=2)out.put((String)data[n],data[n+1]);return out;
     }
-    static Map<String,String> settings(){return GeoAndCalibrationTest.configured("latitude","-28","longitude","153","height","4").values;}
+    static Map<String,String> settings(){return GeoAndCalibrationTest.configured("latitude","-28","longitude","153","height","4","hfov","6.48").values;}
     static Map<String,Object> gps(long seq,double lat,double lon){return Map.of("sequence",seq,"latitude",lat,"longitude",lon,"satellites",20,"hdop",.6);}
     static Document parse(String text)throws Exception {
         DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);

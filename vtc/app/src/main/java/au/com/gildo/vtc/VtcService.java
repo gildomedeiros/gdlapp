@@ -57,7 +57,10 @@ public final class VtcService extends Service {
         controller.configure(settings);
         storage.execute(()->{try{setup.save(settings.values);loadError="";}catch(Exception e){loadError="Settings save failed: "+e.getMessage();log.error("settings_save_failed",e);}});
     }
-    void exit(Runnable finished){controller.exit(ok->{if(ok)main.post(()->{finished.run();stopSelf();});});}
+    void exit(Runnable finished){controller.exit(ok->main.post(()->{
+        if(!ok)android.widget.Toast.makeText(this,"VTC closed. Mount stop NOT confirmed; check mount power.",android.widget.Toast.LENGTH_LONG).show();
+        finished.run();stopSelf();
+    }));}
     void attach(VtcController.Listener listener){listeners.add(listener);if(latest!=null)listener.update(latest);}
     void detach(VtcController.Listener listener){listeners.remove(listener);}
     @android.annotation.SuppressLint("WakelockTimeout") // Held only for a connected device session; released on disconnect or service destruction.

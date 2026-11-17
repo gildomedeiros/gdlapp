@@ -63,7 +63,7 @@ final class KmlDocument {
             Map<String,Object> data=new LinkedHashMap<>();data.put("headingDegreesTrue",heading);data.put("tiltDegreesFromHorizontal",tilt);
             data.put("lensHeightAboveWaterM",number(settings,"height"));data.put("rayLengthM",range);data.put("rayLengthSource",rangeSource);
             data.put("state",event.get("state"));data.put("moving",position.get("moving"));
-            double hfov=number(settings,"hfov");data.put("horizontalFieldOfViewDegrees",hfov);
+            double hfov=number(settings,"hfov");if(Double.isFinite(hfov))data.put("horizontalFieldOfViewDegrees",hfov);
             String geometry=line(lat,lon,endpoint[0],endpoint[1]);
             if(Double.isFinite(hfov)&&hfov>0&&hfov<180) {
                 double[] left=destination(lat,lon,heading-hfov/2,range),right=destination(lat,lon,heading+hfov/2,range);

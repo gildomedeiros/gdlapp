@@ -1,18 +1,21 @@
 package au.com.gildo.vtc;
 
 import android.net.Network;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import java.net.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 final class GtiUdpTransport implements GtiClient.Transport {
     private final Network network;
+    private final ConnectivityManager manager;
     private final InetAddress address;
     private final int port;
     private final SessionLog log;
     private long transaction;
-    GtiUdpTransport(Network network,String host,int port,SessionLog log)throws IOException {
-        this.network=network;this.address=InetAddress.getByName(host);this.port=port;this.log=log;
+    GtiUdpTransport(ConnectivityManager manager,Network network,String host,int port,SessionLog log)throws IOException {
+        this.manager=manager;this.network=network;this.address=InetAddress.getByName(host);this.port=port;this.log=log;
     }
     public String exchange(String command)throws IOException {
         long start=System.nanoTime();
@@ -22,7 +25,7 @@ final class GtiUdpTransport implements GtiClient.Transport {
         // A fresh port isolates replies addressed to old transactions. Some bridges
         // may redirect a delayed reply to the newest peer, so also validate its shape.
         try(DatagramSocket socket=new DatagramSocket(null)) {
-            network.bindSocket(socket);socket.bind(new InetSocketAddress(0));socket.connect(address,port);
+            networkFor(command).bindSocket(socket);socket.bind(new InetSocketAddress(0));socket.connect(address,port);
             localPort=socket.getLocalPort();
             log.record("mount_tx","transaction",id,"command",command,"host",address.getHostAddress(),"port",port,
                 "localPort",localPort,"responseTimeoutMs",GtiReplyReader.timeoutMs(command),"expectedReply",expected);
@@ -44,6 +47,22 @@ final class GtiUdpTransport implements GtiClient.Transport {
         }catch(IOException e){log.error("mount_error",e,"transaction",id,"command",command,"host",address.getHostAddress(),"port",port,
             "localPort",localPort,"responseTimeoutMs",GtiReplyReader.timeoutMs(command),"expectedReply",expected,
             "elapsedMs",(System.nanoTime()-start)/1_000_000.0);throw e;}
+    }
+    private Network networkFor(String command)throws IOException {
+        NetworkCapabilities cap=manager.getNetworkCapabilities(network);
+        if(cap!=null&&cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))return network;
+        if(!StopCompletion.recoveryCommand(command))throw new IOException("Original Wi-Fi lost; reconnect before motion");
+        Network wifi=null;
+        for(Network candidate:manager.getAllNetworks()) {
+            NetworkCapabilities available=manager.getNetworkCapabilities(candidate);
+            if(available!=null&&available.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                if(wifi!=null)throw new IOException("Multiple Wi-Fi networks; cannot select Stop connection");
+                wifi=candidate;
+            }
+        }
+        if(wifi==null)throw new IOException("No Wi-Fi available for Stop");
+        log.record("stop_network_reselected","oldNetwork",network.toString(),"network",wifi.toString(),"command",command);
+        return wifi;
     }
     public void close(){}
 }

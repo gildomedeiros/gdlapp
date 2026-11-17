@@ -21,7 +21,7 @@ final class Settings {
             {"panMin","-90"},{"panMax","90"},{"tiltMin","-45"},{"tiltMax","20"},{"rangeMin","30"},{"rangeMax","2000"},
             {"panTolerance","0.15"},{"tiltTolerance","0.10"},{"reverseSeconds","2"},{"gpsAge","2"},
             {"acquisitionTriggerDegrees","3"},{"gotoMaxMove","45"},{"cameraHost",""},{"cameraPort","8080"},
-            {"maxPanningSpeed","0.5"},{"gpsGapTimeout","3"},{"magnitude","1"},{"tiltOffset","0"},{"hfov","6.48"},
+            {"maxPanningSpeed","0.5"},{"gpsGapTimeout","3"},{"magnitude","1"},{"tiltOffset","0"},{"hfov",""},
             {"window","1.5"},{"observations","3"},{"minNet","0.3"},{"consistency","0.8"},{"supports","2"},{"supportChange","0.03"},
             {"quietRate","0.08"},{"quietSeconds","3"},{"offsetRate","0.3"},{"maxGpsSpeed","30"}
         };
@@ -53,11 +53,10 @@ final class Settings {
         if(rangeMin>=rangeMax)throw new IllegalArgumentException("Minimum range must be below maximum range");
         panTolerance=number("panTolerance",.01,3);tiltTolerance=number("tiltTolerance",.01,3);
         acquisitionTriggerDegrees=number("acquisitionTriggerDegrees",0,30);
-        maxPanningSpeed=number("maxPanningSpeed",.01,.5);gpsGapTimeout=number("gpsGapTimeout",.3,30);gotoMaxMove=number("gotoMaxMove",1,45);
+        maxPanningSpeed=number("maxPanningSpeed",.01,5);gpsGapTimeout=number("gpsGapTimeout",.3,30);gotoMaxMove=number("gotoMaxMove",1,45);
         reverseSeconds=number("reverseSeconds",0,10);gpsAge=number("gpsAge",.3,5);
         magnitude=number("magnitude",0,30);tiltOffset=number("tiltOffset",-10,10);
-        hfov=number("hfov",.2,120);
-        if(magnitude+panTolerance>=hfov/2)throw new IllegalArgumentException("Offset plus pan tolerance must be smaller than half the horizontal field of view");
+        hfov=optional("hfov",.2,120);
         window=number("window",.3,10);observations=integer("observations",3,40);minNet=number("minNet",.01,15);
         consistency=number("consistency",.5,1);supports=integer("supports",2,20);supportChange=number("supportChange",.001,5);
         quietRate=number("quietRate",.001,5);quietSeconds=number("quietSeconds",.5,30);offsetRate=number("offsetRate",.01,2);

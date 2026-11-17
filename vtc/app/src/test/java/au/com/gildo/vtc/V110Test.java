@@ -55,7 +55,7 @@ public class V110Test {
         assertEquals(2000,GtiClient.stepPeriod(1000000,360000,.5));
         int period=GtiClient.stepPeriod(1000000,360001,.3);
         assertTrue(1000000*360.0/(360001*period)<=.3);
-        assertThrows(IOException.class,()->GtiClient.stepPeriod(1000000,360000,.6));
+        assertThrows(IOException.class,()->GtiClient.stepPeriod(1000000,360000,5.01));
         assertThrows(IOException.class,()->GtiClient.stepPeriod(0,360000,.3));
     }
     @Test public void slowsDownStopsAndUsesRestartHysteresis(){
@@ -69,7 +69,7 @@ public class V110Test {
     }
     @Test public void lowerConfiguredCapIsRespected(){
         assertEquals(-.1,new ContinuousPlanner().rate(1,-2,.15,.1),0);
-        assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("maxPanningSpeed","0.6")));
+        assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("maxPanningSpeed","5.01")));
         assertEquals(.05,new Settings(Map.of("maxPanningSpeed","0.05")).maxPanningSpeed,0);
     }
     @Test public void gpsGapDeadlineIsFromPacketNotLossDetection(){
