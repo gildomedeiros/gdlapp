@@ -19,6 +19,8 @@ import java.util.concurrent.*;
 
 public final class MainActivity extends Activity {
     private static final int BACKGROUND=Color.rgb(16,29,40),CARD=Color.rgb(28,44,57),TEXT=Color.rgb(234,243,247),MUTED=Color.rgb(166,186,200),ACCENT=Color.rgb(84,214,176);
+    private static final double[] MANUAL_STEPS={.1,.5,1,5,15,30};
+    private static final int FINE_STEP_COUNT=3;
     private final Map<String,EditText> fields=new LinkedHashMap<>();
     private final List<Button> manualButtons=new ArrayList<>();
     private final List<Button> landmarkButtons=new ArrayList<>();
@@ -47,17 +49,19 @@ public final class MainActivity extends Activity {
     private LinearLayout root,body;
     private View[] pages;
     private TextView state,message,connections,mountInfo,gpsInfo,aimInfo,frameInfo,calibrationInfo,setupMessage,logStatus;
-    private Button connect,disconnect,start,calibrate;
+    private Button connect,disconnect,start,calibrate,landmarkCalibrate;
     private final List<Button> aimingButtons=new ArrayList<>();
     private boolean capturing;
-    private TextView captureStatus,calibrationGps,waveLineStatus;
+    private TextView captureStatus,calibrationGps,offshoreHeadingStatus;
+    private Button saveOffshoreHeading;
     private final List<TextView> settingsStorageStatuses=new ArrayList<>();
     private String settingsValidationError="";
     private static final int LIVE_MAP_PAGE=5, REPLAY_FILE_REQUEST=106;
     private LiveMapView liveMap;
     private TextView calibrationConnectionHint;
     private boolean replayPending;
-    private Spinner panSign,tiltSign,manualStep,zoomMode;
+    private Spinner panSign,tiltSign,zoomMode,wavePanStep;
+    private boolean wavePanCalibrated;
     private CheckBox levelConfirmed,directionsConfirmed;
     private String exportSettingsText;
     private int page;
@@ -119,7 +123,7 @@ public final class MainActivity extends Activity {
         LinearLayout a=card(p,"Aim / next steps");aimInfo=text(a,"Checking settings and connection",16,TEXT,false);
         LinearLayout f=card(p,"Automatic framing");frameInfo=text(f,"Automatic",15,TEXT,false);
         LinearLayout g=card(p,"Surfer GPS");gpsInfo=text(g,"Disconnected",15,TEXT,false);
-        cameraInfo=text(card(p,"Camera zoom / clock"),"Camera disabled",14,MUTED,false);
+        cameraInfo=text(card(p,"Camera"),"Camera disabled",14,MUTED,false);
         LinearLayout m=card(p,"Mount");mountInfo=text(m,"Disconnected",14,MUTED,false);
         button(p,"STOP & EXIT VTC",()->service.exit(()->{finishAndRemoveTask();}));
         return scroll(p);
@@ -153,33 +157,38 @@ public final class MainActivity extends Activity {
 
         landmarkButtons.add(button(p,"GO TO LAST LANDMARK",()->controller.goToLandmark()));
         landmarkStatuses.add(text(p,"Loading last saved landmark",13,MUTED,false));
-        text(p,"Each successful calibration saves the landmark position across app restarts. Return, check alignment on the camera, then validate calibration. Recalibrate after moving the setup or restarting the mount.",13,MUTED,false);
+        text(p,"A saved landmark can be used for automatic calibration when the mount and camera are still aligned with the saved setup.",13,MUTED,false);
         text(p,"1. Level the mount and secure the camera.\n2. Check that Right and Up move the camera in those directions.\n3. Centre the exact configured landmark point using the camera screen.\n4. Tap Calibrate here.",15,TEXT,false);
         text(p,"Before calibration, manual positioning uses moves of at most 1°. Go to last landmark is also available when a compatible saved position exists.",13,MUTED,false);
-        manualStep=spinner(p,new String[]{"0.1° move","0.5° move","1° move"});
-        LinearLayout pan=row(p);
-        manualButtons.add(button(pan,"← Left",()->nudge(1,-1)));
-        manualButtons.add(button(pan,"Right →",()->nudge(1,1)));
+        Spinner step=manualStep(p);
+        panButtons(p,step,"← Left","Right →");
         LinearLayout tilt=row(p);
-        manualButtons.add(button(tilt,"↓ Down",()->nudge(2,-1)));
-        manualButtons.add(button(tilt,"Up ↑",()->nudge(2,1)));
+        manualButtons.add(button(tilt,"↓ Down",()->nudge(2,-1,step)));
+        manualButtons.add(button(tilt,"Up ↑",()->nudge(2,1,step)));
         levelConfirmed=new CheckBox(this);levelConfirmed.setText("Mount is level and camera is secure");p.addView(levelConfirmed);
         directionsConfirmed=new CheckBox(this);directionsConfirmed.setText("Right / Up directions have been checked");p.addView(directionsConfirmed);
         calibrationConnectionHint=text(p,"Connect the GTi to calibrate",14,ACCENT,false);
         text(p,"LoRa is only needed here to capture GPS coordinates. You can enter the coordinates manually.",13,MUTED,false);
-        calibrate=button(p,"CALIBRATE HERE",()->{
-            log.record("calibration_requested","levelConfirmed",levelConfirmed.isChecked(),"directionsConfirmed",directionsConfirmed.isChecked(),"form",formValues());
-            if(!levelConfirmed.isChecked()||!directionsConfirmed.isChecked()){
-                log.event("calibration_blocked","Confirm levelling and axis directions first");
-                toast("Confirm levelling and axis directions first");return;
-            }
-            if(autoSaveSettings())controller.calibrate();
-        });
+        calibrate=button(p,"Calibrate here",()->requestCalibration(false));
+        landmarkCalibrate=button(p,"Go to landmark and calibrate here",()->requestCalibration(true));
+        landmarkCalibrate.setEnabled(false);
+        text(p,"After calibration, VTC pans to the saved offshore heading when it is within the pan limits.",13,MUTED,false);
         levelConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","level","checked",checked));
         directionsConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","directions","checked",checked));
         calibrationInfo=text(card(p,"Reference"),"Not calibrated",15,TEXT,false);
         text(p,"Calibration is valid only for this connection. Recalibrate after moving the tripod, releasing a clutch, adjusting the camera, or restarting the mount. Disconnect VTC before making those changes.",14,MUTED,false);
         return scroll(p);
+    }
+    private void requestCalibration(boolean returnToLandmark) {
+        log.record("calibration_requested","returnToLandmark",returnToLandmark,"levelConfirmed",levelConfirmed.isChecked(),
+            "directionsConfirmed",directionsConfirmed.isChecked(),"form",formValues());
+        if(!levelConfirmed.isChecked()||!directionsConfirmed.isChecked()){
+            log.event("calibration_blocked","Confirm levelling and axis directions first");
+            toast("Confirm levelling and axis directions first");return;
+        }
+        if(!autoSaveSettings())return;
+        if(returnToLandmark)controller.goToLandmark(true);
+        else controller.calibrate();
     }
     private Button aimingButton(LinearLayout p){Button b=button(p,"START AIMING",()->{if(lastView!=null&&lastView.tracking)controller.stop("User Stop aiming");else if(autoSaveSettings())controller.start();});aimingButtons.add(b);b.setTextColor(ACCENT);return b;}
     private void loraControls(LinearLayout p){LinearLayout r=row(p);button(r,"Connect LoRa",()->{if(autoSaveSettings())controller.connectLora();});button(r,"Disconnect LoRa",()->controller.disconnectLora());}
@@ -225,7 +234,32 @@ public final class MainActivity extends Activity {
             log.record("gps_capture_coordinates_cleared","target",label,"reason",reason,"settings",settings.values);
         }catch(Exception e){captureStatus.setText(reason+". Field cleared, but saving failed: "+e.getMessage());log.error("gps_capture_clear_failed",e,"target",label);}
     }
-    private void nudge(int axis,int direction){double[] steps={.1,.5,1};controller.nudge(axis,direction*steps[manualStep.getSelectedItemPosition()]);}
+    private Spinner manualStep(LinearLayout parent) {
+        return spinner(parent,manualStepLabels(FINE_STEP_COUNT));
+    }
+    private static String[] manualStepLabels(int count) {
+        String[] labels=new String[count];
+        for(int i=0;i<count;i++){
+            double degrees=MANUAL_STEPS[i];
+            labels[i]=String.format(Locale.US,degrees<1?"%.1f° per press":"%.0f° per press",degrees);
+        }
+        return labels;
+    }
+    private void updateWavePanSteps(boolean calibrated) {
+        wavePanCalibrated=calibrated;
+        String[] labels=manualStepLabels(calibrated?MANUAL_STEPS.length:FINE_STEP_COUNT);
+        wavePanStep.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
+        wavePanStep.setSelection(calibrated?4:2);
+    }
+    private void panButtons(LinearLayout parent,Spinner step,String anticlockwise,String clockwise) {
+        LinearLayout pan=row(parent);
+        manualButtons.add(button(pan,anticlockwise,()->nudge(1,-1,step)));
+        manualButtons.add(button(pan,clockwise,()->nudge(1,1,step)));
+    }
+    private void nudge(int axis,int direction,Spinner step) {
+        int index=step.getSelectedItemPosition();
+        if(index>=0&&index<MANUAL_STEPS.length)controller.nudge(axis,direction*MANUAL_STEPS[index]);
+    }
     private View settingsPage() {
         LinearLayout p=scrollPage();
         setupMessage=text(p,"Valid edits save automatically while disconnected. Heights use the same water-level reference.",14,ACCENT,false);
@@ -248,6 +282,7 @@ public final class MainActivity extends Activity {
         LinearLayout camera=card(p,"Optional Canon camera");
         field(camera,"cameraHost","Camera IPv4 address — blank disables polling");
         field(camera,"cameraPort","CCAPI HTTP port");
+        field(camera,"maxRecordingMinutes","Maximum recording length (minutes, 0 = no rollover)");
         text(camera,"Zoom mode",14,TEXT,false);
         zoomMode=spinner(camera,new String[]{"Off","Bands","Auto-fit"});
         text(camera,"Edit zoom bands, zoom mapping and zoom scales in setup.json. Off leaves the lens where it is.",13,MUTED,false);
@@ -296,6 +331,23 @@ public final class MainActivity extends Activity {
     }
     private View waveRidePage() {
         LinearLayout p=scrollPage();
+        LinearLayout pan=card(p,"Position the camera");
+        text(pan,"Connect the GTi and stop aiming to pan manually.",13,MUTED,false);
+        wavePanStep=new Spinner(this);
+        pan.addView(wavePanStep,new LinearLayout.LayoutParams(-1,dp(52)));
+        updateWavePanSteps(false);
+        wavePanStep.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onItemSelected(AdapterView<?> parent,View view,int position,long id){
+                log.record("wave_pan_step_selected","degrees",MANUAL_STEPS[position]);
+            }
+            public void onNothingSelected(AdapterView<?> parent){}
+        });
+        panButtons(pan,wavePanStep,"Pan anticlockwise","Pan clockwise");
+        text(pan,"After calibration, point the camera straight offshore and wait for the mount to stop.",13,MUTED,false);
+        offshoreHeadingStatus=text(pan,"No offshore heading saved",14,TEXT,false);
+        saveOffshoreHeading=button(pan,"Save offshore heading",this::saveOffshoreHeading);
+        saveOffshoreHeading.setEnabled(false);
+        settingsStorageStatuses.add(text(pan,"Checking settings storage",14,ACCENT,false));
         LinearLayout ride=card(p,"Wave Ride");
         field(ride,"rideStartKmh","Ride start speed (km/h)");
         field(ride,"rideStartConfirmations","Consecutive speed estimates to start");
@@ -303,96 +355,24 @@ public final class MainActivity extends Activity {
         field(ride,"rideEndSeconds","Time below end speed (seconds)");
         field(ride,"magnitudeMetres","Framing offset during a ride (m; 0 = off)");
         text(ride,"Ride speed counts shoreward and alongshore movement. Framing follows the surfer directly between rides.",13,MUTED,false);
-        LinearLayout line=card(p,"Waveline");
-        waveLineStatus=text(line,"No wave line saved",14,MUTED,false);
-        text(line,"Disconnect the GTi to capture. Keep the LoRa unit still at each point.",13,MUTED,false);
-        loraControls(line);
-        button(line,"Capture waveline",this::startWaveLine);
         return scroll(p);
     }
 
-    private void showWaveLine(Settings s) {
-        if(waveLineStatus==null)return;
-        WaveLine line=s.waveLine;
-        waveLineStatus.setText(line==null?"No wave line saved. Ride framing stays centred.":String.format(Locale.US,
-            "A: %.7f, %.7f\nB: %.7f, %.7f\nSeaward: %s when facing from A to B",
-            line.aLat,line.aLon,line.bLat,line.bLon,line.seaSide.equals("leftOfAToB")?"left":"right"));
+    private void showOffshoreHeading(Settings s) {
+        offshoreHeadingStatus.setText(s.offshoreHeading==null
+            ? "No offshore heading saved"
+            : String.format(Locale.US,"Offshore heading %.2f° true",s.offshoreHeading.degrees));
     }
 
-    private void startWaveLine() {
-        if(!waveLineCaptureAllowed())return;
-        if(!autoSaveSettings())return;
-        new AlertDialog.Builder(this).setTitle("Capture waveline")
-            .setMessage("Stand still with the LoRa GPS unit at point A. Then walk 50–100 m along the shoreline to point B.")
-            .setPositiveButton("Capture A",(d,w)->captureWavePoint("A",a->
-                new AlertDialog.Builder(this).setTitle("Point A captured")
-                .setMessage("Walk 50–100 m along the shoreline. Stand still at point B, then capture it.")
-                .setPositiveButton("Capture B",(d2,w2)->captureWavePoint("B",b->reviewWaveLine(a,b)))
-                .setNegativeButton("Cancel",null).show()))
-            .setNegativeButton("Cancel",null).show();
-    }
-
-    private boolean waveLineCaptureAllowed() {
-        if(capturing){toast("A GPS capture is already running");return false;}
-        if(lastView!=null&&(lastView.connected||lastView.busy)){toast("Disconnect the GTi before capturing a waveline");return false;}
-        return true;
-    }
-
-    private void captureWavePoint(String label,java.util.function.Consumer<StableGpsCapture.Point> done) {
-        if(!waveLineCaptureAllowed())return;
-        capturing=true;
-        StableGpsCapture capture=new StableGpsCapture(SystemClock.elapsedRealtime());
-        TextView progress=new TextView(this);
-        progress.setPadding(dp(24),dp(12),dp(24),dp(12));
-        progress.setText(capture.status);
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Capture point "+label).setView(progress)
-            .setNegativeButton("Cancel",null).create();
-        dialog.setOnDismissListener(d->capturing=false);
-        dialog.show();
-        handler.post(new Runnable(){
-            long epoch=-1;
-            @Override public void run(){
-                if(!dialog.isShowing())return;
-                if(!screenVisible||isDestroyed()||lastView!=null&&(lastView.connected||lastView.busy)){
-                    dialog.dismiss();return;
-                }
-                try{
-                    GpsFeed.Fix fix=controller.captureFix();
-                    if(fix!=null&&epoch!=fix.epoch){epoch=fix.epoch;capture.reset();}
-                    StableGpsCapture.Point point=capture.observe(fix==null?Double.NaN:fix.packet.lat,
-                        fix==null?Double.NaN:fix.packet.lon,fix==null?-1:fix.receivedAt,SystemClock.elapsedRealtime());
-                    progress.setText(capture.status);
-                    if(point!=null){
-                        log.record("waveline_point_captured","point",label,"latitude",point.lat,"longitude",point.lon,
-                            "scatterMetres",point.scatter,"fixes",capture.count());
-                        capturing=false;dialog.dismiss();done.accept(point);return;
-                    }
-                    handler.postDelayed(this,200);
-                }catch(Exception e){
-                    dialog.dismiss();log.error("waveline_capture_failed",e,"point",label);toast(e.getMessage());
-                }
-            }
+    private void saveOffshoreHeading() {
+        VtcService owner=service;
+        if(owner==null)return;
+        owner.captureOffshoreHeading(next->{
+            if(isDestroyed()||service!=owner)return;
+            settings=next;
+            showOffshoreHeading(next);
+            refreshSettingsStatus();
         });
-    }
-
-    private void reviewWaveLine(StableGpsCapture.Point a,StableGpsCapture.Point b) {
-        try{
-            WaveLine line=new WaveLine(a.lat,a.lon,b.lat,b.lon,"leftOfAToB");
-            android.content.DialogInterface.OnClickListener saveSide=(d,i)->{
-                    if(!waveLineCaptureAllowed()||!autoSaveSettings())return;
-                    try{
-                        WaveLine chosen=new WaveLine(a.lat,a.lon,b.lat,b.lon,i==android.content.DialogInterface.BUTTON_POSITIVE?"leftOfAToB":"rightOfAToB");
-                        Map<String,String> next=new LinkedHashMap<>(settings.values);
-                        next.put("waveLine",chosen.json());
-                        applySettings(new Settings(next));
-                        log.event("waveline_save_queued",chosen.json());toast("Waveline captured");
-                    }catch(Exception e){log.error("waveline_save_failed",e);toast(e.getMessage());}
-                };
-            new AlertDialog.Builder(this).setTitle("Which side is the sea?")
-                .setMessage(String.format(Locale.US,"Facing from A to B, which side is seaward?\n\nA: %.7f, %.7f\nB: %.7f, %.7f",
-                    line.aLat,line.aLon,line.bLat,line.bLon))
-                .setPositiveButton("Left",saveSide).setNeutralButton("Right",saveSide).setNegativeButton("Cancel",null).show();
-        }catch(IllegalArgumentException e){toast(e.getMessage());}
     }
 
     private View liveMapPage(){
@@ -494,7 +474,7 @@ public final class MainActivity extends Activity {
         fillingSettings=true;
         for(Map.Entry<String,EditText> e:fields.entrySet())
             if(s.values.containsKey(e.getKey()))e.getValue().setText(s.values.get(e.getKey()));
-        showWaveLine(s);
+        showOffshoreHeading(s);
         fields.get("cameraCoordinates").setText(Coordinates.display(s.values.get("latitude"),s.values.get("longitude")));
         fields.get("landmarkCoordinates").setText(Coordinates.display(s.values.get("landmarkLat"),s.values.get("landmarkLon")));
         zoomMode.setSelection(s.zoomMode.equals("off")?0:s.zoomMode.equals("bands")?1:2);
@@ -529,12 +509,12 @@ public final class MainActivity extends Activity {
         }catch(Exception e){settingsValidationError="Not applied: "+e.getMessage()+". Last valid settings retained.";setupMessage.setText(settingsValidationError);refreshSettingsStatus();return false;}
     }
     private void applySettings(Settings next)throws Exception {
-        if(lastView!=null&&(lastView.connected||lastView.busy)&&!settings.onlyZoomChanged(next))
-            throw new IllegalArgumentException("Only zoom settings can change while connected");
+        if(lastView!=null&&(lastView.connected||lastView.busy)&&!settings.onlyLiveCameraChanged(next))
+            throw new IllegalArgumentException("Only live camera settings can change while connected");
         if(!next.values.equals(settings.values)){
             service.saveSettings(next);settings=next;log.settings("settings_applied_save_queued",next);
         }
-        showWaveLine(next);
+        showOffshoreHeading(next);
     }
     private void exportSetup() {
         try {
@@ -592,12 +572,15 @@ public final class MainActivity extends Activity {
         connect.setEnabled(!v.connected&&!v.busy);disconnect.setEnabled(v.connected||v.busy);
         for(Button button:aimingButtons){button.setEnabled(v.tracking||v.canStart);button.setText(v.tracking?"STOP AIMING":"START AIMING");}
         calibrate.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
+        landmarkCalibrate.setEnabled(v.canGoToLandmark&&!v.tracking&&!v.moving);
+        if(v.calibrated!=wavePanCalibrated)updateWavePanSteps(v.calibrated);
+        saveOffshoreHeading.setEnabled(v.connected&&v.calibrated&&!v.tracking&&!v.busy&&!v.moving);
         calibrationConnectionHint.setVisibility(v.connected?View.GONE:View.VISIBLE);
         for(Button b:manualButtons)b.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
         for(Button b:landmarkButtons)b.setEnabled(v.canGoToLandmark);
         for(TextView t:landmarkStatuses)t.setText(v.lastLandmark);
         boolean editing=!v.connected&&!v.busy;
-        for(Map.Entry<String,EditText> entry:fields.entrySet())entry.getValue().setEnabled(editing||Settings.liveZoomKey(entry.getKey()));
+        for(Map.Entry<String,EditText> entry:fields.entrySet())entry.getValue().setEnabled(editing||Settings.liveCameraKey(entry.getKey()));
         panSign.setEnabled(editing);tiltSign.setEnabled(editing);
         if(!v.connected){levelConfirmed.setChecked(false);directionsConfirmed.setChecked(false);}
         refreshSettingsStatus();

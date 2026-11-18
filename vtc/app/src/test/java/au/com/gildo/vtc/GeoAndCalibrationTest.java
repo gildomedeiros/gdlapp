@@ -40,6 +40,30 @@ public class GeoAndCalibrationTest {
         assertFalse(c.allowed(100,-3));assertFalse(c.allowed(-100,-3));
         assertFalse(c.allowed(0,30));assertFalse(c.allowed(Double.NaN,0));assertTrue(c.allowed(0,-3));
     }
+    @Test public void manualPanStepsCannotCrossEitherPanLimitOrWrapAround() {
+        Settings s=configured("panMin","-170","panMax","170","panSign","-1");
+        int origin=0xfffff0;
+        Calibration c=new Calibration(s,new GtiClient.Position(origin,10000,false),new int[]{360000,360000});
+        GtiClient.Position right=new GtiClient.Position(GtiClient.wrap24(origin-160000),10000,false);
+        GtiClient.Position left=new GtiClient.Position(GtiClient.wrap24(origin+160000),10000,false);
+        assertTrue(c.allowsManualMove(right,5,0));
+        assertTrue(c.allowsManualMove(right,10,0));
+        assertFalse(c.allowsManualMove(right,15,0));
+        assertFalse(c.allowsManualMove(right,30,0));
+        assertTrue(c.allowsManualMove(right,-30,0));
+        assertFalse(c.allowsManualMove(left,-30,0));
+        assertTrue(c.allowsManualMove(left,30,0));
+    }
+
+    @Test public void manualPanLimitUsesTheRoundedMotorDestination() {
+        Settings s=configured("panMax","30.15");
+        int origin=10000;
+        Calibration c=new Calibration(s,new GtiClient.Position(origin,origin,false),new int[]{3600,3600});
+        GtiClient.Position here=new GtiClient.Position(origin+300,origin,false);
+        assertTrue(c.allowsManualMove(here,.1,0));
+        assertFalse(c.allowsManualMove(here,.15,0));
+    }
+
     @Test public void tiltChangesWithRangeAndHeight() {
         assertEquals(-45,Geo.elevation(100,101,1),1e-8);
         assertEquals(0,Geo.elevation(100,1,1),1e-8);

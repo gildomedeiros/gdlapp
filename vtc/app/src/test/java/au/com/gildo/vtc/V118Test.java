@@ -18,7 +18,7 @@ public class V118Test {
         ZoomPlan.Decision d=new ZoomPlan().decide(s,new ZoomPlan.Input(100,0,true,1),0,0,201,1);
         assertEquals(80,d.target);assertEquals(40,((Number)d.fields.get("estimatedFrameWidthM")).doubleValue(),1e-9);
         assertEquals(120,s.zoomMapping.raw(8),1e-8);assertEquals(32,s.zoomMapping.optical(200),1e-8);
-        assertTrue(s.onlyZoomChanged(new Settings(Map.of("autoFit","0","desiredFrameWidthMetres","20"))));
+        assertTrue(s.onlyLiveCameraChanged(new Settings(Map.of("autoFit","0","desiredFrameWidthMetres","20"))));
     }
     @Test public void validatesMappingAndFactors(){
         for(String bad:List.of("[]","{}","[{\"zoomX\":1,\"ccapiValue\":0}]","[{\"zoomX\":2,\"ccapiValue\":0},{\"zoomX\":6,\"ccapiValue\":89}]","[{\"zoomX\":1,\"ccapiValue\":89},{\"zoomX\":6,\"ccapiValue\":0}]"))assertThrows(IllegalArgumentException.class,()->new ZoomMapping(bad));

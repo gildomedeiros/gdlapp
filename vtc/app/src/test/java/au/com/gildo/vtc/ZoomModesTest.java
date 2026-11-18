@@ -41,7 +41,7 @@ public class ZoomModesTest {
         Settings round=new Settings(ConfigJson.settings(LogJson.encode(ConfigJson.structured(s.values))));
         assertEquals(s.values,round.values);
         assertEquals("off",new Settings(Map.of("zoomMode","off","autoFit","1")).zoomMode);
-        assertTrue(s.onlyZoomChanged(mode("auto-fit")));
+        assertTrue(s.onlyLiveCameraChanged(mode("auto-fit")));
     }
     @Test public void autoZoomRunsOnlyWhileAimingAndRestartsItsScaleOnNewSession(){
         for(String mode:List.of("bands","auto-fit")){

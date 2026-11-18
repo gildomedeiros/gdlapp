@@ -67,6 +67,16 @@ public final class VtcService extends Service {
         String previousManual=controller.settings().values.get("manualZoomX");
         controller.configure(settings);
         if(!previousManual.equals(settings.values.get("manualZoomX")))camera.manualObservation("field_changed");
+        queueSettingsSave(settings);
+    }
+    void captureOffshoreHeading(java.util.function.Consumer<Settings> captured) {
+        controller.captureOffshoreHeading(main::post, next->{
+            if(destroyed)return;
+            queueSettingsSave(next);
+            captured.accept(next);
+        });
+    }
+    private void queueSettingsSave(Settings settings) {
         final long revision=savesQueued.incrementAndGet();
         storage.execute(()->{try{setup.save(settings.values);loadError="";}catch(Exception e){loadError="Settings save failed: "+e.getMessage();log.error("settings_save_failed",e);}finally{savesCompleted=revision;}});
     }

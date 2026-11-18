@@ -6,7 +6,7 @@ html,body{margin:0;background:#102030;color:#edf5fc;font:14px sans-serif}
 #status,#nav{padding:5px 8px}button{margin-left:5px;min-height:32px}#svg{display:block;touch-action:none}
 </style></head><body>
 <div id="nav"><span id="provider">Offline map · North ↑</span><button type="button" id="fit">Fit largest range</button><button type="button" id="minus" aria-label="Zoom out">−</button><button type="button" id="plus" aria-label="Zoom in">+</button></div>
-<div id="map" hidden></div><svg id="svg" viewBox="0 0 480 340" role="img" aria-label="VTC camera, surfer, and waveline map"></svg>
+<div id="map" hidden></div><svg id="svg" viewBox="0 0 480 340" role="img" aria-label="VTC camera, surfer, and offshore direction map"></svg>
 <div id="status">Waiting for coordinates</div>
 <script>
 'use strict';
@@ -119,7 +119,7 @@ function frameLabel(f){
 }
 const googlePoint=p=>({lat:p[0],lng:p[1]});
 function googleDraw(f,g){
- const signature=JSON.stringify([f.camera,f.landmark,f.surfer,f.waveA,f.waveB,g.far,g.left,g.right,f.lineColor,f.fovFresh,f.gpsFresh,frameLabel(f)]);
+ const signature=JSON.stringify([f.camera,f.landmark,f.surfer,f.waveA,f.waveB,f.seaStart,f.seaEnd,g.far,g.left,g.right,f.lineColor,f.fovFresh,f.gpsFresh,frameLabel(f)]);
  if(signature!==lastCoordinates){
   lastCoordinates=signature;
   googleOverlays.forEach(item=>item.setMap(null));googleOverlays=[];

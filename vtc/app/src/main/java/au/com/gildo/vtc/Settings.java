@@ -1,18 +1,22 @@
 package au.com.gildo.vtc;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 final class Settings {
     final Map<String,String> values;
     final String mountHost,receiverHost,cameraHost;
     final int cameraPort;
+    final double maxRecordingMinutes;
     final int mountPort,receivePort,receiverPort,panSign,tiltSign;
     final double latitude,longitude,height,landmarkLat,landmarkLon,landmarkHeight,targetHeight;
     final double panMin,panMax,tiltMin,tiltMax,rangeMin,rangeMax,panTolerance,tiltTolerance,reverseSeconds,gpsAge;
     final double acquisitionTriggerMetres,gotoMaxMove,maxPanningSpeed,gpsGapTimeout;
     final double magnitude,tiltOffset,maxGpsSpeed,rideStartKmh,rideEndKmh,rideEndSeconds;
     final int rideStartConfirmations;
-    final WaveLine waveLine;
+    final OffshoreHeading offshoreHeading;
+    final WaveLine legacyWaveLine;
     final boolean autoZoom;
     final String zoomMode;
     final ZoomBands zoomBands;
@@ -20,9 +24,9 @@ final class Settings {
     final ZoomMapping zoomMapping;
     final double desiredFrameWidthMetres,wideFrameFactor;
     final double zoomSwitchSeconds,manualZoomX;
-    static boolean liveZoomKey(String key){return Arrays.asList("zoomMode","zoomBands","desiredFrameWidthMetres","wideFrameFactor","zoomMapping","zoom_scales","zoomSwitchSeconds","manualZoomX").contains(key);}
-    boolean onlyZoomChanged(Settings next){
-        for(String key:values.keySet())if(!liveZoomKey(key)&&!values.get(key).equals(next.values.get(key)))return false;
+    static boolean liveCameraKey(String key){return Arrays.asList("maxRecordingMinutes","zoomMode","zoomBands","desiredFrameWidthMetres","wideFrameFactor","zoomMapping","zoom_scales","zoomSwitchSeconds","manualZoomX").contains(key);}
+    boolean onlyLiveCameraChanged(Settings next){
+        for(String key:values.keySet())if(!liveCameraKey(key)&&!values.get(key).equals(next.values.get(key)))return false;
         return true;
     }
     static LinkedHashMap<String,String> defaults() {
@@ -79,6 +83,7 @@ final class Settings {
             {"gotoMaxMove", "45"},
             {"cameraHost", "192.168.4.3"},
             {"cameraPort", "8080"},
+            {"maxRecordingMinutes", "20"},
             {"maxPanningSpeed", "5"},
             {"gpsGapTimeout", "3"},
             {"magnitudeMetres", "2"},
@@ -87,7 +92,7 @@ final class Settings {
             {"rideStartConfirmations", "2"},
             {"rideEndKmh", "10.8"},
             {"rideEndSeconds", "2"},
-            {"waveLine", "null"},
+            {"offshoreHeadingDegrees", ""},
             {"maxGpsSpeed", "20"},
         };
         for(String[] r:rows)d.put(r[0],r[1]);
@@ -95,6 +100,19 @@ final class Settings {
     }
     Settings(Map<String,String> input) {
         input=AimUnits.migrate(input);
+        String legacyRecordingSeconds=input.remove("maxRecordingSeconds");
+        if(legacyRecordingSeconds!=null&&!input.containsKey("maxRecordingMinutes")){
+            BigDecimal seconds=new BigDecimal(legacyRecordingSeconds.trim());
+            if(seconds.signum()>0){
+                String minutes=seconds.divide(BigDecimal.valueOf(60),6,RoundingMode.HALF_UP)
+                    .stripTrailingZeros().toPlainString();
+                input.put("maxRecordingMinutes",minutes);
+            }
+        }
+        String legacyLine=input.remove("waveLine");
+        legacyWaveLine=legacyLine==null||input.containsKey("offshoreHeadingDegrees")
+            ? null : WaveLine.parse(legacyLine.trim());
+        if(legacyWaveLine!=null)input.put("offshoreHeadingDegrees",Double.toString(legacyWaveLine.offshoreDegrees));
         LinkedHashMap<String,String> d=defaults();
         for(Map.Entry<String,String> e:input.entrySet()) {
             if(java.util.Arrays.asList("framing","fixedOffset","waitForGoto","maxStep","window","observations","minNet","consistency","supports","supportChange","quietRate","quietSeconds","offsetRate","hfov").contains(e.getKey()))continue;
@@ -118,6 +136,7 @@ final class Settings {
         manualZoomX=optional("manualZoomX",1,65);
         mountHost=d.get("mountHost");receiverHost=d.get("receiverHost");
         cameraHost=d.get("cameraHost");cameraPort=integer("cameraPort",1,65535);
+        maxRecordingMinutes=number("maxRecordingMinutes",0,Integer.MAX_VALUE);
         if(!cameraHost.isEmpty()&&!ipv4(cameraHost))throw new IllegalArgumentException("Camera address must be an IPv4 address, or blank to disable");
         mountPort=integer("mountPort",1,65535);receivePort=integer("receivePort",1024,65535);receiverPort=integer("receiverPort",1,65535);
         latitude=optional("latitude",-90,90);longitude=optional("longitude",-180,180);height=optional("height",0,2000);
@@ -140,8 +159,9 @@ final class Settings {
         rideEndKmh=number("rideEndKmh",.1,100);
         if(rideEndKmh>=rideStartKmh)throw new IllegalArgumentException("Ride end speed must be below ride start speed");
         rideEndSeconds=number("rideEndSeconds",.1,60);
-        waveLine=WaveLine.parse(d.get("waveLine"));
-        d.put("waveLine",waveLine==null?"null":waveLine.json());
+        double offshoreDegrees=optional("offshoreHeadingDegrees",0,360);
+        offshoreHeading=Double.isFinite(offshoreDegrees)?new OffshoreHeading(offshoreDegrees):null;
+        if(offshoreDegrees==360)d.put("offshoreHeadingDegrees","0");
         maxGpsSpeed=number("maxGpsSpeed",1,100);
     }
     double panToleranceDegrees(double range){return AimUnits.degrees(panTolerance,range);}

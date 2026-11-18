@@ -20,6 +20,8 @@ final class CameraZoomReader implements AutoCloseable {
     private final SessionLog log;
     private final Supplier<ZoomPlan.Input> input;
     private final ZoomPlan planner=new ZoomPlan();
+    private final CameraRecording recording = new CameraRecording();
+    private volatile String recordingStatus = "Recording waiting for Start Aiming";
     private volatile ZoomSample sample;
     private volatile String zoomStatus="Zoom off; leaving zoom unchanged";
     private String zoomConnection="";
@@ -69,17 +71,20 @@ final class CameraZoomReader implements AutoCloseable {
         }
         String controlStatus=s.autoZoom&&gps.aimingSession<0
             ? "Automatic zoom waiting for Start Aiming; reading zoom" : zoomStatus;
-        return status+"\n"+controlStatus+"\n"+clockStatus+readback+"\n"+width;
+        return status+"\n"+controlStatus+"\n"+clockStatus+readback+"\n"+width+"\n"+recordingStatus;
     }
     private void read(){
         if(closed)return;
         Settings s=settings.get();String url=s.cameraHost.isEmpty()?"":"http://"+s.cameraHost+":"+s.cameraPort+"/ccapi/ver100/shooting/control/zoom";
-        if(!url.equals(endpoint)){endpoint=url;value="";receivedAt=0;sample=null;planner.reset();pendingTarget=-1;}
+        if(!url.equals(endpoint)){endpoint=url;value="";receivedAt=0;sample=null;planner.reset();pendingTarget=-1;recording.reset();}
+        if(url.isEmpty())recordingStatus="Recording unavailable · camera disabled";
         if(url.isEmpty()){log.record("camera_zoom_skipped","reason","Camera disabled","settings",s.values);status="Camera disabled — enter its IP in Setup";zoomStatus="No zoom commands: camera disabled";return;}
         Network wifi=network.get();
-        if(wifi==null){sample=null;planner.reset();pendingTarget=-1;log.record("camera_zoom_skipped","reason","No connected Wi-Fi","settings",s.values);clockDone=false;clockConnection="";status="Camera waiting for Wi-Fi connection; aiming is independent";return;}
+        if(wifi==null){recording.reset();recordingStatus="Recording status unavailable · waiting for Wi-Fi";sample=null;planner.reset();pendingTarget=-1;log.record("camera_zoom_skipped","reason","No connected Wi-Fi","settings",s.values);clockDone=false;clockConnection="";status="Camera waiting for Wi-Fi connection; aiming is independent";return;}
         String connectionKey=url+"@"+wifi.toString();
-        if(!connectionKey.equals(zoomConnection)){zoomConnection=connectionKey;planner.reset();pendingTarget=-1;sample=null;}
+        if(!connectionKey.equals(zoomConnection)){zoomConnection=connectionKey;planner.reset();pendingTarget=-1;sample=null;recording.reset();}
+        readRecording(wifi,s);
+        if(closed)return;
         long began=SystemClock.elapsedRealtime();HttpURLConnection c=null;
         try{
             log.record("camera_zoom_request","url",url,"method","GET");status="Reading camera zoom";
@@ -114,6 +119,13 @@ final class CameraZoomReader implements AutoCloseable {
     }
     private String clockRequest(Network wifi,String url,String method,String body,
                                 java.util.function.BooleanSupplier maySend)throws Exception {
+        return jsonRequest(wifi,url,method,body,maySend,
+                url.endsWith("/zoom")?"camera_zoom_http":"camera_clock_http");
+    }
+
+    private String jsonRequest(Network wifi, String url, String method, String body,
+                               java.util.function.BooleanSupplier maySend, String logType)throws IOException {
+        if (closed) throw new IOException("Camera worker closed");
         long began=SystemClock.elapsedRealtime();
         HttpURLConnection c=(HttpURLConnection)wifi.openConnection(new URL(url));connection=c;
         try {
@@ -127,15 +139,80 @@ final class CameraZoomReader implements AutoCloseable {
                     out.write(body.getBytes(StandardCharsets.UTF_8));
                 }
             }
-            int code=c.getResponseCode();if(code!=200)throw new IOException("Camera HTTP "+code);
+            int code=c.getResponseCode();
+            boolean accepted=code==200;
             ByteArrayOutputStream bytes=new ByteArrayOutputStream();
-            try(InputStream in=c.getInputStream()){byte[] b=new byte[1024];int n;
-                while((n=in.read(b))!=-1){bytes.write(b,0,n);if(bytes.size()>8192||SystemClock.elapsedRealtime()-began>4000)throw new IOException("Clock response limit");}}
+            try(InputStream in=accepted?c.getInputStream():c.getErrorStream()){
+                if(in!=null){
+                    byte[] b=new byte[1024];int n;
+                    while((n=in.read(b))!=-1){
+                        if(n>65536-bytes.size()||SystemClock.elapsedRealtime()-began>4000)throw new IOException("Camera response exceeded read limit");
+                        bytes.write(b,0,n);
+                    }
+                }
+            }
             String result=bytes.toString(StandardCharsets.UTF_8.name());
-            log.record(url.endsWith("/zoom")?"camera_zoom_http":"camera_clock_http","method",method,"url",url,"request",body,"response",result,"elapsedMs",SystemClock.elapsedRealtime()-began);
+            if(logType!=null)log.record(logType,"method",method,"url",url,"request",body,"response",result,
+                    "httpStatus",code,"elapsedMs",SystemClock.elapsedRealtime()-began);
+            if(!accepted)throw CameraRecording.HttpError.fromResponse(code,result);
             return result;
         }finally{c.disconnect();connection=null;}
     }
+    private void readRecording(Network wifi, Settings settingsAtPoll) {
+        String base = "http://" + settingsAtPoll.cameraHost + ":" + settingsAtPoll.cameraPort + "/ccapi/ver100";
+        long session = input.get().aimingSession;
+        try {
+            String events = jsonRequest(wifi, base + "/event/polling", "GET", null, () -> true, null);
+            if (!events.trim().isEmpty()) {
+                String action = recording.observe(events, SystemClock.elapsedRealtime());
+                if (!action.isEmpty()) log.record("camera_recording_event", "action", action, "aimingSession", session);
+            }
+        } catch (Exception failure) {
+            if (session >= 0 && !closed) log.error("camera_recording_event_error", failure);
+        }
+
+        if (closed) return;
+        session = input.get().aimingSession;
+        final long aimingSession = session;
+        try {
+            recording.update(aimingSession, settingsAtPoll.maxRecordingMinutes, SystemClock::elapsedRealtime,
+                    (method, path, body) -> {
+                        try {
+                            return jsonRequest(wifi, base + path, method, body,
+                                    () -> canRecord(wifi, settingsAtPoll, aimingSession), "camera_recording_command");
+                        } catch (CancellationException cancelled) {
+                            throw new IOException("Aiming or camera settings changed", cancelled);
+                        }
+                    });
+        } catch (IOException failure) {
+            if (!canRecord(wifi, settingsAtPoll, aimingSession)) return;
+            recordingStatus = "Recording command unconfirmed · " + failure.getMessage();
+            log.error("camera_recording_error", failure, "aimingSession", aimingSession,
+                    "maxRecordingMinutes", settingsAtPoll.maxRecordingMinutes);
+            return;
+        }
+
+        long began = recording.startedAt();
+        if (began >= 0) {
+            long elapsedSeconds = (SystemClock.elapsedRealtime() - began) / 1000;
+            recordingStatus = "Recording · " + elapsedSeconds + " s since start observed"
+                    + (aimingSession < 0 ? " · rollover inactive"
+                    : settingsAtPoll.maxRecordingMinutes == 0 ? "" : " · limit " + settingsAtPoll.values.get("maxRecordingMinutes") + " min");
+        } else if (aimingSession < 0) {
+            recordingStatus = "Recording waiting for Start Aiming";
+        } else if (!recordingStatus.startsWith("Recording command unconfirmed")) {
+            recordingStatus = "Waiting for the camera to start recording";
+        }
+    }
+
+    private boolean canRecord(Network wifi, Settings requested, long aimingSession) {
+        Settings current = settings.get();
+        return !closed && aimingSession >= 0 && input.get().aimingSession == aimingSession
+                && wifi.equals(network.get()) && current.cameraHost.equals(requested.cameraHost)
+                && current.cameraPort == requested.cameraPort
+                && current.maxRecordingMinutes == requested.maxRecordingMinutes;
+    }
+
     private void controlZoom(Network wifi,Settings s,String url,int current,int min,int max,int step)throws Exception {
         long now=SystemClock.elapsedRealtime();ZoomPlan.Input gps=input.get();
         ZoomPlan.Decision decision=planner.decide(s,gps,now,min,max,step);

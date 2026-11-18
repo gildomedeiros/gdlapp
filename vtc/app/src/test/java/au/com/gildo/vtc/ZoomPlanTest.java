@@ -63,8 +63,8 @@ public class ZoomPlanTest {
     @Test public void validatesDecimalListsAndLiveSettingScope(){
         assertArrayEquals(new double[]{1,1.1,1.2},ZoomPlan.parse("1.0, 1.1, 1.2",true),0);
         for(String bad:new String[]{"","1,","NaN","0.4","3.1","1.15"})assertThrows(IllegalArgumentException.class,()->ZoomPlan.parse(bad,true));
-        Settings s=settings();assertTrue(s.onlyZoomChanged(settings("manualZoomX","6","zoomMultipliers","1.2")));
-        assertFalse(s.onlyZoomChanged(settings("panTolerance","1")));
+        Settings s=settings();assertTrue(s.onlyLiveCameraChanged(settings("manualZoomX","6","zoomMultipliers","1.2")));
+        assertFalse(s.onlyLiveCameraChanged(settings("panTolerance","1")));
         assertEquals(s.values,new Settings(s.values).values);
     }
 }

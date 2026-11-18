@@ -41,7 +41,7 @@ final class FramingEngine {
     }
 
     void observe(long sampleMs,long receivedMs,double lat,double lon,double bearing) {
-        if(settings.waveLine==null){clear("Capture a wave line to enable ride detection");return;}
+        if(settings.offshoreHeading==null){clear("Save an offshore heading to enable ride detection");return;}
         if(sampleMs==lastSample||receivedMs<lastReceived)return;
         if(lastReceived>=0&&(receivedMs-lastReceived>settings.gpsAge*1000||sampleMs<lastSample))
             unavailable(receivedMs);
@@ -58,7 +58,7 @@ final class FramingEngine {
             reason="Waiting for a GPS speed estimate";
             return;
         }
-        speedKmh=settings.waveLine.qualifyingDistance(reference.lat,reference.lon,lat,lon)
+        speedKmh=settings.offshoreHeading.qualifyingDistance(reference.lat,reference.lon,lat,lon)
             *3600/(sampleMs-reference.sampleMs);
         if(!riding) {
             startCount=speedKmh>=settings.rideStartKmh ? startCount+1 : 0;

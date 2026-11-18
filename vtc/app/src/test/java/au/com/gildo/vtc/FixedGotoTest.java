@@ -9,7 +9,7 @@ public class FixedGotoTest {
             Calibration c=calibration("panSign",panSign,"tiltSign",tiltSign,"landmarkHeight","0",
                 "fixedOffset","1","tiltOffset","3","rangeMin","200");
             FixedGoto route=FixedGoto.landmark(c,1000);
-            assertTrue(route.landmark);assertNull(route.source);assertEquals(0,route.offset,0);
+            assertEquals(FixedGoto.Kind.LANDMARK,route.kind);assertNull(route.source);assertEquals(0,route.offset,0);
             assertEquals(0,route.pan,0);assertEquals(c.elevation,route.tilt,0);
             assertTrue("Landmark is allowed even below the surfer minimum range",route.range<200);
             GtiClientTest.Wire w=new GtiClientTest.Wire();w.cpr=c.panCpr;
@@ -31,6 +31,37 @@ public class FixedGotoTest {
         assertEquals("LANDMARK",route.snapshot().get("kind"));assertEquals(c.panRaw,route.snapshot().get("calibratedPanRaw"));
         assertThrows(IllegalArgumentException.class,()->route.nextMove(175,0));
     }
+    @Test public void combinedLandmarkRouteRequiresBothAxesStoppedAndAtTarget() {
+        Calibration c=calibration();
+        FixedGoto route=FixedGoto.landmark(c,1000,true);
+        assertFalse(FixedGoto.landmark(c,1000).calibrateOnArrival);
+        assertTrue(route.calibrateOnArrival);
+        assertEquals("LANDMARK",route.snapshot().get("kind"));
+        double[] atTarget=route.nextMove(0,c.elevation);
+        assertFalse(route.arrived(new GtiClient.Position(c.panRaw,c.tiltRaw,true),atTarget));
+        assertTrue(route.arrived(new GtiClient.Position(c.panRaw,c.tiltRaw,false),atTarget));
+        assertFalse(route.arrived(new GtiClient.Position(c.panRaw,c.tiltRaw,false),route.nextMove(1,c.elevation)));
+        assertFalse(route.arrived(new GtiClient.Position(c.panRaw,c.tiltRaw,false),route.nextMove(0,c.elevation+1)));
+    }
+
+    @Test public void offshoreRouteUsesPanOnlyAndRespectsLimits()throws Exception {
+        Calibration c=calibration("panSign","-1","panMax","70");
+        FixedGoto route=FixedGoto.offshore(c,60,c.elevation,1000);
+        assertEquals("OFFSHORE",route.snapshot().get("kind"));
+        assertArrayEquals(new double[]{45,0},route.nextMove(0,c.elevation),0);
+        assertArrayEquals(new double[]{15,0},route.nextMove(45,c.elevation+1),0);
+        assertArrayEquals(new double[]{0,0},route.nextMove(60,c.elevation),0);
+        assertThrows(IllegalArgumentException.class,()->FixedGoto.offshore(c,80,c.elevation,1000));
+        GtiClientTest.Wire w=new GtiClientTest.Wire();w.cpr=c.panCpr;
+        w.pos[0]=GtiClient.wrap24(c.panRaw-45*c.panCpr/360);w.pos[1]=c.tiltRaw;
+        GtiClient mount=new GtiClient(w);mount.connect();
+        GtiClient.Position position=mount.position();
+        double[] steps=route.nextMove(c.panOffset(position.pan),c.tiltAngle(position.tilt));
+        mount.goTo(position,steps[0]*c.settings.panSign,steps[1]*c.settings.tiltSign,()->true);
+        assertEquals(GtiClient.wrap24(c.panRaw-60*c.panCpr/360),w.target[0]);
+        assertEquals(1,w.starts());
+    }
+
     private Calibration calibration(String... changes) {
         java.util.Map<String,String> values=new java.util.HashMap<>(Map.of("latitude","0","longitude","0","height","4",
             "landmarkLat","0.001","landmarkLon","0","landmarkHeight","4","panMin","-170","panMax","170"));

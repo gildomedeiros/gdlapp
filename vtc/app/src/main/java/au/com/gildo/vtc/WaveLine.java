@@ -2,11 +2,9 @@ package au.com.gildo.vtc;
 
 import java.util.Map;
 
+/** Reads the two-point reference in older settings and replay logs. */
 final class WaveLine {
-    private static final double EARTH_METRES = 6371000;
-    final double aLat, aLon, bLat, bLon;
-    final String seaSide;
-    private final double eastUnit, northUnit, seaSign;
+    final double aLat, aLon, bLat, bLon, offshoreDegrees;
 
     WaveLine(double aLat, double aLon, double bLat, double bLon, String seaSide) {
         if (!Geo.valid(aLat,aLon) || !Geo.valid(bLat,bLon))
@@ -16,10 +14,9 @@ final class WaveLine {
             throw new IllegalArgumentException("Wave line points must be 30–10000 m apart");
         if (!"leftOfAToB".equals(seaSide) && !"rightOfAToB".equals(seaSide))
             throw new IllegalArgumentException("Choose which side of the wave line is seaward");
-        this.aLat=aLat; this.aLon=aLon; this.bLat=bLat; this.bLon=bLon; this.seaSide=seaSide;
-        double heading = Math.toRadians(Geo.bearing(aLat,aLon,bLat,bLon));
-        eastUnit=Math.sin(heading); northUnit=Math.cos(heading);
-        seaSign="leftOfAToB".equals(seaSide) ? 1 : -1;
+        this.aLat=aLat; this.aLon=aLon; this.bLat=bLat; this.bLon=bLon;
+        double alongshore=Geo.bearing(aLat,aLon,bLat,bLon);
+        offshoreDegrees=Geo.wrap(alongshore+("leftOfAToB".equals(seaSide)?-90:90));
     }
 
     static WaveLine parse(String json) {
@@ -39,24 +36,12 @@ final class WaveLine {
         return ((Number)value).doubleValue();
     }
 
-    String json() {
-        return LogJson.encode(Map.of("aLat",aLat,"aLon",aLon,"bLat",bLat,"bLon",bLon,"seaSide",seaSide));
-    }
-
     double[] seawardArrow(){
         double length=Geo.distance(aLat,aLon,bLat,bLon);
         double heading=Geo.bearing(aLat,aLon,bLat,bLon);
         double[] start=KmlDocument.destination(aLat,aLon,heading,length/2);
-        double[] end=KmlDocument.destination(start[0],start[1],heading-90*seaSign,Math.min(40,length/3));
+        double[] end=KmlDocument.destination(start[0],start[1],offshoreDegrees,Math.min(40,length/3));
         return new double[]{start[0],start[1],end[0],end[1]};
     }
 
-    double qualifyingDistance(double fromLat,double fromLon,double toLat,double toLon) {
-        double east=EARTH_METRES*Math.toRadians(Geo.delta(toLon,fromLon))
-            *Math.cos(Math.toRadians((fromLat+toLat)/2));
-        double north=EARTH_METRES*Math.toRadians(toLat-fromLat);
-        double along=east*eastUnit+north*northUnit;
-        double seaward=seaSign*(north*eastUnit-east*northUnit);
-        return Math.hypot(along,Math.min(0,seaward));
-    }
 }

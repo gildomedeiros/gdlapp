@@ -97,15 +97,37 @@ public class LiveMapReplayTest {
         assertEquals(333.585,result.largestRange,.01);
     }
 
-    @Test public void earthContainsWavelineAndArrowPointsToSeawardSide()throws Exception {
-        WaveLine wave=new WaveLine(0,0,0,.001,"leftOfAToB");
-        assertTrue(wave.seawardArrow()[2]>0);
-        assertTrue(new WaveLine(0,0,0,.001,"rightOfAToB").seawardArrow()[2]<0);
-        Settings s=new Settings(Map.of("waveLine",wave.json()));
+    @Test public void legacyWavelineMigratesAndRemainsVisibleInOldReplay() {
+        String wave=LogJson.encode(Map.of("aLat",0,"aLon",0,"bLat",0,"bLon",.001,"seaSide","leftOfAToB"));
+        Settings migrated=new Settings(Map.of("waveLine",wave));
+        assertEquals(0,migrated.offshoreHeading.degrees,0);
+        assertFalse(migrated.values.containsKey("waveLine"));
+        Settings reloaded=new Settings(migrated.values);
+        assertEquals(0,reloaded.offshoreHeading.degrees,0);
+        assertNull(reloaded.legacyWaveLine);
+        Settings explicit=new Settings(Map.of("waveLine",wave,"offshoreHeadingDegrees","90"));
+        assertEquals(90,explicit.offshoreHeading.degrees,0);
+
+        MapTimeline replay=new MapTimeline();
+        replay.accept(Map.of("event","settings_snapshot","monoMs",0,"settings",Map.of("waveLine",ConfigJson.parse(wave))));
+        Map<String,Object> oldFrame=replay.frame(0);
+        assertTrue(oldFrame.containsKey("waveA"));
+        assertTrue(oldFrame.containsKey("waveB"));
+        assertTrue(oldFrame.containsKey("seaEnd"));
+    }
+
+    @Test public void savedHeadingDrawsSeawardArrowInLiveMapAndEarth()throws Exception {
+        Settings s=new Settings(Map.of("offshoreHeadingDegrees","90"));
+        MapTimeline live=new MapTimeline();
+        live.accept(Map.of("event","settings_snapshot","monoMs",0,"settings",ConfigJson.structured(s.values)));
+        Map<String,Object> frame=live.frame(0);
+        assertEquals(frame.get("camera"),frame.get("seaStart"));
+        List<?> tip=(List<?>)frame.get("seaEnd");
+        assertTrue(((Number)tip.get(1)).doubleValue()>s.longitude);
+        assertFalse(frame.containsKey("waveA"));
         String kml=CurrentMap.kml(s,true);
         KmlDocumentTest.parse(kml);
-        for(String label:List.of("Waveline A","Waveline B","Saved waveline","Seaward arrow"))
-            assertTrue(kml.contains(label));
+        assertTrue(kml.contains("Seaward arrow"));
         assertEquals(-170,s.panMin,0);assertEquals(170,s.panMax,0);
     }
 }

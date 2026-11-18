@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 /** One serialized owner of motor commands. UI Stop cancels pending STARTs immediately. */
 final class VtcController implements AutoCloseable {
@@ -137,7 +138,7 @@ final class VtcController implements AutoCloseable {
         publish();
     }
     void configure(Settings settings) {
-        if((mount!=null||busy||stopping)&&s.onlyZoomChanged(settings)){s=settings;log.settings("zoom_settings_applied_live",s);publish();return;}
+        if((mount!=null||busy||stopping)&&s.onlyLiveCameraChanged(settings)){s=settings;log.settings("camera_settings_applied_live",s);publish();return;}
         if(mount!=null||busy||stopping){log.event("settings_blocked","Disconnect before changing settings");throw new IllegalStateException("Disconnect before changing settings");}
         s=settings;framing=new FramingEngine(s);planner=new AimPlanner(s);
         log.settings("settings_applied",s);publish();
@@ -191,35 +192,98 @@ final class VtcController implements AutoCloseable {
         action("Calibrating",token->{
             log.settings("calibration_attempt",s);
             s.calibrationReady();
-            GtiClient.Position here=mount.position();
-            if(here.moving)throw new IOException("Wait for the mount to stop before calibrating");
-            if(!valid(token))return;
-            calibration=new Calibration(s,here,mount.cpr);position=here;
-            state="CALIBRATED";message="Landmark calibrated and saved. Check Aim / next steps before starting.";
-            SavedLandmark bookmark=SavedLandmark.capture(calibration,mount.firmware,System.currentTimeMillis());
-            try{landmarkStore.save(bookmark);lastLandmark=bookmark;landmarkStorageError="";log.record("last_landmark_saved","landmark",bookmark.snapshot());}
-            catch(IOException e){landmarkStorageError=e.getMessage();message="Calibrated, but last landmark could not be saved: "+e.getMessage();log.error("last_landmark_save_failed",e);}
-            calibrationFiles.save(bookmark);
-            log.record("calibration_success","calibration",calibrationSnapshot(calibration),"position",positionSnapshot(here));
+            if(active||pendingMove)throw new IOException("Wait for the mount to stop before calibrating");
+            GtiClient.Position here=mount.position(()->valid(token));
+            calibrateAt(here,token,"manual");
         });
+    }
+    private void calibrateAt(GtiClient.Position here,long token,String method)throws IOException {
+        if(here.moving)throw new IOException("Wait for the mount to stop before calibrating");
+        if(!valid(token))return;
+        calibration=new Calibration(s,here,mount.cpr);position=here;
+        state="CALIBRATED";message="Landmark calibrated and saved. Check Aim / next steps before starting.";
+        SavedLandmark bookmark=SavedLandmark.capture(calibration,mount.firmware,System.currentTimeMillis());
+        try{landmarkStore.save(bookmark);lastLandmark=bookmark;landmarkStorageError="";log.record("last_landmark_saved","landmark",bookmark.snapshot());}
+        catch(IOException e){landmarkStorageError=e.getMessage();message="Calibrated, but last landmark could not be saved: "+e.getMessage();log.error("last_landmark_save_failed",e);}
+        calibrationFiles.save(bookmark);
+        log.record("calibration_success","method",method,"calibration",calibrationSnapshot(calibration),"position",positionSnapshot(here));
+        startOffshoreGoto(here,token);
+    }
+    private void startOffshoreGoto(GtiClient.Position here,long token) {
+        if(!valid(token))return;
+        OffshoreHeading saved=s.offshoreHeading;
+        if(saved==null){
+            log.record("offshore_goto_skipped","reason","No saved offshore heading");
+            return;
+        }
+        double tilt=calibration.tiltAngle(here.tilt);
+        if(!calibration.allowed(calibration.targetPan(saved.degrees),tilt)){
+            message="Calibrated. Saved offshore heading is outside the pan limits.";
+            log.record("offshore_goto_skipped","reason","Outside pan limits","headingDegrees",saved.degrees,
+                "panMin",s.panMin,"panMax",s.panMax);
+            return;
+        }
+        fixedGoto=FixedGoto.offshore(calibration,saved.degrees,tilt,SystemClock.elapsedRealtime());
+        planner.reset();surferAimingGeneration=-1;aimingGeneration=token;active=true;
+        state=fixedGoto.kind.state;message="Calibrated. Panning to the saved offshore heading.";
+        log.record("goto_captured","target",fixedGoto.snapshot(),"reason","After calibration","position",positionSnapshot(here));
     }
     void nudge(int axis,double degrees) {
         if(active){log.record("manual_move_blocked","axis",axis,"degrees",degrees,"reason","Aiming active");return;}
         action("Positioning camera",token->{
-            if(!Double.isFinite(degrees)||Math.abs(degrees)>1)throw new IllegalArgumentException("Manual move must be at most 1 degree");
-            GtiClient.Position here=mount.position();
+            Calibration reference=calibration;
+            int maxStep=axis==1&&reference!=null?30:1;
+            if(!Double.isFinite(degrees)||Math.abs(degrees)>maxStep){
+                message="Manual move must be at most "+maxStep+"°";
+                log.record("manual_move_blocked","axis",axis,"degrees",degrees,"reason",message);
+                return;
+            }
+            if(pendingMove){message="Wait for the current move to finish";return;}
+            GtiClient.Position here=mount.position(()->valid(token));
             if(here.moving)throw new IOException("Wait for the current move to finish");
             double pan=axis==1?degrees:0,tilt=axis==2?degrees:0;
-            if(calibration!=null&&!calibration.allowed(calibration.panOffset(here.pan)+pan,calibration.tiltAngle(here.tilt)+tilt))
-                throw new IOException("Manual move would exceed movement limits");
+            if(reference!=null&&!reference.allowsManualMove(here,pan,tilt)){
+                message="That step would exceed the movement limits. Choose a smaller step or turn the other way.";
+                log.record("manual_move_blocked","axis",axis,"degrees",degrees,"reason",message,"position",positionSnapshot(here));
+                return;
+            }
             long deadline=SystemClock.elapsedRealtime()+1000;
+            java.util.function.BooleanSupplier permitted=()->valid(token)&&SystemClock.elapsedRealtime()<=deadline;
             mount.begin();
-            mount.move(here,pan*s.panSign,tilt*s.tiltSign,()->valid(token)&&SystemClock.elapsedRealtime()<=deadline);
-            rememberMove(here,pan,tilt);
+            boolean coarsePan=Math.abs(pan)>1;
+            if(coarsePan)mount.goTo(here,pan*s.panSign,0,permitted);
+            else mount.move(here,pan*s.panSign,tilt*s.tiltSign,permitted);
+            rememberMove(here,pan,tilt,FixedGoto.timeoutMs(pan,tilt));
             message="Finite native GoTo sent; waiting for arrival";
-            log.record("manual_move","panDegrees",pan,"tiltDegrees",tilt,"destinationPan",expectedPan,"destinationTilt",expectedTilt);
+            log.record("manual_move","panDegrees",pan,"tiltDegrees",tilt,"destinationPan",expectedPan,"destinationTilt",expectedTilt,
+                "coarsePan",coarsePan,"timeoutMs",motionTimeoutMs);
         });
     }
+    void captureOffshoreHeading(Executor completionThread, Consumer<Settings> captured) {
+        action("Reading offshore heading", token -> {
+            Calibration reference=calibration;
+            if(reference==null)throw new IOException("Calibrate the landmark first");
+            if(active||pendingMove)throw new IOException("Wait for the mount to stop before saving");
+            GtiClient.Position measured=mount.position();
+            if(measured.moving)throw new IOException("Wait for the mount to stop before saving");
+            if(!valid(token)||calibration!=reference)return;
+            double heading=reference.heading(measured.pan);
+            completionThread.execute(()->{
+                if(!valid(token)||active||pendingMove||calibration!=reference)return;
+                Map<String,String> values=new LinkedHashMap<>(s.values);
+                values.put("offshoreHeadingDegrees",Double.toString(heading));
+                Settings next=new Settings(values);
+                framing=new FramingEngine(next);
+                s=next;
+                message=String.format(Locale.US,"Offshore heading set to %.2f° true",heading);
+                log.record("offshore_heading_captured","headingDegrees",heading,"motorPanCount",measured.pan);
+                log.settings("offshore_heading_captured",next);
+                captured.accept(next);
+                publish();
+            });
+        });
+    }
+
     void start() {
         action("Starting aiming",token->{
             log.settings("aim_start_requested",s);
@@ -239,7 +303,8 @@ final class VtcController implements AutoCloseable {
             log.record("aim_start","calibration",calibrationSnapshot(calibration),"gps",gpsSnapshot(fix),"rangeM",distance,"bearing",bearing,"tilt",tilt);
         });
     }
-    void goToLandmark() {
+    void goToLandmark(){goToLandmark(false);}
+    void goToLandmark(boolean calibrateOnArrival) {
         String blocker=lastLandmarkBlocker();
         if(closed||stopping||stopUnconfirmed||busy||mount==null||blocker!=null||poller.waiting()) {
             log.record("landmark_goto_blocked","connected",mount!=null,"calibrated",calibration!=null,
@@ -250,8 +315,9 @@ final class VtcController implements AutoCloseable {
         action("Returning to landmark",token->{
             Calibration navigation=lastLandmark.navigationReference(s,mount.cpr,mount.firmware);
             clearFixedGoto("Go to last landmark requested");targetWait.reset();
-            fixedGoto=FixedGoto.landmark(navigation,SystemClock.elapsedRealtime());
-            log.record("goto_captured","target",fixedGoto.snapshot(),"reason","User Go to last landmark",
+            fixedGoto=FixedGoto.landmark(navigation,SystemClock.elapsedRealtime(),calibrateOnArrival);
+            log.record("goto_captured","target",fixedGoto.snapshot(),"reason",
+                calibrateOnArrival?"User Go to landmark and calibrate here":"User Go to last landmark",
                 "savedAtEpochMs",lastLandmark.savedAtEpochMs,"calibrationValidated",calibration!=null,
                 "position",positionSnapshot(position));
             // Stop acknowledgements do not mean deceleration is already complete.
@@ -382,7 +448,7 @@ final class VtcController implements AutoCloseable {
                 // A mount outage must not fill the 64-observation framing queue and
                 // appear as GPS loss. Keep latest GPS and raw telemetry logging intact.
                 if(gps!=null)gps.discardUnusedObservations("Waiting for GTi; framing paused");
-                boolean landmarkStop=fixedGoto!=null&&fixedGoto.landmark&&poller.interruptedMove();
+                boolean landmarkStop=fixedGoto!=null&&fixedGoto.kind==FixedGoto.Kind.LANDMARK&&poller.interruptedMove();
                 state=landmarkStop?"STOPPING FOR LANDMARK":poller.interruptedMove()?"WAITING FOR GTi":"RETRYING GTi";
                 message=landmarkStop?"Waiting for a confirmed stopped position before returning to the landmark.":
                     poller.interruptedMove()?"Stop requested; checking for a stopped position automatically. Calibration and saved target retained.":
@@ -400,7 +466,7 @@ final class VtcController implements AutoCloseable {
                 framing.unavailable(SystemClock.elapsedRealtime());
                 if(gps!=null)gps.clearObservations();
                 lastFramePacket=lastFrameSender=lastFrameAt=-1;
-                state=active?fixedGoto==null?"AIMING":fixedGoto.landmark?"GOTO LANDMARK":"GOTO SAVED TARGET":calibration==null?"CONNECTED":"CALIBRATED";
+                state=active?fixedGoto==null?"AIMING":fixedGoto.kind.state:calibration==null?"CONNECTED":"CALIBRATED";
                 message=active?"GTi replies restored. Continuing automatically.":"GTi replies restored.";
             }
             lastPoll=SystemClock.elapsedRealtime();position=here;
@@ -419,7 +485,7 @@ final class VtcController implements AutoCloseable {
             if(!active){publishThrottled();return;}
             // Ride detection can advance during a GoTo. The captured motor target never changes.
             if(fixedGoto!=null){
-                if(!fixedGoto.landmark && active && freshFix()!=null)drainRideFixes(SystemClock.elapsedRealtime());
+                if(fixedGoto.kind==FixedGoto.Kind.SURFER && freshFix()!=null)drainRideFixes(SystemClock.elapsedRealtime());
                 else framing.unavailable(lastPoll);
                 advanceFixedGoto(here,lastPoll);publishThrottled();return;
             }
@@ -539,7 +605,8 @@ final class VtcController implements AutoCloseable {
         }catch(CancellationException e){log.event("mount_poll_cancelled","Stop or disconnect took priority");}
         catch(Exception e){
             log.error("control_error",e);
-            if(!stopping&&active&&freshFix()==null&&"Movement cancelled or inputs expired".equals(e.getMessage()))stopForGpsTimeout();
+            if(!stopping&&active&&surferAimingGeneration==aimingGeneration&&freshFix()==null
+                &&"Movement cancelled or inputs expired".equals(e.getMessage()))stopForGpsTimeout();
             else if(!stopping)fault(e.getMessage(),true);
         }
         catch(Throwable e){log.event("control_uncaught_error",e.toString());emergencyStop("Unexpected control failure",null);}
@@ -578,9 +645,6 @@ final class VtcController implements AutoCloseable {
         log.record("framing_observation","gps",gpsSnapshot(f),"bearingDegrees",Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon),"framing",framingSnapshot(f.receivedAt));
         lastFramePacket=f.packet.sequence;lastFrameSender=f.packet.senderMs;lastFrameAt=f.receivedAt;
     }
-    private void rememberMove(GtiClient.Position here,double pan,double tilt) {
-        rememberMove(here,pan,tilt,15000);
-    }
     private void rememberMove(GtiClient.Position here,double pan,double tilt,long timeoutMs) {
         moveOrigin=here;
         expectedPan=GtiClient.wrap24(here.pan+(int)Math.round(pan*s.panSign*mount.cpr[0]/360.0));
@@ -592,30 +656,54 @@ final class VtcController implements AutoCloseable {
         Calibration navigation=target.calibration;
         double pan=navigation.panOffset(here.pan),tilt=navigation.tiltAngle(here.tilt);
         double[] steps=target.nextMove(pan,tilt);
-        if(target.landmark&&gps!=null)gps.clearObservations();
-        state=target.landmark?"GOTO LANDMARK":"GOTO SAVED TARGET";
-        message=target.landmark?"Returning pan and tilt to the last saved landmark; surfer tracking is off.":"Moving to the saved position; new GPS does not change this GoTo.";
-        aimText=String.format(Locale.US,"%s · range %.1f m\nSaved aim %.2f° / tilt %.2f°\nCamera %.2f° / tilt %.2f°\nRemaining pan %+.2f° · tilt %+.2f°",
-            target.landmark?"Last saved landmark":"Saved GPS #"+target.source.sequence,target.range,target.heading,target.tilt,navigation.heading(here.pan),tilt,target.pan-pan,target.tilt-tilt);
+        state=target.kind.state;
+        switch(target.kind){
+            case LANDMARK:
+                if(gps!=null)gps.clearObservations();
+                message=target.calibrateOnArrival?"Returning to the landmark for calibration.":"Returning pan and tilt to the last saved landmark; surfer tracking is off.";
+                aimText=String.format(Locale.US,"Last saved landmark · remaining pan %+.2f° · tilt %+.2f°",
+                    target.pan-pan,target.tilt-tilt);
+                break;
+            case OFFSHORE:
+                message="Calibrated. Panning to the saved offshore heading.";
+                aimText=String.format(Locale.US,"Offshore %.2f° true · remaining pan %+.2f°",target.heading,target.pan-pan);
+                break;
+            case SURFER:
+                message="Moving to the saved position; new GPS does not change this GoTo.";
+                aimText=String.format(Locale.US,"Saved GPS #%d · range %.1f m\nSaved aim %.2f° / tilt %.2f°\nCamera %.2f° / tilt %.2f°\nRemaining pan %+.2f° · tilt %+.2f°",
+                    target.source.sequence,target.range,target.heading,target.tilt,navigation.heading(here.pan),tilt,
+                    target.pan-pan,target.tilt-tilt);
+                break;
+        }
         log.record("goto_progress","target",target.snapshot(),"position",positionSnapshot(here),
             "remainingPanDegrees",target.pan-pan,"remainingTiltDegrees",target.tilt-tilt,"pendingMove",pendingMove);
-        if(here.moving)return;
-        if(steps[0]==0&&steps[1]==0) {
+        if(target.arrived(here,steps)) {
+            long token=aimingGeneration;
+            if(!valid(token)||!active)return;
             log.record("goto_completed","target",target.snapshot(),"position",positionSnapshot(here),"elapsedMs",now-target.capturedAt);
             fixedGoto=null;lastRateFixAt=-1;
-            if(target.landmark) {
-                framing.holdForGoto(now);lastFramePacket=lastFrameSender=lastFrameAt=-1;
-                if(gps!=null)continuity=gps.continuity();
-                active=false;state=calibration==null?"CONNECTED":"CALIBRATED";
+            if(target.kind==FixedGoto.Kind.SURFER) {
+                state="AIMING";message="Saved position reached. Resuming live GPS aiming.";
+                aimText="Saved position reached; checking the latest surfer GPS";
+                return;
+            }
+            framing.holdForGoto(now);lastFramePacket=lastFrameSender=lastFrameAt=-1;
+            if(gps!=null)continuity=gps.continuity();
+            active=false;state=calibration==null?"CONNECTED":"CALIBRATED";
+            if(target.calibrateOnArrival){
+                log.settings("calibration_attempt",s);
+                calibrateAt(here,token,"saved_landmark");
+            }else if(target.kind==FixedGoto.Kind.OFFSHORE){
+                message="Calibrated. Camera is now pointing offshore.";
+                aimText="At the saved offshore heading";
+            }else{
                 message=calibration==null?"Last landmark position reached. Check alignment and validate calibration before tracking.":
                     "Last landmark reached. Pan and tilt returned; surfer tracking remains off.";
                 aimText="At the last saved landmark position";
-            }else {
-                state="AIMING";message="Saved position reached. Resuming live GPS aiming.";
-                aimText="Saved position reached; checking the latest surfer GPS";
             }
             return;
         }
+        if(here.moving)return;
         // Retain the fixed destination while respecting the same reversal hold as fine aiming.
         if(planner.reversalBlocked(1,steps[0],now)||planner.reversalBlocked(2,steps[1],now)){
             log.record("goto_reversal_hold","panStepDegrees",steps[0],"tiltStepDegrees",steps[1]);return;

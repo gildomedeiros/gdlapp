@@ -132,11 +132,16 @@ final class MapTimeline {
         Settings s=settings;
         if(Geo.valid(s.latitude,s.longitude))f.put("camera",point(s.latitude,s.longitude));
         if(Geo.valid(s.landmarkLat,s.landmarkLon))f.put("landmark",point(s.landmarkLat,s.landmarkLon));
-        if(s.waveLine!=null){
-            WaveLine line=s.waveLine;
-            double[] arrow=line.seawardArrow();
+        double[] seaward=null;
+        if(s.legacyWaveLine!=null){
+            WaveLine line=s.legacyWaveLine;
+            seaward=line.seawardArrow();
             f.put("waveA",point(line.aLat,line.aLon));f.put("waveB",point(line.bLat,line.bLon));
-            f.put("seaStart",point(arrow[0],arrow[1]));f.put("seaEnd",point(arrow[2],arrow[3]));
+        }else if(s.offshoreHeading!=null&&f.containsKey("camera")){
+            seaward=s.offshoreHeading.seawardArrow(s.latitude,s.longitude);
+        }
+        if(seaward!=null){
+            f.put("seaStart",point(seaward[0],seaward[1]));f.put("seaEnd",point(seaward[2],seaward[3]));
         }
         long maxAge=(long)(s.gpsAge*1000);
         boolean surferFresh=gpsValid&&fresh(now,gpsAt,maxAge);

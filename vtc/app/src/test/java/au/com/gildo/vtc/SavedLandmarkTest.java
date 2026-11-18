@@ -35,7 +35,7 @@ public class SavedLandmarkTest {
         double[] step=target.nextMove(navigation.panOffset(current.pan),navigation.tiltAngle(current.tilt));
         mount.goTo(current,step[0]*navigation.settings.panSign,step[1]*navigation.settings.tiltSign,()->true);
         assertEquals(7677975,wire.target[0]);assertEquals(8386537,wire.target[1]);assertEquals(2,wire.starts());
-        assertNull(target.source);assertTrue(target.landmark);assertEquals(1794831979696L,loaded.savedAtEpochMs);
+        assertNull(target.source);assertEquals(FixedGoto.Kind.LANDMARK,target.kind);assertEquals(1794831979696L,loaded.savedAtEpochMs);
         assertEquals(bookmark(home()).values(),loaded.values());
     }
     @Test public void returnReferenceDoesNotRemoveTheTrackingCalibrationRequirement()throws Exception {

@@ -1,3 +1,45 @@
+## VTC 1.0.38 — Larger manual pan steps
+
+Install [VTC 1.0.38](VTC-1.0.38-debug.apk) with your current setup.json.
+
+- After calibration, **Wave Ride → Position the camera** adds **5°**, **15°**, and **30°** pan steps and defaults to **15°**. The **0.1°**, **0.5°**, and **1°** steps are available for fine alignment.
+- VTC checks each requested move against the configured movement limits. If a step would cross a limit, VTC leaves the mount in place and keeps calibration.
+
+## VTC 1.0.37 — Return, calibrate and pan offshore
+
+Install [VTC 1.0.37](VTC-1.0.37-debug.apk) with your current setup.json.
+
+- In **Calibrate**, use **Go to landmark and calibrate here** for a saved landmark on the same physical setup. VTC returns both axes to that position and calibrates after both have stopped. Use **Calibrate here** after manually centring the landmark for first setup or after moving the equipment.
+- After either calibration, VTC pans to the saved offshore heading when it is within the pan limits. The tilt stays at its calibration angle. If the heading is blank, point offshore manually and use **Save offshore heading** on **Wave Ride**.
+
+## VTC 1.0.36 — Save offshore heading
+
+Install [VTC 1.0.36](VTC-1.0.36-debug.apk) with your current setup.json.
+
+- Calibrate the GTi, open **Wave Ride**, and use the pan buttons to point straight offshore. When the mount stops, tap **Save offshore heading**. VTC reads the calibrated heading and saves it as offshoreHeadingDegrees in setup.json.
+- Ride detection uses that fixed bearing while the camera follows the surfer. Live Map and the Google Earth preview show the seaward arrow from the camera position. Existing two-point settings convert automatically, and older replays can still display their A and B points.
+
+## VTC 1.0.35 — Manual pan on Wave Ride
+
+Install [VTC 1.0.35](VTC-1.0.35-debug.apk) with your current setup.json.
+
+- On **Wave Ride**, select the pan angle and tap **Pan anticlockwise** or **Pan clockwise**. Each press makes one finite move. The GTi must be connected and aiming must be stopped.
+
+## VTC 1.0.34 — Recording limit in minutes
+
+Install [VTC 1.0.34](VTC-1.0.34-debug.apk) with your current setup.json.
+
+- **Setup → Optional Canon camera → Maximum recording length** is now in minutes and defaults to 20. Use 0 to disable timed rollover.
+- Existing positive limits in seconds convert to minutes. A saved 1.0.33 zero uses the new 20-minute default.
+
+## VTC 1.0.33 — Recording while aiming
+
+Install [VTC 1.0.33](VTC-1.0.33-debug.apk) with your current setup.json.
+
+- **Start Aiming** starts recording on the configured camera if it is idle. In **Setup → Optional Canon camera**, set **Maximum recording length** in seconds (the setup.json field is maxRecordingSeconds). At the limit, VTC stops the clip and starts a new one while aiming is active. Leave it at 0 to use the camera's own clip limit without timed rollover.
+- **Stop Aiming** ends automatic starts and rollover and leaves the current clip recording. Recording commands run on the camera worker. A camera connection or recording error leaves aiming active.
+- The camera reports recording events rather than the elapsed time of an existing clip. For a clip already running when VTC first observes it, the timer counts from that observation.
+
 ## VTC 1.0.32 — Camera Preview
 
 Install [VTC 1.0.32](VTC-1.0.32-debug.apk) with your current setup.json.
