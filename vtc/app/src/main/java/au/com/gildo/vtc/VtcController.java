@@ -28,6 +28,9 @@ final class VtcController implements AutoCloseable {
     private final Listener listener;
     private final MountPoller poller;
     private final LandmarkStore landmarkStore;
+    private final CalibrationFiles calibrationFiles;
+    SavedLandmark mapLandmark(){return lastLandmark;}
+    boolean mapValidated(){return calibration!=null;}
     private volatile SavedLandmark lastLandmark;
     private String landmarkStorageError="";
     private final TargetWait targetWait=new TargetWait();
@@ -49,7 +52,36 @@ final class VtcController implements AutoCloseable {
     private volatile boolean active,busy,screenVisible,closed;
     private volatile Settings s;
     private volatile Network network;
-    Network cameraNetwork(){return network;}
+    private final ScheduledExecutorService loraWorker=Executors.newSingleThreadScheduledExecutor(r->new Thread(r,"vtc-lora-link"));
+    private volatile boolean loraWanted;
+    private volatile Network loraNetwork;
+    private volatile String loraLinkStatus="Disconnected";
+    private String loraKey="";
+    boolean loraRequested(){return loraWanted;}
+    GpsFeed.Fix captureFix(){GpsFeed f=gps;GpsFeed.Fix fix=f==null?null:f.latest();return fix!=null&&fix.epoch==f.continuity()?fix:null;}
+    void connectLora(){if(closed)return;loraWanted=true;loraWorker.execute(this::maintainLora);log.event("lora_connect_requested","Independent LoRa connection");publish();}
+    void disconnectLora(){loraWanted=false;loraWorker.execute(this::maintainLora);log.event("lora_disconnect_requested","Mount connection retained");}
+    private Network wifiNetwork()throws IOException{
+        ConnectivityManager cm=context.getSystemService(ConnectivityManager.class);Network result=null;
+        for(Network n:cm.getAllNetworks()){NetworkCapabilities cap=cm.getNetworkCapabilities(n);if(cap!=null&&cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)){if(result!=null)throw new IOException("Select a single Wi-Fi network");result=n;}}
+        if(result==null)throw new IOException("Join Wi-Fi first");return result;
+    }
+    private synchronized void maintainLora(){
+        try{
+            if(closed||!loraWanted){closeLora();loraLinkStatus="Disconnected";return;}
+            Network wifi=wifiNetwork();Settings settings=s;
+            if(!Settings.ipv4(settings.receiverHost))throw new IOException("Enter the LoRa receiver IPv4 address");
+            String key=wifi+"/"+settings.receiverHost+"/"+settings.receiverPort+"/"+settings.receivePort+"/"+settings.gpsAge+"/"+settings.maxGpsSpeed;
+            if(gps==null||gps.ended()||!key.equals(loraKey)){
+                closeLora();loraNetwork=wifi;loraKey=key;gps=new GpsFeed(wifi,settings,log);gps.start();
+                log.record("lora_link_started","network",wifi.toString(),"settings",settings.values);
+            }
+            loraLinkStatus=gps.connectionStatus();
+            if(mount==null)gps.clearObservations();
+        }catch(Exception e){closeLora();loraLinkStatus="Retrying: "+e.getMessage();log.error("lora_link_retry",e);}
+    }
+    private synchronized void closeLora(){GpsFeed old=gps;gps=null;loraNetwork=null;loraKey="";if(old!=null)old.close();}
+    Network cameraNetwork(){return network!=null?network:loraNetwork;}
     Settings settings(){return s;}
     ZoomPlan.Input zoomInput(){
         Settings settings=s;GpsFeed feed=gps;GpsFeed.Fix fix=feed==null?null:feed.latest();
@@ -80,9 +112,11 @@ final class VtcController implements AutoCloseable {
         this.context=context.getApplicationContext();this.s=settings;this.log=log;this.listener=listener;
         poller=new MountPoller(SystemClock::elapsedRealtime,log::record);
         landmarkStore=new LandmarkStore(this.context,log);
+        calibrationFiles=new CalibrationFiles(this.context,log);
         try{lastLandmark=landmarkStore.load();log.record("last_landmark_loaded","landmark",lastLandmark==null?null:lastLandmark.snapshot());}
         catch(Exception e){landmarkStorageError=e.getMessage();log.error("last_landmark_load_failed",e);}
         framing=new FramingEngine(s);planner=new AimPlanner(s);
+        loraWorker.scheduleWithFixedDelay(this::maintainLora,0,2,TimeUnit.SECONDS);
         worker.scheduleWithFixedDelay(this::tick,100,100,TimeUnit.MILLISECONDS);
         watchdogThread.scheduleWithFixedDelay(()->{
             try {
@@ -106,6 +140,7 @@ final class VtcController implements AutoCloseable {
         log.settings("settings_applied",s);publish();
     }
     void connect() {
+        connectLora();
         log.settings("connect_requested",s);
         if(mount!=null||busy||closed||stopping||stopUnconfirmed){log.record("connect_blocked","connected",mount!=null,"busy",busy,"closed",closed);return;}
         final long token=generation.incrementAndGet();busy=true;message="Connecting to GTi and LoRa receiver";publish();
@@ -135,7 +170,7 @@ final class VtcController implements AutoCloseable {
                 if(!valid(token)){candidate.close();return;}
                 watchdog.reset(SystemClock.elapsedRealtime());network=wifi;mount=candidate;position=here;calibration=null;pendingMove=false;poller.reset();
                 targetWait.reset();
-                gps=new GpsFeed(wifi,s,log);gps.start();
+                // LoRa lifecycle is independent of mount connection.
                 state="CONNECTED";message=lastLandmarkBlocker()==null?"Go to last landmark or centre it manually, then validate calibration.":"Centre the landmark, then calibrate.";lastPoll=0;
                 log.record("connected","mountHost",s.mountHost,"mountPort",s.mountPort,"firmware",candidate.firmware,"countsPerRevolution",candidate.cpr);
             }catch(Exception e){
@@ -160,6 +195,7 @@ final class VtcController implements AutoCloseable {
             SavedLandmark bookmark=SavedLandmark.capture(calibration,mount.firmware,System.currentTimeMillis());
             try{landmarkStore.save(bookmark);lastLandmark=bookmark;landmarkStorageError="";log.record("last_landmark_saved","landmark",bookmark.snapshot());}
             catch(IOException e){landmarkStorageError=e.getMessage();message="Calibrated, but last landmark could not be saved: "+e.getMessage();log.error("last_landmark_save_failed",e);}
+            calibrationFiles.save(bookmark);
             log.record("calibration_success","calibration",calibrationSnapshot(calibration),"position",positionSnapshot(here));
         });
     }
@@ -595,7 +631,7 @@ final class VtcController implements AutoCloseable {
     private void cleanup() {
         clearFixedGoto("Connection closed");
         log.record("calibration_cleared","previous",calibrationSnapshot(calibration));
-        GpsFeed feed=gps;gps=null;if(feed!=null)feed.close();
+
         GtiClient client=mount;mount=null;if(client!=null)client.close();
         calibration=null;position=null;moveOrigin=null;pendingMove=false;framing.reset();planner.reset();network=null;poller.reset();targetWait.reset();
     }
@@ -647,7 +683,7 @@ final class VtcController implements AutoCloseable {
     private String connections() {
         GpsFeed feed=gps;
         return "GTi: "+(mount==null?"Disconnected":poller.waiting()?"Waiting for replies":"Connected")+" · "+s.mountHost+
-            "\nLoRa: "+(feed==null?"Disconnected":feed.connectionStatus())+" · "+s.receiverHost+
+            "\nLoRa: "+(feed==null?loraLinkStatus:feed.connectionStatus())+" · "+s.receiverHost+
             "\nCalibration: "+(calibration==null?"Required":"Set");
     }
     private void heartbeat() {
@@ -691,7 +727,8 @@ final class VtcController implements AutoCloseable {
     public void close() {
         if(closed)return;
         active=false;closed=true;generation.incrementAndGet();GtiClient m=mount;if(m!=null)m.cancel();
-        watchdogThread.shutdownNow();
+        calibrationFiles.close();
+        watchdogThread.shutdownNow();loraWanted=false;loraWorker.shutdownNow();closeLora();
         emergency.execute(()->{
             try{if(m!=null)m.stop();log.event("service_close_stopped","Both axes stopped");}
             catch(Throwable e){log.event("close_stop_unconfirmed",e.toString());}

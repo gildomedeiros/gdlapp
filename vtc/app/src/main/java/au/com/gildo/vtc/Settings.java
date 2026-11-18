@@ -13,11 +13,13 @@ final class Settings {
     final double magnitude,tiltOffset,window,minNet,consistency,supportChange,quietRate,quietSeconds,offsetRate,hfov,maxGpsSpeed;
     final int observations,supports;
     final boolean autoZoom;
+    final String zoomMode;
+    final ZoomBands zoomBands;
     final double[] zoomMultipliers;
     final ZoomMapping zoomMapping;
     final double desiredFrameWidthMetres,wideFrameFactor;
     final double zoomSwitchSeconds,manualZoomX;
-    static boolean liveZoomKey(String key){return Arrays.asList("autoFit","desiredFrameWidthMetres","wideFrameFactor","zoomMapping","zoom_scales","zoomSwitchSeconds","manualZoomX").contains(key);}
+    static boolean liveZoomKey(String key){return Arrays.asList("zoomMode","zoomBands","desiredFrameWidthMetres","wideFrameFactor","zoomMapping","zoom_scales","zoomSwitchSeconds","manualZoomX").contains(key);}
     boolean onlyZoomChanged(Settings next){
         for(String key:values.keySet())if(!liveZoomKey(key)&&!values.get(key).equals(next.values.get(key)))return false;
         return true;
@@ -25,17 +27,72 @@ final class Settings {
     static LinkedHashMap<String,String> defaults() {
         LinkedHashMap<String,String> d=new LinkedHashMap<>();
         String[][] rows={
-            {"schemaVersion","2"},{"aimingUnits","metres"},{"migrationReferenceMetres","143"},
-            {"autoFit","0"},{"desiredFrameWidthMetres","40"},{"wideFrameFactor","1.648"},{"zoomMapping",ZoomMapping.DEFAULT},{"zoom_scales","[1.0]"},{"zoomSwitchSeconds","10"},{"manualZoomX",""},
-            {"mountHost",""},{"mountPort","11880"},{"receiverHost","192.168.4.1"},{"receivePort","5005"},{"receiverPort","5006"},
-            {"latitude","-28.165513983264137"},{"longitude","153.55045722684628"},{"height",""},{"targetHeight","1"},
-            {"landmarkLat",""},{"landmarkLon",""},{"landmarkHeight",""},{"panSign","1"},{"tiltSign","1"},
-            {"panMin","-90"},{"panMax","90"},{"tiltMin","-45"},{"tiltMax","20"},{"rangeMin","30"},{"rangeMax","2000"},
-            {"panToleranceMetres",Double.toString(AimUnits.metres(0.15,AimUnits.REFERENCE))},{"tiltToleranceMetres",Double.toString(AimUnits.metres(0.1,AimUnits.REFERENCE))},{"reverseSeconds","2"},{"gpsAge","2"},
-            {"acquisitionTriggerMetres",Double.toString(AimUnits.metres(3,AimUnits.REFERENCE))},{"gotoMaxMove","45"},{"cameraHost",""},{"cameraPort","8080"},
-            {"maxPanningSpeed","0.5"},{"gpsGapTimeout","3"},{"magnitudeMetres",Double.toString(AimUnits.metres(1,AimUnits.REFERENCE))},{"tiltOffset","0"},{"hfov",""},
-            {"window","1.5"},{"observations","3"},{"minNet","0.3"},{"consistency","0.8"},{"supports","2"},{"supportChange","0.03"},
-            {"quietRate","0.08"},{"quietSeconds","3"},{"offsetRate","0"},{"maxGpsSpeed","30"}
+            {"schemaVersion", "2"},
+            {"aimingUnits", "metres"},
+            {"migrationReferenceMetres", "143"},
+            {"zoomMode", "bands"},
+            {"zoomBands", 
+                "{\n" +
+                "  \"bufferMetres\": 5,\n" +
+                "  \"bands\": [\n" +
+                "    {\"maxDistanceMetres\": 20, \"zoomX\": 1},\n" +
+                "    {\"maxDistanceMetres\": 25, \"zoomX\": 1.5},\n" +
+                "    {\"maxDistanceMetres\": 30, \"zoomX\": 2},\n" +
+                "    {\"maxDistanceMetres\": 50, \"zoomX\": 2.5},\n" +
+                "    {\"maxDistanceMetres\": 60, \"zoomX\": 3},\n" +
+                "    {\"maxDistanceMetres\": 200, \"zoomX\": 8},\n" +
+                "    {\"maxDistanceMetres\": null, \"zoomX\": 10}\n" +
+                "  ]\n" +
+                "}"},
+            {"desiredFrameWidthMetres", "40"},
+            {"wideFrameFactor", "1.648"},
+            {"zoomMapping", ZoomMapping.DEFAULT},
+            {"zoom_scales", "[1.0]"},
+            {"zoomSwitchSeconds", "10"},
+            {"manualZoomX", ""},
+            {"mountHost", "192.168.4.4"},
+            {"mountPort", "11880"},
+            {"receiverHost", "192.168.4.1"},
+            {"receivePort", "5005"},
+            {"receiverPort", "5006"},
+            {"latitude", "-28.07007000"},
+            {"longitude", "153.38730000"},
+            {"height", "3"},
+            {"targetHeight", "1"},
+            {"landmarkLat", "-28.07057000"},
+            {"landmarkLon", "153.38709000"},
+            {"landmarkHeight", "0"},
+            {"panSign", "1"},
+            {"tiltSign", "-1"},
+            {"panMin", "-120"},
+            {"panMax", "120"},
+            {"tiltMin", "-45"},
+            {"tiltMax", "20"},
+            {"rangeMin", "10"},
+            {"rangeMax", "2000"},
+            {"panToleranceMetres", "2"},
+            {"tiltToleranceMetres", "0.5"},
+            {"reverseSeconds", "2"},
+            {"gpsAge", "2"},
+            {"acquisitionTriggerMetres", "3"},
+            {"gotoMaxMove", "45"},
+            {"cameraHost", "192.168.4.3"},
+            {"cameraPort", "8080"},
+            {"maxPanningSpeed", "5"},
+            {"gpsGapTimeout", "3"},
+            {"magnitudeMetres", "2"},
+            {"tiltOffset", "0"},
+            {"hfov", "6.48"},
+            {"window", "1.5"},
+            {"observations", "3"},
+            {"minNet", "0.3"},
+            {"consistency", "0.8"},
+            {"supports", "2"},
+            {"supportChange", "0.03"},
+            {"quietRate", "0.08"},
+            {"quietSeconds", "3"},
+            {"offsetRate", "0.3"},
+            {"maxGpsSpeed", "20"},
         };
         for(String[] r:rows)d.put(r[0],r[1]);
         return d;
@@ -53,7 +110,11 @@ final class Settings {
         if(!d.get("aimingUnits").equals("metres"))throw new IllegalArgumentException("aimingUnits must be metres");
         d.put("schemaVersion","2");
         values=Collections.unmodifiableMap(d);
-        autoZoom=integer("autoFit",0,1)==1;
+        zoomMode=d.get("zoomMode");
+        if(!Arrays.asList("off","bands","auto-fit").contains(zoomMode))throw new IllegalArgumentException("Zoom mode must be off, bands or auto-fit");
+        autoZoom=!zoomMode.equals("off");
+        zoomBands=new ZoomBands(d.get("zoomBands"));
+        d.put("zoomBands",LogJson.encode(ConfigJson.parse(d.get("zoomBands"))));
         zoomMultipliers=ZoomPlan.parse(d.get("zoom_scales"),true);d.put("zoom_scales",LogJson.encode(zoomMultipliers));
         zoomMapping=new ZoomMapping(d.get("zoomMapping"));d.put("zoomMapping",LogJson.encode(ConfigJson.parse(d.get("zoomMapping"))));
         desiredFrameWidthMetres=number("desiredFrameWidthMetres",1,10000);wideFrameFactor=number("wideFrameFactor",0.01,10);

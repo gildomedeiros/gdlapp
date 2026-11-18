@@ -12,6 +12,7 @@ public class SavedLandmarkTest {
         Map<String,String> values=new HashMap<>(Map.of("mountHost","192.168.4.3","latitude","-28.07924011",
             "longitude","153.4010217","height","4","targetHeight","0","landmarkLat","-28.0791129",
             "landmarkLon","153.4012993","landmarkHeight","4","tiltSign","-1","rangeMin","15"));
+        values.put("panMin","-90");values.put("panMax","90");
         for(int i=0;i<changes.length;i+=2)values.put(changes[i],changes[i+1]);
         return new Settings(values);
     }

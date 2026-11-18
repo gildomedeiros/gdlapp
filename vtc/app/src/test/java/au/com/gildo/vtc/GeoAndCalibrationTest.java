@@ -7,6 +7,8 @@ import static org.junit.Assert.*;
 public class GeoAndCalibrationTest {
     static Settings configured(String... changes) {
         Map<String,String> m=new HashMap<>();
+        m.put("latitude","-28.165513983264137");m.put("longitude","153.55045722684628");
+        m.put("panMin","-90");m.put("panMax","90");
         m.put("height","40");m.put("landmarkLat","-28.168607320532757");
         m.put("landmarkLon","153.55456670415674");m.put("landmarkHeight","0");
         for(int i=0;i<changes.length;i+=2)m.put(changes[i],changes[i+1]);

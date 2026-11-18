@@ -14,7 +14,7 @@ public class V111Test {
     }
     @Test public void settingAcceptsFiveAndPreservesDefaultAndSavedValues(){
         assertEquals(5,new Settings(Map.of("maxPanningSpeed","5")).maxPanningSpeed,0);
-        assertEquals(.5,new Settings(Map.of()).maxPanningSpeed,0);
+        assertEquals(5,new Settings(Map.of()).maxPanningSpeed,0);
         assertEquals(.2,new Settings(Map.of("maxPanningSpeed","0.2")).maxPanningSpeed,0);
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("maxPanningSpeed","5.001")));
     }

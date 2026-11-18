@@ -10,7 +10,7 @@ public class V113Test {
         assertEquals(3,restored.magnitudeDegrees(143),1e-10);assertEquals(1,restored.panToleranceDegrees(143),1e-10);assertEquals(6.48,restored.hfov,0);
     }
     @Test public void fieldOfViewIsOptionalAndDoesNotRestrictOffsets(){
-        assertTrue(Double.isNaN(new Settings(Map.of()).hfov));
+        assertEquals(6.48,new Settings(Map.of()).hfov,0);
         Settings s=new Settings(Map.of("hfov","","magnitude","30","panTolerance","3","tiltOffset","-2"));
         assertTrue(Double.isNaN(s.hfov));assertEquals(30,s.magnitudeDegrees(143),1e-10);assertEquals(-2,s.tiltOffset,0);
         assertEquals(30,new Settings(Map.of("hfov","0.2","magnitude","30")).magnitudeDegrees(143),1e-10);

@@ -24,6 +24,8 @@ public final class VtcService extends Service {
     private volatile String loadError="";
     private android.net.wifi.WifiManager.WifiLock wifiLock;
     private boolean destroyed;
+    private final java.util.concurrent.atomic.AtomicLong savesQueued=new java.util.concurrent.atomic.AtomicLong();
+    private volatile long savesCompleted;
     private boolean logsMigrated;
     private Thread.UncaughtExceptionHandler previousHandler,fatalHandler;
     public final class LocalBinder extends Binder {VtcService service(){return VtcService.this;}}
@@ -37,7 +39,7 @@ public final class VtcService extends Service {
         android.net.wifi.WifiManager wifi=(android.net.wifi.WifiManager)getApplicationContext().getSystemService(WIFI_SERVICE);
         if(wifi!=null){wifiLock=wifi.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF,"VTC:device-wifi");wifiLock.setReferenceCounted(false);}
         log=new SessionLog(this);setup=new PublicSettingsStore(this,"vtc_setup","setup.json",log);
-        Settings settings;
+        Settings settings;boolean loadedOk=true;
         try{
             Map<String,String> loaded=setup.load();
             if(!loaded.isEmpty()&&!loaded.containsKey("schemaVersion")){
@@ -46,7 +48,7 @@ public final class VtcService extends Service {
                 log.record("settings_units_migration","referenceDistanceMetres",143,"from","degrees","to","metres");
             }
             settings=new Settings(loaded);
-        }catch(Exception e){settings=new Settings(Collections.emptyMap());loadError="Settings could not be loaded: "+e.getMessage();log.error("settings_load_failed",e);}
+        }catch(Exception e){loadedOk=false;settings=new Settings(Collections.emptyMap());loadError="Settings could not be loaded: "+e.getMessage();log.error("settings_load_failed",e);}
         controller=new VtcController(this,settings,log,v->main.post(()->update(v)));
         previousHandler=Thread.getDefaultUncaughtExceptionHandler();
         fatalHandler=(thread,failure)->{try{controller.fatalFailure(failure);}finally{if(previousHandler!=null)previousHandler.uncaughtException(thread,failure);}};
@@ -54,18 +56,31 @@ public final class VtcService extends Service {
         camera=new CameraZoomReader(controller::settings,controller::cameraNetwork,controller::zoomInput,log);
         log.settings("service_start",settings);
         final Settings migrated=settings;
-        storage.execute(()->{try{setup.save(migrated.values);}catch(Exception e){log.error("settings_migration_save_failed",e);}});
+        if(loadedOk)storage.execute(()->{try{setup.save(migrated.values);}catch(Exception e){log.error("settings_migration_save_failed",e);}});
         log.event("service_session","New service session; calibration must be validated before aiming");
         storage.scheduleWithFixedDelay(()->{setup.retry();controller.retryLandmarkStorage();
             if(!logsMigrated)logsMigrated=LogStorage.migratePreviousLogs(this,log);
         },5,10,TimeUnit.SECONDS);
     }
-    String setupStatus(){return loadError.isEmpty()?setup.status():loadError;}
+    String setupStatus(){return savesCompleted<savesQueued.get()?"Saving setup.json…":loadError.isEmpty()?setup.status():loadError;}
     void saveSettings(Settings settings)throws Exception {
         String previousManual=controller.settings().values.get("manualZoomX");
         controller.configure(settings);
         if(!previousManual.equals(settings.values.get("manualZoomX")))camera.manualObservation("field_changed");
-        storage.execute(()->{try{setup.save(settings.values);loadError="";}catch(Exception e){loadError="Settings save failed: "+e.getMessage();log.error("settings_save_failed",e);}});
+        final long revision=savesQueued.incrementAndGet();
+        storage.execute(()->{try{setup.save(settings.values);loadError="";}catch(Exception e){loadError="Settings save failed: "+e.getMessage();log.error("settings_save_failed",e);}finally{savesCompleted=revision;}});
+    }
+    void useSettingsFolder(android.net.Uri tree,int flags){
+        int grants=Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+        if((flags&grants)!=grants)throw new IllegalArgumentException("Allow both read and write access to the Settings folder");
+        String id=android.provider.DocumentsContract.getTreeDocumentId(tree);
+        if(!id.endsWith(":Download/VTC/Settings")&&!id.endsWith(":Downloads/VTC/Settings"))throw new IllegalArgumentException("Select Download/VTC/Settings, not the Downloads root");
+        getContentResolver().takePersistableUriPermission(tree,grants);
+        if(!getSharedPreferences(AndroidSettingsFiles.FOLDER_PREFS,0).edit().putString("uri",tree.toString()).commit())throw new IllegalStateException("Cannot retain folder access");
+        final long revision=savesQueued.incrementAndGet();
+        // Retry known pending edits only. Granting access must never write fallback
+        // defaults over an existing file that could not be loaded at startup.
+        storage.execute(()->{try{setup.retry();controller.retryLandmarkStorage();log.event("settings_folder_access",tree.toString());}catch(Exception e){loadError=e.toString();log.error("settings_folder_save_failed",e);}finally{savesCompleted=revision;}});
     }
     void exit(Runnable finished){controller.exit(ok->main.post(()->{
         if(!ok)android.widget.Toast.makeText(this,"VTC closed. Mount stop NOT confirmed; check mount power.",android.widget.Toast.LENGTH_LONG).show();
@@ -77,7 +92,7 @@ public final class VtcService extends Service {
     private void update(VtcController.View v){
         if(destroyed)return;latest=v;
         // Keep CPU awake throughout a connected session, including waiting for fresh GPS.
-        boolean needed=v.connected||v.busy||v.tracking;
+        boolean needed=v.connected||v.busy||v.tracking||controller.loraRequested();
         if(needed&&!wake.isHeld())wake.acquire();else if(!needed&&wake.isHeld())wake.release();
         if(wifiLock!=null){if(needed&&!wifiLock.isHeld())wifiLock.acquire();else if(!needed&&wifiLock.isHeld())wifiLock.release();}
         String text=v.tracking?"Aiming active · "+v.state:v.connected?"Connected · "+v.state:v.state;

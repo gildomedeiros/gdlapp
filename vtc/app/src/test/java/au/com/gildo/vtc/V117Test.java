@@ -30,12 +30,12 @@ public class V117Test {
         assertEquals("metres",s.values.get("aimingUnits"));assertEquals("2",s.values.get("schemaVersion"));
         for(String old:List.of("panTolerance","tiltTolerance","magnitude","acquisitionTriggerDegrees","zoomMultipliers"))assertFalse(s.values.containsKey(old));
         Settings round=new Settings(ConfigJson.settings(LogJson.encode(ConfigJson.structured(s.values))));assertEquals(s.values,round.values);
-        assertFalse(round.values.containsKey("zoomBands"));assertEquals(40,round.desiredFrameWidthMetres,0);
+        assertTrue(round.values.containsKey("zoomBands"));assertEquals(40,round.desiredFrameWidthMetres,0);
         assertArrayEquals(new double[]{1,3},round.zoomMultipliers,0);
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("panTolerance","1","panToleranceMetres","2")));
     }
-    @Test public void defaultZeroRateAppliesMagnitudeImmediatelyAndAdaptsToRange(){
-        Settings s=new Settings(Map.of("magnitudeMetres","10"));assertEquals(0,s.offsetRate,0);
+    @Test public void zeroRateAppliesMagnitudeImmediatelyAndAdaptsToRange(){
+        Settings s=new Settings(Map.of("magnitudeMetres","10","offsetRate","0"));assertEquals(0,s.offsetRate,0);
         FramingEngine f=new FramingEngine(s);f.distance(100);
         f.observe(1,1,0,0);f.observe(2,2,750,.4);f.observe(3,3,1500,.8);
         assertEquals(AimUnits.degrees(10,100),f.tick(1500),1e-10);
@@ -59,8 +59,8 @@ public class V117Test {
     }
     @Test public void legacyBandsRetireAndScalesSurvive(){
         Settings s=new Settings(Map.of("autoZoom","0","zoomBands",ZoomPlan.DEFAULT_BANDS,"zoom_scales","[1,3]"));
-        assertFalse(s.values.containsKey("zoomBands"));assertFalse(s.values.containsKey("autoZoom"));
-        assertEquals("0",s.values.get("autoFit"));assertArrayEquals(new double[]{1,3},s.zoomMultipliers,0);
+        assertTrue(s.values.containsKey("zoomBands"));assertFalse(s.values.containsKey("autoZoom"));
+        assertEquals("off",s.values.get("zoomMode"));assertArrayEquals(new double[]{1,3},s.zoomMultipliers,0);
     }
     @Test public void rejectsMalformedOrUnboundedBandConfigurations(){
         for(String bad:List.of("{}","{\"bufferMetres\":5,\"bands\":[]}","{\"bufferMetres\":5,\"bands\":[{\"maxDistanceMetres\":50,\"zoomX\":1}]}","{\"bufferMetres\":-1,\"bands\":[{\"maxDistanceMetres\":null,\"zoomX\":1}]}"))

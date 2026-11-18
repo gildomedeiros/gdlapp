@@ -35,7 +35,7 @@ public final class MainActivity extends Activity {
     private final ServiceConnection serviceConnection=new ServiceConnection(){
         public void onServiceConnected(ComponentName name,IBinder binder){
             service=((VtcService.LocalBinder)binder).service();controller=service.controller;log=service.log;settings=controller.settings();
-            buildUi();fillSettings(settings);setupMessage.setText(service.setupStatus());showPage(0);service.attach(listener);controller.foreground(screenVisible);refreshLogStatus();refreshTelemetry();
+            buildUi();fillSettings(settings);showPage(0);service.attach(listener);controller.foreground(screenVisible);refreshLogStatus();refreshTelemetry();
         }
         public void onServiceDisconnected(ComponentName name){controller=null;service=null;handler.removeCallbacksAndMessages(null);
             TextView error=new TextView(MainActivity.this);error.setText("VTC service interrupted. Reopen VTC, reconnect and validate calibration.");setContentView(error);}
@@ -45,7 +45,13 @@ public final class MainActivity extends Activity {
     private View[] pages;
     private TextView state,message,connections,mountInfo,gpsInfo,aimInfo,frameInfo,calibrationInfo,setupMessage,logStatus;
     private Button connect,disconnect,start,calibrate;
-    private Spinner panSign,tiltSign,manualStep;
+    private final List<Button> aimingButtons=new ArrayList<>();
+    private boolean capturing;
+    private TextView captureStatus,calibrationGps;
+    private final List<TextView> settingsStorageStatuses=new ArrayList<>();
+    private String settingsValidationError="";
+    private CalibrationMapView calibrationMap;
+    private Spinner panSign,tiltSign,manualStep,zoomMode;
     private CheckBox levelConfirmed,directionsConfirmed;
     private String exportSettingsText;
     private int page;
@@ -91,8 +97,9 @@ public final class MainActivity extends Activity {
     private View scroll(LinearLayout content){ScrollView s=new ScrollView(this);s.setFillViewport(true);s.addView(content);return s;}
     private View trackPage() {
         LinearLayout p=scrollPage();
-        LinearLayout r=row(p);connect=button(r,"Connect",()->{if(autoSaveSettings())controller.connect();});disconnect=button(r,"Disconnect",()->controller.disconnect());
-        start=button(p,"START AIMING",()->controller.start());start.setTextColor(ACCENT);
+        LinearLayout r=row(p);connect=button(r,"Connect GTi + LoRa",()->{if(autoSaveSettings())controller.connect();});disconnect=button(r,"Disconnect GTi",()->controller.disconnect());
+        loraControls(p);
+        start=aimingButton(p);
         landmarkButtons.add(button(p,"GO TO LAST LANDMARK",()->controller.goToLandmark()));
         landmarkStatuses.add(text(p,"Loading last saved landmark",13,MUTED,false));
         text(p,"Returns both axes to the last saved landmark and stays there. No surfer GPS is needed. Returning does not validate calibration.",13,MUTED,false);
@@ -108,6 +115,31 @@ public final class MainActivity extends Activity {
     }
     private View calibrationPage() {
         LinearLayout p=scrollPage();
+        aimingButton(p);loraControls(p);
+        button(p,"See calibration in Google Maps",()->{if(autoSaveSettings())CalibrationLauncher.maps(this,controller.settings());});
+        button(p,"See calibration in Google Earth",()->{if(autoSaveSettings())CalibrationLauncher.earth(this,controller.settings(),controller.mapValidated());});
+        text(p,"Uses current saved camera and landmark coordinates, including LoRa captures. Maps shows directions; Earth shows both points and their bearing line. No calibration or API key is required to view coordinates.",13,MUTED,false);
+        calibrationGps=text(card(p,"LoRa GPS for capture"),"LoRa disconnected",14,MUTED,false);
+        settingsStorageStatuses.add(text(p,"Checking settings storage",14,ACCENT,false));
+        captureStatus=text(p,"Disconnect GTi to edit reference settings or capture GPS. LoRa stays connected. Keep the LoRa unit still during capture.",14,ACCENT,false);
+        LinearLayout site=card(p,"Camera site");
+        field(site,"cameraCoordinates","Camera coordinates — latitude, longitude");
+        text(site,"Paste the coordinate pair copied from Google Maps, e.g. -28.165514, 153.550457",13,MUTED,false);
+        button(site,"Use LoRa GPS for camera",()->captureCoordinates(false));
+        field(site,"height","Lens height above water (m)");
+        field(site,"targetHeight","Aim height on surfer above water (m)");
+
+        LinearLayout reference=card(p,"Landmark");
+        text(reference,"Enter the coordinates and height of the exact point you will centre. Use the same water level as the camera height.",13,MUTED,false);
+        field(reference,"landmarkCoordinates","Landmark coordinates — latitude, longitude");
+        button(reference,"Use LoRa GPS for landmark",()->captureCoordinates(true));
+        field(reference,"landmarkHeight","Landmark height above water (m)");
+        text(reference,"Pan direction",14,TEXT,false);
+        panSign=spinner(reference,new String[]{"Positive motor count turns right (+1)","Negative motor count turns right (-1)"});
+        text(reference,"Tilt direction",14,TEXT,false);
+        tiltSign=spinner(reference,new String[]{"Positive motor count tilts up (+1)","Negative motor count tilts up (-1)"});
+
+
         landmarkButtons.add(button(p,"GO TO LAST LANDMARK",()->controller.goToLandmark()));
         landmarkStatuses.add(text(p,"Loading last saved landmark",13,MUTED,false));
         text(p,"Each successful calibration saves the landmark position across app restarts. Return, check alignment on the camera, then validate calibration. Recalibrate after moving the setup or restarting the mount.",13,MUTED,false);
@@ -128,18 +160,70 @@ public final class MainActivity extends Activity {
                 log.event("calibration_blocked","Confirm levelling and axis directions first");
                 toast("Confirm levelling and axis directions first");return;
             }
-            controller.calibrate();
+            if(autoSaveSettings())controller.calibrate();
         });
         levelConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","level","checked",checked));
         directionsConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","directions","checked",checked));
         calibrationInfo=text(card(p,"Reference"),"Not calibrated",15,TEXT,false);
+        calibrationMap=new CalibrationMapView(this,controller::settings,controller::mapValidated);p.addView(calibrationMap);
         text(p,"Calibration is valid only for this connection. Recalibrate after moving the tripod, releasing a clutch, adjusting the camera, or restarting the mount. Disconnect VTC before making those changes.",14,MUTED,false);
         return scroll(p);
+    }
+    private Button aimingButton(LinearLayout p){Button b=button(p,"START AIMING",()->{if(lastView!=null&&lastView.tracking)controller.stop("User Stop aiming");else if(autoSaveSettings())controller.start();});aimingButtons.add(b);b.setTextColor(ACCENT);return b;}
+    private void loraControls(LinearLayout p){LinearLayout r=row(p);button(r,"Connect LoRa",()->{if(autoSaveSettings())controller.connectLora();});button(r,"Disconnect LoRa",()->controller.disconnectLora());}
+    private void captureCoordinates(boolean landmark){
+        if(capturing){toast("A GPS capture is already running");return;}
+        if(lastView!=null&&(lastView.connected||lastView.busy)){toast("Disconnect GTi first; LoRa can stay connected");return;}
+        if(!autoSaveSettings())return;
+        controller.connectLora();capturing=true;
+        String label=landmark?"landmark":"camera";
+        StableGpsCapture capture=new StableGpsCapture(SystemClock.elapsedRealtime());
+        TextView progress=new TextView(this);progress.setPadding(dp(20),dp(20),dp(20),dp(20));progress.setText("Waiting for fresh LoRa GPS");
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Capture "+label+" GPS — remain still").setView(progress).setNegativeButton("Cancel",(d,w)->{capturing=false;log.event("gps_capture_cancelled",label);}).create();
+        dialog.setOnCancelListener(d->{capturing=false;log.event("gps_capture_cancelled",label);});dialog.show();
+        log.record("gps_capture_started","target",label,"settings",settings.values);
+        handler.post(new Runnable(){long epoch=-1;public void run(){
+            if(!capturing||!dialog.isShowing())return;
+            if(!screenVisible||lastView!=null&&(lastView.connected||lastView.busy)){capturing=false;dialog.dismiss();log.event("gps_capture_cancelled","Screen or mount state changed");return;}
+            try{
+                GpsFeed.Fix fix=controller.captureFix();long now=SystemClock.elapsedRealtime();
+                if(fix!=null&&epoch!=fix.epoch){capture.reset();epoch=fix.epoch;}
+                StableGpsCapture.Point point=capture.observe(fix==null?Double.NaN:fix.packet.lat,fix==null?Double.NaN:fix.packet.lon,fix==null?-1:fix.receivedAt,now);
+                progress.setText(capture.status);captureStatus.setText(capture.status);
+                log.record("gps_capture_progress","target",label,"fix",fix==null?null:fix.packet.fields(),"fixReceivedAtMs",fix==null?null:fix.receivedAt,"samples",capture.count(),"scatterMetres",capture.scatter,"status",capture.status);
+                if(point!=null){
+                    capturing=false;dialog.dismiss();String key=landmark?"landmarkCoordinates":"cameraCoordinates";
+                    fillingSettings=true;fields.get(key).setText(String.format(Locale.US,"%.8f, %.8f",point.lat,point.lon));fillingSettings=false;
+                    if(autoSaveSettings()){captureStatus.setText("Captured "+label+": "+fields.get(key).getText()+" · scatter "+String.format(Locale.US,"%.1f m",point.scatter));log.record("gps_capture_applied_save_queued","target",label,"latitude",point.lat,"longitude",point.lon,"scatterMetres",point.scatter,"fixes",10,"settings",settings.values);}
+                    else{clearFailedCapture(landmark,"Capture could not be saved");log.event("gps_capture_save_failed",label);}
+                    return;
+                }
+                handler.postDelayed(this,500);
+            }catch(Exception e){capturing=false;dialog.dismiss();clearFailedCapture(landmark,e.getMessage());log.error("gps_capture_failed",e,"target",label);}
+        }});
+    }
+    private void clearFailedCapture(boolean landmark,String reason){
+        String label=landmark?"landmark":"camera",key=landmark?"landmarkCoordinates":"cameraCoordinates";
+        handler.removeCallbacks(autoSave);fillingSettings=true;fields.get(key).setText("");fillingSettings=false;
+        try{
+            Map<String,String> values=new LinkedHashMap<>(controller.settings().values);
+            values.put(landmark?"landmarkLat":"latitude","");values.put(landmark?"landmarkLon":"longitude","");
+            Settings cleared=new Settings(values);service.saveSettings(cleared);settings=cleared;
+            captureStatus.setText(reason+". "+label+" coordinates cleared; see storage status for file confirmation.");
+            log.record("gps_capture_coordinates_cleared","target",label,"reason",reason,"settings",settings.values);
+        }catch(Exception e){captureStatus.setText(reason+". Field cleared, but saving failed: "+e.getMessage());log.error("gps_capture_clear_failed",e,"target",label);}
     }
     private void nudge(int axis,int direction){double[] steps={.1,.5,1};controller.nudge(axis,direction*steps[manualStep.getSelectedItemPosition()]);}
     private View settingsPage() {
         LinearLayout p=scrollPage();
         setupMessage=text(p,"Valid edits save automatically while disconnected. Heights use the same water-level reference.",14,ACCENT,false);
+        settingsStorageStatuses.add(text(p,"Checking settings storage",14,ACCENT,false));
+        button(p,"Allow Settings folder access",()->{
+            Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION|Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,DocumentsContract.buildDocumentUri("com.android.externalstorage.documents","primary:Download/VTC/Settings"));startActivityForResult(intent,105);
+        });
+        text(p,"Only needed if Android denies access after a PC file replacement. Select Download/VTC/Settings once. VTC then saves current settings to setup.json and verifies the file automatically.",13,MUTED,false);
         LinearLayout connection=card(p,"Network");
         text(connection,"Join Wi-Fi in Android first. The GTi and LoRa receiver must both be reachable on it. Close SynScan and other LoRa viewers.",13,MUTED,false);
         field(connection,"mountHost","GTi IPv4 address");
@@ -152,7 +236,11 @@ public final class MainActivity extends Activity {
         LinearLayout camera=card(p,"Optional Canon camera");
         field(camera,"cameraHost","Camera IPv4 address — blank disables polling");
         field(camera,"cameraPort","CCAPI HTTP port");
-        field(camera,"autoFit","Auto-fit (0 = off, 1 = on)");
+        text(camera,"Zoom mode",14,TEXT,false);
+        zoomMode=spinner(camera,new String[]{"Off","Bands","Auto-fit"});
+        field(camera,"zoomBands","Zoom bands JSON: distance limits and zoomX");
+        fields.get("zoomBands").setSingleLine(false);fields.get("zoomBands").setMinLines(8);fields.get("zoomBands").setGravity(Gravity.TOP);
+        text(camera,"Bands selects zoomX by GPS distance, then multiplies it by the current zoom scale. bufferMetres prevents repeated switching near a boundary. Auto-fit uses desired frame width. Zoom scales and their timer apply to both modes.",13,MUTED,false);
         text(camera,"Off leaves the camera zoom exactly as it is: no zoom commands, no automatic adjustments. VTC continues reading and logging zoom.",13,MUTED,false);
         field(camera,"zoom_scales","Zoom scales (comma-separated; 0.5–3.0, increments 0.1)");
         field(camera,"zoomSwitchSeconds","Seconds per zoom scale (2–3600)");
@@ -160,27 +248,12 @@ public final class MainActivity extends Activity {
         field(camera,"wideFrameFactor","Wide frame factor (0.01–10; default 1.648)");
         field(camera,"zoomMapping","Zoom mapping JSON: zoomX / ccapiValue points");
         fields.get("zoomMapping").setSingleLine(false);fields.get("zoomMapping").setMinLines(8);fields.get("zoomMapping").setGravity(Gravity.TOP);
-        text(camera,"Auto-fit calculates zoom from GPS distance and desired width. Scale 1 uses that width; scale 2 halves it. One scale holds; multiple scales cycle. Mapping points must increase in zoomX and ccapiValue, beginning at 1x. Uses logarithmic interpolation/extrapolation. Adjustments allow 5% width error to avoid zoom chatter; checked on the independent camera poll (at least 2 seconds apart).",13,MUTED,false);
-        text(camera,"Zoom mapping and frame widths are provisional estimates from 1x=0, 6x=89 and 10x=102. Test and calibrate. Camera limits are enforced. Fresh GPS is required for automatic zoom.",13,MUTED,false);
+        text(camera,"Auto-fit calculates zoom from GPS distance and desired width. Scale 1 uses that width; scale 2 halves it. One scale holds; multiple scales cycle. Mapping accepts 2–1000 points beginning at 1x. zoomX must increase; ccapiValue may repeat but must not decrease. Uses logarithmic interpolation/extrapolation. Adjustments allow 5% width error to avoid zoom chatter; checked on the independent camera poll (at least 2 seconds apart).",13,MUTED,false);
+        text(camera,"Zoom uses the configured calibration mapping. Frame widths remain estimates. Camera limits are enforced. Fresh GPS is required for automatic zoom.",13,MUTED,false);
         field(camera,"manualZoomX","Manual camera zoom (×; optional observation, not a command)");
         button(camera,"Log manual zoom observation",()->{if(autoSaveSettings())service.camera.manualObservation("user_record");});
-        text(camera,"Turn Auto-fit off, set the zoom on your camera and enter its displayed × value. The observation logs the latest CCAPI reading and its age. These fields can be edited while aiming.",13,MUTED,false);
+        text(camera,"Select Off, set the zoom on your camera and enter its displayed × value. The observation logs the latest CCAPI reading and its age. These fields can be edited while aiming.",13,MUTED,false);
         text(camera,"Reads zoom and synchronises the clock once per connection, independently of aiming. Camera errors do not stop tracking. Use the camera IP shown on your shared Wi-Fi network.",13,MUTED,false);
-        LinearLayout site=card(p,"Camera site");
-        field(site,"cameraCoordinates","Camera coordinates — latitude, longitude");
-        text(site,"Paste the coordinate pair copied from Google Maps, e.g. -28.165514, 153.550457",13,MUTED,false);
-        field(site,"height","Lens height above water (m)");
-        field(site,"targetHeight","Aim height on surfer above water (m)");
-
-        LinearLayout reference=card(p,"Landmark");
-        text(reference,"Enter the coordinates and height of the exact point you will centre. Use the same water level as the camera height.",13,MUTED,false);
-        field(reference,"landmarkCoordinates","Landmark coordinates — latitude, longitude");
-        field(reference,"landmarkHeight","Landmark height above water (m)");
-        text(reference,"Pan direction",14,TEXT,false);
-        panSign=spinner(reference,new String[]{"Positive motor count turns right (+1)","Negative motor count turns right (-1)"});
-        text(reference,"Tilt direction",14,TEXT,false);
-        tiltSign=spinner(reference,new String[]{"Positive motor count tilts up (+1)","Negative motor count tilts up (-1)"});
-
         LinearLayout frame=card(p,"Framing");
         text(frame,"Always automatic. Magnitude 0 means no horizontal offset.",13,MUTED,false);
         field(frame,"magnitudeMetres","Automatic horizontal offset magnitude (m)");
@@ -242,18 +315,20 @@ public final class MainActivity extends Activity {
         text(p,"Verification\n• Build and automated checks cover software logic.\n• Landmark accuracy, motor directions, backlash and tracking smoothness need a hardware check.\n• No guarantee of a mount communication-loss watchdog is assumed. Continuous movement needs Stop. The independent watchdog attempts Stop on a control stall; lost power, force-stop or lost Wi-Fi can prevent it.\n• Aiming continues when switching apps or locking the screen. Use Stop in VTC or its notification. Force-stop/process termination ends the service; reconnect and validate calibration after a new service session.",14,MUTED,false);
         return scroll(p);
     }
-    private String prettyBands(String json){try{return new org.json.JSONArray(json).toString(2);}catch(Exception e){return json;}}
+    private String prettyBands(String json){try{return json.trim().startsWith("{")?new org.json.JSONObject(json).toString(2):new org.json.JSONArray(json).toString(2);}catch(Exception e){return json;}}
     private void fillSettings(Settings s) {
         fillingSettings=true;
-        for(Map.Entry<String,EditText> e:fields.entrySet())if(s.values.containsKey(e.getKey()))e.getValue().setText(e.getKey().equals("zoom_scales")?s.values.get(e.getKey()).replace("[", "").replace("]", ""):e.getKey().equals("zoomMapping")?prettyBands(s.values.get(e.getKey())):s.values.get(e.getKey()));
+        for(Map.Entry<String,EditText> e:fields.entrySet())if(s.values.containsKey(e.getKey()))e.getValue().setText(e.getKey().equals("zoom_scales")?s.values.get(e.getKey()).replace("[", "").replace("]", ""):(e.getKey().equals("zoomMapping")||e.getKey().equals("zoomBands"))?prettyBands(s.values.get(e.getKey())):s.values.get(e.getKey()));
         fields.get("cameraCoordinates").setText(Coordinates.display(s.values.get("latitude"),s.values.get("longitude")));
         fields.get("landmarkCoordinates").setText(Coordinates.display(s.values.get("landmarkLat"),s.values.get("landmarkLon")));
+        zoomMode.setSelection(s.zoomMode.equals("off")?0:s.zoomMode.equals("bands")?1:2);
         panSign.setSelection(s.panSign>0?0:1);tiltSign.setSelection(s.tiltSign>0?0:1);
         fillingSettings=false;
     }
     private Map<String,String> formValues() {
         Map<String,String> values=new LinkedHashMap<>();
         for(Map.Entry<String,EditText> e:fields.entrySet())values.put(e.getKey(),e.getValue().getText().toString());
+        values.put("zoomMode",new String[]{"off","bands","auto-fit"}[zoomMode.getSelectedItemPosition()]);
         values.put("panSign",panSign.getSelectedItemPosition()==0?"1":"-1");
         values.put("tiltSign",tiltSign.getSelectedItemPosition()==0?"1":"-1");
         return values;
@@ -275,9 +350,9 @@ public final class MainActivity extends Activity {
             Settings next=readSettings();
             if(lastView!=null&&(lastView.connected||lastView.busy)&&!settings.onlyZoomChanged(next))
                 throw new IllegalArgumentException("Only zoom settings can change while connected");
-            if(!next.values.equals(settings.values)){service.saveSettings(next);settings=next;log.settings("settings_auto_saved",next);}
-            setupMessage.setText("Saved automatically: Download/VTC/Settings/setup.json");return true;
-        }catch(Exception e){setupMessage.setText("Not applied: "+e.getMessage()+". Last valid settings retained.");return false;}
+            if(!next.values.equals(settings.values)){service.saveSettings(next);settings=next;log.settings("settings_applied_save_queued",next);}
+            settingsValidationError="";setupMessage.setText("Valid edits apply automatically. File save status is shown below.");refreshSettingsStatus();return true;
+        }catch(Exception e){settingsValidationError="Not applied: "+e.getMessage()+". Last valid settings retained.";setupMessage.setText(settingsValidationError);refreshSettingsStatus();return false;}
     }
     private void exportSetup() {
         try {
@@ -295,7 +370,9 @@ public final class MainActivity extends Activity {
         super.onActivityResult(request,result,data);
         if(result!=RESULT_OK||data==null||data.getData()==null)return;
         Uri uri=data.getData();
-        if(request==101) {
+        if(request==105){
+            try{service.useSettingsFolder(uri,data.getFlags());toast("Folder access saved. Check settings storage status below.");}catch(Exception e){toast(e.getMessage());}
+        }else if(request==101) {
             String content=exportSettingsText;
             files.execute(()->{
                 try {
@@ -325,7 +402,7 @@ public final class MainActivity extends Activity {
         connections.setText(v.connections);
         message.setText(v.message);mountInfo.setText(v.mount);gpsInfo.setText(controller.liveGps());aimInfo.setText(v.aim);frameInfo.setText(v.framing);calibrationInfo.setText(v.calibration);
         connect.setEnabled(!v.connected&&!v.busy);disconnect.setEnabled(v.connected||v.busy);
-        start.setEnabled(v.canStart);
+        for(Button button:aimingButtons){button.setEnabled(v.tracking||v.canStart);button.setText(v.tracking?"STOP AIMING":"START AIMING");}
         calibrate.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
         for(Button b:manualButtons)b.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
         for(Button b:landmarkButtons)b.setEnabled(v.canGoToLandmark);
@@ -334,15 +411,17 @@ public final class MainActivity extends Activity {
         for(Map.Entry<String,EditText> entry:fields.entrySet())entry.getValue().setEnabled(editing||Settings.liveZoomKey(entry.getKey()));
         panSign.setEnabled(editing);tiltSign.setEnabled(editing);
         if(!v.connected){levelConfirmed.setChecked(false);directionsConfirmed.setChecked(false);}
+        refreshSettingsStatus();
         logStatus.setText(log.status()+"\n\n"+service.setupStatus());
         cameraInfo.setText(service.camera.status());
+        if(screenVisible&&page==1&&calibrationMap!=null)calibrationMap.refreshIfChanged();
     }
-    private void showPage(int index){page=index;body.removeAllViews();body.addView(pages[index],new LinearLayout.LayoutParams(-1,-1));log.record("ui_page","index",index);}
+    private void showPage(int index){page=index;if(index==1&&calibrationMap!=null)calibrationMap.refresh();body.removeAllViews();body.addView(pages[index],new LinearLayout.LayoutParams(-1,-1));log.record("ui_page","index",index);}
     private void field(LinearLayout parent,String key,String label) {
         text(parent,label,14,TEXT,false);
         EditText e=new EditText(this);e.setSingleLine();e.setTextSize(16);e.setTextColor(TEXT);e.setHintTextColor(MUTED);
         boolean coordinates=key.endsWith("Coordinates");
-        e.setInputType(key.endsWith("Host")||coordinates||key.equals("zoom_scales")||key.equals("zoomMapping")?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        e.setInputType(key.endsWith("Host")||coordinates||key.equals("zoom_scales")||(key.equals("zoomMapping")||key.equals("zoomBands"))?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
         e.setHint(coordinates?"-28.165514, 153.550457":key.equals("height")||key.equals("landmarkHeight")?"Required before calibration":"");
         e.setOnFocusChangeListener((v,focused)->{if(!focused)log.record("settings_field_edited","field",key,"value",e.getText().toString(),"saved",false);});
         e.addTextChangedListener(new android.text.TextWatcher(){
@@ -380,11 +459,13 @@ public final class MainActivity extends Activity {
     private void toast(String text){Toast.makeText(this,text,Toast.LENGTH_LONG).show();}
     private void refreshTelemetry(){
         if(isDestroyed()||service==null)return;
-        if(screenVisible&&controller!=null)gpsInfo.setText(controller.liveGps());
+        if(screenVisible&&controller!=null){String gps=controller.liveGps();gpsInfo.setText(gps);calibrationGps.setText(gps);}
         handler.postDelayed(this::refreshTelemetry,250);
     }
+    private void refreshSettingsStatus(){String value=settingsValidationError.isEmpty()?service.setupStatus():settingsValidationError+"\n"+service.setupStatus();for(TextView status:settingsStorageStatuses)status.setText(value);}
     private void refreshLogStatus(){
         if(isDestroyed()||service==null)return;
+        refreshSettingsStatus();
         logStatus.setText(log.status()+"\n\n"+service.setupStatus());
         cameraInfo.setText(service.camera.status());
         if(!screenVisible){handler.postDelayed(this::refreshLogStatus,1000);return;}
@@ -394,7 +475,7 @@ public final class MainActivity extends Activity {
             "state",v==null?null:v.state,"message",v==null?null:v.message,"aim",v==null?null:v.aim,
             "connections",v==null?null:v.connections,
             "mount",v==null?null:v.mount,"gps",controller==null?null:controller.liveGps(),"calibration",v==null?null:v.calibration,
-            "startEnabled",start.isEnabled(),"calibrateEnabled",calibrate.isEnabled(),"logStatus",log.status());
+            "startEnabled",start.isEnabled(),"calibrateEnabled",calibrate.isEnabled(),"settingsStorage",service.setupStatus(),"logStatus",log.status());
         handler.postDelayed(this::refreshLogStatus,1000);
     }
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] grants){
@@ -405,6 +486,7 @@ public final class MainActivity extends Activity {
     @Override protected void onPause(){if(service!=null)autoSaveSettings();screenVisible=false;if(log!=null)log.record("activity_pause","form",formValues());if(controller!=null)controller.foreground(false);super.onPause();}
     @Override protected void onDestroy(){
         if(service!=null)service.detach(listener);if(bound)unbindService(serviceConnection);
+        if(calibrationMap!=null)calibrationMap.close();
         files.shutdown();handler.removeCallbacksAndMessages(null);super.onDestroy();
     }
 }

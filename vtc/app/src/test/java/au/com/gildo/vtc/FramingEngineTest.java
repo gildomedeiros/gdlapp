@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 
 public class FramingEngineTest {
     private FramingEngine engine(String... changes) {
-        Map<String,String> m=new HashMap<>();m.put("framing","AUTO");m.put("offsetRate","0.3");
+        Map<String,String> m=new HashMap<>();m.put("framing","AUTO");m.put("offsetRate","0.3");m.put("magnitude","1");
         for(int i=0;i<changes.length;i+=2)m.put(changes[i],changes[i+1]);
         return new FramingEngine(new Settings(m));
     }

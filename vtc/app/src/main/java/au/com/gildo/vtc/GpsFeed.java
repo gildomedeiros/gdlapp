@@ -30,6 +30,7 @@ final class GpsFeed implements AutoCloseable {
     private volatile String connectionError="";
     private volatile String status="Waiting for LoRa GPS";
     GpsFeed(Network network,Settings s,SessionLog log){this.network=network;this.s=s;this.log=log;}
+    boolean ended(){return ended;}
     void start(){Thread t=new Thread(this::receive,"vtc-gps");t.setDaemon(true);t.start();}
     Fix latest(){return latest;}
     Fix poll(){return observations.poll();}

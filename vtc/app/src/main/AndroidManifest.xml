@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application android:label="VTC" android:icon="@drawable/ic_vtc" android:theme="@style/AppTheme" android:allowBackup="false" android:usesCleartextTraffic="true" android:supportsRtl="true">
+        <provider android:name=".CalibrationShareProvider" android:authorities="${applicationId}.calibration" android:exported="false" android:grantUriPermissions="true" />
         <service android:name=".VtcService" android:exported="false" android:foregroundServiceType="connectedDevice" android:stopWithTask="false" />
         <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize">
             <intent-filter>

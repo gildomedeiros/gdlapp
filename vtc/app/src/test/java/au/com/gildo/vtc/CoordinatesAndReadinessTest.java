@@ -23,7 +23,7 @@ public class CoordinatesAndReadinessTest {
         assertEquals(old.landmarkLat,Double.parseDouble(pair[0]),0);assertEquals(old.landmarkLon,Double.parseDouble(pair[1]),0);
     }
     @Test public void initialBlockersExplainEachMissingField() {
-        List<String> blockers=Readiness.blockers(new Settings(Map.of()),false,false,false,false,true,false,"LoRa disconnected");
+        List<String> blockers=Readiness.blockers(new Settings(Map.of("mountHost","","height","","landmarkLat","","landmarkLon","","landmarkHeight","")),false,false,false,false,true,false,"LoRa disconnected");
         assertTrue(blockers.stream().anyMatch(s->s.contains("GTi IP")));
         assertTrue(blockers.stream().anyMatch(s->s.contains("lens height")));
         assertTrue(blockers.stream().anyMatch(s->s.contains("landmark coordinates")));

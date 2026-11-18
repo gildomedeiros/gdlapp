@@ -10,7 +10,7 @@ import java.util.*;
 
 /** Always-on, structured full diagnostics. No save/export step. */
 final class SessionLog implements AutoCloseable {
-    static final String VERSION="1.0.18";
+    static final String VERSION="1.0.25";
     private final AutomaticLogWriter writer;
     private final AutomaticKmlWriter kml;
     private long record;

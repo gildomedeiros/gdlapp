@@ -7,14 +7,14 @@ public class ZoomPlanTest {
     private Settings settings(String... pairs){Map<String,String> m=new HashMap<>();m.put("autoZoom","1");for(int i=0;i<pairs.length;i+=2)m.put(pairs[i],pairs[i+1]);return new Settings(m);}
     private ZoomPlan.Decision at(ZoomPlan p,Settings s,double distance,long time){return p.decide(s,new ZoomPlan.Input(distance,100,true),time,0,201,1);}
     private double number(ZoomPlan.Decision d,String name){return ((Number)d.fields.get(name)).doubleValue();}
-    @Test public void defaultsLeaveAutomaticZoomOff(){assertFalse(new Settings(Collections.emptyMap()).autoZoom);}
+    @Test public void defaultsSelectBands(){assertEquals("bands",new Settings(Collections.emptyMap()).zoomMode);}
     @Test public void switchingOffDoesNotCommandWideOrResetZoom(){
         ZoomPlan p=new ZoomPlan();
         assertTrue(at(p,settings("zoomMultipliers","2"),450,0).enabled);
         for(double distance:new double[]{10,150,500}){
             ZoomPlan.Decision off=at(p,settings("autoZoom","0","zoomMultipliers","1,2"),distance,20000);
             assertFalse(off.enabled);assertEquals(-1,off.target);
-            assertEquals("Auto-fit off",off.fields.get("reason"));
+            assertEquals("Zoom off; leaving zoom unchanged",off.fields.get("reason"));
         }
     }
     @Test public void widthTracksDistanceAndScalesBelow40(){
@@ -48,8 +48,8 @@ public class ZoomPlanTest {
         assertFalse(at(p,s,Double.NaN,200).enabled);
     }
     @Test public void mappingMatchesAnchorsAndIsMonotonic(){
-        assertEquals(0,ZoomPlan.raw(1),0);assertEquals(89,ZoomPlan.raw(6),1e-8);assertEquals(102,ZoomPlan.raw(10),1e-8);
-        double last=-1;for(double x=1;x<=65;x+=.1){assertTrue(ZoomPlan.raw(x)>last);last=ZoomPlan.raw(x);assertEquals(x,ZoomPlan.optical(last),1e-8);}
+        assertEquals(0,ZoomPlan.raw(1),0);assertEquals(89,ZoomPlan.raw(6),1e-8);assertEquals(116,ZoomPlan.raw(10),1e-8);
+        double last=-1;for(double x=1;x<=65;x+=.1){assertTrue(ZoomPlan.raw(x)>=last);last=ZoomPlan.raw(x);assertEquals(x,ZoomPlan.optical(last),(x>=3.2&&x<=3.3)?0.051:1e-8);}
     }
     @Test public void honorsCameraLimitsAndStep(){
         ZoomPlan.Decision d=new ZoomPlan().decide(settings(),new ZoomPlan.Input(500,1,true),0,10,90,4);

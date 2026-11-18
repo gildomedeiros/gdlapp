@@ -23,8 +23,12 @@ final class AimUnits {
             m.remove("zoomMultipliers");
         }
         if(m.containsKey("zoomBands")&&!m.get("zoomBands").trim().startsWith("{"))m.put("zoomBands",ZoomBands.legacy(m.get("zoomBands")));
-        if(m.containsKey("autoZoom")){if(!m.containsKey("autoFit"))m.put("autoFit",m.get("autoZoom"));m.remove("autoZoom");}
-        m.remove("zoomBands");
+        if(!m.containsKey("zoomMode")&&(m.containsKey("autoFit")||m.containsKey("autoZoom"))){
+            String enabled=m.containsKey("autoFit")?m.get("autoFit"):m.getOrDefault("autoZoom","0");
+            if(!enabled.equals("0")&&!enabled.equals("1"))throw new IllegalArgumentException("Legacy automatic zoom must be 0 or 1");
+            m.put("zoomMode",enabled.equals("0")?"off":m.containsKey("autoFit")?"auto-fit":m.containsKey("zoomBands")?"bands":"auto-fit");
+        }
+        m.remove("autoFit");m.remove("autoZoom");
         return m;
     }
 }

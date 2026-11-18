@@ -1,3 +1,94 @@
+## VTC 1.0.27 — Off, Bands and Auto-fit
+
+Setup's Zoom mode selector restores editable distance bands alongside Auto-fit. Off sends no zoom commands and continues readback/logging; it does not reset the lens. A command already sent to the camera may finish. Both automatic modes use the configured zoom mapping, scales and switching interval, on the independent camera worker.
+
+Bands retains the structured bufferMetres/bands JSON. At 220 m the default band is 5x; scales [1,3] request 5x then 15x. Scales also apply below 40 m. Exact maximum distance belongs to the lower band on initial selection. The default 5 m buffer requires crossing the boundary plus/minus 5 m to change bands. Large distance jumps can traverse multiple bands. Auto-fit retains its 5% width tolerance; Bands waits for the selected command instead of applying that width tolerance. Stale GPS holds zoom. Logs include mode, band index/limits/base zoom, buffer, scale, final command and camera limits.
+
+Existing autoFit 0/1 migrates automatically to Off/Auto-fit. Imported older autoZoom settings with bands restore Bands when enabled. Explicit zoomMode takes precedence. Saved bands and calibration are preserved. If bands were removed by an earlier version, the original default bands are restored; import/edit an old custom table to recover custom values. No manual settings conversion is needed.
+
+## VTC 1.0.26 — Supplied camera zoom calibration
+
+The default mapping now contains all 102 user-supplied points unchanged, from 1x/0 to 65x/200. Mapping validation accepts up to 1000 points and nondecreasing CCAPI values. Both 3.2x and 3.3x request 60; readback 60 estimates their geometric midpoint, approximately 3.25x. Other values retain logarithmic interpolation. Repeated endpoint values cannot cause division by zero; a mapping with no distinct command values is rejected.
+
+Existing saved mappings remain in use. Paste the contents of VTC-1.0.26-zoomMapping.json into Setup's Zoom mapping JSON field to apply this table to an existing installation. The file is an array, not a complete setup.json. No other settings need conversion.
+
+## VTC 1.0.25 — Save the current setup.json and verify it
+
+Each public settings save now discovers the current canonical filename in Download/VTC/Settings. That file takes precedence over a saved URI, including after a PC rename or replacement. A stale reference is checked before use. If only a numbered active file exists and it is accessible, it is renamed to the canonical filename in place; unrelated backups and bookmark files are retained. Discovery/permission failures never trigger a replacement insert. The existing durable creation guard still prevents repeated MediaStore inserts.
+
+Public saves use truncating writes followed by exact content readback. The durable recovery copy remains pending until verification succeeds. Setup and Calibration show Saving, Saved and verified (with time), or the actual failure. Coordinate capture no longer claims the public file was saved before the asynchronous write completes. Invalid form edits are reported on both screens. Reading status does not wait for file I/O. Logs distinguish edits queued from verified public writes and include the resolved file URI and verification outcome.
+
+Setup > Allow Settings folder access is a recovery action if Android denies access to a file renamed/replaced outside VTC. Select Download/VTC/Settings once in Android's folder picker. The persisted directory permission allows discovery of the current child file after replacement. It retries pending edits automatically; granting permission alone does not overwrite an unreadable existing file with fallback defaults. No settings conversion or manual save is required. Existing files are not deleted.
+
+Regression coverage includes canonical replacement after a stale URI, external rename, canonical preference over old numbered files, repeated saves/restarts, rename migration, permission failures, readback mismatch, close failure, deletion during save, and truncation. Android MediaStore/SAF behavior still requires confirmation on the user's phone; no phone was attached for this build.
+
+
+## VTC 1.0.24 — Do not discard the saved settings URI
+
+The user's screenshot did not establish which version created the newest duplicate. Review nevertheless found a remaining path in 1.0.23: metadata lookup could discard a remembered settings URI and lead to a replacement insert.
+
+The store now directly reuses its persisted MediaStore URI without requiring a successful metadata query. A failed read/write preserves both the identity and private recovery settings and reports an error; it does not silently create another settings file. A durable creation-attempt marker is committed before a new insert. If insertion or identity persistence is interrupted, discovery may recover an existing file, but subsequent retries cannot insert another copy. If no URI/file can be recovered after that attempt, public saves remain blocked with a storage error rather than generating additional numbered files. This policy also means deleting the active file externally does not automatically create a replacement.
+
+Logs now include settings_uri_reused, settings_file_create_attempt and the actual URI in settings_public_saved. Existing files are not deleted. Keep the current app data/settings and update in place; no conversion required. Full unit suite/build/lint verify regressions but the Android MediaStore persistence path still needs verification on the phone.
+
+
+## VTC 1.0.23 — Reuse settings files
+
+PublicSettingsStore now retains the actual Android content URI in separate private metadata. Clearing/replacing the settings recovery cache cannot erase this reference. Each save reuses the remembered file even if Android assigned a collision name such as setup (18).json. It verifies that the reference still belongs to the settings directory and expected file family before use.
+
+Without a remembered reference, discovery uses exact setup.json when visible; otherwise it reuses the newest MediaStore entry matching Android's setup (N).json naming pattern. It does not select setup - Copy.json, migration backups or landmark bookmarks. The same behavior applies independently to the last-landmark store. Actual saved filenames appear in storage status and settings_public_saved logs.
+
+If discovery fails or an existing canonical file is inaccessible, settings remain in private recovery and VTC reports/retries the storage error instead of knowingly creating a colliding file. Inserted URIs are remembered immediately, including Android's resulting display name. Existing phone files are not deleted or consolidated automatically. Keep them until the active file and latest values have been verified on device.
+
+Validation: filename-family tests for collision names, exclusion of backups and separation of setup/bookmark families; full unit suite, build and lint. Android MediaStore behavior and existing-file ownership still require a phone check.
+
+
+## VTC 1.0.22 — Current coordinates in maps
+
+Google Maps launch, Google Earth launch and the embedded calibration map now use current saved camera/landmark coordinates from Settings, not last-landmark.json. Successful LoRa captures or manual edits are immediately reflected without pressing Calibrate here. Launch buttons apply valid pending form edits first. Both coordinate pairs are required; missing coordinates are reported, never replaced with an old bookmark. Heights and a prior calibration are not required just to inspect positions, including coincident points.
+
+Earth receives a new KML copy each launch, with current pins and geographic bearing line. It is labelled Not yet calibrated unless this connection has a validated mount calibration. The line is geographic direction to the landmark, not a measured camera heading. Embedded maps refresh when saved coordinates or calibration state changes. Historical automatic calibration KML and the motor bookmark for Go to last landmark retain their original meaning; settings/bookmark files remain separate and no migration is required.
+
+Successful LoRa captures continue to save automatically. Capture failure/timeout or inability to apply a capture clears the selected camera or landmark pair and attempts to persist that blank pair without replacing unrelated settings. Save errors remain explicit. User cancellation remains distinct from capture failure and retains the prior values.
+
+Regression tests cover changed coordinates overriding old exports, no-calibration/no-height previews, missing-coordinate rejection, coincident points and existing map/KML behavior. Device-side Google Maps/Earth and LoRa behavior still need physical testing.
+
+
+## VTC 1.0.21 — Launch calibration in Maps / Earth
+
+Two buttons near the top of Calibration use the last saved calibration, including after Wi-Fi changes or app restart. No settings conversion or API key is needed for these external app launches. The embedded Google Maps view still has its separate key requirement.
+
+See calibration in Google Maps opens a standard Maps directions URL with the saved camera as origin and landmark as destination, preferring the installed Google Maps app and falling back to a URL handler/browser. It does not start turn-by-turn navigation. Google may draw a route or report that no route is available: that is not VTC's calibration heading line.
+
+See calibration in Google Earth prepares a KML copy from that saved snapshot and opens it with Google Earth using a temporary read-only content URI grant. It contains both pins and the calibrated heading line, as in the automatically exported calibration KML. If Earth cannot handle the intent, Android offers another KML viewer and VTC explains the fallback. No saved calibration produces a clear message. Launching another app does not stop foreground-service aiming; stop/disconnect GTi before switching device Wi-Fi.
+
+The sharing provider is non-exported and exposes only generated calibration KML names inside a dedicated private cache folder, with read-only access. Files older than seven days in that feature-specific cache are cleaned on a later Earth launch. Original automatic calibration KML files in Download/VTC/logs remain unchanged.
+
+Validation includes saved-coordinate URL encoding under different locales, absence of automatic navigation, strict shared-file names, existing XML/snapshot tests, unit suite, APK build and lint. Actual Google Maps/Earth app handling has not been tested on the phone.
+
+
+## VTC 1.0.20 — Calibration map and KML
+
+Every successful calibration queues a separate VTC_calibration_<timestamp>_<id>.kml in Download/VTC/logs. It contains camera/landmark pins and a camera-to-landmark line representing heading at calibration, with distance, true bearing, elevation, configured water-relative heights and capture time. Positions are clamped to ground for map inspection, not interpreted as sea-level GPS altitudes. An asynchronous private pending spool retries public-file failures every five seconds and resumes pending files next service start. Session logs record queued/saved/error events. Existing session KML is unchanged.
+
+Calibration includes a saved-position map preview. It uses the last saved calibration, including after app restart or switching Wi-Fi, and labels it as a historical reference rather than live heading or calibration validation. A no-key/offline north-up direction diagram shows the camera, landmark and direction. Refresh or re-enter Calibration after joining internet Wi-Fi. Stop aiming and disconnect GTi before switching Wi-Fi; reconnect and validate calibration before aiming again.
+
+Google Maps can be configured later using the optional key field on Calibration. This implementation uses Google Maps JavaScript API in Android WebView (not the native Maps SDK). Enable that API and the required Google Cloud billing configuration; add a website/referrer restriction for https://vtc.local/* and restrict the key to Maps JavaScript API. A valid configured key loads Google's hybrid map, camera/landmark markers and a directional line, fitting both positions. Authentication/network errors show explanatory text; without a key there is no Google API request. Key storage is separate private SharedPreferences and is not included in setup.json or VTC session logs. Displayed coordinates are shared with Google when its map loads. WebView has no native JavaScript bridge or local-file access. No SSL-error bypass is implemented.
+
+No settings conversion is required. Map/KML tests validate XML, longitude/latitude order, pin and line counts, offline output, Google map features and persistence roundtrip. Actual Google tiles/authentication could not be tested without a key; physical device validation remains outstanding.
+
+
+## VTC 1.0.19 — LoRa calibration capture
+
+LoRa now has an independent connection worker and Connect/Disconnect LoRa controls on Track and Calibration. Connect GTi + LoRa requests both, but LoRa starts independently and survives GTi failure/disconnection. Disconnect GTi stops and closes only the mount. The LoRa worker rechecks Wi-Fi/endpoints and retries ended sockets every two seconds; receiver HELLO retries remain every five seconds. Network/receiver failures retain explicit status/log details. GPS loss during aiming retains the existing timeout/stop policy. Camera polling may use the LoRa-selected Wi-Fi when GTi is disconnected. Exit closes all resources.
+
+Calibration now contains camera and landmark coordinates, camera/landmark heights, target height, axis signs, manual movement controls, confirmations, calibration status, Go to last landmark, live LoRa telemetry and Start/Stop aiming. The same aiming session and readiness checks serve both Track and Calibration buttons. General network/tracking/Auto-fit settings stay in Setup. Reference settings remain editable only with GTi disconnected; LoRa may remain connected for capture. Heights remain manual.
+
+Use LoRa GPS for camera / landmark starts an explicit stationary capture. Like VT's wave-line capture, it requires 10 distinct accepted fixes captured after starting, spanning at least four seconds, with every sample within 5 m of the averaged coordinates. Polling is every 500 ms. Stale (>3 s), unavailable or invalid fixes reset the batch; continuity changes reset evidence. A rolling ten-sample batch continues through excess scatter. Timeout is 120 seconds. Progress, samples, scatter and final saved coordinates/settings are logged. Cancel, leaving the foreground, or connecting GTi cancels capture. Successful capture updates only the chosen coordinates and saves automatically. This consistency check does not guarantee absolute GPS accuracy.
+
+Settings schema is unchanged; keep the current setup.json. No conversion/import is needed. Automated tests cover capture average, duplicate suppression, freshness, minimum time, excess scatter/recovery, timeout and date-line averaging, alongside existing aiming and Auto-fit tests. Physical LoRa/GTi testing remains outstanding.
+
+
 ## VTC 1.0.18 — Auto-fit
 
 Auto-fit replaces distance bands. Set `autoFit` to 1 and `desiredFrameWidthMetres` to the desired horizontal scene width at the surfer's GPS distance. The default is 40 m; `autoFit` defaults to 0 and sends no zoom commands when off. Camera reads and logs continue independently of aiming.

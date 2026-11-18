@@ -9,11 +9,11 @@ public class V108Test {
     @Test public void legacyStepMigratesAwayAndAcquisitionAngleIsRetained(){
         Settings s=new Settings(Map.of("maxStep","3","gotoThreshold","4"));
         assertEquals(4,s.acquisitionDegrees(143),1e-10);assertFalse(s.values.containsKey("maxStep"));
-        assertEquals(.5,s.maxPanningSpeed,0);
+        assertEquals(5,s.maxPanningSpeed,0);
         assertEquals(0,new Settings(Map.of("acquisitionTriggerDegrees","0")).acquisitionDegrees(143),1e-10);
     }
     @Test public void overshootWaitsForReversalThenCorrectsWithoutResettingPlanner(){
-        AimPlanner p=new AimPlanner(new Settings(Collections.emptyMap()));p.sent(1,.25,1000);
+        AimPlanner p=new AimPlanner(new Settings(Map.of("panTolerance","0.15")));p.sent(1,.25,1000);
         assertEquals(0,p.step(1,-.2,1500),0);assertTrue(p.reversalBlocked(1,-.2,1500));
         assertEquals(-.2,p.step(1,-.2,3000),0);assertFalse(p.reversalBlocked(1,-.2,3000));
     }

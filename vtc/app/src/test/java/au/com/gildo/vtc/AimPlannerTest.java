@@ -36,9 +36,12 @@ public class AimPlannerTest {
         assertEquals(-1,p.step(1,-1,4500),0);
     }
     @Test public void largeErrorsTriggerGotoAndNearTargetKeepsFineCorrections() {
-        AimPlanner p=new AimPlanner(new Settings(Map.of()));
-        assertTrue(p.shouldGoTo(-37,-9,1000));assertTrue(p.shouldGoTo(3,0,1000));
-        assertTrue(p.shouldGoTo(0,-3,1000));assertFalse(p.shouldGoTo(2.999,0,1000));
+        Settings s=new Settings(Map.of());
+        AimPlanner p=new AimPlanner(s);
+        double trigger=AimUnits.degrees(3,143);
+        assertEquals(3,s.acquisitionTriggerMetres,0);
+        assertTrue(p.shouldGoTo(-37,-9,1000));assertTrue(p.shouldGoTo(trigger,0,1000));
+        assertTrue(p.shouldGoTo(0,-trigger,1000));assertFalse(p.shouldGoTo(trigger-0.001,0,1000));
         assertEquals(2,p.step(1,2,1000),0);
     }
     @Test public void gotoRespectsReversalHoldAndOldSettingsStillLoad() {
@@ -46,7 +49,7 @@ public class AimPlannerTest {
         p.sent(1,1,1000);
         assertFalse(p.shouldGoTo(-37,-9,1500));assertTrue(p.shouldGoTo(-37,-9,3000));
         Settings old=new Settings(Map.of("panTolerance","3","magnitude","0"));
-        assertEquals(3,old.acquisitionDegrees(143),1e-10);assertEquals(45,old.gotoMaxMove,0);
+        assertEquals(3,old.acquisitionTriggerMetres,0);assertEquals(45,old.gotoMaxMove,0);
         assertFalse(new AimPlanner(old).shouldGoTo(3,0,1000));
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("gotoMaxMove","46")));
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("gotoThreshold","NaN")));
