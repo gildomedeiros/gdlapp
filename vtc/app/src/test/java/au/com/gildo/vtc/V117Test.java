@@ -8,7 +8,7 @@ public class V117Test {
         try(java.io.InputStream in=getClass().getResourceAsStream("/VTC-1.0.17-setup-metres.json")){
             assertNotNull(in);Settings s=new Settings(ConfigJson.settings(new String(in.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8)));
             assertEquals(2,s.panTolerance,0);assertEquals(.5,s.tiltTolerance,0);assertEquals(12.51,s.magnitude,0);
-            assertEquals(7.49,s.acquisitionTriggerMetres,0);assertEquals(0,s.offsetRate,0);assertEquals(2,s.reverseSeconds,0);
+            assertEquals(7.49,s.acquisitionTriggerMetres,0);assertEquals(2,s.reverseSeconds,0);
             assertFalse(s.autoZoom);assertEquals("192.168.4.3",s.mountHost);assertEquals("192.168.4.1",s.receiverHost);
             assertEquals("192.168.4.4",s.cameraHost);assertEquals(s.values,new Settings(ConfigJson.settings(LogJson.encode(ConfigJson.structured(s.values)))).values);
         }
@@ -34,18 +34,8 @@ public class V117Test {
         assertArrayEquals(new double[]{1,3},round.zoomMultipliers,0);
         assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("panTolerance","1","panToleranceMetres","2")));
     }
-    @Test public void zeroRateAppliesMagnitudeImmediatelyAndAdaptsToRange(){
-        Settings s=new Settings(Map.of("magnitudeMetres","10","offsetRate","0"));assertEquals(0,s.offsetRate,0);
-        FramingEngine f=new FramingEngine(s);f.distance(100);
-        f.observe(1,1,0,0);f.observe(2,2,750,.4);f.observe(3,3,1500,.8);
-        assertEquals(AimUnits.degrees(10,100),f.tick(1500),1e-10);
-        f.distance(200);assertEquals(AimUnits.degrees(10,200),f.tick(1600),1e-10);
-        f.observe(4,4,2250,.4);f.observe(5,5,3000,0);
-        assertEquals(-AimUnits.degrees(10,200),f.tick(3000),1e-10);
-        double held=f.applied;f.unavailable(3100);f.distance(50);assertEquals(held,f.tick(4000),0);
-    }
-    @Test public void zeroSmoothingDoesNotBypassReversalHold(){
-        Settings s=new Settings(Map.of("offsetRate","0","panToleranceMetres","1","acquisitionTriggerMetres","3","reverseSeconds","2"));
+    @Test public void goToRespectsReversalHold(){
+        Settings s=new Settings(Map.of("panToleranceMetres","1","acquisitionTriggerMetres","3","reverseSeconds","2"));
         AimPlanner p=new AimPlanner(s);p.distance(100);p.sent(1,1,1000);
         assertTrue(p.reversalBlocked(1,-1,1500));assertFalse(p.shouldGoTo(-10,0,1500));
         assertTrue(p.shouldGoTo(-10,0,3000));

@@ -63,14 +63,7 @@ final class KmlDocument {
             Map<String,Object> data=new LinkedHashMap<>();data.put("headingDegreesTrue",heading);data.put("tiltDegreesFromHorizontal",tilt);
             data.put("lensHeightAboveWaterM",number(settings,"height"));data.put("rayLengthM",range);data.put("rayLengthSource",rangeSource);
             data.put("state",event.get("state"));data.put("moving",position.get("moving"));
-            double hfov=number(settings,"hfov");if(Double.isFinite(hfov))data.put("horizontalFieldOfViewDegrees",hfov);
             String geometry=line(lat,lon,endpoint[0],endpoint[1]);
-            if(Double.isFinite(hfov)&&hfov>0&&hfov<180) {
-                double[] left=destination(lat,lon,heading-hfov/2,range),right=destination(lat,lon,heading+hfov/2,range);
-                geometry="<MultiGeometry>"+geometry+"<Polygon><altitudeMode>clampToGround</altitudeMode><outerBoundaryIs><LinearRing><coordinates>"
-                    +coordinate(lat,lon)+" "+coordinate(right[0],right[1])+" "+coordinate(left[0],left[1])+" "+coordinate(lat,lon)
-                    +"</coordinates></LinearRing></outerBoundaryIs></Polygon></MultiGeometry>";
-            }
             double sample=number(event,"positionSampleMonoMs"),mono=number(event,"monoMs");
             if(Double.isFinite(sample)&&sample>0&&Double.isFinite(mono)&&mono>=sample)at-=(long)(mono-sample);
             return site+placemark(String.format(Locale.US,"Camera aim %.2f° · tilt %+.2f°",heading,tilt),"aim",span(at,at+1000),data,geometry);

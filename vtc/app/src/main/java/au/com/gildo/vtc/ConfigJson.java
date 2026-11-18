@@ -43,6 +43,7 @@ final class ConfigJson {
     static Map<String,Object> structured(Map<String,String> values){
         Map<String,Object> out=new LinkedHashMap<>(values);
         for(String key:new String[]{"zoomBands","zoom_scales","zoomMapping"})if(values.containsKey(key)&&(values.get(key).trim().startsWith("[")||values.get(key).trim().startsWith("{")))out.put(key,parse(values.get(key)));
+        if(values.containsKey("waveLine"))out.put("waveLine",parse(values.get("waveLine")));
         return out;
     }
 }

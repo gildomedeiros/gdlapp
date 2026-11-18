@@ -31,6 +31,9 @@ public final class MainActivity extends Activity {
     private boolean bound,screenVisible,fillingSettings;
     private final Runnable autoSave=this::autoSaveSettings;
     private TextView cameraInfo;
+    private TextView previewStatus;
+    private ImageView previewImage;
+    private Button previewUpdate;
     private final VtcController.Listener listener=this::render;
     private final ServiceConnection serviceConnection=new ServiceConnection(){
         public void onServiceConnected(ComponentName name,IBinder binder){
@@ -47,10 +50,13 @@ public final class MainActivity extends Activity {
     private Button connect,disconnect,start,calibrate;
     private final List<Button> aimingButtons=new ArrayList<>();
     private boolean capturing;
-    private TextView captureStatus,calibrationGps;
+    private TextView captureStatus,calibrationGps,waveLineStatus;
     private final List<TextView> settingsStorageStatuses=new ArrayList<>();
     private String settingsValidationError="";
-    private CalibrationMapView calibrationMap;
+    private static final int LIVE_MAP_PAGE=5, REPLAY_FILE_REQUEST=106;
+    private LiveMapView liveMap;
+    private TextView calibrationConnectionHint;
+    private boolean replayPending;
     private Spinner panSign,tiltSign,manualStep,zoomMode;
     private CheckBox levelConfirmed,directionsConfirmed;
     private String exportSettingsText;
@@ -81,11 +87,16 @@ public final class MainActivity extends Activity {
         connections=text(root,"GTi: Disconnected\nLoRa: Disconnected\nCalibration: Required",13,TEXT,false);
         message=text(root,"Set up the site and connect.",14,MUTED,false);
         LinearLayout nav=row(root);
-        String[] labels={"Track","Calibrate","Setup","Logs"};
-        for(int i=0;i<labels.length;i++){final int n=i;button(nav,labels[i],()->showPage(n));}
+        String[] labels={"Track","Calibrate","Setup","Logs","Wave Ride","Live Map","Camera Preview"};
+        for(int i=0;i<labels.length;i++){
+            if(i==4)nav=row(root);
+            final int n=i;
+            Button tab=button(nav,labels[i],()->showPage(n));
+            tab.setTextSize(12);tab.setPadding(dp(2),0,dp(2),0);
+        }
         body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);
         root.addView(body,new LinearLayout.LayoutParams(-1,0,1));
-        pages=new View[]{trackPage(),calibrationPage(),settingsPage(),logsPage()};
+        pages=new View[]{trackPage(),calibrationPage(),settingsPage(),logsPage(),waveRidePage(),liveMapPage(),cameraPreviewPage()};
         Button stop=button(root,"STOP MOUNT",()->controller.stop("User Stop"));
         stop.setTextColor(Color.WHITE);
         stop.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(158,48,56)));
@@ -154,6 +165,8 @@ public final class MainActivity extends Activity {
         manualButtons.add(button(tilt,"Up ↑",()->nudge(2,1)));
         levelConfirmed=new CheckBox(this);levelConfirmed.setText("Mount is level and camera is secure");p.addView(levelConfirmed);
         directionsConfirmed=new CheckBox(this);directionsConfirmed.setText("Right / Up directions have been checked");p.addView(directionsConfirmed);
+        calibrationConnectionHint=text(p,"Connect the GTi to calibrate",14,ACCENT,false);
+        text(p,"LoRa is only needed here to capture GPS coordinates. You can enter the coordinates manually.",13,MUTED,false);
         calibrate=button(p,"CALIBRATE HERE",()->{
             log.record("calibration_requested","levelConfirmed",levelConfirmed.isChecked(),"directionsConfirmed",directionsConfirmed.isChecked(),"form",formValues());
             if(!levelConfirmed.isChecked()||!directionsConfirmed.isChecked()){
@@ -165,7 +178,6 @@ public final class MainActivity extends Activity {
         levelConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","level","checked",checked));
         directionsConfirmed.setOnCheckedChangeListener((b,checked)->log.record("calibration_confirmation","field","directions","checked",checked));
         calibrationInfo=text(card(p,"Reference"),"Not calibrated",15,TEXT,false);
-        calibrationMap=new CalibrationMapView(this,controller::settings,controller::mapValidated);p.addView(calibrationMap);
         text(p,"Calibration is valid only for this connection. Recalibrate after moving the tripod, releasing a clutch, adjusting the camera, or restarting the mount. Disconnect VTC before making those changes.",14,MUTED,false);
         return scroll(p);
     }
@@ -238,28 +250,16 @@ public final class MainActivity extends Activity {
         field(camera,"cameraPort","CCAPI HTTP port");
         text(camera,"Zoom mode",14,TEXT,false);
         zoomMode=spinner(camera,new String[]{"Off","Bands","Auto-fit"});
-        field(camera,"zoomBands","Zoom bands JSON: distance limits and zoomX");
-        fields.get("zoomBands").setSingleLine(false);fields.get("zoomBands").setMinLines(8);fields.get("zoomBands").setGravity(Gravity.TOP);
-        text(camera,"Bands selects zoomX by GPS distance, then multiplies it by the current zoom scale. bufferMetres prevents repeated switching near a boundary. Auto-fit uses desired frame width. Zoom scales and their timer apply to both modes.",13,MUTED,false);
-        text(camera,"Off leaves the camera zoom exactly as it is: no zoom commands, no automatic adjustments. VTC continues reading and logging zoom.",13,MUTED,false);
-        field(camera,"zoom_scales","Zoom scales (comma-separated; 0.5–3.0, increments 0.1)");
+        text(camera,"Edit zoom bands, zoom mapping and zoom scales in setup.json. Off leaves the lens where it is.",13,MUTED,false);
         field(camera,"zoomSwitchSeconds","Seconds per zoom scale (2–3600)");
         field(camera,"desiredFrameWidthMetres","Desired frame width (metres; 1–10000)");
         field(camera,"wideFrameFactor","Wide frame factor (0.01–10; default 1.648)");
-        field(camera,"zoomMapping","Zoom mapping JSON: zoomX / ccapiValue points");
-        fields.get("zoomMapping").setSingleLine(false);fields.get("zoomMapping").setMinLines(8);fields.get("zoomMapping").setGravity(Gravity.TOP);
-        text(camera,"Auto-fit calculates zoom from GPS distance and desired width. Scale 1 uses that width; scale 2 halves it. One scale holds; multiple scales cycle. Mapping accepts 2–1000 points beginning at 1x. zoomX must increase; ccapiValue may repeat but must not decrease. Uses logarithmic interpolation/extrapolation. Adjustments allow 5% width error to avoid zoom chatter; checked on the independent camera poll (at least 2 seconds apart).",13,MUTED,false);
-        text(camera,"Zoom uses the configured calibration mapping. Frame widths remain estimates. Camera limits are enforced. Fresh GPS is required for automatic zoom.",13,MUTED,false);
+        text(camera,"Bands and Auto-fit adjust zoom after Start Aiming. Stopping aiming leaves the zoom in place and readback continues.",13,MUTED,false);
         field(camera,"manualZoomX","Manual camera zoom (×; optional observation, not a command)");
         button(camera,"Log manual zoom observation",()->{if(autoSaveSettings())service.camera.manualObservation("user_record");});
         text(camera,"Select Off, set the zoom on your camera and enter its displayed × value. The observation logs the latest CCAPI reading and its age. These fields can be edited while aiming.",13,MUTED,false);
         text(camera,"Reads zoom and synchronises the clock once per connection, independently of aiming. Camera errors do not stop tracking. Use the camera IP shown on your shared Wi-Fi network.",13,MUTED,false);
-        LinearLayout frame=card(p,"Framing");
-        text(frame,"Always automatic. Magnitude 0 means no horizontal offset.",13,MUTED,false);
-        field(frame,"magnitudeMetres","Automatic horizontal offset magnitude (m)");
-        field(frame,"tiltOffset","Vertical offset (°; + up)");
-        field(frame,"hfov","Optional horizontal field of view (°; blank if unknown)");
-        text(frame,"An automatic +offset aims right and places the surfer left. Field of view is optional: it only estimates frame width and draws the KML viewing sector. It does not restrict offsets or control aiming. Leave blank if unknown. Camera zoom is not converted into field of view automatically.",13,MUTED,false);
+        field(camera,"tiltOffset","Vertical aiming offset (°; + up)");
 
         LinearLayout limits=card(p,"Movement limits");
         text(limits,"Pan limits are relative to the calibrated landmark. Tilt limits are angles above / below horizontal. Set them to clear your tripod and cables.",13,MUTED,false);
@@ -273,29 +273,18 @@ public final class MainActivity extends Activity {
         LinearLayout acquire=card(p,"GoTo for large aiming errors");
         field(acquire,"acquisitionTriggerMetres","Acquisition trigger pointing error (m)");
         field(acquire,"gotoMaxMove","Maximum GoTo movement per leg (°; 1–45)");
-        text(acquire,"Pointing error in metres is converted using current surfer distance. Default: about 7.49 m triggers fast native GoTo. The target position and framing are saved once and held until arrival, even if surfer GPS changes or stops. Larger turns use legs toward the same saved position. Live GPS aiming resumes after arrival.",13,MUTED,false);
+        text(acquire,"Pointing error in metres is converted using current surfer distance. Default: 3 m triggers fast native GoTo. The target position and framing are saved once and held until arrival, even if surfer GPS changes or stops. Larger turns use legs toward the same saved position. Live GPS aiming resumes after arrival.",13,MUTED,false);
 
         LinearLayout advanced=card(p,"Advanced aiming");
         text(advanced,"Low-speed correction varies up to 0.5°/s. High-speed catch-up holds the configured maximum, then returns to low speed near the target. Tolerances are metres at the surfer distance. Stop within tolerance; restart beyond 1.5× that metre tolerance.",13,MUTED,false);
         field(advanced,"maxPanningSpeed","Maximum panning speed (°/s; 0.01–5)");
-        text(advanced,"Also caps tilt. AZ-GTi commands are capped at 3.34°/s (800× sidereal). High-speed catch-up uses one fixed rate. Switching modes or reversing still requires Stop/Start. Default remains 0.5°/s.",13,MUTED,false);
+        text(advanced,"Also caps tilt. AZ-GTi commands are capped at 3.34°/s (800× sidereal). High-speed catch-up uses one fixed rate. Switching modes or reversing still requires Stop/Start.",13,MUTED,false);
         field(advanced,"gpsGapTimeout","Keep panning without GPS for (s since last accepted packet)");
         field(advanced,"panToleranceMetres","Pan aiming tolerance (m)");
         field(advanced,"tiltToleranceMetres","Tilt aiming tolerance (vertical m at surfer distance)");
         field(advanced,"reverseSeconds","Direction reversal hold (s)");
         field(advanced,"gpsAge","Maximum GPS age / evidence gap (s)");
         field(advanced,"maxGpsSpeed","Reject GPS jumps above (m/s)");
-
-        LinearLayout auto=card(p,"Automatic offset detection");
-        field(auto,"window","Direction observation window (s)");
-        field(auto,"observations","Minimum GPS observations");
-        field(auto,"minNet","Minimum net bearing change (°)");
-        field(auto,"consistency","Direction consistency (0.5–1)");
-        field(auto,"supports","Minimum separate supporting changes");
-        field(auto,"supportChange","Minimum supporting change (°)");
-        field(auto,"quietRate","Quiet total angular travel rate (°/s)");
-        field(auto,"quietSeconds","Continuous quiet before centring (s)");
-        field(auto,"offsetRate","Offset transition rate (°/s; 0 = immediate, default 0)");
 
         LinearLayout filesRow=row(p);
         button(filesRow,"Export setup",this::exportSetup);
@@ -305,20 +294,207 @@ public final class MainActivity extends Activity {
         });
         return scroll(p);
     }
+    private View waveRidePage() {
+        LinearLayout p=scrollPage();
+        LinearLayout ride=card(p,"Wave Ride");
+        field(ride,"rideStartKmh","Ride start speed (km/h)");
+        field(ride,"rideStartConfirmations","Consecutive speed estimates to start");
+        field(ride,"rideEndKmh","Ride end speed (km/h)");
+        field(ride,"rideEndSeconds","Time below end speed (seconds)");
+        field(ride,"magnitudeMetres","Framing offset during a ride (m; 0 = off)");
+        text(ride,"Ride speed counts shoreward and alongshore movement. Framing follows the surfer directly between rides.",13,MUTED,false);
+        LinearLayout line=card(p,"Waveline");
+        waveLineStatus=text(line,"No wave line saved",14,MUTED,false);
+        text(line,"Disconnect the GTi to capture. Keep the LoRa unit still at each point.",13,MUTED,false);
+        loraControls(line);
+        button(line,"Capture waveline",this::startWaveLine);
+        return scroll(p);
+    }
+
+    private void showWaveLine(Settings s) {
+        if(waveLineStatus==null)return;
+        WaveLine line=s.waveLine;
+        waveLineStatus.setText(line==null?"No wave line saved. Ride framing stays centred.":String.format(Locale.US,
+            "A: %.7f, %.7f\nB: %.7f, %.7f\nSeaward: %s when facing from A to B",
+            line.aLat,line.aLon,line.bLat,line.bLon,line.seaSide.equals("leftOfAToB")?"left":"right"));
+    }
+
+    private void startWaveLine() {
+        if(!waveLineCaptureAllowed())return;
+        if(!autoSaveSettings())return;
+        new AlertDialog.Builder(this).setTitle("Capture waveline")
+            .setMessage("Stand still with the LoRa GPS unit at point A. Then walk 50–100 m along the shoreline to point B.")
+            .setPositiveButton("Capture A",(d,w)->captureWavePoint("A",a->
+                new AlertDialog.Builder(this).setTitle("Point A captured")
+                .setMessage("Walk 50–100 m along the shoreline. Stand still at point B, then capture it.")
+                .setPositiveButton("Capture B",(d2,w2)->captureWavePoint("B",b->reviewWaveLine(a,b)))
+                .setNegativeButton("Cancel",null).show()))
+            .setNegativeButton("Cancel",null).show();
+    }
+
+    private boolean waveLineCaptureAllowed() {
+        if(capturing){toast("A GPS capture is already running");return false;}
+        if(lastView!=null&&(lastView.connected||lastView.busy)){toast("Disconnect the GTi before capturing a waveline");return false;}
+        return true;
+    }
+
+    private void captureWavePoint(String label,java.util.function.Consumer<StableGpsCapture.Point> done) {
+        if(!waveLineCaptureAllowed())return;
+        capturing=true;
+        StableGpsCapture capture=new StableGpsCapture(SystemClock.elapsedRealtime());
+        TextView progress=new TextView(this);
+        progress.setPadding(dp(24),dp(12),dp(24),dp(12));
+        progress.setText(capture.status);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Capture point "+label).setView(progress)
+            .setNegativeButton("Cancel",null).create();
+        dialog.setOnDismissListener(d->capturing=false);
+        dialog.show();
+        handler.post(new Runnable(){
+            long epoch=-1;
+            @Override public void run(){
+                if(!dialog.isShowing())return;
+                if(!screenVisible||isDestroyed()||lastView!=null&&(lastView.connected||lastView.busy)){
+                    dialog.dismiss();return;
+                }
+                try{
+                    GpsFeed.Fix fix=controller.captureFix();
+                    if(fix!=null&&epoch!=fix.epoch){epoch=fix.epoch;capture.reset();}
+                    StableGpsCapture.Point point=capture.observe(fix==null?Double.NaN:fix.packet.lat,
+                        fix==null?Double.NaN:fix.packet.lon,fix==null?-1:fix.receivedAt,SystemClock.elapsedRealtime());
+                    progress.setText(capture.status);
+                    if(point!=null){
+                        log.record("waveline_point_captured","point",label,"latitude",point.lat,"longitude",point.lon,
+                            "scatterMetres",point.scatter,"fixes",capture.count());
+                        capturing=false;dialog.dismiss();done.accept(point);return;
+                    }
+                    handler.postDelayed(this,200);
+                }catch(Exception e){
+                    dialog.dismiss();log.error("waveline_capture_failed",e,"point",label);toast(e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void reviewWaveLine(StableGpsCapture.Point a,StableGpsCapture.Point b) {
+        try{
+            WaveLine line=new WaveLine(a.lat,a.lon,b.lat,b.lon,"leftOfAToB");
+            android.content.DialogInterface.OnClickListener saveSide=(d,i)->{
+                    if(!waveLineCaptureAllowed()||!autoSaveSettings())return;
+                    try{
+                        WaveLine chosen=new WaveLine(a.lat,a.lon,b.lat,b.lon,i==android.content.DialogInterface.BUTTON_POSITIVE?"leftOfAToB":"rightOfAToB");
+                        Map<String,String> next=new LinkedHashMap<>(settings.values);
+                        next.put("waveLine",chosen.json());
+                        applySettings(new Settings(next));
+                        log.event("waveline_save_queued",chosen.json());toast("Waveline captured");
+                    }catch(Exception e){log.error("waveline_save_failed",e);toast(e.getMessage());}
+                };
+            new AlertDialog.Builder(this).setTitle("Which side is the sea?")
+                .setMessage(String.format(Locale.US,"Facing from A to B, which side is seaward?\n\nA: %.7f, %.7f\nB: %.7f, %.7f",
+                    line.aLat,line.aLon,line.bLat,line.bLon))
+                .setPositiveButton("Left",saveSide).setNeutralButton("Right",saveSide).setNegativeButton("Cancel",null).show();
+        }catch(IllegalArgumentException e){toast(e.getMessage());}
+    }
+
+    private View liveMapPage(){
+        LinearLayout p=scrollPage();
+        liveMap=new LiveMapView(this,log::liveMapFrame,()->beginReplay(null),this::pickReplayLog,this::endReplay);
+        p.addView(liveMap,new LinearLayout.LayoutParams(-1,-2));
+        return scroll(p);
+    }
+    private View cameraPreviewPage() {
+        LinearLayout panel = scrollPage();
+        previewUpdate = button(panel, "Update", this::requestCameraPreview);
+        previewStatus = text(panel, "Press Update for a new camera image.", 14, MUTED, false);
+        previewImage = new ImageView(this);
+        previewImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        previewImage.setContentDescription("Last camera preview");
+        previewImage.setBackgroundColor(Color.BLACK);
+        panel.addView(previewImage, new LinearLayout.LayoutParams(-1, 0, 1));
+        return panel;
+    }
+
+    private void requestCameraPreview() {
+        if (service == null || controller == null) return;
+        previewUpdate.setEnabled(false);
+        previewStatus.setText("Fetching camera image…");
+        VtcService owner = service;
+        owner.camera.requestPreview(controller::wifiNetwork, (image, error) -> runOnUiThread(() -> {
+            if (isDestroyed() || service != owner) return;
+            previewUpdate.setEnabled(true);
+            if (image == null) {
+                previewStatus.setText(error);
+                return;
+            }
+            previewImage.setImageBitmap(image);
+            String time = android.text.format.DateFormat.getTimeFormat(this).format(new Date());
+            previewStatus.setText("Updated " + time);
+        }));
+    }
+
+    private void pickReplayLog(){
+        Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,
+            DocumentsContract.buildDocumentUri("com.android.externalstorage.documents","primary:Download/VTC/logs"));
+        try{startActivityForResult(intent,REPLAY_FILE_REQUEST);}
+        catch(ActivityNotFoundException e){toast("No file picker available");}
+    }
+
+    private void beginReplay(Uri file){
+        if(service==null||replayPending||liveMap.replaying())return;
+        VtcService source=service;
+        replayPending=true;
+        String notice="Starting replay. VTC will stop aiming and disconnect the GTi, LoRa and camera.";
+        liveMap.loading(true,notice);toast(notice);
+        handler.postDelayed(()->source.prepareReplay(closedCamera->{
+            if(isDestroyed()||service!=source){source.endReplay();return;}
+            if(closedCamera==null){
+                replayPending=false;liveMap.loading(false,"Stop unconfirmed or in progress. Confirm Stop and retry replay.");
+                return;
+            }
+            files.execute(()->{
+                try{
+                    if(!closedCamera.awaitClosed(6000))throw new IOException("Camera polling has not stopped. Try replay again.");
+                    MapReplay run;
+                    if(file==null)run=source.log.lastRun();
+                    else try(InputStream input=getContentResolver().openInputStream(file)){
+                        if(input==null)throw new IOException("Could not open the selected log");
+                        run=MapReplay.read(input);
+                    }
+                    if(run==null)throw new IOException("No completed aiming run in "+(file==null?"the available logs":"the selected log"));
+                    runOnUiThread(()->{
+                        if(isDestroyed()||service!=source){source.endReplay();return;}
+                        replayPending=false;liveMap.openReplay(run);
+                    });
+                }catch(Exception e){
+                    source.log.error("replay_open_failed",e);
+                    runOnUiThread(()->{
+                        source.endReplay();
+                        if(!isDestroyed()&&service==source){replayPending=false;liveMap.loading(false,e.getMessage());}
+                    });
+                }
+            });
+        }),1400);
+    }
+    private void endReplay(){
+        if(service!=null)service.endReplay();
+        liveMap.live();
+    }
+
     private View logsPage() {
         LinearLayout p=scrollPage();
         logStatus=text(p,"Opening automatic full log in Download/VTC/logs",14,TEXT,false);
         text(p,"Full logging is always on. Each session writes directly to Download/VTC/logs and flushes continuously. The file is available while VTC is running; no Save or Export is needed.",15,TEXT,false);
-        text(p,"A matching KML updates automatically in Download/VTC/logs: camera position, surfer points/track, timestamped camera heading and tilt, field-of-view sector, and saved GoTo targets. Open it in Google Earth and use the time slider. Aiming lines are calculated from calibration and motor positions; they do not verify the camera image.",14,MUTED,false);
+        text(p,"A matching KML updates automatically in Download/VTC/logs: camera position, surfer points/track, timestamped camera heading and tilt, and saved GoTo targets. Open it in Google Earth and use the time slider. Aiming lines are calculated from calibration and motor positions; they do not verify the camera image.",14,MUTED,false);
         text(p,"Records include all saved settings and edits, button actions, calibration checks and failures, raw GPS datagrams, parsed telemetry, mount commands/replies, motor positions, aiming/framing decisions, and a status snapshot every second—even while waiting for calibration.",14,MUTED,false);
         text(p,"If public storage fails, VTC keeps a private recovery copy and automatically retries writing the full session to Download/VTC/logs. Storage errors and dropped-record counts appear here.",14,MUTED,false);
         text(p,"Verification\n• Build and automated checks cover software logic.\n• Landmark accuracy, motor directions, backlash and tracking smoothness need a hardware check.\n• No guarantee of a mount communication-loss watchdog is assumed. Continuous movement needs Stop. The independent watchdog attempts Stop on a control stall; lost power, force-stop or lost Wi-Fi can prevent it.\n• Aiming continues when switching apps or locking the screen. Use Stop in VTC or its notification. Force-stop/process termination ends the service; reconnect and validate calibration after a new service session.",14,MUTED,false);
         return scroll(p);
     }
-    private String prettyBands(String json){try{return json.trim().startsWith("{")?new org.json.JSONObject(json).toString(2):new org.json.JSONArray(json).toString(2);}catch(Exception e){return json;}}
     private void fillSettings(Settings s) {
         fillingSettings=true;
-        for(Map.Entry<String,EditText> e:fields.entrySet())if(s.values.containsKey(e.getKey()))e.getValue().setText(e.getKey().equals("zoom_scales")?s.values.get(e.getKey()).replace("[", "").replace("]", ""):(e.getKey().equals("zoomMapping")||e.getKey().equals("zoomBands"))?prettyBands(s.values.get(e.getKey())):s.values.get(e.getKey()));
+        for(Map.Entry<String,EditText> e:fields.entrySet())
+            if(s.values.containsKey(e.getKey()))e.getValue().setText(s.values.get(e.getKey()));
+        showWaveLine(s);
         fields.get("cameraCoordinates").setText(Coordinates.display(s.values.get("latitude"),s.values.get("longitude")));
         fields.get("landmarkCoordinates").setText(Coordinates.display(s.values.get("landmarkLat"),s.values.get("landmarkLon")));
         zoomMode.setSelection(s.zoomMode.equals("off")?0:s.zoomMode.equals("bands")?1:2);
@@ -348,11 +524,17 @@ public final class MainActivity extends Activity {
         
         try {
             Settings next=readSettings();
-            if(lastView!=null&&(lastView.connected||lastView.busy)&&!settings.onlyZoomChanged(next))
-                throw new IllegalArgumentException("Only zoom settings can change while connected");
-            if(!next.values.equals(settings.values)){service.saveSettings(next);settings=next;log.settings("settings_applied_save_queued",next);}
+            applySettings(next);
             settingsValidationError="";setupMessage.setText("Valid edits apply automatically. File save status is shown below.");refreshSettingsStatus();return true;
         }catch(Exception e){settingsValidationError="Not applied: "+e.getMessage()+". Last valid settings retained.";setupMessage.setText(settingsValidationError);refreshSettingsStatus();return false;}
+    }
+    private void applySettings(Settings next)throws Exception {
+        if(lastView!=null&&(lastView.connected||lastView.busy)&&!settings.onlyZoomChanged(next))
+            throw new IllegalArgumentException("Only zoom settings can change while connected");
+        if(!next.values.equals(settings.values)){
+            service.saveSettings(next);settings=next;log.settings("settings_applied_save_queued",next);
+        }
+        showWaveLine(next);
     }
     private void exportSetup() {
         try {
@@ -370,7 +552,9 @@ public final class MainActivity extends Activity {
         super.onActivityResult(request,result,data);
         if(result!=RESULT_OK||data==null||data.getData()==null)return;
         Uri uri=data.getData();
-        if(request==105){
+        if(request==REPLAY_FILE_REQUEST){
+            beginReplay(uri);
+        }else if(request==105){
             try{service.useSettingsFolder(uri,data.getFlags());toast("Folder access saved. Check settings storage status below.");}catch(Exception e){toast(e.getMessage());}
         }else if(request==101) {
             String content=exportSettingsText;
@@ -390,7 +574,11 @@ public final class MainActivity extends Activity {
                     Map<String,String> input=ConfigJson.settings(out.toString(StandardCharsets.UTF_8.name()));
                     Settings imported=new Settings(input);
                     log.settings("import_for_review",imported);
-                    runOnUiThread(()->{fillSettings(imported);autoSaveSettings();showPage(2);});
+                    runOnUiThread(()->{
+                        handler.removeCallbacks(autoSave);
+                        try{applySettings(imported);fillSettings(imported);showPage(2);toast("Setup applied");}
+                        catch(Exception e){log.error("settings_import_failed",e);toast("Import failed: "+e.getMessage());}
+                    });
                 }catch(Exception e){log.error("settings_import_failed",e);runOnUiThread(()->toast("Import failed: "+e.getMessage()));}
             });
         }
@@ -404,6 +592,7 @@ public final class MainActivity extends Activity {
         connect.setEnabled(!v.connected&&!v.busy);disconnect.setEnabled(v.connected||v.busy);
         for(Button button:aimingButtons){button.setEnabled(v.tracking||v.canStart);button.setText(v.tracking?"STOP AIMING":"START AIMING");}
         calibrate.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
+        calibrationConnectionHint.setVisibility(v.connected?View.GONE:View.VISIBLE);
         for(Button b:manualButtons)b.setEnabled(v.connected&&!v.tracking&&!v.busy&&!v.moving);
         for(Button b:landmarkButtons)b.setEnabled(v.canGoToLandmark);
         for(TextView t:landmarkStatuses)t.setText(v.lastLandmark);
@@ -414,14 +603,22 @@ public final class MainActivity extends Activity {
         refreshSettingsStatus();
         logStatus.setText(log.status()+"\n\n"+service.setupStatus());
         cameraInfo.setText(service.camera.status());
-        if(screenVisible&&page==1&&calibrationMap!=null)calibrationMap.refreshIfChanged();
     }
-    private void showPage(int index){page=index;if(index==1&&calibrationMap!=null)calibrationMap.refresh();body.removeAllViews();body.addView(pages[index],new LinearLayout.LayoutParams(-1,-1));log.record("ui_page","index",index);}
+    private void showPage(int index){
+        if(index!=LIVE_MAP_PAGE&&(replayPending||liveMap.replaying())){
+            toast(replayPending?"Wait for replay to finish opening":"Return to live before leaving the replay");
+            return;
+        }
+        page=index;
+        body.removeAllViews();body.addView(pages[index],new LinearLayout.LayoutParams(-1,-1));
+        liveMap.setVisibleOnScreen(screenVisible&&page==LIVE_MAP_PAGE);
+        log.record("ui_page","index",index);
+    }
     private void field(LinearLayout parent,String key,String label) {
         text(parent,label,14,TEXT,false);
         EditText e=new EditText(this);e.setSingleLine();e.setTextSize(16);e.setTextColor(TEXT);e.setHintTextColor(MUTED);
         boolean coordinates=key.endsWith("Coordinates");
-        e.setInputType(key.endsWith("Host")||coordinates||key.equals("zoom_scales")||(key.equals("zoomMapping")||key.equals("zoomBands"))?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        e.setInputType(key.endsWith("Host")||coordinates?InputType.TYPE_CLASS_TEXT:InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
         e.setHint(coordinates?"-28.165514, 153.550457":key.equals("height")||key.equals("landmarkHeight")?"Required before calibration":"");
         e.setOnFocusChangeListener((v,focused)->{if(!focused)log.record("settings_field_edited","field",key,"value",e.getText().toString(),"saved",false);});
         e.addTextChangedListener(new android.text.TextWatcher(){
@@ -482,11 +679,14 @@ public final class MainActivity extends Activity {
         super.onRequestPermissionsResult(request,permissions,grants);
         if(request==103&&log!=null)log.record("storage_permission_result","permissions",permissions,"grants",grants);
     }
-    @Override protected void onResume(){super.onResume();screenVisible=true;if(log!=null)log.event("activity_resume","foreground");if(controller!=null)controller.foreground(true);}
-    @Override protected void onPause(){if(service!=null)autoSaveSettings();screenVisible=false;if(log!=null)log.record("activity_pause","form",formValues());if(controller!=null)controller.foreground(false);super.onPause();}
+    @Override protected void onResume(){super.onResume();screenVisible=true;if(log!=null)log.event("activity_resume","foreground");if(controller!=null)controller.foreground(true);if(liveMap!=null)liveMap.setVisibleOnScreen(page==LIVE_MAP_PAGE);}
+    @Override protected void onPause(){if(service!=null)autoSaveSettings();screenVisible=false;if(log!=null)log.record("activity_pause","form",formValues());if(controller!=null)controller.foreground(false);if(liveMap!=null)liveMap.setVisibleOnScreen(false);super.onPause();}
     @Override protected void onDestroy(){
         if(service!=null)service.detach(listener);if(bound)unbindService(serviceConnection);
-        if(calibrationMap!=null)calibrationMap.close();
+        if(liveMap!=null){
+            if(service!=null&&!replayPending&&liveMap.replaying())service.endReplay();
+            liveMap.close();
+        }
         files.shutdown();handler.removeCallbacksAndMessages(null);super.onDestroy();
     }
 }

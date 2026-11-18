@@ -9,8 +9,15 @@ final class ZoomPlan {
     static final double HYSTERESIS=5;
     static final String MAPPING="configured zoom mapping with logarithmic interpolation";
     static final class Input {
-        final double distance;final long ageMs;final boolean valid;
-        Input(double distance,long ageMs,boolean valid){this.distance=distance;this.ageMs=ageMs;this.valid=valid;}
+        final double distance;
+        final long ageMs,aimingSession;
+        final boolean valid;
+        Input(double distance,long ageMs,boolean valid,long aimingSession) {
+            this.distance=distance;this.ageMs=ageMs;this.valid=valid;this.aimingSession=aimingSession;
+        }
+        boolean canSendFor(long session) {
+            return session>=0&&aimingSession==session&&valid&&Double.isFinite(distance)&&distance>0;
+        }
     }
     static double[] parse(String text,boolean multipliers){
         text=text.trim();if(multipliers&&text.startsWith("[")){Object parsed=ConfigJson.parse(text);if(!(parsed instanceof List))throw new IllegalArgumentException("zoom_scales must be an array");text=((List<?>)parsed).stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));}
@@ -43,20 +50,25 @@ final class ZoomPlan {
         return Math.abs(gps.distance*s.wideFrameFactor/s.zoomMapping.optical(current)-desired)<=desired*.05;
     }
     Decision decide(Settings s,Input input,long now,int min,int max,int step){
-        String next=s.zoomMode+"/"+s.values.get("zoomBands")+"/"+s.values.get("zoom_scales")+"/"+s.zoomSwitchSeconds+"/"+s.desiredFrameWidthMetres+"/"+s.wideFrameFactor+"/"+s.values.get("zoomMapping");
+        String next=input.aimingSession+"/"+s.zoomMode+"/"+s.values.get("zoomBands")+"/"+s.values.get("zoom_scales")+"/"+s.zoomSwitchSeconds+"/"+s.desiredFrameWidthMetres+"/"+s.wideFrameFactor+"/"+s.values.get("zoomMapping");
         if(!next.equals(key)){key=next;began=now;band=-1;}
         Map<String,Object> f=new LinkedHashMap<>();
         f.put("zoomMode",s.zoomMode);f.put("autoFit",s.zoomMode.equals("auto-fit"));f.put("settings",ConfigJson.structured(s.values));
         f.put("mapping",ConfigJson.parse(s.values.get("zoomMapping")));f.put("mappingMethod","log interpolation / end-segment extrapolation");
         f.put("gpsValid",input.valid);f.put("gpsAgeMs",input.ageMs);f.put("distanceM",Double.isFinite(input.distance)?input.distance:null);
+        f.put("aimingActive",input.aimingSession>=0);
+        if(!s.autoZoom||!input.canSendFor(input.aimingSession)){
+            String reason="No fresh valid GPS; holding zoom";
+            if(!s.autoZoom)reason="Zoom off; leaving zoom unchanged";
+            else if(input.aimingSession<0)reason="Automatic zoom waiting for Start Aiming; reading zoom";
+            f.put("reason",reason);
+            return new Decision(f,-1,false);
+        }
         int phase=(int)((Math.max(0,now-began)/(long)(s.zoomSwitchSeconds*1000))%s.zoomMultipliers.length);
         double scale=s.zoomMultipliers[phase],desired=s.desiredFrameWidthMetres/scale;
         f.put("multiplierIndex",phase);f.put("multiplier",scale);f.put("zoom_scales",s.zoomMultipliers);
         f.put("desiredFrameWidthMetres",s.desiredFrameWidthMetres);f.put("effectiveFrameWidthMetres",desired);f.put("wideFrameFactor",s.wideFrameFactor);f.put("widthToleranceFraction",.05);
         f.put("nextSwitchMonoMs",s.zoomMultipliers.length==1?null:began+((now-began)/(long)(s.zoomSwitchSeconds*1000)+1)*(long)(s.zoomSwitchSeconds*1000));
-        if(!s.autoZoom||!input.valid||!Double.isFinite(input.distance)||input.distance<=0){
-            f.put("reason",!s.autoZoom?"Zoom off; leaving zoom unchanged":"No fresh valid GPS; holding zoom");return new Decision(f,-1,false);
-        }
         double requested;
         if(s.zoomMode.equals("bands")){
             ZoomBands b=s.zoomBands;int nominal=0;

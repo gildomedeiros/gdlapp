@@ -39,7 +39,7 @@ final class VtcController implements AutoCloseable {
     private final ExecutorService emergency=Executors.newSingleThreadExecutor(r->new Thread(r,"vtc-stop"));
     private final MovementWatchdog watchdog=new MovementWatchdog(SystemClock.elapsedRealtime());
     private final ContinuousPlanner continuousPlanner=new ContinuousPlanner();
-    private volatile boolean stopping,stopUnconfirmed;
+    private volatile boolean stopping,stopUnconfirmed,replayLocked;
     private volatile Runnable afterStop;
     private final StopCompletion stopCompletion=new StopCompletion();
     private volatile long lastAcceptedAt=-1;
@@ -59,16 +59,16 @@ final class VtcController implements AutoCloseable {
     private String loraKey="";
     boolean loraRequested(){return loraWanted;}
     GpsFeed.Fix captureFix(){GpsFeed f=gps;GpsFeed.Fix fix=f==null?null:f.latest();return fix!=null&&fix.epoch==f.continuity()?fix:null;}
-    void connectLora(){if(closed)return;loraWanted=true;loraWorker.execute(this::maintainLora);log.event("lora_connect_requested","Independent LoRa connection");publish();}
+    void connectLora(){if(closed||replayLocked)return;loraWanted=true;loraWorker.execute(this::maintainLora);log.event("lora_connect_requested","Independent LoRa connection");publish();}
     void disconnectLora(){loraWanted=false;loraWorker.execute(this::maintainLora);log.event("lora_disconnect_requested","Mount connection retained");}
-    private Network wifiNetwork()throws IOException{
+    Network wifiNetwork()throws IOException{
         ConnectivityManager cm=context.getSystemService(ConnectivityManager.class);Network result=null;
         for(Network n:cm.getAllNetworks()){NetworkCapabilities cap=cm.getNetworkCapabilities(n);if(cap!=null&&cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)){if(result!=null)throw new IOException("Select a single Wi-Fi network");result=n;}}
         if(result==null)throw new IOException("Join Wi-Fi first");return result;
     }
     private synchronized void maintainLora(){
         try{
-            if(closed||!loraWanted){closeLora();loraLinkStatus="Disconnected";return;}
+            if(closed||replayLocked||!loraWanted){closeLora();loraLinkStatus="Disconnected";return;}
             Network wifi=wifiNetwork();Settings settings=s;
             if(!Settings.ipv4(settings.receiverHost))throw new IOException("Enter the LoRa receiver IPv4 address");
             String key=wifi+"/"+settings.receiverHost+"/"+settings.receiverPort+"/"+settings.receivePort+"/"+settings.gpsAge+"/"+settings.maxGpsSpeed;
@@ -85,10 +85,12 @@ final class VtcController implements AutoCloseable {
     Settings settings(){return s;}
     ZoomPlan.Input zoomInput(){
         Settings settings=s;GpsFeed feed=gps;GpsFeed.Fix fix=feed==null?null:feed.latest();
-        if(fix==null)return new ZoomPlan.Input(Double.NaN,-1,false);
+        long token=surferAimingGeneration;
+        long zoomSession=active&&valid(token)?token:-1;
+        if(fix==null)return new ZoomPlan.Input(Double.NaN,-1,false,zoomSession);
         long age=SystemClock.elapsedRealtime()-fix.receivedAt;
         double distance=Geo.valid(settings.latitude,settings.longitude)?Geo.distance(settings.latitude,settings.longitude,fix.packet.lat,fix.packet.lon):Double.NaN;
-        return new ZoomPlan.Input(distance,age,fix.epoch==feed.continuity()&&age>=0&&age<=settings.gpsAge*1000&&Double.isFinite(distance));
+        return new ZoomPlan.Input(distance,age,fix.epoch==feed.continuity()&&age>=0&&age<=settings.gpsAge*1000&&Double.isFinite(distance),zoomSession);
     }
     String liveGps(){GpsFeed f=gps;return f==null?"LoRa disconnected":f.display();}
     void retryLandmarkStorage(){landmarkStore.retry();}
@@ -106,6 +108,7 @@ final class VtcController implements AutoCloseable {
     private int expectedPan,expectedTilt;
     private long lastHeartbeat;
     private long aimingGeneration=-1;
+    private volatile long surferAimingGeneration=-1;
     private String lastPublishedState="";
 
     VtcController(Context context,Settings settings,SessionLog log,Listener listener) {
@@ -140,6 +143,7 @@ final class VtcController implements AutoCloseable {
         log.settings("settings_applied",s);publish();
     }
     void connect() {
+        if(replayLocked)return;
         connectLora();
         log.settings("connect_requested",s);
         if(mount!=null||busy||closed||stopping||stopUnconfirmed){log.record("connect_blocked","connected",mount!=null,"busy",busy,"closed",closed);return;}
@@ -231,7 +235,7 @@ final class VtcController implements AutoCloseable {
             if(!valid(token))return;
             continuousPlanner.reset();lastRateFixAt=-1;lastAcceptedAt=fix.receivedAt;framing.reset();planner.reset();gps.clearObservations();lastFramePacket=lastFrameSender=lastFrameAt=-1;continuity=gps.continuity();
             clearFixedGoto("New aiming session");targetWait.reset();
-            position=here;aimingGeneration=token;active=true;gpsWaiting=false;pendingMove=false;state="AIMING";message="Large error: saved-target GoTo. Near target: live GPS corrections.";
+            position=here;aimingGeneration=token;surferAimingGeneration=token;active=true;gpsWaiting=false;pendingMove=false;state="AIMING";message="Large error: saved-target GoTo. Near target: live GPS corrections.";
             log.record("aim_start","calibration",calibrationSnapshot(calibration),"gps",gpsSnapshot(fix),"rangeM",distance,"bearing",bearing,"tilt",tilt);
         });
     }
@@ -266,6 +270,23 @@ final class VtcController implements AutoCloseable {
             log.record("disconnect_complete","stopConfirmed",ok);publish();});
         emergencyStop("User disconnect",null);
     }
+    synchronized void disconnectForReplay(java.util.function.Consumer<Boolean> completed){
+        if(closed||stopping||replayLocked||stopUnconfirmed&&mount==null){completed.accept(false);return;}
+        replayLocked=true;
+        stopCompletion.request(ok->{
+            if(ok){
+                cleanup();
+                synchronized(this){loraWanted=false;closeLora();loraLinkStatus="Disconnected";}
+                state="DISCONNECTED";message="Replay · mount stopped and devices disconnected";
+                stopUnconfirmed=false;
+                log.event("replay_devices_disconnected","GTi stopped and GTi/LoRa disconnected");
+            }else replayLocked=false;
+            publish();completed.accept(ok);
+        });
+        emergencyStop("Replay",null);
+    }
+    void leaveReplay(){replayLocked=false;publish();}
+
     synchronized void exit(java.util.function.Consumer<Boolean> completed){
         stopCompletion.request(ok->{cleanup();stopUnconfirmed=false;log.record("exit_complete","stopConfirmed",ok);completed.accept(ok);});
         emergencyStop("Exit VTC",null);
@@ -324,7 +345,7 @@ final class VtcController implements AutoCloseable {
     void foreground(boolean value){screenVisible=value;log.record("screen_visibility","visible",value,"aimingContinues",active);}
     private interface Action {void run(long token)throws Exception;}
     private void action(String title,Action action) {
-        if(closed||stopping||stopUnconfirmed||busy||mount==null||poller.waiting()){log.record("action_blocked","action",title,"closed",closed,"busy",busy,"connected",mount!=null,"screenVisible",screenVisible,"recovery",poller.snapshot());return;}
+        if(closed||stopping||replayLocked||stopUnconfirmed||busy||mount==null||poller.waiting()){log.record("action_blocked","action",title,"closed",closed,"busy",busy,"connected",mount!=null,"screenVisible",screenVisible,"recovery",poller.snapshot());return;}
         log.record("action_begin","action",title,"generation",generation.get());
         busy=true;long token=generation.get();message=title;publish();
         worker.execute(()->{
@@ -396,9 +417,12 @@ final class VtcController implements AutoCloseable {
                 }
             }else if(here.moving&&!mount.continuous()){fault("Unexpected mount movement; stop other controllers and recalibrate",true);return;}
             if(!active){publishThrottled();return;}
-            // A captured GoTo owns the destination until arrival. Do not consume live
-            // surfer positions, change its framing, or interrupt it for stale GPS.
-            if(fixedGoto!=null){advanceFixedGoto(here,lastPoll);publishThrottled();return;}
+            // Ride detection can advance during a GoTo. The captured motor target never changes.
+            if(fixedGoto!=null){
+                if(!fixedGoto.landmark && active && freshFix()!=null)drainRideFixes(SystemClock.elapsedRealtime());
+                else framing.unavailable(lastPoll);
+                advanceFixedGoto(here,lastPoll);publishThrottled();return;
+            }
             now=SystemClock.elapsedRealtime();
             GpsFeed.Fix fix=freshFix();
             if(fix==null) {
@@ -435,10 +459,7 @@ final class VtcController implements AutoCloseable {
                 framing.unavailable(now);continuity=gps.continuity();lastFramePacket=lastFrameSender=lastFrameAt=-1;
             }
             if(!targetWait.waiting()) {
-                GpsFeed.Fix event;
-                for(int n=0;n<64&&(event=gps.poll())!=null;n++) {
-                    if(event.epoch==continuity&&now-event.receivedAt<=s.gpsAge*1000)observe(event);
-                }
+                drainRideFixes(now);
             }else gps.clearObservations();
             // The receiver can publish a newer fix while the queue is being drained.
             fix=freshFix();now=SystemClock.elapsedRealtime();
@@ -475,19 +496,17 @@ final class VtcController implements AutoCloseable {
             double panError=targetPan-pan,tiltError=targetTilt-tilt;
             aimText=String.format(Locale.US,"Range %.1f m · bearing %.2f°\nCamera %.2f° / tilt %.2f°\nAim %.2f° / tilt %.2f°\nError pan %+.2f° · tilt %+.2f°",
                 distance,bearing,calibration.heading(here.pan),tilt,targetHeading,targetTilt,panError,tiltError);
-            if(Double.isFinite(s.hfov))aimText+=String.format(Locale.US,"\nEstimated frame width %.1f m",2*distance*Math.tan(Math.toRadians(s.hfov/2)));
             log.record("aim_cycle","gps",gpsSnapshot(fix),"rangeM",distance,"bearingDegrees",bearing,
                 "targetHeadingDegrees",targetHeading,"targetPanDegrees",targetPan,"targetTiltDegrees",targetTilt,
                 "cameraHeadingDegrees",calibration.heading(here.pan),"panFromLandmarkDegrees",pan,"tiltDegrees",tilt,
                 "panErrorDegrees",panError,"tiltErrorDegrees",tiltError,
                 "panToleranceMetres",s.panTolerance,"tiltToleranceMetres",s.tiltTolerance,"magnitudeMetres",s.magnitude,
                 "panToleranceDegrees",panTolerance,"tiltToleranceDegrees",tiltTolerance,"magnitudeDegrees",s.magnitudeDegrees(calculationRange),
-                "acquisitionTriggerMetres",s.acquisitionTriggerMetres,"acquisitionTriggerDegrees",acquisitionDegrees,"offsetRate",s.offsetRate,
+                "acquisitionTriggerMetres",s.acquisitionTriggerMetres,"acquisitionTriggerDegrees",acquisitionDegrees,
                 "framing",framingSnapshot(now),"moving",here.moving);
             if(pendingMove){publishThrottled();return;}
             if(planner.shouldGoTo(panError,tiltError,now)) {
                 fixedGoto=new FixedGoto(calibration,fix.packet,fix.receivedAt,now,offset);
-                framing.holdForGoto(now);gps.clearObservations();
                 log.record("goto_captured","target",fixedGoto.snapshot(),"panErrorDegrees",panError,"tiltErrorDegrees",tiltError,
                     "acquisitionTriggerDegrees",acquisitionDegrees,"acquisitionTriggerMetres",s.acquisitionTriggerMetres,"gpsAgeAtCaptureMs",now-fix.receivedAt);
                 if(here.moving||mount.continuous()) {
@@ -539,10 +558,23 @@ final class VtcController implements AutoCloseable {
         log.record("continuous_rates","panDegreesPerSecond",pan,"tiltDegreesPerSecond",tilt,"gpsGap",gap);
         return true;
     }
+    private void drainRideFixes(long now) {
+        if(continuity!=gps.continuity()){
+            framing.unavailable(now);continuity=gps.continuity();
+            lastFramePacket=lastFrameSender=lastFrameAt=-1;
+        }
+        GpsFeed.Fix event;
+        for(int n=0;n<64&&(event=gps.poll())!=null;n++) {
+            if(event.epoch==continuity&&now-event.receivedAt<=s.gpsAge*1000)observe(event);
+        }
+        framing.tick(now);
+    }
+
     private void observe(GpsFeed.Fix f) {
         if(f.receivedAt<lastFrameAt||(f.packet.sequence==lastFramePacket&&f.packet.senderMs==lastFrameSender))return;
         framing.distance(Math.max(.001,Geo.distance(s.latitude,s.longitude,f.packet.lat,f.packet.lon)));
-        framing.observe(f.packet.sequence,f.packet.senderMs,f.receivedAt,Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon));
+        framing.observe(f.packet.senderMs,f.receivedAt,f.packet.lat,f.packet.lon,
+            Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon));
         log.record("framing_observation","gps",gpsSnapshot(f),"bearingDegrees",Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon),"framing",framingSnapshot(f.receivedAt));
         lastFramePacket=f.packet.sequence;lastFrameSender=f.packet.senderMs;lastFrameAt=f.receivedAt;
     }
@@ -560,7 +592,7 @@ final class VtcController implements AutoCloseable {
         Calibration navigation=target.calibration;
         double pan=navigation.panOffset(here.pan),tilt=navigation.tiltAngle(here.tilt);
         double[] steps=target.nextMove(pan,tilt);
-        if(gps!=null)gps.clearObservations();
+        if(target.landmark&&gps!=null)gps.clearObservations();
         state=target.landmark?"GOTO LANDMARK":"GOTO SAVED TARGET";
         message=target.landmark?"Returning pan and tilt to the last saved landmark; surfer tracking is off.":"Moving to the saved position; new GPS does not change this GoTo.";
         aimText=String.format(Locale.US,"%s · range %.1f m\nSaved aim %.2f° / tilt %.2f°\nCamera %.2f° / tilt %.2f°\nRemaining pan %+.2f° · tilt %+.2f°",
@@ -570,9 +602,10 @@ final class VtcController implements AutoCloseable {
         if(here.moving)return;
         if(steps[0]==0&&steps[1]==0) {
             log.record("goto_completed","target",target.snapshot(),"position",positionSnapshot(here),"elapsedMs",now-target.capturedAt);
-            fixedGoto=null;lastRateFixAt=-1;framing.holdForGoto(now);lastFramePacket=lastFrameSender=lastFrameAt=-1;
-            if(gps!=null){gps.clearObservations();continuity=gps.continuity();}
+            fixedGoto=null;lastRateFixAt=-1;
             if(target.landmark) {
+                framing.holdForGoto(now);lastFramePacket=lastFrameSender=lastFrameAt=-1;
+                if(gps!=null)continuity=gps.continuity();
                 active=false;state=calibration==null?"CONNECTED":"CALIBRATED";
                 message=calibration==null?"Last landmark position reached. Check alignment and validate calibration before tracking.":
                     "Last landmark reached. Pan and tilt returned; surfer tracking remains off.";
@@ -647,8 +680,10 @@ final class VtcController implements AutoCloseable {
         if(p!=null)mountText+="\nMotor counts "+p.pan+" / "+p.tilt+(p.moving?" · last reported moving":" · last reported stopped");
         if(poller.waiting())mountText+="\nStatus unavailable — checking automatically";
         String calText=cal==null?"Calibration required each connection":String.format(Locale.US,"Landmark %.2f° true · elevation %.2f°\nPan sector %+.1f° to %+.1f° from landmark\nTilt %.1f° to %.1f°",cal.bearing,cal.elevation,s.panMin,s.panMax,s.tiltMin,s.tiltMax);
-        String frame=String.format(Locale.US,"%s · magnitude %.2f m\nDesired %+.2f° · applied %+.2f°\n%s\nWindow change %+.2f° · consistency %.0f%% · supports %d",
-            "AUTO",s.magnitude,framing.desired,framing.applied,framing.reason,framing.net,100*framing.consistency,framing.supporting);
+        String frame=String.format(Locale.US,"%s · applied offset %+.2f m\nQualifying speed %s · sideways %+.2f m",
+            framing.reason,framing.direction*s.magnitude,
+            Double.isFinite(framing.speedKmh)?String.format(Locale.US,"%.1f km/h",framing.speedKmh):"unavailable",
+            framing.sidewaysMetres);
         List<String> blockers=blockers();
         String readiness=blockers.isEmpty()?"Ready — tap Start aiming":String.join("\n",blockers);
         GpsFeed.Fix fresh=freshFix();
@@ -719,10 +754,13 @@ final class VtcController implements AutoCloseable {
         Map<String,Object> out=f.packet.fields();out.put("receivedAtMs",f.receivedAt);out.put("ageMs",SystemClock.elapsedRealtime()-f.receivedAt);out.put("continuity",f.epoch);return out;
     }
     private Map<String,Object> framingSnapshot(long now) {
-        Map<String,Object> out=new LinkedHashMap<>();out.put("mode","AUTO");out.put("direction",framing.direction);
-        out.put("desiredOffsetDegrees",framing.desired);out.put("appliedOffsetDegrees",framing.applied);out.put("reason",framing.reason);
-        out.put("netBearingChangeDegrees",framing.net);out.put("totalBearingTravelDegrees",framing.travel);out.put("consistency",framing.consistency);
-        out.put("supportingChanges",framing.supporting);out.put("quietSeconds",framing.quietSeconds(now));return out;
+        Map<String,Object> out=new LinkedHashMap<>();
+        out.put("mode","RIDE");out.put("rideActive",framing.riding);out.put("direction",framing.direction);
+        out.put("reason",framing.reason);out.put("appliedOffsetDegrees",framing.applied);
+        out.put("appliedOffsetMetres",framing.direction*s.magnitude);
+        out.put("qualifyingSpeedKmh",framing.speedKmh);out.put("sidewaysMetres",framing.sidewaysMetres);
+        out.put("startConfirmations",framing.startCount);
+        return out;
     }
     public void close() {
         if(closed)return;

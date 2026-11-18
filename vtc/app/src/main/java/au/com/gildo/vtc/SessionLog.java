@@ -10,15 +10,17 @@ import java.util.*;
 
 /** Always-on, structured full diagnostics. No save/export step. */
 final class SessionLog implements AutoCloseable {
-    static final String VERSION="1.0.25";
+    static final String VERSION="1.0.32";
     private final AutomaticLogWriter writer;
+    private final File spool;
+    private final MapTimeline liveMap=new MapTimeline();
     private final AutomaticKmlWriter kml;
     private long record;
     private boolean open=true;
     final String name="VTC_"+VERSION+"_"+LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"))+"_"+UUID.randomUUID().toString().substring(0,8)+".jsonl";
     final String kmlName=name.replace(".jsonl",".kml");
     SessionLog(Context context) {
-        File spool=new File(new File(context.getFilesDir(),"logs"),name);
+        spool=new File(new File(context.getFilesDir(),"logs"),name);
         writer=new AutomaticLogWriter(spool,new LogStorage(context,name));
         LogStorage kmlStorage=new LogStorage(context,kmlName);
         kml=new AutomaticKmlWriter(new File(spool.getParentFile(),kmlName),kmlStorage::openChannel,kmlName);
@@ -34,6 +36,7 @@ final class SessionLog implements AutoCloseable {
         row.put("thread",Thread.currentThread().getName());row.put("event",type);
         for(int i=0;i+1<fields.length;i+=2)row.put(String.valueOf(fields[i]),fields[i+1]);
         writer.append(LogJson.encode(row));
+        liveMap.accept(row);
         kml.append(row);
     }
     void event(String type,String detail){record(type,"detail",detail);}
@@ -54,6 +57,14 @@ final class SessionLog implements AutoCloseable {
             kml.publicReady()?"KML updating automatically":"Opening automatic KML";
         return status+"\nRecords written "+writer.written()+" · dropped "+writer.dropped()
             +"\n"+kmlStatus+"\nDownload/VTC/logs/"+kmlName+"\nKML events "+kml.written()+" · dropped "+kml.dropped();
+    }
+    synchronized Map<String,Object> liveMapFrame() {
+        return liveMap.frame(SystemClock.elapsedRealtime());
+    }
+    MapReplay lastRun()throws IOException,InterruptedException {
+        long checkpoint=writer.checkpoint();
+        if(!writer.awaitFlushed(checkpoint,5000))throw new IOException("Session log is still saving. Try Replay last run again.");
+        return MapReplay.latest(spool.getParentFile(),spool);
     }
     public synchronized void close() {
         if(!open)return;

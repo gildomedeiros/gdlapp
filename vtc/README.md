@@ -1,3 +1,39 @@
+## VTC 1.0.32 — Camera Preview
+
+Install [VTC 1.0.32](VTC-1.0.32-debug.apk) with your current setup.json.
+
+- Join the camera's Wi-Fi network and open **Camera Preview**. Each press of **Update** requests one image from the configured Canon camera. VTC keeps the last successful image on screen. Aiming can continue while the camera request runs.
+
+## VTC 1.0.31 — Wave ride replay and map zoom
+
+Install [VTC 1.0.31](VTC-1.0.31-debug.apk) with your current setup.json.
+
+- The camera–surfer arrow labels distance in metres beside the zoom multiplier. Live Map fits to the greatest recorded camera–surfer range in the run and expands when that range grows. Replay fits to the full run's maximum range. Use + or − to zoom, and Fit largest range to restore the fit.
+- A wave indicator appears when VTC reports an active ride. Choose a wave ride in either replay mode to play the detected ride and up to 10 seconds of recorded context on each side. The selector offers Full run or each detected ride in the run. Logs without ride data offer the full run.
+
+## VTC 1.0.30 — Live Map and replay
+
+Install [VTC 1.0.30](VTC-1.0.30-debug.apk) using your current setup.json. New or missing pan limits default to -170 and +170 degrees from the landmark. Existing saved limits take precedence.
+
+- **Live Map** replaces the map on Calibration. It shows the camera, landmark, saved waveline and seaward arrow, surfer GPS, and the GTi-reported aim. When range and confirmed zoom are known, a wedge shows the estimated field of view to scale. The camera-to-surfer arrow carries the zoom label. Its colour is green when settled and on target, orange while panning, red when panning and the GPS marker is potentially out of shot, or grey when stopped and unconfirmed. The wedge marks stale data separately.
+- **Replay last run** reads the latest completed aiming run on the phone, including one just stopped for replay. **Replay from log file** opens the latest completed aiming run in a selected VTC JSONL file. Use Play, Pause, the timeline and 0.25x to 8x speed. Both show a notice before stopping aiming and disconnecting GTi, LoRa and camera polling automatically. An unconfirmed mount stop blocks replay. Use Return to live when done, then reconnect the devices.
+- The **Google Earth** calibration preview shows waveline A/B and the seaward arrow. Calibration shows a Connect GTi prompt when needed and explains that LoRa is only needed for coordinate capture on that screen.
+
+## VTC 1.0.29 — Automatic zoom follows Start Aiming
+
+Install [VTC 1.0.29](VTC-1.0.29-debug.apk) with the existing 1.0.28 setup. Bands and Auto-fit can send zoom commands only during a surfer aiming session. Connecting LoRa, calibrating or returning to a landmark does not start automatic zoom. Stop Aiming leaves the lens where it is and keeps camera zoom readback and estimated width available. A command already accepted by the camera may finish. Each aiming session starts the zoom scale sequence from its first entry.
+
+## VTC 1.0.28 — Wave ride framing
+
+Before installing [VTC 1.0.28](VTC-1.0.28-debug.apk), copy [the replacement settings](VTC-1.0.28-setup.json) to Download/VTC/Settings/setup.json. The file uses the latest supplied setup, with 2 m pan tolerance and 0.5 m tilt tolerance.
+
+- Open **Wave Ride → Capture waveline**. Capture two stationary LoRa GPS points along the shore, then select the seaward side when facing from A to B. Ride detection counts shoreward and alongshore speed and ignores the seaward component.
+- A ride starts at 12 km/h on two consecutive fresh speed estimates by default and ends after 2 seconds below 10.8 km/h. These settings are editable on the Wave Ride tab. During a ride, framing applies the configured offset immediately in the direction of sideways motion around the mount. Outside a ride, without a waveline, or below 0.25 m of sideways movement over the measurement interval, the offset is zero.
+- **Off / Bands / Auto-fit** remain in Setup. Edit zoomBands, zoomMapping and zoom_scales in setup.json. The camera panel estimates frame width from the last confirmed zoom and shows the age of that reading. KML keeps the camera aim line.
+- The replacement setup removes window, observations, minNet, consistency, supports, supportChange, quietRate, quietSeconds, offsetRate and hfov.
+
+Verification passed 229 unit tests and lint with zero errors. The APK signer matches 1.0.27. The waveline wizard and aiming still need a field test.
+
 ## VTC 1.0.27 — Off, Bands and Auto-fit
 
 Setup's Zoom mode selector restores editable distance bands alongside Auto-fit. Off sends no zoom commands and continues readback/logging; it does not reset the lens. A command already sent to the camera may finish. Both automatic modes use the configured zoom mapping, scales and switching interval, on the independent camera worker.

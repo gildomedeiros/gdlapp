@@ -15,7 +15,8 @@ final class AutomaticLogWriter implements AutoCloseable {
     private final Thread worker;
     private final long retryMillis;
     private volatile boolean open=true,publicReady,finished;
-    private volatile long written;
+    private volatile long written,flushedRecords;
+    private long queuedRecords;
     private volatile String publicError="",privateError="";
     private BufferedWriter local,shared;
     private long nextRetry;
@@ -27,7 +28,14 @@ final class AutomaticLogWriter implements AutoCloseable {
     }
     synchronized void append(String line) {
         if(!open)return;
-        if(!queue.offer(line)){dropped.incrementAndGet();pendingDropped.incrementAndGet();}
+        if(queue.offer(line))queuedRecords++;
+        else{dropped.incrementAndGet();pendingDropped.incrementAndGet();}
+    }
+    synchronized long checkpoint(){return queuedRecords;}
+    boolean awaitFlushed(long checkpoint,long timeout)throws InterruptedException {
+        long deadline=monotonic()+timeout;
+        while(flushedRecords<checkpoint&&!finished&&monotonic()<deadline)Thread.sleep(25);
+        return flushedRecords>=checkpoint;
     }
     long written(){return written;}
     long dropped(){return dropped.get();}
@@ -41,14 +49,16 @@ final class AutomaticLogWriter implements AutoCloseable {
             if(!dir.isDirectory()&&!dir.mkdirs())throw new IOException("Cannot create private log folder");
             local=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(spool),StandardCharsets.UTF_8));
             tryPublic(true);
+            long processed=0;
             while(open||!queue.isEmpty()) {
                 String row=queue.poll(200,TimeUnit.MILLISECONDS);
-                if(row!=null)write(row);
+                if(row!=null){write(row);processed++;}
                 long lost=pendingDropped.getAndSet(0);
                 if(lost>0)write("{\"event\":\"log_overflow\",\"epochMs\":"+System.currentTimeMillis()+",\"droppedEntries\":"+lost+"}");
                 // Batches keep disk work separate from all control and receiver threads.
-                for(int n=0;n<127&&(row=queue.poll())!=null;n++)write(row);
+                for(int n=0;n<127&&(row=queue.poll())!=null;n++){write(row);processed++;}
                 local.flush();
+                flushedRecords=processed;
                 flushPublic();
                 tryPublic(false);
             }

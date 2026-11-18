@@ -26,7 +26,7 @@ public class KmlDocumentTest {
         Map<String,Object> out=new LinkedHashMap<>();out.put("event",type);out.put("epochMs",at);
         for(int n=0;n<data.length;n+=2)out.put((String)data[n],data[n+1]);return out;
     }
-    static Map<String,String> settings(){return GeoAndCalibrationTest.configured("latitude","-28","longitude","153","height","4","hfov","6.48").values;}
+    static Map<String,String> settings(){return GeoAndCalibrationTest.configured("latitude","-28","longitude","153","height","4").values;}
     static Map<String,Object> gps(long seq,double lat,double lon){return Map.of("sequence",seq,"latitude",lat,"longitude",lon,"satellites",20,"hdop",.6);}
     static Document parse(String text)throws Exception {
         DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);
@@ -60,7 +60,7 @@ public class KmlDocumentTest {
             "position",Map.of("headingDegrees",90,"tiltDegrees",-9.21,"moving",true),
             "state","GOTO <saved> & tracking","monoMs",1000,"positionSampleMonoMs",900));
         Document xml=parse(KmlDocument.header("test")+fragment+KmlDocument.FOOTER);
-        assertEquals(1,xml.getElementsByTagName("LineString").getLength());assertEquals(1,xml.getElementsByTagName("Polygon").getLength());
+        assertEquals(1,xml.getElementsByTagName("LineString").getLength());assertEquals(0,xml.getElementsByTagName("Polygon").getLength());
         assertTrue(fragment.contains("name=\"headingDegreesTrue\"><value>90.0</value>"));
         assertTrue(fragment.contains("name=\"tiltDegreesFromHorizontal\"><value>-9.21</value>"));
         assertTrue(fragment.contains("<begin>1970-01-01T00:00:01.900Z</begin>"));

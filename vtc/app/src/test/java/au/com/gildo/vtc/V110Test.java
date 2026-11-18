@@ -104,11 +104,6 @@ public class V110Test {
         for(String k:List.of("gotoThreshold","maxStep","waitForGoto","framing","fixedOffset"))assertFalse(s.values.containsKey(k));
         assertEquals(5,new Settings(Map.of("gotoThreshold","4","acquisitionTriggerDegrees","5")).acquisitionDegrees(143),1e-10);
     }
-    @Test public void zeroMagnitudeAlwaysProducesZeroOffset(){
-        FramingEngine f=new FramingEngine(new Settings(Map.of("magnitude","0")));
-        f.observe(1,1,0,0);f.observe(2,2,750,.5);f.observe(3,3,1500,1);f.tick(1800);
-        assertEquals(1,f.direction);assertEquals(0,f.desired,0);assertEquals(0,f.applied,0);
-    }
     @Test public void clockRoundTripsPhoneTimezoneAndDst()throws Exception {
         long epoch=1794873600000L;
         for(String id:List.of("Australia/Brisbane","Australia/Sydney","America/New_York")){

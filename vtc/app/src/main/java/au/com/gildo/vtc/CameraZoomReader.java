@@ -1,4 +1,6 @@
 package au.com.gildo.vtc;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Network;
 import android.os.SystemClock;
 import org.json.JSONObject;
@@ -6,9 +8,11 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-/** Single camera worker; zoom/clock HTTP never blocks the aiming executor. */
+/** Serial camera requests on a worker separate from the aiming executor. */
 final class CameraZoomReader implements AutoCloseable {
     private final CameraPollLoop loop;
     private final Supplier<Settings> settings;
@@ -29,12 +33,15 @@ final class CameraZoomReader implements AutoCloseable {
         String expected="http://"+s.cameraHost+":"+s.cameraPort+"/ccapi/ver100/shooting/control/zoom";
         boolean same=last!=null&&last.endpoint.equals(expected);
         log.record("manual_zoom_observation","reason",reason,"manualZoomX",Double.isFinite(s.manualZoomX)?s.manualZoomX:null,
-            "automaticZoom",s.autoZoom,"usableManualObservation",!s.autoZoom&&Double.isFinite(s.manualZoomX)&&same&&now-last.at<=5000,
+            "automaticZoom",s.autoZoom,"usableManualObservation",(!s.autoZoom||gps.aimingSession<0)&&Double.isFinite(s.manualZoomX)&&same&&now-last.at<=5000,
             "ccapiZoom",same?last.value:null,"ccapiAgeMs",same?now-last.at:null,"distanceM",Double.isFinite(gps.distance)?gps.distance:null,
             "gpsAgeMs",gps.ageMs,"gpsValid",gps.valid,"settings",s.values);
     }
     private volatile HttpURLConnection connection;
     private volatile boolean closed;
+    private final AtomicReference<BiConsumer<Bitmap, String>> preview = new AtomicReference<>();
+    private static final int PREVIEW_TIMEOUT_MS = 1500;
+    private static final int MAX_PREVIEW_BYTES = 2 * 1024 * 1024;
     private volatile String status="Camera disabled — enter its IP in Setup",value="";
     private volatile long receivedAt;
     private String endpoint="",clockConnection="";
@@ -46,7 +53,24 @@ final class CameraZoomReader implements AutoCloseable {
         this.settings=settings;this.network=network;this.input=input;this.log=log;
         loop=new CameraPollLoop(this::read,2000);
     }
-    String status(){long at=receivedAt;return status+"\n"+zoomStatus+"\n"+clockStatus+(at==0?"":"\nLast zoom "+value+" · age "+String.format(java.util.Locale.US,"%.1f",(SystemClock.elapsedRealtime()-at)/1000.0)+" s");}
+    String status() {
+        ZoomSample last=sample;
+        Settings s=settings.get();
+        ZoomPlan.Input gps=input.get();
+        String expected="http://"+s.cameraHost+":"+s.cameraPort+"/ccapi/ver100/shooting/control/zoom";
+        String width="Width unavailable";
+        String readback="";
+        if(last!=null&&last.endpoint.equals(expected)){
+            double age=(SystemClock.elapsedRealtime()-last.at)/1000.0;
+            readback=String.format(java.util.Locale.US,"\nLast zoom %s · age %.1f s",value,age);
+            if(gps.valid&&Double.isFinite(gps.distance)&&gps.distance>0)
+                width=String.format(java.util.Locale.US,"Estimated width %.1f m · zoom readback age %.1f s",
+                    gps.distance*s.wideFrameFactor/s.zoomMapping.optical(last.value),age);
+        }
+        String controlStatus=s.autoZoom&&gps.aimingSession<0
+            ? "Automatic zoom waiting for Start Aiming; reading zoom" : zoomStatus;
+        return status+"\n"+controlStatus+"\n"+clockStatus+readback+"\n"+width;
+    }
     private void read(){
         if(closed)return;
         Settings s=settings.get();String url=s.cameraHost.isEmpty()?"":"http://"+s.cameraHost+":"+s.cameraPort+"/ccapi/ver100/shooting/control/zoom";
@@ -86,13 +110,23 @@ final class CameraZoomReader implements AutoCloseable {
         }finally{if(c!=null)c.disconnect();connection=null;}
     }
     private String clockRequest(Network wifi,String url,String method,String body)throws Exception {
+        return clockRequest(wifi,url,method,body,()->true);
+    }
+    private String clockRequest(Network wifi,String url,String method,String body,
+                                java.util.function.BooleanSupplier maySend)throws Exception {
         long began=SystemClock.elapsedRealtime();
         HttpURLConnection c=(HttpURLConnection)wifi.openConnection(new URL(url));connection=c;
         try {
             if(closed)throw new IOException("Camera worker closed");
             c.setRequestMethod(method);c.setConnectTimeout(1500);c.setReadTimeout(1500);c.setInstanceFollowRedirects(false);c.setUseCaches(false);
-            if(body!=null){c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");
-                try(OutputStream out=c.getOutputStream()){out.write(body.getBytes(StandardCharsets.UTF_8));}}
+            if(body!=null){
+                if(!maySend.getAsBoolean())throw new CancellationException();
+                c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");
+                try(OutputStream out=c.getOutputStream()){
+                    if(!maySend.getAsBoolean())throw new CancellationException();
+                    out.write(body.getBytes(StandardCharsets.UTF_8));
+                }
+            }
             int code=c.getResponseCode();if(code!=200)throw new IOException("Camera HTTP "+code);
             ByteArrayOutputStream bytes=new ByteArrayOutputStream();
             try(InputStream in=c.getInputStream()){byte[] b=new byte[1024];int n;
@@ -109,7 +143,7 @@ final class CameraZoomReader implements AutoCloseable {
         decision.fields.put("estimatedCurrentOpticalZoom",s.zoomMapping.optical(current));
         decision.fields.put("estimatedCurrentFrameWidthM",Double.isFinite(gps.distance)?gps.distance*s.wideFrameFactor/s.zoomMapping.optical(current):null);
         String action;
-        if(!decision.enabled){action=String.valueOf(decision.fields.get("reason"));pendingTarget=-1;}
+        if(!decision.enabled)action=String.valueOf(decision.fields.get("reason"));
         else if(current==decision.target)action="At requested zoom position";
         else if(ZoomPlan.withinWidth(s,gps,decision,current))action="Within 5% width tolerance";
         else if(pendingTarget>=0&&now-pendingAt<5000)action="Waiting for previous zoom readback (up to 5 seconds)";
@@ -119,13 +153,16 @@ final class CameraZoomReader implements AutoCloseable {
         zoomStatus=!decision.enabled?action:(s.zoomMode.equals("bands")?"Bands "+decision.fields.get("bandZoomX")+"x · scale "+decision.fields.get("multiplier"):"Auto-fit "+decision.fields.get("effectiveFrameWidthMetres")+" m")+" · estimated "+decision.fields.get("estimatedFrameWidthM")+" m · "+(Boolean.TRUE.equals(decision.fields.get("clamped"))?"lens/camera limit · ":"")+
             " · requested "+decision.fields.get("limitedOpticalZoom")+"× (estimated) · "+action;
         if(!action.equals("Send zoom"))return;
-        if(closed||settings.get()!=s||network.get()!=wifi){log.record("camera_zoom_skipped","reason","Settings or network changed before command");return;}
-        ZoomPlan.Input fresh=input.get();if(!fresh.valid){log.record("camera_zoom_skipped","reason","GPS expired before command");return;}
+        java.util.function.BooleanSupplier maySend=()->!closed&&settings.get()==s&&network.get()==wifi
+            &&input.get().canSendFor(gps.aimingSession);
+        String cancelledReason="Aiming session, settings, network or GPS changed before zoom command";
+        if(!maySend.getAsBoolean()){log.record("camera_zoom_skipped","reason",cancelledReason);return;}
         pendingTarget=decision.target;pendingAt=now;
         String body=new JSONObject().put("value",decision.target).toString();
         log.record("camera_zoom_command","requestedCcapi",decision.target,"decision",decision.fields,"method","POST","url",url,"body",body);
         // POST acknowledgement is not treated as physical arrival; next GET confirms it.
-        try{String response=clockRequest(wifi,url,"POST",body);log.record("camera_zoom_ack","requestedCcapi",decision.target,"response",response,"elapsedMs",SystemClock.elapsedRealtime()-now);}
+        try{String response=clockRequest(wifi,url,"POST",body,maySend);log.record("camera_zoom_ack","requestedCcapi",decision.target,"response",response,"elapsedMs",SystemClock.elapsedRealtime()-now);}
+        catch(CancellationException e){pendingTarget=-1;log.record("camera_zoom_skipped","reason",cancelledReason);}
         catch(Exception e){log.error("camera_zoom_command_error",e,"requestedCcapi",decision.target,"elapsedMs",SystemClock.elapsedRealtime()-now);throw e;}
     }
     private void syncClock(Network wifi,Settings s){
@@ -149,5 +186,110 @@ final class CameraZoomReader implements AutoCloseable {
             clockDone=true;clockStatus="Clock synchronised to phone ("+zone.getID()+")";
         }catch(Exception e){clockStatus="Clock sync unavailable; retrying in 60 s";log.error("camera_clock_sync_failed",e);}
     }
-    public void close(){closed=true;loop.close();HttpURLConnection c=connection;if(c!=null)c.disconnect();}
+    void requestPreview(Callable<Network> wifiSource, BiConsumer<Bitmap, String> result) {
+        if (!preview.compareAndSet(null, result)) {
+            result.accept(null, "A preview request is already running.");
+            return;
+        }
+        try {
+            loop.execute(() -> readPreview(wifiSource, result));
+        } catch (RejectedExecutionException stopped) {
+            finishPreview(result, null, "Camera connection closed.");
+        }
+    }
+
+    private void readPreview(Callable<Network> wifiSource, BiConsumer<Bitmap, String> result) {
+        if (closed) return;
+        long startedAt = SystemClock.elapsedRealtime();
+        Settings requested = settings.get();
+        try {
+            if (requested.cameraHost.isEmpty()) throw new IOException("Enter the camera IP in Setup.");
+            Network wifi = wifiSource.call();
+            String address = "http://" + requested.cameraHost + ":" + requested.cameraPort
+                    + "/ccapi/ver100/shooting/liveview";
+            log.record("camera_preview_request", "url", address);
+            byte[] frame = CameraSnapshot.capture((method, suffix, body) ->
+                previewRequest(wifi, address + suffix, method, body));
+            Settings current = settings.get();
+            if (!current.cameraHost.equals(requested.cameraHost) || current.cameraPort != requested.cameraPort
+                    || !wifi.equals(wifiSource.call())) {
+                throw new IOException("Camera address or Wi-Fi changed. Press Update again.");
+            }
+
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(frame, 0, frame.length, bounds);
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0
+                    || (long) bounds.outWidth * bounds.outHeight > 2_100_000) {
+                throw new IOException("Invalid or oversized camera image.");
+            }
+            Bitmap image = BitmapFactory.decodeByteArray(frame, 0, frame.length);
+            if (image == null) throw new IOException("Could not decode camera image.");
+            log.record("camera_preview_response", "bytes", frame.length, "width", image.getWidth(),
+                    "height", image.getHeight(), "elapsedMs", SystemClock.elapsedRealtime() - startedAt);
+            finishPreview(result, image, null);
+        } catch (Exception failure) {
+            if (!closed) {
+                log.error("camera_preview_error", failure, "elapsedMs", SystemClock.elapsedRealtime() - startedAt);
+                String detail = failure.getMessage();
+                finishPreview(result, null, detail == null ? "Could not load camera image." : detail);
+            }
+        }
+    }
+
+    private byte[] previewRequest(Network wifi, String url, String method, String body) throws IOException {
+        HttpURLConnection request = (HttpURLConnection) wifi.openConnection(new URL(url));
+        connection = request;
+        try {
+            if (closed && !CameraSnapshot.STOP.equals(body)) throw new IOException("Camera connection closed.");
+            request.setConnectTimeout(PREVIEW_TIMEOUT_MS);
+            request.setReadTimeout(PREVIEW_TIMEOUT_MS);
+            request.setInstanceFollowRedirects(false);
+            request.setUseCaches(false);
+            request.setRequestMethod(method);
+            request.setRequestProperty("Accept", body == null ? "image/jpeg" : "application/json");
+            if (body != null) {
+                byte[] payload = body.getBytes(StandardCharsets.UTF_8);
+                request.setDoOutput(true);
+                request.setFixedLengthStreamingMode(payload.length);
+                request.setRequestProperty("Content-Type", "application/json");
+                try (OutputStream out = request.getOutputStream()) {
+                    out.write(payload);
+                }
+            }
+            int status = request.getResponseCode();
+            if (status != 200) throw new IOException("Camera preview HTTP " + status + ".");
+            if (body != null) return new byte[0];
+            long readStartedAt = SystemClock.elapsedRealtime();
+            try (InputStream in = request.getInputStream(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                byte[] buffer = new byte[8192];
+                int count;
+                while ((count = in.read(buffer)) != -1) {
+                    if (count > MAX_PREVIEW_BYTES - out.size()
+                            || SystemClock.elapsedRealtime() - readStartedAt > PREVIEW_TIMEOUT_MS) {
+                        throw new IOException("Camera image exceeded the read limit.");
+                    }
+                    out.write(buffer, 0, count);
+                }
+                return out.toByteArray();
+            }
+        } finally {
+            request.disconnect();
+            connection = null;
+        }
+    }
+
+    private void finishPreview(BiConsumer<Bitmap, String> result, Bitmap image, String error) {
+        if (preview.compareAndSet(result, null)) result.accept(image, error);
+    }
+
+    boolean awaitClosed(long millis)throws InterruptedException{return loop.awaitClosed(millis);}
+    public void close() {
+        closed = true;
+        loop.close();
+        HttpURLConnection active = connection;
+        if (active != null) active.disconnect();
+        BiConsumer<Bitmap, String> pending = preview.getAndSet(null);
+        if (pending != null) pending.accept(null, "Camera connection closed.");
+    }
 }

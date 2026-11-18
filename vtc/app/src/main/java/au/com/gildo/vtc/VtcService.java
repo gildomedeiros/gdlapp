@@ -23,7 +23,7 @@ public final class VtcService extends Service {
     private String notificationText="";
     private volatile String loadError="";
     private android.net.wifi.WifiManager.WifiLock wifiLock;
-    private boolean destroyed;
+    private boolean destroyed,replayDisconnected;
     private final java.util.concurrent.atomic.AtomicLong savesQueued=new java.util.concurrent.atomic.AtomicLong();
     private volatile long savesCompleted;
     private boolean logsMigrated;
@@ -86,6 +86,22 @@ public final class VtcService extends Service {
         if(!ok)android.widget.Toast.makeText(this,"VTC closed. Mount stop NOT confirmed; check mount power.",android.widget.Toast.LENGTH_LONG).show();
         finished.run();stopSelf();
     }));}
+    void prepareReplay(java.util.function.Consumer<CameraZoomReader> ready) {
+        controller.disconnectForReplay(ok->main.post(()->{
+            if(destroyed)return;
+            if(!ok){ready.accept(null);return;}
+            replayDisconnected=true;
+            camera.close();
+            ready.accept(camera);
+        }));
+    }
+    void endReplay(){
+        if(!replayDisconnected||destroyed)return;
+        replayDisconnected=false;
+        camera=new CameraZoomReader(controller::settings,controller::cameraNetwork,controller::zoomInput,log);
+        controller.leaveReplay();
+    }
+
     void attach(VtcController.Listener listener){listeners.add(listener);if(latest!=null)listener.update(latest);}
     void detach(VtcController.Listener listener){listeners.remove(listener);}
     @android.annotation.SuppressLint("WakelockTimeout") // Held only for a connected device session; released on disconnect or service destruction.

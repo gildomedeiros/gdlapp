@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 
 public class ZoomPlanTest {
     private Settings settings(String... pairs){Map<String,String> m=new HashMap<>();m.put("autoZoom","1");for(int i=0;i<pairs.length;i+=2)m.put(pairs[i],pairs[i+1]);return new Settings(m);}
-    private ZoomPlan.Decision at(ZoomPlan p,Settings s,double distance,long time){return p.decide(s,new ZoomPlan.Input(distance,100,true),time,0,201,1);}
+    private ZoomPlan.Decision at(ZoomPlan p,Settings s,double distance,long time){return p.decide(s,new ZoomPlan.Input(distance,100,true,1),time,0,201,1);}
     private double number(ZoomPlan.Decision d,String name){return ((Number)d.fields.get(name)).doubleValue();}
     @Test public void defaultsSelectBands(){assertEquals("bands",new Settings(Collections.emptyMap()).zoomMode);}
     @Test public void switchingOffDoesNotCommandWideOrResetZoom(){
@@ -36,14 +36,14 @@ public class ZoomPlanTest {
         assertEquals(2,number(at(p,settings("zoomMultipliers","2"),200,90000),"multiplier"),0);
     }
     @Test public void widthDeadbandPreventsTinyAdjustments(){
-        Settings s=settings();ZoomPlan p=new ZoomPlan();ZoomPlan.Input gps=new ZoomPlan.Input(200,0,true);
+        Settings s=settings();ZoomPlan p=new ZoomPlan();ZoomPlan.Input gps=new ZoomPlan.Input(200,0,true,1);
         ZoomPlan.Decision d=p.decide(s,gps,0,0,201,1);
         assertTrue(ZoomPlan.withinWidth(s,gps,d,d.target));
-        assertFalse(ZoomPlan.withinWidth(s,new ZoomPlan.Input(250,0,true),d,d.target));
+        assertFalse(ZoomPlan.withinWidth(s,new ZoomPlan.Input(250,0,true,1),d,d.target));
     }
     @Test public void staleGpsAndOffNeverCommand(){
         ZoomPlan p=new ZoomPlan();Settings s=settings();
-        assertFalse(p.decide(s,new ZoomPlan.Input(150,6000,false),0,0,201,1).enabled);
+        assertFalse(p.decide(s,new ZoomPlan.Input(150,6000,false,1),0,0,201,1).enabled);
         assertFalse(at(p,settings("autoZoom","0"),150,100).enabled);
         assertFalse(at(p,s,Double.NaN,200).enabled);
     }
@@ -52,7 +52,7 @@ public class ZoomPlanTest {
         double last=-1;for(double x=1;x<=65;x+=.1){assertTrue(ZoomPlan.raw(x)>=last);last=ZoomPlan.raw(x);assertEquals(x,ZoomPlan.optical(last),(x>=3.2&&x<=3.3)?0.051:1e-8);}
     }
     @Test public void honorsCameraLimitsAndStep(){
-        ZoomPlan.Decision d=new ZoomPlan().decide(settings(),new ZoomPlan.Input(500,1,true),0,10,90,4);
+        ZoomPlan.Decision d=new ZoomPlan().decide(settings(),new ZoomPlan.Input(500,1,true,1),0,10,90,4);
         assertTrue(d.target<=90&&d.target>=10);assertEquals(0,(d.target-10)%4);assertEquals(true,d.fields.get("clamped"));
     }
     @Test public void manualObservationDoesNotRestartCycleButSequenceChangeDoes(){

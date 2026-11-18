@@ -15,13 +15,12 @@ public class GeoAndCalibrationTest {
         return new Settings(m);
     }
     @Test public void knownPointDangerToGroyneGeometry() {
-        Settings s=configured("hfov","6.48");
+        Settings s=configured();
         double range=Geo.distance(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon);
         assertEquals(529.7,range,.5);
         assertTrue(Geo.bearing(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon)>120);
         assertTrue(Geo.bearing(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon)<140);
         assertEquals(-4.21,Geo.elevation(range,40,1),.02);
-        assertEquals(60,2*range*Math.tan(Math.toRadians(s.hfov/2)),.1);
     }
     @Test public void bearingsUnwrapAcrossNorthBothWays() {
         assertEquals(2,Geo.delta(1,359),0);assertEquals(-2,Geo.delta(359,1),0);

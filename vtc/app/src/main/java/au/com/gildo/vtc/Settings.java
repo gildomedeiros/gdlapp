@@ -10,8 +10,9 @@ final class Settings {
     final double latitude,longitude,height,landmarkLat,landmarkLon,landmarkHeight,targetHeight;
     final double panMin,panMax,tiltMin,tiltMax,rangeMin,rangeMax,panTolerance,tiltTolerance,reverseSeconds,gpsAge;
     final double acquisitionTriggerMetres,gotoMaxMove,maxPanningSpeed,gpsGapTimeout;
-    final double magnitude,tiltOffset,window,minNet,consistency,supportChange,quietRate,quietSeconds,offsetRate,hfov,maxGpsSpeed;
-    final int observations,supports;
+    final double magnitude,tiltOffset,maxGpsSpeed,rideStartKmh,rideEndKmh,rideEndSeconds;
+    final int rideStartConfirmations;
+    final WaveLine waveLine;
     final boolean autoZoom;
     final String zoomMode;
     final ZoomBands zoomBands;
@@ -64,8 +65,8 @@ final class Settings {
             {"landmarkHeight", "0"},
             {"panSign", "1"},
             {"tiltSign", "-1"},
-            {"panMin", "-120"},
-            {"panMax", "120"},
+            {"panMin", "-170"},
+            {"panMax", "170"},
             {"tiltMin", "-45"},
             {"tiltMax", "20"},
             {"rangeMin", "10"},
@@ -82,16 +83,11 @@ final class Settings {
             {"gpsGapTimeout", "3"},
             {"magnitudeMetres", "2"},
             {"tiltOffset", "0"},
-            {"hfov", "6.48"},
-            {"window", "1.5"},
-            {"observations", "3"},
-            {"minNet", "0.3"},
-            {"consistency", "0.8"},
-            {"supports", "2"},
-            {"supportChange", "0.03"},
-            {"quietRate", "0.08"},
-            {"quietSeconds", "3"},
-            {"offsetRate", "0.3"},
+            {"rideStartKmh", "12"},
+            {"rideStartConfirmations", "2"},
+            {"rideEndKmh", "10.8"},
+            {"rideEndSeconds", "2"},
+            {"waveLine", "null"},
             {"maxGpsSpeed", "20"},
         };
         for(String[] r:rows)d.put(r[0],r[1]);
@@ -101,7 +97,7 @@ final class Settings {
         input=AimUnits.migrate(input);
         LinkedHashMap<String,String> d=defaults();
         for(Map.Entry<String,String> e:input.entrySet()) {
-            if(java.util.Arrays.asList("framing","fixedOffset","waitForGoto","maxStep").contains(e.getKey()))continue;
+            if(java.util.Arrays.asList("framing","fixedOffset","waitForGoto","maxStep","window","observations","minNet","consistency","supports","supportChange","quietRate","quietSeconds","offsetRate","hfov").contains(e.getKey()))continue;
             
             if(!d.containsKey(e.getKey()))throw new IllegalArgumentException("Unknown setting: "+e.getKey());
             d.put(e.getKey(),e.getValue().trim());
@@ -139,10 +135,13 @@ final class Settings {
         maxPanningSpeed=number("maxPanningSpeed",.01,5);gpsGapTimeout=number("gpsGapTimeout",.3,30);gotoMaxMove=number("gotoMaxMove",1,45);
         reverseSeconds=number("reverseSeconds",0,10);gpsAge=number("gpsAge",.3,5);
         magnitude=number("magnitudeMetres",0,1000);tiltOffset=number("tiltOffset",-10,10);
-        hfov=optional("hfov",.2,120);
-        window=number("window",.3,10);observations=integer("observations",3,40);minNet=number("minNet",.01,15);
-        consistency=number("consistency",.5,1);supports=integer("supports",2,20);supportChange=number("supportChange",.001,5);
-        quietRate=number("quietRate",.001,5);quietSeconds=number("quietSeconds",.5,30);offsetRate=number("offsetRate",0,2);
+        rideStartKmh=number("rideStartKmh",.1,100);
+        rideStartConfirmations=integer("rideStartConfirmations",1,20);
+        rideEndKmh=number("rideEndKmh",.1,100);
+        if(rideEndKmh>=rideStartKmh)throw new IllegalArgumentException("Ride end speed must be below ride start speed");
+        rideEndSeconds=number("rideEndSeconds",.1,60);
+        waveLine=WaveLine.parse(d.get("waveLine"));
+        d.put("waveLine",waveLine==null?"null":waveLine.json());
         maxGpsSpeed=number("maxGpsSpeed",1,100);
     }
     double panToleranceDegrees(double range){return AimUnits.degrees(panTolerance,range);}

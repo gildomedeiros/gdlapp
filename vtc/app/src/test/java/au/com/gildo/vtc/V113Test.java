@@ -7,17 +7,10 @@ public class V113Test {
     @Test public void screenshotCombinationIsAcceptedAndRoundTrips(){
         Settings s=new Settings(Map.of("magnitude","3","panTolerance","1","hfov","6.48"));
         Settings restored=new Settings(s.values);
-        assertEquals(3,restored.magnitudeDegrees(143),1e-10);assertEquals(1,restored.panToleranceDegrees(143),1e-10);assertEquals(6.48,restored.hfov,0);
+        assertEquals(3,restored.magnitudeDegrees(143),1e-10);assertEquals(1,restored.panToleranceDegrees(143),1e-10);assertFalse(restored.values.containsKey("hfov"));
     }
-    @Test public void fieldOfViewIsOptionalAndDoesNotRestrictOffsets(){
-        assertEquals(6.48,new Settings(Map.of()).hfov,0);
-        Settings s=new Settings(Map.of("hfov","","magnitude","30","panTolerance","3","tiltOffset","-2"));
-        assertTrue(Double.isNaN(s.hfov));assertEquals(30,s.magnitudeDegrees(143),1e-10);assertEquals(-2,s.tiltOffset,0);
-        assertEquals(30,new Settings(Map.of("hfov","0.2","magnitude","30")).magnitudeDegrees(143),1e-10);
-        assertThrows(IllegalArgumentException.class,()->new Settings(Map.of("magnitude","31")));
-    }
-    @Test public void blankFieldOfViewKeepsAimLineWithoutInventingSector()throws Exception {
-        Map<String,String> settings=new LinkedHashMap<>(KmlDocumentTest.settings());settings.put("hfov","");
+    @Test public void oldFieldOfViewDoesNotDrawFixedSector()throws Exception {
+        Map<String,String> settings=new LinkedHashMap<>(KmlDocumentTest.settings());settings.put("hfov","6.48");
         KmlDocument k=new KmlDocument();
         String xml=k.accept(KmlDocumentTest.event("status_snapshot",2000,"settings",settings,
             "position",Map.of("headingDegrees",90,"tiltDegrees",-5)));
