@@ -1,3 +1,10 @@
+## VTC 1.0.39 — Hold pan
+
+Install [VTC 1.0.39](VTC-1.0.39-debug.apk) with your current setup.json.
+
+- While aiming, VTC checks the surfer's previous and latest fresh GPS fixes against where the camera currently points. Moving toward the camera's current centreline holds pan and skips a new GoTo, even above the acquisition trigger. VTC checks again at the next fresh GPS fix.
+- Moving away from the camera's current centreline uses the normal continuous pan and GoTo rules, including the configured motor reversal block.
+
 ## VTC 1.0.38 — Larger manual pan steps
 
 Install [VTC 1.0.38](VTC-1.0.38-debug.apk) with your current setup.json.

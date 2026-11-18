@@ -10,8 +10,14 @@ import java.util.concurrent.ArrayBlockingQueue;
 /** Receives the existing VT LoRa wire protocol on the selected Wi-Fi network. */
 final class GpsFeed implements AutoCloseable {
     static final class Fix {
-        final LoRaTelemetry packet;final long receivedAt,epoch;
-        Fix(LoRaTelemetry packet,long receivedAt,long epoch){this.packet=packet;this.receivedAt=receivedAt;this.epoch=epoch;}
+        final LoRaTelemetry packet,previousPacket;
+        final long receivedAt,epoch,previousReceivedAt;
+        Fix(LoRaTelemetry packet,long receivedAt,long epoch,Fix previous){
+            this.packet=packet;this.receivedAt=receivedAt;this.epoch=epoch;
+            boolean sameContinuity=previous!=null&&previous.epoch==epoch;
+            previousPacket=sameContinuity?previous.packet:null;
+            previousReceivedAt=sameContinuity?previous.receivedAt:-1;
+        }
     }
     private final Network network;
     private final Settings s;
@@ -109,8 +115,8 @@ final class GpsFeed implements AutoCloseable {
                                 status="GPS jump rejected; awaiting consistent position";activity.decision(status);continue;
                             }
                         }
-                        Fix fix=new Fix(packet,at,continuity);
-                        if(!observations.offer(fix)){invalidate("GPS processing backlog; rebuilding evidence");fix=new Fix(packet,at,continuity);observations.offer(fix);}
+                        Fix fix=new Fix(packet,at,continuity,old);
+                        if(!observations.offer(fix)){invalidate("GPS processing backlog; rebuilding evidence");fix=new Fix(packet,at,continuity,null);observations.offer(fix);}
                         lastAcceptedAt=at;latest=fix;status="Receiving surfer GPS";activity.decision("Latest GPS accepted for aiming");
                         log.record("gps_accepted","telemetry",packet.fields(),"receivedAtMs",at,"continuity",continuity,"queuedObservations",observations.size(),
                             "repeats",tracker.repeats,"older",tracker.older,"gaps",tracker.gaps,"restarts",tracker.restarts);

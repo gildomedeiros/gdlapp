@@ -6,7 +6,8 @@ final class ContinuousPlanner {
     static final double LOW_SPEED_CAP=.5, HIGH_RETURN_SECONDS=.5, HIGH_ENTRY_MARGIN=.25;
     private final boolean[] correcting={false,false};
     private final boolean[] high={false,false};
-    void reset(){correcting[0]=correcting[1]=high[0]=high[1]=false;}
+    void reset(){reset(1);reset(2);}
+    void reset(int axis){correcting[axis-1]=high[axis-1]=false;}
     static double highReturnError(double tolerance,double maximum){
         return Math.max(tolerance*RESTART_FACTOR,Math.max(LOW_SPEED_CAP*RESPONSE_SECONDS,maximum*HIGH_RETURN_SECONDS));
     }
