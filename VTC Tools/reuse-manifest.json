@@ -1,0 +1,9 @@
+{
+  "source": "C:\\Users\\gildo\\gdlapp\\VT Tools\\tools\\telemetry_around.py",
+  "sha256": "67d440573f68ced363272fdee9f6f9c6b35b703b03aa2316725d97319f654715",
+  "functions": [
+    "travel_bearing",
+    "offset_point"
+  ],
+  "notes": "VT map workflows adapted for VTC fixed-camera events. No VT preferences, exports, models or logs copied."
+}
