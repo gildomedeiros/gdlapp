@@ -7,7 +7,7 @@ import java.util.*;
 final class Settings {
     final Map<String,String> values;
     final String mountHost,receiverHost,cameraHost;
-    final int cameraPort;
+    final int cameraPort,panPollMs,tiltPollMs,encoderTimeoutMs,maxPositionAgeMs;
     final double maxRecordingMinutes;
     final int mountPort,receivePort,receiverPort,panSign,tiltSign;
     final double latitude,longitude,height,landmarkLat,landmarkLon,landmarkHeight,targetHeight;
@@ -15,6 +15,7 @@ final class Settings {
     final double acquisitionTriggerMetres,gotoMaxMove,maxPanningSpeed,gpsGapTimeout;
     final double magnitude,tiltOffset,maxGpsSpeed,rideStartKmh,rideEndKmh,rideEndSeconds;
     final int rideStartConfirmations;
+    final boolean gotoNoWait;
     final OffshoreHeading offshoreHeading;
     final WaveLine legacyWaveLine;
     final boolean autoZoom;
@@ -24,7 +25,33 @@ final class Settings {
     final ZoomMapping zoomMapping;
     final double desiredFrameWidthMetres,wideFrameFactor;
     final double zoomSwitchSeconds,manualZoomX;
-    static boolean liveCameraKey(String key){return Arrays.asList("maxRecordingMinutes","zoomMode","zoomBands","desiredFrameWidthMetres","wideFrameFactor","zoomMapping","zoom_scales","zoomSwitchSeconds","manualZoomX").contains(key);}
+    static boolean liveCameraKey(String key){return Arrays.asList("cameraHost","cameraPort","maxRecordingMinutes","zoomMode","zoomBands","desiredFrameWidthMetres","wideFrameFactor","zoomMapping","zoom_scales","zoomSwitchSeconds","manualZoomX").contains(key);}
+    static boolean canEditDuringAiming(String key) {
+        return liveCameraKey(key)||Arrays.asList("magnitudeMetres","rideStartKmh","rideStartConfirmations","rideEndKmh","rideEndSeconds").contains(key);
+    }
+    Settings withFormEdits(Map<String,String> baseline,Map<String,String> form) {
+        Map<String,String> values=new LinkedHashMap<>(this.values);
+        for(Map.Entry<String,String> field:form.entrySet()) {
+            String key=field.getKey(), value=field.getValue();
+            if(Objects.equals(value,baseline.get(key)))continue;
+            switch(key) {
+                case "cameraCoordinates":
+                case "landmarkCoordinates":
+                    String[] coordinates=Coordinates.parse(value);
+                    boolean camera=key.equals("cameraCoordinates");
+                    values.put(camera?"latitude":"landmarkLat",coordinates[0]);
+                    values.put(camera?"longitude":"landmarkLon",coordinates[1]);
+                    break;
+                default: values.put(key,value);
+            }
+        }
+        return values.equals(this.values)?this:new Settings(values);
+    }
+    Set<String> changesFrom(Settings previous) {
+        Set<String> changed=new LinkedHashSet<>();
+        for(String key:values.keySet())if(!Objects.equals(values.get(key),previous.values.get(key)))changed.add(key);
+        return changed;
+    }
     boolean onlyLiveCameraChanged(Settings next){
         for(String key:values.keySet())if(!liveCameraKey(key)&&!values.get(key).equals(next.values.get(key)))return false;
         return true;
@@ -79,7 +106,10 @@ final class Settings {
             {"tiltToleranceMetres", "0.5"},
             {"reverseSeconds", "2"},
             {"gpsAge", "2"},
-            {"acquisitionTriggerMetres", "3"},
+            {"acquisitionTriggerMetres", "0"},
+            {"gotoMode", "no-wait"},
+            {"panPollMs", "500"}, {"tiltPollMs", "500"},
+            {"encoderTimeoutMs", "100"}, {"maxPositionAgeMs", "4000"},
             {"gotoMaxMove", "45"},
             {"cameraHost", "192.168.4.3"},
             {"cameraPort", "8080"},
@@ -129,15 +159,19 @@ final class Settings {
         autoZoom=!zoomMode.equals("off");
         zoomBands=new ZoomBands(d.get("zoomBands"));
         d.put("zoomBands",LogJson.encode(ConfigJson.parse(d.get("zoomBands"))));
-        zoomMultipliers=ZoomPlan.parse(d.get("zoom_scales"),true);d.put("zoom_scales",LogJson.encode(zoomMultipliers));
+        try{zoomMultipliers=ZoomPlan.parse(d.get("zoom_scales"),true);}
+        catch(IllegalArgumentException e){throw new IllegalArgumentException("zoom_scales = "+d.get("zoom_scales")+": "+e.getMessage(),e);}
+        d.put("zoom_scales",LogJson.encode(zoomMultipliers));
         zoomMapping=new ZoomMapping(d.get("zoomMapping"));d.put("zoomMapping",LogJson.encode(ConfigJson.parse(d.get("zoomMapping"))));
         desiredFrameWidthMetres=number("desiredFrameWidthMetres",1,10000);wideFrameFactor=number("wideFrameFactor",0.01,10);
         zoomSwitchSeconds=number("zoomSwitchSeconds",2,3600);
         manualZoomX=optional("manualZoomX",1,65);
         mountHost=d.get("mountHost");receiverHost=d.get("receiverHost");
+        if(!mountHost.isEmpty()&&!ipv4(mountHost))throw new IllegalArgumentException("GTi address must be a complete IPv4 address: "+mountHost);
+        if(!receiverHost.isEmpty()&&!ipv4(receiverHost))throw new IllegalArgumentException("LoRa address must be a complete IPv4 address: "+receiverHost);
         cameraHost=d.get("cameraHost");cameraPort=integer("cameraPort",1,65535);
         maxRecordingMinutes=number("maxRecordingMinutes",0,Integer.MAX_VALUE);
-        if(!cameraHost.isEmpty()&&!ipv4(cameraHost))throw new IllegalArgumentException("Camera address must be an IPv4 address, or blank to disable");
+        if(!cameraHost.isEmpty()&&!ipv4(cameraHost))throw new IllegalArgumentException("Camera address must be an IPv4 address, or blank to disable: "+cameraHost);
         mountPort=integer("mountPort",1,65535);receivePort=integer("receivePort",1024,65535);receiverPort=integer("receiverPort",1,65535);
         latitude=optional("latitude",-90,90);longitude=optional("longitude",-180,180);height=optional("height",0,2000);
         landmarkLat=optional("landmarkLat",-90,90);landmarkLon=optional("landmarkLon",-180,180);landmarkHeight=optional("landmarkHeight",-100,3000);
@@ -151,6 +185,13 @@ final class Settings {
         if(rangeMin>=rangeMax)throw new IllegalArgumentException("Minimum range must be below maximum range");
         panTolerance=number("panToleranceMetres",.001,100);tiltTolerance=number("tiltToleranceMetres",.001,100);
         acquisitionTriggerMetres=number("acquisitionTriggerMetres",0,1000);
+        String gotoMode=values.get("gotoMode");
+        if(!"acknowledged".equals(gotoMode)&&!"no-wait".equals(gotoMode))throw new IllegalArgumentException("Choose Acknowledged or No-wait GoTo");
+        gotoNoWait="no-wait".equals(gotoMode);
+        panPollMs=integer("panPollMs",1,Integer.MAX_VALUE);
+        tiltPollMs=integer("tiltPollMs",1,Integer.MAX_VALUE);
+        encoderTimeoutMs=integer("encoderTimeoutMs",1,Integer.MAX_VALUE);
+        maxPositionAgeMs=integer("maxPositionAgeMs",1,Integer.MAX_VALUE);
         maxPanningSpeed=number("maxPanningSpeed",.01,5);gpsGapTimeout=number("gpsGapTimeout",.3,30);gotoMaxMove=number("gotoMaxMove",1,45);
         reverseSeconds=number("reverseSeconds",0,10);gpsAge=number("gpsAge",.3,5);
         magnitude=number("magnitudeMetres",0,1000);tiltOffset=number("tiltOffset",-10,10);

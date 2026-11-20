@@ -54,6 +54,15 @@ final class CameraRecording {
 
     long startedAt() { return startedAt; }
 
+    void stop(Exchange camera) throws IOException {
+        try {
+            camera.send("POST", RECORD, STOP);
+        } catch (HttpError error) {
+            if (error.code != 400 || !error.detail.equalsIgnoreCase("Invalid parameter")) throw error;
+        }
+        reset();
+    }
+
     String observe(String json, long now) {
         if (ConfigJson.parse(json) instanceof Map<?, ?> events && events.get("recbutton") instanceof Map<?, ?> rec) {
             Object state = rec.containsKey("action") ? rec.get("action") : rec.get("status");
@@ -81,13 +90,7 @@ final class CameraRecording {
 
         try {
             if (startedAt >= 0) {
-                try {
-                    camera.send("POST", RECORD, STOP);
-                } catch (HttpError error) {
-                    // Canon also returns this when the clip ended before the stop arrived.
-                    if (error.code != 400 || !error.detail.equalsIgnoreCase("Invalid parameter")) throw error;
-                }
-                startedAt = -1;
+                stop(camera);
             }
             try {
                 camera.send("POST", RECORD, START);

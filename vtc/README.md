@@ -1,3 +1,50 @@
+## VTC 1.0.46 — Camera connection controls
+
+Install [VTC 1.0.46](VTC-1.0.46-debug.apk) with your current settings.
+
+- The main screen uses green for connected GTi, responding LoRa, responding CAM, and set calibration. Red shows an unavailable connection or required calibration.
+- Connect labels include + CAM when a camera is configured. Disconnect labels include + CAM when that action removes the last connection the camera uses.
+
+## VTC 1.0.45 — Find GTi and Find Camera
+
+Install [VTC 1.0.45](VTC-1.0.45-debug.apk) with your current settings.
+
+- In **Setup**, **Find GTi** broadcasts a read-only firmware request, then tries direct local addresses if necessary. **Find Camera** checks the saved address and can search the local subnet for a Canon CCAPI camera.
+- Discovery runs separately from aiming and camera control. Tap a result to save its address. You can also type the IP manually. Stop aiming before applying an address.
+- New GTi settings default to a 4,000 ms encoder cache age per axis. To use four seconds on an existing installation that has an explicit value, set maxPositionAgeMs to 4000 in gti.json.
+
+## VTC 1.0.44 — Higher zoom scales
+
+Install [VTC 1.0.44](VTC-1.0.44-debug.apk) with your current settings.
+
+- \`zoom_scales\` accepts 0.5 through 7.0 in 0.1 increments. VTC applies the scale before capping the final zoom at 65x or the camera's lower supported maximum.
+
+## VTC 1.0.43 — Directional Hold pan
+
+Install [VTC 1.0.43](VTC-1.0.43-debug.apk) over 1.0.42 with your current settings.
+
+- **PR2** holds clockwise pan and lets an existing anticlockwise pan continue. **PR4** holds anticlockwise pan and lets an existing clockwise pan continue.
+- If an opposing command could still be active, VTC sends pan Stop without waiting for the reply. The reversal block still applies before an opposite Start.
+- The JSONL log records the pan rule and action. A skipped GoTo reports the original GPS packet, the final GPS check when performed, and the reason. An acknowledged-mode GTi motor-not-stopped refusal identifies the command and reply. No-wait logs GTi replies asynchronously.
+
+## VTC 1.0.42 — GTi polling, No-wait and camera Stop
+
+Install [VTC 1.0.42](VTC-1.0.42-debug.apk). Keep your current `setup.json`. VTC stores GTi settings separately in `Download/VTC/Settings/gti.json`.
+
+- For the No-wait test, check **Setup > GoTo replies > No-wait (experimental)** before starting. The first `tracking_start_sent` entry should show `"mode": "no-wait"`.
+- Routine pan and tilt encoder reads are capped at the accepted surfer GPS rate. Each axis defaults to a 500 ms minimum interval. Encoder reads default to a 100 ms timeout, with cached readings usable for up to 1,000 ms. VTC can reconnect automatically after a failed fresh read.
+- JSONL pan decisions log PR1 through PR4. The revised PR2 and PR4 directional hold is pending.
+- **Stop Aiming** sends camera Stop Recording. VTC also attempts Stop Recording before closing the session log and records the result.
+
+## VTC 1.0.40 — Settings and run KML
+
+Install [VTC 1.0.40](VTC-1.0.40-debug.apk) with your current setup.json.
+
+- The app icon and notification reuse one VTC window. **Stop & Exit** confirms the mount stop before closing VTC and its service.
+- Autosave applies field edits to current settings. The GTi can stay connected while editing framing, ride detection, or the camera endpoint. Stop aiming and let the mount finish moving before changing mount or calibration settings, or capturing reference GPS. Changes to the reference require recalibration.
+- **Start Aiming** requires a saved offshore heading. Use **Wave Ride → Save offshore heading** if one is missing. A saved 0° means due north.
+- The automatic run KML labels surfer points with local timestamps and packet numbers. Point details include GPS and ride-detection speeds, non-seaward distance per step and per ride/session, mount and target telemetry, zoom, and wait reasons. The file also shows the calibration references and timestamped aiming, GoTo, ride and recording events.
+
 ## VTC 1.0.39 — Hold pan
 
 Install [VTC 1.0.39](VTC-1.0.39-debug.apk) with your current setup.json.

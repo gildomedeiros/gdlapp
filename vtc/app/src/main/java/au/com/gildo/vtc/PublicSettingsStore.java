@@ -19,14 +19,17 @@ final class PublicSettingsStore {
     private SettingsFileIO.Entry resolve(AndroidSettingsFiles backend,boolean create)throws IOException{
         return SettingsFileIO.resolve(backend,name,location.getString("uri",null),create);
     }
-    synchronized Map<String,String> load()throws IOException{
-        if(cache.getBoolean(DIRTY,false)){storageStatus="Pending file save: "+AndroidSettingsFiles.DIR+name;return cached();}
+    synchronized Map<String,String> load()throws IOException{return load(false);}
+    synchronized Map<String,String> loadForValidation()throws IOException{return load(true);}
+    synchronized Map<String,String> recoveryCopy(){return cached();}
+    private Map<String,String> load(boolean validateFirst)throws IOException{
+        if(!validateFirst&&cache.getBoolean(DIRTY,false)){storageStatus="Pending file save: "+AndroidSettingsFiles.DIR+name;return cached();}
         try{
             AndroidSettingsFiles backend=new AndroidSettingsFiles(context,location,name,log);
             SettingsFileIO.Entry entry=resolve(backend,false);
-            if(entry!=null){Map<String,String> values=ConfigJson.settings(new String(SettingsFileIO.bytes(backend.read(entry)),StandardCharsets.UTF_8));cache(values,false);storageStatus="Loaded: "+AndroidSettingsFiles.DIR+name;return values;}
-        }catch(Exception e){storageStatus="Cannot read "+name+": "+e;log.error("settings_public_read_failed",e,"file",name);if(cached().isEmpty())throw new IOException("Cannot load "+name+"; existing file was not changed",e);}
-        Map<String,String> recovery=cached();if(!recovery.isEmpty()){cache(recovery,true);storageStatus="Pending file save: "+AndroidSettingsFiles.DIR+name;}return recovery;
+            if(entry!=null){Map<String,String> values=ConfigJson.settings(new String(SettingsFileIO.bytes(backend.read(entry)),StandardCharsets.UTF_8));if(!validateFirst)cache(values,false);storageStatus="Loaded: "+AndroidSettingsFiles.DIR+name;return values;}
+        }catch(Exception e){storageStatus="Cannot read "+name+": "+e;log.error("settings_public_read_failed",e,"file",name);if(validateFirst||cached().isEmpty())throw new IOException("Cannot load "+name+"; existing file was not changed",e);}
+        Map<String,String> recovery=cached();if(!recovery.isEmpty()&&!validateFirst){cache(recovery,true);storageStatus="Pending file save: "+AndroidSettingsFiles.DIR+name;}return recovery;
     }
     synchronized void save(Map<String,String> values)throws IOException{cache(values,true);retry();}
     synchronized void retry(){

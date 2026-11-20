@@ -22,6 +22,7 @@ final class GpsFeed implements AutoCloseable {
     private final Network network;
     private final Settings s;
     private final SessionLog log;
+    private final Runnable onAccepted;
     private final LoRaTelemetry.Tracker tracker=new LoRaTelemetry.Tracker();
     private final ArrayBlockingQueue<Fix> observations=new ArrayBlockingQueue<>(64);
     private volatile boolean running=true;
@@ -35,7 +36,7 @@ final class GpsFeed implements AutoCloseable {
     private volatile boolean socketOpen,ended;
     private volatile String connectionError="";
     private volatile String status="Waiting for LoRa GPS";
-    GpsFeed(Network network,Settings s,SessionLog log){this.network=network;this.s=s;this.log=log;}
+    GpsFeed(Network network,Settings s,SessionLog log,Runnable onAccepted){this.network=network;this.s=s;this.log=log;this.onAccepted=onAccepted;}
     boolean ended(){return ended;}
     void start(){Thread t=new Thread(this::receive,"vtc-gps");t.setDaemon(true);t.start();}
     Fix latest(){return latest;}
@@ -102,7 +103,8 @@ final class GpsFeed implements AutoCloseable {
                         log.record("gps_parsed","telemetry",packet.fields(),"receivedAtMs",at);
                         long restarts=tracker.restarts;
                         if(!tracker.accept(packet,at)){activity.decision("Received but rejected: duplicate/out-of-order GPS");log.record("gps_rejected","reason","Duplicate/out-of-order sequence","telemetry",packet.fields(),
-                            "baselineSequence",tracker.lastSequence(),"repeats",tracker.repeats,"older",tracker.older,"gaps",tracker.gaps,"restarts",tracker.restarts);continue;}
+                            "baselineSequence",tracker.lastSequence(),"repeats",tracker.repeats,"older",tracker.older,"gaps",tracker.gaps,"restarts",tracker.restarts);
+                        onAccepted.run();continue;}
                         if(tracker.restarts!=restarts)invalidate("GPS transmitter restarted; rebuilding evidence");
                         Fix old=latest;
                         if(old!=null&&at>old.receivedAt&&at-old.receivedAt<=s.gpsAge*1000) {

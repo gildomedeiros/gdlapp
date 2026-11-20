@@ -28,9 +28,9 @@ final class ZoomPlan {
         for(int i=0;i<parts.length;i++){
             try{result[i]=Double.parseDouble(parts[i].trim());}catch(Exception e){throw new IllegalArgumentException("Enter comma-separated decimal zoom values");}
             double n=result[i];
-            if(!Double.isFinite(n)||n<(multipliers?.5:1)||n>(multipliers?3:65)||
+            if(!Double.isFinite(n)||n<(multipliers?.5:1)||n>(multipliers?7:65)||
                 (multipliers&&Math.abs(n*10-Math.rint(n*10))>1e-8))
-                throw new IllegalArgumentException(multipliers?"Multipliers must be 0.5–3.0 in 0.1 increments":"Band zoom must be 1–65x");
+                throw new IllegalArgumentException(multipliers?"Multipliers must be 0.5–7.0 in 0.1 increments":"Band zoom must be 1–65x");
             if(!multipliers&&i>0&&n<result[i-1])throw new IllegalArgumentException("Band zoom must not decrease with distance");
         }
         return result;

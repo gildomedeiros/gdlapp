@@ -26,7 +26,7 @@ public class KmlDocumentTest {
         Map<String,Object> out=new LinkedHashMap<>();out.put("event",type);out.put("epochMs",at);
         for(int n=0;n<data.length;n+=2)out.put((String)data[n],data[n+1]);return out;
     }
-    static Map<String,String> settings(){return GeoAndCalibrationTest.configured("latitude","-28","longitude","153","height","4").values;}
+    static Map<String,String> settings(){return GeoAndCalibrationTest.configured("latitude","-28","longitude","153","height","4","landmarkLat","","landmarkLon","").values;}
     static Map<String,Object> gps(long seq,double lat,double lon){return Map.of("sequence",seq,"latitude",lat,"longitude",lon,"satellites",20,"hdop",.6);}
     static Document parse(String text)throws Exception {
         DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);
@@ -75,6 +75,66 @@ public class KmlDocumentTest {
         assertTrue(fragment.contains("Saved GoTo target range"));assertTrue(fragment.contains("<value>530.0</value>"));
         Map<String,Object> target=Map.of("source",gps(7,-28.002,153.003),"headingDegrees",45,"rangeM",530,"tiltDegrees",-5);
         assertTrue(kml.accept(event("goto_captured",3000,"target",target)).contains("Saved GoTo target"));
+    }
+    private static String data(Document document,String point,String key) {
+        org.w3c.dom.NodeList placemarks=document.getElementsByTagName("Placemark");
+        for(int i=0;i<placemarks.getLength();i++){
+            org.w3c.dom.Element feature=(org.w3c.dom.Element)placemarks.item(i);
+            if(!feature.getElementsByTagName("name").item(0).getTextContent().startsWith(point))continue;
+            org.w3c.dom.NodeList entries=feature.getElementsByTagName("Data");
+            for(int j=0;j<entries.getLength();j++){
+                org.w3c.dom.Element entry=(org.w3c.dom.Element)entries.item(j);
+                if(key.equals(entry.getAttribute("name")))return entry.getTextContent();
+            }
+        }
+        throw new AssertionError(point+" missing "+key);
+    }
+    @Test public void timestampsAndRideTelemetryFollowTheMatchingFixAcrossGpsLoss()throws Exception {
+        KmlDocument kml=new KmlDocument();
+        Map<String,String> settings=new LinkedHashMap<>(settings());
+        settings.put("offshoreHeadingDegrees","0");
+        settings.put("landmarkLat","-28.001");settings.put("landmarkLon","153");
+        String text=KmlDocument.header("test")+kml.accept(event("settings_snapshot",1000,"settings",settings));
+        text+=kml.accept(event("aim_start",1100));
+        text+=kml.accept(event("camera_zoom_response",1150,"zoom",89,"opticalZoomX",6));
+        Map<String,Object> first=new LinkedHashMap<>(gps(1,-28.001,153));
+        first.put("receivedAtMs",1250);first.put("continuity",1);first.put("senderMs",1250);
+        Map<String,Object> second=new LinkedHashMap<>(gps(2,-28.001,153.00005));
+        second.put("receivedAtMs",1750);second.put("continuity",1);second.put("senderMs",1750);
+        text+=kml.accept(event("gps_accepted",1250,"telemetry",first,"receivedAtMs",1250,"continuity",1,
+            "timestamp","1970-01-01T10:00:01.250+10:00"));
+        text+=kml.accept(event("framing_observation",1350,"gps",first,"framing",
+            Map.of("rideActive",true,"qualifyingSpeedKmh",12.1,"appliedOffsetMetres",2)));
+        text+=kml.accept(event("framing_observation",1750,"gps",second,"framing",
+            Map.of("rideActive",true,"qualifyingSpeedKmh",14.2,"appliedOffsetMetres",2)));
+        text+=kml.accept(event("gps_accepted",1750,"telemetry",second,"receivedAtMs",1750,"continuity",1));
+        text+=kml.accept(event("aim_cycle",1950,"gps",second,"rangeM",120,"bearingDegrees",185,
+            "cameraHeadingDegrees",180,"targetHeadingDegrees",186,"panErrorDegrees",6,"tiltErrorDegrees",1,"holdPan",true));
+        text+=kml.accept(event("gps_invalid",2100,"reason","GPS interrupted"));
+        text+=kml.accept(event("gps_accepted",2400,"telemetry",gps(3,-28.001,153.005),"receivedAtMs",2400,"continuity",2));
+        Document doc=parse(text+kml.finish()+KmlDocument.FOOTER);
+        assertEquals("1970-01-01T10:00:01.250+10:00",data(doc,"Surfer #1","localTimestamp"));
+        assertEquals("12.1",data(doc,"Surfer #1","qualifyingSpeedKmh"));
+        assertEquals("14.2",data(doc,"Surfer #2","qualifyingSpeedKmh"));
+        assertEquals("2",data(doc,"Surfer #2","appliedOffsetMetres"));
+        assertEquals("Hold pan",data(doc,"Surfer #2","aimingMode"));
+        assertEquals("89",data(doc,"Surfer #2","confirmedCcapiZoom"));
+        assertEquals(4.9,Double.parseDouble(data(doc,"Surfer #2","nonSeawardStepMetres")),.1);
+        assertEquals(data(doc,"Surfer #2","nonSeawardStepMetres"),data(doc,"Surfer #2","nonSeawardRideMetres"));
+        assertEquals("Unavailable",data(doc,"Surfer #3","nonSeawardStepMetres"));
+        assertEquals(data(doc,"Surfer #2","nonSeawardSessionMetres"),data(doc,"Surfer #3","nonSeawardSessionMetres"));
+        assertEquals("0",data(doc,"Offshore heading","offshoreHeadingDegrees"));
+    }
+    @Test public void outwardComponentDoesNotCountTowardKmlDistance()throws Exception {
+        KmlDocument kml=new KmlDocument();
+        Map<String,String> settings=new LinkedHashMap<>(settings());
+        settings.put("offshoreHeadingDegrees","0");
+        String text=KmlDocument.header("test")+kml.accept(event("settings_snapshot",1000,"settings",settings));
+        text+=kml.accept(event("gps_accepted",1200,"telemetry",gps(1,-28,153)));
+        text+=kml.accept(event("gps_accepted",1700,"telemetry",gps(2,-27.99995,153)));
+        Document doc=parse(text+KmlDocument.FOOTER);
+        assertEquals(0,Double.parseDouble(data(doc,"Surfer #2","nonSeawardStepMetres")),0);
+        assertTrue(Double.parseDouble(data(doc,"Surfer #2","gpsSpeedKmh"))>0);
     }
     @Test public void rayProjectionMatchesKnownCardinalDirections() {
         double[] north=KmlDocument.destination(0,0,0,1000),east=KmlDocument.destination(0,0,90,1000);

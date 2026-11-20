@@ -51,6 +51,18 @@ public class ZoomPlanTest {
         assertEquals(0,ZoomPlan.raw(1),0);assertEquals(89,ZoomPlan.raw(6),1e-8);assertEquals(116,ZoomPlan.raw(10),1e-8);
         double last=-1;for(double x=1;x<=65;x+=.1){assertTrue(ZoomPlan.raw(x)>=last);last=ZoomPlan.raw(x);assertEquals(x,ZoomPlan.optical(last),(x>=3.2&&x<=3.3)?0.051:1e-8);}
     }
+    @Test public void sevenScaleRespectsOpticalAndCameraLimits(){
+        Settings bands=settings("zoomMode","bands","zoom_scales","[7.0]",
+            "zoomBands",ZoomBands.legacy(ZoomPlan.DEFAULT_BANDS));
+        ZoomPlan.Input gps=new ZoomPlan.Input(600,1,true,1);
+        ZoomPlan.Decision full=new ZoomPlan().decide(bands,gps,0,0,201,1);
+        assertEquals(84,number(full,"requestedOpticalZoom"),0);
+        assertEquals(65,number(full,"limitedOpticalZoom"),0);
+        assertEquals((int)ZoomPlan.raw(65),full.target);
+        ZoomPlan.Decision restricted=new ZoomPlan().decide(bands,gps,0,10,91,4);
+        assertEquals(90,restricted.target);
+        assertEquals(true,restricted.fields.get("clamped"));
+    }
     @Test public void honorsCameraLimitsAndStep(){
         ZoomPlan.Decision d=new ZoomPlan().decide(settings(),new ZoomPlan.Input(500,1,true,1),0,10,90,4);
         assertTrue(d.target<=90&&d.target>=10);assertEquals(0,(d.target-10)%4);assertEquals(true,d.fields.get("clamped"));
@@ -61,8 +73,8 @@ public class ZoomPlanTest {
         assertEquals(1.2,number(at(p,settings("zoomMultipliers","1.2,2"),150,12000),"multiplier"),0);
     }
     @Test public void validatesDecimalListsAndLiveSettingScope(){
-        assertArrayEquals(new double[]{1,1.1,1.2},ZoomPlan.parse("1.0, 1.1, 1.2",true),0);
-        for(String bad:new String[]{"","1,","NaN","0.4","3.1","1.15"})assertThrows(IllegalArgumentException.class,()->ZoomPlan.parse(bad,true));
+        assertArrayEquals(new double[]{.5,1,3.1,7},ZoomPlan.parse("[0.5, 1.0, 3.1, 7.0]",true),0);
+        for(String bad:new String[]{"","1,","NaN","0.4","7.1","1.15"})assertThrows(IllegalArgumentException.class,()->ZoomPlan.parse(bad,true));
         Settings s=settings();assertTrue(s.onlyLiveCameraChanged(settings("manualZoomX","6","zoomMultipliers","1.2")));
         assertFalse(s.onlyLiveCameraChanged(settings("panTolerance","1")));
         assertEquals(s.values,new Settings(s.values).values);

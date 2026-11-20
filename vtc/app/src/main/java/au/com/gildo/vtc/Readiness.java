@@ -17,6 +17,7 @@ final class Readiness {
         if(Geo.valid(s.latitude,s.longitude)&&Geo.valid(s.landmarkLat,s.landmarkLon)
             &&Geo.distance(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon)<20)out.add("Setup: choose a landmark at least 20 m away");
         if(!calibrated)out.add("Calibrate: centre the landmark, confirm level/directions, then tap Calibrate here");
+        if(s.offshoreHeading==null)out.add("Wave Ride: save an offshore heading before starting aiming");
         if(moving)out.add("Wait for the mount to finish moving");
         if(busy)out.add("Wait for the current operation to finish");
         if(!serviceRunning)out.add("VTC control service is not running");

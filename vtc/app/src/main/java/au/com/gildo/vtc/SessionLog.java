@@ -10,7 +10,7 @@ import java.util.*;
 
 /** Always-on, structured full diagnostics. No save/export step. */
 final class SessionLog implements AutoCloseable {
-    static final String VERSION="1.0.39";
+    static final String VERSION=BuildConfig.VERSION_NAME;
     private final AutomaticLogWriter writer;
     private final File spool;
     private final MapTimeline liveMap=new MapTimeline();

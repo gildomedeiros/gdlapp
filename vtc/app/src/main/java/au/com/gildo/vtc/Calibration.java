@@ -11,6 +11,13 @@ final class Calibration {
         elevation=Geo.elevation(Geo.distance(s.latitude,s.longitude,s.landmarkLat,s.landmarkLon),s.height,s.landmarkHeight);
         if(elevation<s.tiltMin||elevation>s.tiltMax)throw new IllegalArgumentException("Landmark elevation is outside the configured tilt limits");
     }
+    Calibration withSettings(Settings next) {
+        return new Calibration(this,next);
+    }
+    private Calibration(Calibration previous,Settings next) {
+        settings=next;panRaw=previous.panRaw;tiltRaw=previous.tiltRaw;panCpr=previous.panCpr;tiltCpr=previous.tiltCpr;
+        bearing=previous.bearing;elevation=previous.elevation;
+    }
     double panOffset(int raw){return GtiClient.deltaCounts(raw,panRaw,panCpr)*360.0/panCpr*settings.panSign;}
     double tiltAngle(int raw){return elevation+GtiClient.deltaCounts(raw,tiltRaw,tiltCpr)*360.0/tiltCpr*settings.tiltSign;}
     boolean allowsManualMove(GtiClient.Position here,double pan,double tilt) {

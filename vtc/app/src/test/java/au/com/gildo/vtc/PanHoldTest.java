@@ -5,6 +5,24 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 public class PanHoldTest {
+    @Test public void packet5075KeepsClockwiseGoToAndMirrorKeepsAnticlockwiseGoTo() {
+        double before=217.76717956655372,rider=218.45419770995346;
+        double firstCamera=218.17062786656652,secondCamera=219.59475981101093;
+        assertEquals("PR3",PanHold.rule(before,rider,firstCamera));
+        String pr4=PanHold.rule(before,rider,secondCamera);
+        assertEquals("PR4",pr4);
+        assertTrue(PanHold.continues(pr4,1));
+        assertFalse(PanHold.blocks(pr4,1));
+        assertTrue(PanHold.blocks(pr4,-1));
+        String pr2=PanHold.rule(Geo.wrap(-before),Geo.wrap(-rider),Geo.wrap(-secondCamera));
+        assertEquals("PR2",pr2);
+        assertTrue(PanHold.continues(pr2,-1));
+        assertFalse(PanHold.blocks(pr2,-1));
+        assertTrue(PanHold.blocks(pr2,1));
+        assertFalse(PanHold.continues(pr4,0));
+        assertFalse(PanHold.continues(pr2,0));
+    }
+
     @Test public void validatesTheFourClockPathsAtDifferentCameraHeadings() {
         for (double heading : new double[]{0, 19, 181, 350}) {
             assertTrue(PanHold.movingTowardCentreline(Geo.wrap(heading - 30), heading, heading));

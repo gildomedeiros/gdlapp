@@ -8,7 +8,14 @@ import java.util.function.BooleanSupplier;
 
 /** Serialized transactions; cancellable finite GoTo and continuous slewing with explicit high-speed transitions. */
 final class GtiClient implements AutoCloseable {
-    interface Transport extends AutoCloseable { String exchange(String command)throws IOException; void close(); }
+    interface Transport extends AutoCloseable {
+        String exchange(String command)throws IOException;
+        default String exchange(String command,Runnable sent)throws IOException {sent.run();return exchange(command);}
+        default String exchange(String command,Runnable sent,int timeoutMs)throws IOException {return exchange(command,sent);}
+        default void send(String command,Runnable sent)throws IOException {send(command);sent.run();}
+        default void send(String command)throws IOException {throw new IOException("Transport does not support asynchronous sends");}
+        void close();
+    }
     static final class Position {
         final int pan,tilt;final boolean moving;
         final String panStatus,tiltStatus,panStatusBefore,tiltStatusBefore;
@@ -49,12 +56,91 @@ final class GtiClient implements AutoCloseable {
         }
         throw new IOException("Axis Stop unconfirmed");
     }
+    int encoder(int axis,BooleanSupplier permitted)throws IOException {
+        checkRead(permitted);
+        return decode24(command('j',axis,""));
+    }
+    int encoder(int axis,BooleanSupplier permitted,int timeoutMs)throws IOException {
+        checkRead(permitted);
+        return decode24(parseReply('j',axis,transport.exchange(":j"+axis+"\r",()->{},timeoutMs)));
+    }
+    boolean goToAxis(int axis,int target,double degrees,boolean noWait,BooleanSupplier permitted,
+                     BooleanSupplier verifyStart,Runnable starting)throws IOException {
+        return goToAxis(axis,target,degrees,noWait,permitted,()->verifyStart.getAsBoolean()?target:null,starting);
+    }
+    boolean goToAxis(int axis,int target,double degrees,boolean noWait,BooleanSupplier permitted,
+                     java.util.function.Supplier<Integer> verifyStart,Runnable starting)throws IOException {
+        return attemptGoToAxis(axis,target,degrees,noWait,permitted,verifyStart,starting).started();
+    }
+
+    record GoToResult(boolean started,boolean startSent,String reason,String command,String reply) {}
+
+    GoToResult attemptGoToAxis(int axis,int target,double degrees,boolean noWait,BooleanSupplier permitted,
+                               java.util.function.Supplier<Integer> verifyStart,Runnable starting)throws IOException {
+        GoToResult cancelledResult=new GoToResult(false,false,"control_cancelled",null,null);
+        synchronized(ioGate){
+            if(cancelled.get()||!permitted.getAsBoolean())return cancelledResult;
+            char op='G';
+            try {
+                axisCommand(op,axis,(Math.abs(degrees)>1?"0":"2")+(degrees>0?"0":"1"),noWait);
+                if(cancelled.get()||!permitted.getAsBoolean())return cancelledResult;
+                op='S';
+                axisCommand(op,axis,encode24(target),noWait);
+                while(!cancelled.get()&&permitted.getAsBoolean()){
+                    Integer updated=verifyStart.get();
+                    if(updated==null)return new GoToResult(false,false,"pre_start_check",null,null);
+                    if(updated==target){
+                        op='J';
+                        axisCommand(op,axis,"",noWait,starting);
+                        return new GoToResult(true,true,null,null,null);
+                    }
+                    double updatedDegrees=degrees+deltaCounts(updated,target,cpr[axis-1])*360.0/cpr[axis-1];
+                    if((Math.abs(degrees)>1)!=(Math.abs(updatedDegrees)>1)){
+                        op='G';
+                        axisCommand(op,axis,(Math.abs(updatedDegrees)>1?"0":"2")+(updatedDegrees>0?"0":"1"),noWait);
+                    }
+                    degrees=updatedDegrees;
+                    target=updated;
+                    op='S';
+                    axisCommand(op,axis,encode24(target),noWait);
+                }
+                return cancelledResult;
+            }catch(MotorNotStopped rejected){
+                return new GoToResult(false,op=='J',"gti_motor_not_stopped",":"+op+axis,"!2");
+            }
+        }
+    }
+    void stopTrackingAxis(int axis,BooleanSupplier permitted,Runnable sent)throws IOException {
+        synchronized(ioGate){
+            if(cancelled.get()||!permitted.getAsBoolean())return;
+            axisCommand('K',axis,"",true,sent);
+            slewDirection[axis-1]=period[axis-1]=0;
+            highMode[axis-1]=false;
+            continuous=slewDirection[0]!=0||slewDirection[1]!=0;
+        }
+    }
+    private void axisCommand(char op,int axis,String data,boolean noWait)throws IOException {
+        axisCommand(op,axis,data,noWait,()->{});
+    }
+    private void axisCommand(char op,int axis,String data,boolean noWait,Runnable sent)throws IOException {
+        String request=":"+op+axis+data+"\r";
+        if(noWait)transport.send(request,sent);
+        else if(!parseReply(op,axis,transport.exchange(request,sent)).isEmpty())
+            throw new IOException("Unexpected acknowledgement for "+op+axis);
+    }
     void rates(double pan,double tilt,BooleanSupplier permitted)throws IOException {
+        rates(pan,tilt,permitted,0);
+    }
+    void rateAxis(int axis,double rate,BooleanSupplier permitted)throws IOException {
+        rates(axis==1?rate:0,axis==2?rate:0,permitted,axis);
+    }
+    private void rates(double pan,double tilt,BooleanSupplier permitted,int selectedAxis)throws IOException {
         double[] rates={pan,tilt};
         for(double r:rates)if(!Double.isFinite(r)||Math.abs(r)>5)throw new IOException("Continuous rate must be at most 5 degrees/s");
         rates[0]=effectiveRate(pan);rates[1]=effectiveRate(tilt);
         try {
             for(int i=0;i<2;i++) {
+                if(selectedAxis!=0&&selectedAxis!=i+1)continue;
                 guard(permitted);int axis=i+1,dir=rates[i]>0?1:rates[i]<0?-1:0;
                 if(dir==0) {
                     if(slewDirection[i]!=0){stopAxis(axis,permitted);slewDirection[i]=period[i]=0;}
@@ -88,13 +174,18 @@ final class GtiClient implements AutoCloseable {
     private final Transport transport;
     private final AtomicBoolean cancelled=new AtomicBoolean();
     GtiClient(Transport transport){this.transport=transport;}
-    void connect()throws IOException {
+    void connect()throws IOException {connect(false);}
+    void reconnect()throws IOException {connect(true);}
+    private void connect(boolean recovering)throws IOException {
         for(int a=1;a<=2;a++) {
             cpr[a-1]=decode24(command('a',a,""));
             if(cpr[a-1]<360||cpr[a-1]>0x7fffff)throw new IOException("Invalid mount resolution");
             String f=status(a);
-            if(running(f))throw new IOException("Mount is already moving. Stop SynScan tracking first.");
-            if((Character.digit(f.charAt(2),16)&1)==0){initializedDuringConnect=true;ack('F',a,"");}
+            if(!recovering&&running(f))throw new IOException("Mount is already moving. Stop SynScan tracking first.");
+            if((Character.digit(f.charAt(2),16)&1)==0){
+                if(recovering){referenceLost=true;throw new IOException("GTi lost its motor reference");}
+                initializedDuringConnect=true;ack('F',a,"");
+            }
             firmware+=(a==1?"":" / ")+"axis "+a+"="+command('e',a,"");
         }
     }
@@ -208,6 +299,9 @@ final class GtiClient implements AutoCloseable {
     private String command(char c,int a,String data)throws IOException {
         String r;
         synchronized(ioGate){r=transport.exchange(":"+c+a+data+"\r");}
+        return parseReply(c,a,r);
+    }
+    private String parseReply(char c,int a,String r)throws IOException {
         if("!2\r".equals(r))throw new MotorNotStopped("GTi rejected "+c+a+": motor not stopped (!2)");
         if(r==null||!r.startsWith("=")||!r.endsWith("\r"))throw new IOException("GTi rejected "+c+a+": "+r);
         return r.substring(1,r.length()-1);

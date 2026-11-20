@@ -29,10 +29,11 @@ public class CoordinatesAndReadinessTest {
         assertTrue(blockers.stream().anyMatch(s->s.contains("landmark coordinates")));
         assertTrue(blockers.stream().anyMatch(s->s.contains("landmark height")));
         assertTrue(blockers.stream().anyMatch(s->s.contains("Calibrate here")));
+        assertTrue(blockers.stream().anyMatch(s->s.contains("save an offshore heading")));
         assertTrue(blockers.stream().anyMatch(s->s.contains("Fresh surfer GPS")));
     }
     @Test public void calibratedIdleStateDoesNotClaimItIsWaitingForCalibration() {
-        Settings s=GeoAndCalibrationTest.configured("mountHost","192.168.4.2");
+        Settings s=GeoAndCalibrationTest.configured("mountHost","192.168.4.2","offshoreHeadingDegrees","0");
         assertTrue(Readiness.blockers(s,true,true,false,false,true,true,"Receiving GPS").isEmpty());
         List<String> blockers=Readiness.blockers(s,true,true,false,false,true,false,"stale");
         assertEquals(1,blockers.size());assertTrue(blockers.get(0).contains("GPS"));
@@ -56,6 +57,20 @@ public class CoordinatesAndReadinessTest {
         assertNull(Readiness.rangeBlocker(s,15));assertNull(Readiness.rangeBlocker(s,600));
         assertEquals("Target 601.0 m exceeds maximum range 600.0 m",Readiness.rangeBlocker(s,601));
         assertNotNull(Readiness.rangeBlocker(s,Double.NaN));
+    }
+    @Test public void staleFormOnlyUpdatesTheFieldThatWasEdited() {
+        Settings current=GeoAndCalibrationTest.configured("offshoreHeadingDegrees","273.43","mountHost","192.168.4.3");
+        Map<String,String> old=Map.of("mountHost","192.168.4.4","magnitudeMetres","10",
+            "cameraCoordinates","-28.07007, 153.38730","landmarkCoordinates","-28.07057, 153.38709");
+        Map<String,String> edited=new LinkedHashMap<>(old);edited.put("magnitudeMetres","15");
+        Settings saved=current.withFormEdits(old,edited);
+        assertEquals(Set.of("magnitudeMetres"),saved.changesFrom(current));
+        assertEquals(273.43,saved.offshoreHeading.degrees,.001);
+        assertEquals("192.168.4.3",saved.mountHost);
+        assertTrue(Settings.canEditDuringAiming("cameraHost"));
+        assertTrue(Settings.canEditDuringAiming("magnitudeMetres"));
+        assertFalse(Settings.canEditDuringAiming("panMax"));
+        assertFalse(Settings.canEditDuringAiming("latitude"));
     }
     @Test public void structuredLogsPreserveSettingsRawCommandsAndUnicode() {
         Map<String,Object> fields=new LinkedHashMap<>();

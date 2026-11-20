@@ -6,6 +6,64 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class GtiClientTest {
+    @Test public void rejectedModeIdentifiesCommandAndDoesNotSendStart()throws Exception {
+        List<String> commands=new ArrayList<>();
+        GtiClient mount=new GtiClient(new GtiClient.Transport(){
+            public String exchange(String command){commands.add(command);return "!2\r";}
+            public void close(){}
+        });
+        GtiClient.GoToResult result=mount.attemptGoToAxis(1,1000,-3,false,()->true,()->1000,()->fail("Unexpected Start"));
+        assertFalse(result.started());
+        assertFalse(result.startSent());
+        assertEquals(":G1",result.command());
+        assertEquals("!2",result.reply());
+        assertEquals(List.of(":G101\r"),commands);
+    }
+
+    @Test public void noWaitPanSendsOnlyThreeDatagramsAndStopNeedsNoReply()throws Exception {
+        List<String> sends=new ArrayList<>();
+        GtiClient mount=new GtiClient(new GtiClient.Transport(){
+            public String exchange(String request){throw new AssertionError("Unexpected reply wait: "+request);}
+            public void send(String request){sends.add(request);}
+            public void close(){}
+        });
+        assertTrue(mount.goToAxis(1,1000,3,true,()->true,()->true,()->{}));
+        mount.stopTrackingAxis(1,()->true,()->{});
+        assertEquals(List.of(":G100\r",":S1E80300\r",":J1\r",":K1\r"),sends);
+    }
+
+    @Test public void panStartDoesNotWaitForTiltAndAChangedGpsCancelsStart()throws Exception {
+        Wire wire=new Wire();
+        wire.moving[1]=true;
+        GtiClient mount=new GtiClient(wire);
+        assertFalse(mount.goToAxis(1,1000,3,false,()->true,()->false,()->fail("Stale target started")));
+        assertEquals(List.of(":G100\r",":S1E80300\r"),wire.commands);
+        wire.commands.clear();
+        assertTrue(mount.goToAxis(1,1100,3,false,()->true,()->true,()->{}));
+        assertEquals(List.of(":G100\r",":S14C0400\r",":J1\r"),wire.commands);
+    }
+
+    @Test public void noWaitReprogramsNewTargetBeforeStart()throws Exception {
+        java.util.List<String> sent=new java.util.ArrayList<>();
+        GtiClient mount=new GtiClient(new GtiClient.Transport(){
+            public String exchange(String command){throw new AssertionError("Unexpected reply wait: "+command);}
+            public void send(String command){sent.add(command);}
+            public void close(){}
+        });
+        mount.cpr[0]=2_073_600;
+        assertTrue(mount.goToAxis(1,1000,3,true,()->true,()->1100,()->{}));
+        assertEquals(java.util.List.of(":G100\r",":S1E80300\r",":S14C0400\r",":J1\r"),sent);
+    }
+
+    @Test public void noWaitIsDefaultAndExplicitAcknowledgedIsRetained() {
+        Settings defaults=new Settings(Map.of());
+        assertTrue(defaults.gotoNoWait);
+        assertEquals(0,defaults.acquisitionTriggerMetres,0);
+        Settings custom=new Settings(Map.of("gotoMode","acknowledged","acquisitionTriggerMetres","7"));
+        assertFalse(custom.gotoNoWait);
+        assertEquals(7,custom.acquisitionTriggerMetres,0);
+    }
+
     @Test public void uncertainInitializationStillMarksTheSavedReferenceAsInvalid() {
         Wire wire=new Wire(){@Override public String exchange(String c)throws IOException {
             if(c.startsWith(":f")){commands.add(c);return "=000\r";}

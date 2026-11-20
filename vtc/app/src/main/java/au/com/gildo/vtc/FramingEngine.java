@@ -14,7 +14,7 @@ final class FramingEngine {
             this.sampleMs=sampleMs;this.lat=lat;this.lon=lon;this.bearing=bearing;
         }
     }
-    private final Settings settings;
+    private volatile Settings settings;
     private final ArrayDeque<Observation> history=new ArrayDeque<>();
     private long lastReceived=-1,lastSample=-1,slowSince=-1;
     private double range=AimUnits.REFERENCE;
@@ -24,6 +24,8 @@ final class FramingEngine {
     String reason="Waiting for GPS";
 
     FramingEngine(Settings settings){this.settings=settings;}
+
+    void configure(Settings settings){this.settings=settings;}
 
     void reset(){clear("Waiting for GPS");}
     void unavailable(long now){clear("GPS unavailable");}
@@ -41,6 +43,7 @@ final class FramingEngine {
     }
 
     void observe(long sampleMs,long receivedMs,double lat,double lon,double bearing) {
+        Settings settings=this.settings;
         if(settings.offshoreHeading==null){clear("Save an offshore heading to enable ride detection");return;}
         if(sampleMs==lastSample||receivedMs<lastReceived)return;
         if(lastReceived>=0&&(receivedMs-lastReceived>settings.gpsAge*1000||sampleMs<lastSample))

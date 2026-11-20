@@ -54,6 +54,7 @@ final class AutomaticKmlWriter implements AutoCloseable {
                 for(int n=0;n<63&&(event=queue.poll())!=null;n++){batch.append(document.accept(event));written++;}
                 long lost=pendingDropped.getAndSet(0);
                 if(lost>0)batch.append(document.gap(lost,System.currentTimeMillis()));
+                if(!open&&queue.isEmpty())batch.append(document.finish());
                 if(batch.length()>0) {
                     byte[] bytes=batch.toString().getBytes(StandardCharsets.UTF_8);
                     appendDocument(local,bytes);

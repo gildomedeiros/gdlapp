@@ -32,8 +32,11 @@ final class GtiReplyReader {
         return false;
     }
     static String receive(String command,Receiver receiver,LongSupplier clock)throws IOException {
+        return receive(command,receiver,clock,timeoutMs(command));
+    }
+    static String receive(String command,Receiver receiver,LongSupplier clock,int budget)throws IOException {
         expected(command);
-        int budget=timeoutMs(command),discarded=0;
+        int discarded=0;
         long end=clock.getAsLong()+budget;
         while(true) {
             long remaining=end-clock.getAsLong();
