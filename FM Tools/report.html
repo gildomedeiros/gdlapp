@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM Tools</title>
+<style>
+:root {font:14px Arial,sans-serif;color:#17324d;background:#f4f7fa}
+* {box-sizing:border-box} body {margin:0} header {background:#17324d;color:white;padding:16px 22px}
+h1 {font-size:20px;margin:0} h2 {font-size:17px;margin:0 0 12px}
+main {padding:14px} section,fieldset {background:white;border:1px solid #c6d2dd;border-radius:5px;margin:8px 0 14px;padding:14px}
+legend {font-weight:bold} label {display:block;margin-bottom:7px}
+form {display:flex;gap:8px;flex-wrap:wrap} input,button,select {font:inherit;padding:7px;border:1px solid #acbdcd;border-radius:4px}
+#folder {flex:1 1 320px} #gap-tolerance {width:125px} .tolerance {margin-top:12px} .tolerance label {display:inline-block;margin:0 8px 0 0} button {cursor:pointer;background:#eef3f8;color:#17324d}
+.primary {background:#236298;color:white;border-color:#236298}
+#status {overflow-wrap:anywhere;color:#567086} #status.error,.warning {color:#8b1616;font-weight:bold}
+#summary {line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
+.table {overflow:auto} table {width:100%;border-collapse:collapse}
+th,td {text-align:left;padding:9px 8px;min-width:95px;border-bottom:1px solid #cad6df;white-space:pre-line}
+th {background:#e7eff6} tr.observed {background:#e0f0e0} tr.unobserved {background:#fae3e3}
+td button {background:white} dialog {border:1px solid #acbdcd;border-radius:6px;color:#17324d;max-width:calc(100vw - 32px)}
+dialog::backdrop {background:#17324d88} #details {white-space:pre-line;line-height:1.5}
+</style>
+<header><h1>FM Tools</h1></header>
+<main>
+<fieldset><legend>Log settings</legend>
+<label for="folder">FM log folder</label>
+<label for="report-kind">Report</label>
+<select id="report-kind">
+<option value="replay">HS viewpoint replay</option>
+<option value="aim">Aim at Surfer HS</option>
+</select>
+<form id="settings">
+<input id="folder" required>
+<button type="button" id="browse">Browse…</button>
+<button type="button" id="phone">Use Galaxy USB folder</button>
+<button class="primary">Read latest report</button>
+</form>
+<div class="tolerance" id="tolerance-settings">
+<label for="gap-tolerance">Gap to target tolerance (m)</label>
+<input id="gap-tolerance" type="number" min="0" step="any" placeholder="FM default" aria-describedby="gap-help">
+<span id="gap-help">Leave blank to use the tolerance recorded in the FM log.</span>
+</div>
+<p id="status" role="status"></p>
+</fieldset>
+<section id="report" hidden>
+<h2 id="report-title">HS viewpoint replay report</h2>
+<div id="summary"></div>
+<div id="timing" hidden>
+<p id="legend"></p>
+<div class="table"><table><thead><tr>
+<th scope="col">Viewpoint / CSV row</th><th scope="col">Gap to target</th><th scope="col">Mount range</th>
+<th scope="col">Target pace</th><th scope="col">Matched pace</th><th scope="col">Expected time</th>
+<th scope="col">Observed time</th><th scope="col">Since previous checkpoint</th><th scope="col">Lead / lag</th><th scope="col">Outcome</th>
+</tr></thead><tbody id="rows"></tbody></table></div>
+</div>
+<div id="aim-stages" hidden>
+<h3>Aim stages</h3>
+<div class="table"><table>
+<thead><tr><th scope="col">Stage</th><th scope="col">Start timestamp (local)</th><th scope="col">Started after button press</th>
+<th scope="col">Duration</th><th scope="col">Issue</th></tr></thead>
+<tbody id="stage-rows"></tbody></table></div>
+</div>
+</section>
+</main>
+<dialog id="viewpoint" aria-labelledby="detail-title">
+<h2 id="detail-title"></h2><p id="details"></p><form method="dialog"><button>Close</button></form>
+</dialog>
+<script>
+const byId = id => document.getElementById(id);
+const folder = byId('folder');
+const reportKind = byId('report-kind');
+const status = byId('status');
+const report = byId('report');
+const dialog = byId('viewpoint');
+const tolerance = byId('gap-tolerance');
+let currentReport;
+tolerance.oninput = () => {
+    if (!tolerance.validity.valid) return;
+    if (currentReport) display(currentReport);
+};
+tolerance.onchange = async () => {
+    if (!tolerance.validity.valid) return;
+    try {
+        await request('/tolerance', {gapTolerance: tolerance.value === '' ? null : tolerance.valueAsNumber});
+    } catch (error) {
+        showStatus(error.message, true);
+    }
+};
+async function request(path, payload) {
+    const options = payload === undefined ? {} : {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    };
+    const response = await fetch(path, options);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'FM Tools could not complete the request.');
+    return data;
+}
+function showStatus(message, error = false) {
+    status.textContent = message;
+    status.classList.toggle('error', error);
+}
+function display(data) {
+    byId('summary').replaceChildren(...data.summary.split('\n').map(line => {
+        const element = document.createElement('div');
+        if (line.startsWith('Button to Stop decision · ')) {
+            const bold = document.createElement('strong');
+            bold.textContent = line;
+            element.append(bold);
+        } else {
+            element.textContent = line;
+        }
+        element.classList.toggle('warning', line.startsWith('Speed shortfall · '));
+        return element;
+    }));
+    const aim = Array.isArray(data.stages);
+    byId('report-title').textContent = aim ? 'Aim at Surfer HS report' : 'HS viewpoint replay report';
+    byId('aim-stages').hidden = !aim || data.stages.length === 0;
+    if (aim) {
+        if (data.publication != null) {
+            const summary = byId('summary').lastElementChild;
+            if (summary && summary.textContent === 'Button to result · —') {
+                summary.textContent = 'Button to result · ' + data.publication + ' ms';
+            }
+        }
+        const stageRows = byId('stage-rows');
+        stageRows.replaceChildren();
+        for (const cells of data.stages) {
+            const row = stageRows.insertRow();
+            for (const value of cells) row.insertCell().textContent = value;
+        }
+        byId('timing').hidden = true;
+        report.hidden = false;
+        return;
+    }
+    const override = tolerance.validity.valid ? tolerance.valueAsNumber : NaN;
+    const limitLabel = Number.isFinite(override) ? override + ' m' : data.limit;
+    byId('legend').textContent = 'Green row · Observed   Red row · Unobserved' +
+        (limitLabel ? ' or gap over ' + limitLabel + ' at the scheduled time' : '');
+    const rows = byId('rows');
+    rows.replaceChildren();
+    for (const item of data.rows) {
+        const row = rows.insertRow();
+        const overLimit = Number.isFinite(override)
+            ? item.gapM !== null && item.gapM > override
+            : item.overLimit;
+        row.className = item.observed && !overLimit ? 'observed' : 'unobserved';
+        item.cells.forEach((value, index) => {
+            const cell = row.insertCell();
+            if (index === 0) {
+                const button = document.createElement('button');
+                button.textContent = value;
+                button.setAttribute('aria-label', 'Details for HS viewpoint ' + item.index);
+                button.onclick = () => {
+                    byId('detail-title').textContent = 'HS viewpoint ' + item.index;
+                    let details = item.details;
+                    if (Number.isFinite(override)) {
+                        const lines = details.split('\n');
+                        lines[2] = 'Gap to target at due time · ' + item.cells[1] +
+                            (overLimit ? ' · Over ' + limitLabel : '');
+                        details = lines.join('\n');
+                    }
+                    byId('details').textContent = details;
+                    dialog.showModal();
+                };
+                cell.append(button);
+            } else {
+                cell.textContent = value;
+                cell.classList.toggle('warning', index === 1 && overLimit);
+            }
+        });
+    }
+    byId('timing').hidden = data.rows.length === 0;
+    report.hidden = false;
+}
+async function load() {
+    currentReport = undefined;
+    report.hidden = true;
+    showStatus('Reading FM logs…');
+    try {
+        const data = await request('/report', {folder: folder.value, report: reportKind.value});
+        currentReport = data;
+        display(data);
+        showStatus(data.source);
+    } catch (error) {
+        showStatus(error.message, true);
+    }
+}
+async function busy(action) {
+    const buttons = Array.from(byId('settings').querySelectorAll('button'));
+    buttons.push(reportKind);
+    buttons.forEach(button => button.disabled = true);
+    try { await action(); }
+    catch (error) { showStatus(error.message, true); }
+    finally { buttons.forEach(button => button.disabled = false); }
+}
+reportKind.onchange = () => {
+    byId('tolerance-settings').hidden = reportKind.value === 'aim';
+    busy(load);
+};
+byId('settings').onsubmit = event => { event.preventDefault(); busy(load); };
+byId('phone').onclick = () => busy(async () => {
+    folder.value = 'Galaxy A54 5G > Internal storage > Download > FM > logs';
+    await load();
+});
+byId('browse').onclick = () => busy(async () => {
+    const data = await request('/browse', {folder: folder.value});
+    if (data.folder) { folder.value = data.folder; await load(); }
+});
+busy(async () => {
+    const settings = await request('/settings');
+    folder.value = settings.folder;
+    tolerance.value = settings.gapTolerance ?? '';
+    await load();
+});
+</script>
+</html>
