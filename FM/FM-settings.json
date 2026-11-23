@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "settings": {
+    "GPS IP": "192.168.4.1",
+    "GPS port": "5006",
+    "Listen port": "5005",
+    "GPS max age (ms)": "2000",
+    "GTi IP": "192.168.4.2",
+    "GTi port": "11880",
+    "Canon IP": "192.168.4.3",
+    "Canon port": "8080",
+    "Mount coordinates": "-28.079771668978996, 153.39982264505693",
+    "Pivot elevation (m)": "4",
+    "Target elevation (m)": "0",
+    "Reference bearing": "64.83451417140384",
+    "Reference elevation": "-4.508450621250129",
+    "Reference pan count": "8421505",
+    "Reference tilt count": "8509581",
+    "Pan sign": "1",
+    "Tilt sign": "-1",
+    "Landmark coordinates": "-28.079142, 153.401257",
+    "Landmark elevation (m)": "2",
+    "Calibration basis": "192.168.4.2|11880.0|-28.079239|153.401023|4.0|-28.079142|153.401257|2.0|1.0|-1.0"
+  }
+}
