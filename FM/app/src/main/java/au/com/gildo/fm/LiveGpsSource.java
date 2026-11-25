@@ -51,7 +51,7 @@ final class LiveGpsSource {
         return new Fix(packet, receivedAt, raw, target, offset, useOffset ? pressNumber : 0, simulated);
     }
 
-    private static GoTo.Point rotateAroundMount(GoTo.Point mount, GoTo.Point raw, double offset) {
+    static GoTo.Point rotateAroundMount(GoTo.Point mount, GoTo.Point raw, double offset) {
         double rangeM = Geo.distance(mount.lat(), mount.lon(), raw.lat(), raw.lon());
         if (rangeM < .1) return null;
 

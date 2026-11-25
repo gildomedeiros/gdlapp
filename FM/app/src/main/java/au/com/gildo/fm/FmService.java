@@ -19,19 +19,20 @@ import java.util.function.Consumer;
 
 public final class FmService extends Service {
     static final int HS_GAP_WARNING=22, LIVE_PAN_SPEED=23, LIVE_TILT_SPEED=24, LIVE_GPS_HOLD=25,
-        LIVE_GPS_STATIONARY_MS=26;
+        LIVE_GPS_STATIONARY_MS=26, LIVE_PAN_LEAD=27, SIMULATOR_SHOT_WIDTH=28;
     static final String[] KEYS={"GPS IP","GPS port","Listen port","GPS max age (ms)",
         "GTi IP","GTi port","Canon IP","Canon port","Mount latitude","Mount longitude",
         "Pivot elevation (m)","Target elevation (m)","Reference bearing","Reference elevation",
         "Reference pan count","Reference tilt count","Pan sign","Tilt sign",
         "Landmark latitude","Landmark longitude","Landmark elevation (m)","Calibration basis","HS gap warning (m)",
         "Live HS pan speed (× sidereal)","Live slow tilt speed (× sidereal)","Live GPS small-step hold (fixes)",
-        "Live GPS stationary confirmation (ms)"};
+        "Live GPS stationary confirmation (ms)","Live pan lead (m)","Simulator horizontal shot width (m)"};
     static final String[] DEFAULTS={"192.168.4.1","5006","5005","2000","192.168.4.4","11880",
         "192.168.4.3","8080","","","","","","","","","1","-1","","","","","30",
         Integer.toString(LiveTracking.DEFAULT_PAN_SPEED),Integer.toString(LiveTracking.DEFAULT_TILT_SPEED),
         Integer.toString(LiveGpsFilter.DEFAULT_HOLD_FIXES),
-        Integer.toString(LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS)};
+        Integer.toString(LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS),
+        Integer.toString(LiveGpsFilter.DEFAULT_PAN_LEAD_M),Integer.toString(LiveFraming.DEFAULT_SHOT_WIDTH_M)};
 
     private static final String CHANNEL="fm_connected";
     private static final int NOTIFICATION=101;
@@ -747,7 +748,7 @@ public final class FmService extends Service {
             if(!Geo.valid(mount.lat(),mount.lon())) return;
             if(idleSimulatorFilter==null)
                 idleSimulatorFilter=new LiveGpsFilter(mount,liveGpsHold(settings),number(3),
-                    stationaryConfirmationMs(settings),(event,fields)->{});
+                    stationaryConfirmationMs(settings),livePanLead(settings),(event,fields)->{});
         } catch(IllegalArgumentException unavailable) {
             return;
         }
@@ -877,6 +878,20 @@ public final class FmService extends Service {
         LiveTracking.tiltSpeed(number(values,LIVE_TILT_SPEED));
         liveGpsHold(values);
         stationaryConfirmationMs(values);
+        livePanLead(values);
+        simulatorShotWidth(values);
+    }
+
+    private static double livePanLead(String[] values) {
+        double lead=number(values,LIVE_PAN_LEAD);
+        if(lead<0) throw new IllegalArgumentException(KEYS[LIVE_PAN_LEAD]+" must be non-negative");
+        return lead;
+    }
+
+    private static double simulatorShotWidth(String[] values) {
+        double width=number(values,SIMULATOR_SHOT_WIDTH);
+        if(width<=0) throw new IllegalArgumentException(KEYS[SIMULATOR_SHOT_WIDTH]+" must be positive");
+        return width;
     }
 
     private static int liveGpsHold(String[] values) {
@@ -999,9 +1014,10 @@ public final class FmService extends Service {
 
     private static void writeGpsPublication(Trace log,String event,LiveGpsPacket raw,
                                             LiveGpsFilter.Snapshot after,String liveRun) {
-        GoTo.Point published=after.fix().target();
+        GoTo.Point published=after.fix().target(), panTarget=after.panTarget();
         log.event(event,"sourcePacket",after.fix().packet().sequence,"inputPacket",raw.fix().sequence,
             "sourceReceivedMs",after.fix().receivedAt(),"latitude",published.lat(),"longitude",published.lon(),
+            "panLeadM",after.panLeadM(),"panTargetLatitude",panTarget.lat(),"panTargetLongitude",panTarget.lon(),
             "direction",after.direction().name(),"state",after.state().name(),"positionRevision",after.revision(),
             "gpsSource",after.fix().simulated()?"Simulator":"LoRa","simulatorRun",raw.simulatorId(),
             "surferMode",raw.mode()==null?null:raw.mode().name(),"lastTap",raw.lastTap(),"liveRun",liveRun,
@@ -1012,6 +1028,7 @@ public final class FmService extends Service {
 
     private String trackLive(String[] values,long press,Trace log,LiveGpsSource source,LiveTrackingKml report) {
         GoTo mount=null;
+        LiveFraming framing=null;
         boolean readyToTrack=false;
         String reason="Stop requested", stop="GTi session unavailable";
         try {
@@ -1036,16 +1053,23 @@ public final class FmService extends Service {
             }
             int holdCount=liveGpsHold(values);
             int confirmationMs=stationaryConfirmationMs(values);
+            double lead=livePanLead(values), shotWidth=simulatorShotWidth(values);
+            LiveFraming framingReport=new LiveFraming(pointing.pivot(),shotWidth,maximumGpsAge,press);
+            framing=framingReport;
             log.event("live_tracking_ready","panSpeed",panSpeed,"panPeriod",panPeriod,"tiltSpeed",tiltSpeed,
                 "tiltPeriod",tiltPeriod,"maxGpsAgeMs",maximumGpsAge,"gpsSmallStepHold",holdCount,
-                "gpsStationaryConfirmationMs",confirmationMs);
+                "gpsStationaryConfirmationMs",confirmationMs,"panLeadM",lead,"simulatorShotWidthM",shotWidth);
             LiveTracking controller=new LiveTracking(mount,panCpr,panPeriod,tiltPeriod,this::liveActive,this::updateResult);
             readyToTrack=true;
             idleSimulatorFilter=null;
-            LiveGpsFilter filter=new LiveGpsFilter(pointing.pivot(),holdCount,maximumGpsAge,confirmationMs,
+            LiveGpsFilter filter=new LiveGpsFilter(pointing.pivot(),holdCount,maximumGpsAge,confirmationMs,lead,
                 (event,fields)->{if(workerGpsPad==null) log.event(event,fields);});
             Consumer<LiveGpsPacket> observe=packet->{
                 if(packet.firstPlaybackFix()) filter.resetInput();
+                if(packet.rejection()==null) {
+                    LoRaTelemetry raw=packet.fix();
+                    framingReport.fix(packet.mode(),new GoTo.Point(raw.lat,raw.lon,elevation),packet.receivedAt());
+                }
                 processLiveGps(packet,source,filter,pointing.pivot(),elevation,report,log);
             };
             GpsPadSimulator initialGpsSource=gpsPad;
@@ -1063,6 +1087,7 @@ public final class FmService extends Service {
                 drainLiveOffsets(source,report,log);
                 GpsPadSimulator selectedGpsSource=gpsPad;
                 if(selectGpsSource(selectedGpsSource)) {
+                    framingReport.endTakeoff(GoTo.now());
                     filter.resetInput();
                     targets=null;
                     previousRule=null;
@@ -1099,18 +1124,20 @@ public final class FmService extends Service {
                     targets=null;
                     LiveGpsSource.Fix published=fix.fix();
                     try {
-                        AimAtSurfer.Target pan=AimAtSurfer.target(published.target(),pointing,panCpr);
+                        AimAtSurfer.Target pan=AimAtSurfer.target(fix.panTarget(),pointing,panCpr);
                         AimAtSurfer.Target tilt=AimAtSurfer.tiltTarget(elevation,pointing,pan.rangeM(),tiltCpr);
                         int direction=pointing.panSign()*(fix.direction()==LiveGpsSource.Direction.CLOCKWISE?1:-1);
                         targets=new LiveTracking.Targets(published.packet().sequence,fix.revision(),
                             pan.count(),tilt.count(),direction);
                         log.event("live_gps_consumed","packet",published.packet().sequence,
                             "positionRevision",fix.revision(),"latitude",published.target().lat(),
-                            "longitude",published.target().lon(),"direction",fix.direction().name(),"ageMs",age);
+                            "longitude",published.target().lon(),"direction",fix.direction().name(),"ageMs",age,
+                            "panLeadM",fix.panLeadM(),"panTargetLatitude",fix.panTarget().lat(),
+                            "panTargetLongitude",fix.panTarget().lon());
                         log.event("live_target","packet",published.packet().sequence,"positionRevision",fix.revision(),
                             "direction",fix.direction().name(),"panCount",pan.count(),"tiltCount",tilt.count(),
                             "bearingDeg",pan.angleDeg(),"elevationDeg",tilt.angleDeg(),"rangeM",pan.rangeM(),
-                            "offsetM",published.offsetM());
+                            "offsetM",published.offsetM(),"panLeadM",fix.panLeadM());
                     } catch(IllegalArgumentException failure) {
                         log.event("live_target_unusable","packet",published.packet().sequence,"reason",failure.getMessage());
                     }
@@ -1124,9 +1151,11 @@ public final class FmService extends Service {
                     queueGpsPadEvent("gps_simulator_first_pan_start_reply",selectedGpsSource,timing);
                 }
                 GoTo.PanSample sample=controller.lastPanSample();
-                if(sample!=null&&(report.cameraHeading==null||sample.timeMs()!=report.cameraHeading.sampledAt()))
-                    report.cameraHeading=new LiveTrackingKml.CameraHeading(
-                        GoTo.panHeading(sample.count(),pointing,panCpr),sample.count(),sample.timeMs());
+                if(sample!=null&&(report.cameraHeading==null||sample.timeMs()!=report.cameraHeading.sampledAt())) {
+                    double bearing=GoTo.panHeading(sample.count(),pointing,panCpr);
+                    report.cameraHeading=new LiveTrackingKml.CameraHeading(bearing,sample.count(),sample.timeMs());
+                    framingReport.sample(bearing,sample.timeMs());
+                }
                 if(liveActive()) Thread.sleep(LiveTracking.POLL_MS);
             }
         } catch(InterruptedException failure) {
@@ -1136,6 +1165,7 @@ public final class FmService extends Service {
             reason=failure.getMessage();
             log.event("live_tracking_issue","reason",reason);
         } finally {
+            if(framing!=null) framing.endTakeoff(liveStopRequested<0?GoTo.now():liveStopRequested);
             if(mount!=null&&(readyToTrack||liveStopRequested>=0)) {
                 log.event("live_stop_requested","pressMs",liveStopRequested<0?null:liveStopRequested,"reason",reason);
                 try {
@@ -1152,7 +1182,11 @@ public final class FmService extends Service {
         Long firstStart=log.firstStartMs==null?null:log.firstStartMs-press;
         log.event("live_tracking_result","outcome",reason,"stop",stop,"durationMs",GoTo.now()-press,
             "buttonToFirstStartReplyMs",firstStart);
-        return withFirstStart("Live Tracking · "+reason+"\n"+stop,firstStart);
+        String result=withFirstStart("Live Tracking · "+reason+"\n"+stop,firstStart);
+        if(framing==null||!framing.sawTakeoff()) return result;
+        log.event("live_takeoff_framing","shotWidthM",framing.shotWidthM,"takeoffMs",framing.takeoffMs(),
+            "observedMs",framing.observedMs(),"estimatedOutsideMs",framing.observedMs()==0?null:framing.outsideMs());
+        return result+"\n"+framing.summary();
     }
 
     void launchAim(String[] values) {

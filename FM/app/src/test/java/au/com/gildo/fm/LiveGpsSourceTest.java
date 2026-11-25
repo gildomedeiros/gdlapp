@@ -187,7 +187,7 @@ public class LiveGpsSourceTest {
 
     private static void recordPublished(LiveTrackingKml report, LiveGpsSource.Fix fix, long revision) {
         report.publishedFixes.add(new LiveGpsFilter.Snapshot(fix, LiveGpsSource.Direction.CLOCKWISE,
-            LiveGpsFilter.State.MOVING, revision, fix.receivedAt(), fix.receivedAt(), java.util.List.of()));
+            LiveGpsFilter.State.MOVING, revision, fix.receivedAt(), fix.receivedAt(), java.util.List.of(), fix.target(), 0));
     }
 
     private static double arcOffset(LiveGpsSource.Fix fix) {

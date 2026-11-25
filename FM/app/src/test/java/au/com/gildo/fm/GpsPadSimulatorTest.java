@@ -58,7 +58,7 @@ public class GpsPadSimulatorTest {
         var mount = Geo.destination(LANDMARK, 180, 100);
         var simulator = newSimulator();
         var tracker = new LoRaTelemetry.Tracker();
-        var filter = new LiveGpsFilter(mount, 4, 2000, LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS,
+        var filter = new LiveGpsFilter(mount, 4, 2000, LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS, 0,
             (event, fields) -> {});
         var source = new LiveGpsSource(1000);
         source.advance(1000, 2);
@@ -197,7 +197,7 @@ public class GpsPadSimulatorTest {
         var mount = Geo.destination(LANDMARK, 180, 100);
         var simulator = newSimulator();
         var tracker = new LoRaTelemetry.Tracker();
-        var filter = new LiveGpsFilter(mount, 4, 2000, LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS,
+        var filter = new LiveGpsFilter(mount, 4, 2000, LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS, 0,
             (event, fields) -> {});
         var source = new LiveGpsSource(1000);
 
@@ -208,7 +208,11 @@ public class GpsPadSimulatorTest {
         assertEquals(2, filter.currentRule().rule());
 
         simulator.selectMode(SurferModes.Mode.RIDING, 90, 4200, 3000);
-        var departure = feed(simulator, tracker, source, filter, mount, 4500);
+        feed(simulator, tracker, source, filter, mount, 4500);
+        // The first riding fix is still within 1 m of the saved sitting position.
+        assertNull(filter.latest());
+        assertEquals(3, filter.currentRule().rule());
+        var departure = feed(simulator, tracker, source, filter, mount, 5000);
         assertEquals(departure.sequence, filter.latest().fix().packet().sequence);
         assertEquals(LiveGpsSource.Direction.CLOCKWISE, filter.latest().direction());
         assertTrue(filter.latest().rules().contains("GPS_DATA_FILTER_RULE_3"));

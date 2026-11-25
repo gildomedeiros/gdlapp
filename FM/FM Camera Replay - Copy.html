@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM Camera Replay</title>
+<style>
+:root { color-scheme: light dark; --paper:#f4f7f8; --surface:#fff; --ink:#162b38; --muted:#506372; --border:#ccdadd; --grid:#dae4e7; --road:#82949e; --gps:#006a50; --camera:#215cbe; --target:#994600; --danger:#a33038; --button:#133e53; --button-text:#fff; }
+@media (prefers-color-scheme: dark) {
+  :root { --paper:#121923; --surface:#1a2430; --ink:#dce8ec; --muted:#afc1cb; --border:#42505d; --grid:#33414e; --road:#8c9eae; --gps:#66d8ae; --camera:#84aeff; --target:#ffaf70; --danger:#ff8e96; --button:#9cd1e8; --button-text:#102631; }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:1rem/1.45 system-ui,sans-serif; }
+main { max-width:1100px; padding:24px clamp(14px,4vw,44px) 32px; margin:auto; display:grid; gap:18px; }
+h1,p { margin:0; }
+h1 { font-size:clamp(1.65rem,5vw,2.1rem); letter-spacing:-.03em; font-weight:650; }
+small,.subtle { color:var(--muted); }
+button,input,select { font:inherit; color:var(--ink); }
+button { cursor:pointer; }
+input:not([type=range]),button,select,.file-button { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:7px 10px; min-height:38px; }
+button:disabled { opacity:.55; cursor:default; }
+.primary,.file-button { background:var(--button); border-color:var(--button); color:var(--button-text); }
+.file-button { display:inline-flex; align-items:center; cursor:pointer; }
+.file-wrap:focus-within .file-button { outline:2px solid var(--camera); outline-offset:2px; }
+.file-wrap input { position:absolute; width:1px; height:1px; opacity:0; }
+.row,.legend,.readouts { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; }
+.filename { overflow-wrap:anywhere; font-size:.88rem; }
+#route { max-width:min(24em,100%); }
+.setup { display:grid; gap:11px; }
+.coordinate-grid,.settings-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; }
+.settings-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr)); padding:10px 0 2px; }
+.field { display:grid; gap:4px; min-width:0; }
+.field > span { font-size:.86rem; }
+.coordinate { display:flex; gap:6px; }
+.coordinate input { min-width:0; flex:1; }
+.coordinate button { white-space:nowrap; font-size:.86rem; }
+#map { display:block; width:100%; height:clamp(300px,58vh,570px); background:var(--surface); border:1px solid var(--border); border-radius:8px; }
+#map .grid-line { stroke:var(--grid); stroke-width:1; }
+#map .road { stroke:var(--road); stroke-width:1; opacity:.3; fill:none; }
+#map .arterial { stroke-width:2; opacity:.4; }
+#map .track { fill:none; stroke:var(--gps); stroke-width:1.6; opacity:.34; }
+#map .trail { fill:none; stroke:var(--gps); stroke-width:2.4; }
+#map .camera { fill:none; stroke:var(--camera); stroke-width:2.6; }
+#map .wedge { fill:var(--camera); fill-opacity:.12; }
+#map .aim { stroke:var(--target); stroke-width:2; stroke-dasharray:5 5; }
+#map .gps { fill:var(--gps); stroke:var(--surface); stroke-width:2; }
+#map .mount { fill:var(--ink); stroke:var(--surface); stroke-width:2; }
+#map .landmark { fill:var(--surface); stroke:var(--ink); stroke-width:1.5; }
+#map text { fill:var(--ink); font-size:12px; paint-order:stroke; stroke:var(--surface); stroke-width:3; stroke-linejoin:round; }
+#map .scale { stroke:var(--ink); stroke-width:1.5; }
+#map { cursor:crosshair; }
+#map [data-fix-index] { cursor:pointer; }
+#map .fix-pin { fill:var(--surface); stroke:var(--gps); stroke-width:1.5; }
+#map .selected-pin { fill:none; stroke:var(--target); stroke-width:2; }
+#map .fix-label { fill:var(--gps); }
+.viewer { display:grid; gap:8px; min-width:0; }
+.legend span { display:inline-flex; gap:6px; align-items:center; color:var(--muted); font-size:.86rem; }
+.legend i { width:20px; border-top:2px solid var(--gps); }
+.legend .camera-line { border-color:var(--camera); }
+.legend .aim-line { border-color:var(--target); border-top-style:dashed; }
+.readouts { font-variant-numeric:tabular-nums; font-size:.88rem; }
+.readouts > span:empty { display:none; }
+.map-pick [hidden] { display:none; }
+.error { color:var(--danger); }
+.controls { display:grid; gap:5px; }
+.clock { margin-left:auto; font-variant-numeric:tabular-nums; }
+input[type=range] { width:100%; accent-color:var(--camera); }
+a { color:var(--camera); }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>FM Camera Replay</h1>
+    <p class="subtle">GPS playback and simulated camera pan · FM 0.1.75</p>
+  </header>
+  <section class="setup" aria-label="Replay setup">
+    <div class="row">
+      <span class="file-wrap">
+        <input type="file" id="file" accept=".kml,application/vnd.google-earth.kml+xml">
+        <label class="file-button" for="file">Open KML</label>
+      </span>
+      <span class="file-wrap">
+        <input type="file" id="vt-log" accept=".jsonl,.ndjson,.log,.txt,application/x-ndjson">
+        <label class="file-button" for="vt-log">Open VT log</label>
+      </span>
+      <button type="button" id="example">Load example</button>
+      <span class="filename" id="file-name"></span>
+      <label id="route-field" hidden>Track <select id="route"></select></label>
+    </div>
+    <form id="setup" class="setup">
+      <div class="coordinate-grid">
+        <div class="field">
+          <label for="mount">Mount position</label>
+          <span class="coordinate"><input id="mount" placeholder="GPS # or latitude, longitude" required><button type="button" id="pick-mount" aria-label="Use selected GPS fix for mount">Use current fix</button></span>
+        </div>
+        <div class="field">
+          <label for="landmark">Landmark and initial aim</label>
+          <span class="coordinate"><input id="landmark" placeholder="GPS # or latitude, longitude" required><button type="button" id="pick-landmark" aria-label="Use selected GPS fix for landmark">Use current fix</button></span>
+        </div>
+      </div>
+      <details>
+        <summary>Simulation settings</summary>
+        <div class="settings-grid">
+          <label class="field"><span>Small-step hold (fixes)</span><input id="hold" type="number" min="0" max="2147483647" step="1" value="8" required></label>
+          <label class="field"><span>Stationary confirmation (ms)</span><input id="stationary" type="number" min="1" max="2147483647" step="1" value="2000" required></label>
+          <label class="field"><span>GPS freshness limit (ms)</span><input id="age" type="number" min="1" max="2147483647" step="1" value="2000" required></label>
+          <label class="field"><span>Pan speed (× sidereal)</span><input id="speed" type="number" min="128" max="800" step="any" value="800" required></label>
+          <label class="field"><span>Pan lead (m)</span><input id="lead" type="number" min="0" step="any" value="5" required></label>
+          <label class="field"><span>Horizontal shot width (m)</span><input id="width" type="number" min="0.01" step="any" value="40" required></label>
+          <label class="field"><span>Interval for untimed fixes (ms)</span><input id="interval" type="number" min="1" max="3600000" step="1" value="500" required></label>
+        </div>
+      </details>
+      <div class="row">
+        <button class="primary" type="submit" id="run">Run replay</button>
+        <label for="replay-start">Start replay at</label>
+        <select id="replay-start">
+          <option value="beginning">Beginning of track</option>
+          <option value="landmark">Landmark fix</option>
+          <option value="current" id="current-start-option">Current GPS fix</option>
+        </select>
+      </div>
+    </form>
+    <p id="status" class="subtle" role="status"></p>
+  </section>
+  <section class="viewer" aria-label="Camera replay">
+    <div class="controls">
+      <div class="row">
+        <button type="button" id="play">Play</button>
+        <label>Speed <select id="playback-speed"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="10">10×</option></select></label>
+        <button type="button" id="jump" hidden>Jump to #1324</button>
+        <span id="clock" class="clock">0:00.0</span>
+      </div>
+      <label class="sr-only" for="time">Replay time</label>
+      <input id="time" type="range" min="0" max="1" step="1" value="0">
+    </div>
+    <div class="legend" aria-label="Map legend">
+      <span><i></i>Recorded GPS</span><span><i class="camera-line"></i>Simulated camera</span><span><i class="aim-line"></i>GP aim target</span>
+      <button type="button" id="fix-ids" aria-pressed="true">Hide fix IDs</button>
+    </div>
+    <p id="camera-setup" class="subtle" role="status" hidden></p>
+    <svg id="map" role="img" aria-label="GPS route and simulated camera pointing direction"></svg>
+    <div class="map-pick row">
+      <span id="map-selection" class="subtle" role="status">Click a GPS fix or another position on the map.</span>
+      <label id="coincident-fixes" hidden>Fix at this spot <select id="same-point-fixes"></select></label>
+      <button type="button" id="map-mount" disabled>Use as mount</button>
+      <button type="button" id="map-landmark" disabled>Use as landmark</button>
+    </div>
+    <div class="readouts"><span id="fix"></span><span id="pan"></span><span id="shot"></span><span id="target"></span></div>
+    <small>Camera pan model uses 180 ms encoder samples. <a id="credits" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Example map © OpenStreetMap contributors</a></small>
+  </section>
+</main>
+<script id="fm-example" type="application/json">{"routes":[{"name":"Recorded GPS fixes","fixes":[{"point":[153.39189,-28.08153],"sequence":1252,"sender":654165,"mono":641369363703310,"valid":true},{"point":[153.39189,-28.08153],"sequence":1253,"sender":654665,"mono":641369864201887,"valid":true},{"point":[153.39189,-28.08153],"sequence":1254,"sender":655165,"mono":641370363499387,"valid":true},{"point":[153.39189,-28.08153],"sequence":1255,"sender":655665,"mono":641370862811848,"valid":true},{"point":[153.39189,-28.08153],"sequence":1256,"sender":656165,"mono":641371363782847,"valid":true},{"point":[153.39189,-28.08153],"sequence":1257,"sender":656665,"mono":641371865740770,"valid":true},{"point":[153.39189,-28.08153],"sequence":1258,"sender":657165,"mono":641372364535808,"valid":true},{"point":[153.39189,-28.08153],"sequence":1259,"sender":657665,"mono":641372864495039,"valid":true},{"point":[153.39189,-28.08153],"sequence":1260,"sender":658165,"mono":641373735714576,"valid":true},{"point":[153.39188,-28.08153],"sequence":1261,"sender":658894,"mono":641374094266653,"valid":true},{"point":[153.39188,-28.08152],"sequence":1262,"sender":659394,"mono":641374591636537,"valid":true},{"point":[153.39188,-28.08152],"sequence":1263,"sender":659894,"mono":641375091058537,"valid":true},{"point":[153.39188,-28.08152],"sequence":1264,"sender":660394,"mono":641375595343306,"valid":true},{"point":[153.39188,-28.08152],"sequence":1265,"sender":660894,"mono":641376095459921,"valid":true},{"point":[153.39188,-28.08152],"sequence":1266,"sender":661394,"mono":641376590861882,"valid":true},{"point":[153.39188,-28.08152],"sequence":1267,"sender":661894,"mono":641377094944189,"valid":true},{"point":[153.39188,-28.08153],"sequence":1268,"sender":662394,"mono":641377590861804,"valid":true},{"point":[153.39188,-28.08154],"sequence":1269,"sender":662894,"mono":641378094130689,"valid":true},{"point":[153.39188,-28.08155],"sequence":1270,"sender":663394,"mono":641378963645727,"valid":true},{"point":[153.39188,-28.08155],"sequence":1271,"sender":664123,"mono":641379321849649,"valid":true},{"point":[153.39187,-28.08156],"sequence":1272,"sender":664623,"mono":641379821682495,"valid":true},{"point":[153.39187,-28.08156],"sequence":1273,"sender":665123,"mono":641380321870110,"valid":true},{"point":[153.39187,-28.08156],"sequence":1274,"sender":665623,"mono":641380823490148,"valid":true},{"point":[153.39187,-28.08156],"sequence":1275,"sender":666123,"mono":641381321422917,"valid":true},{"point":[153.39187,-28.08156],"sequence":1276,"sender":666623,"mono":641381820570840,"valid":true},{"point":[153.39187,-28.08156],"sequence":1277,"sender":667123,"mono":641382330877147,"valid":true},{"point":[153.39187,-28.08156],"sequence":1278,"sender":667623,"mono":641382824673493,"valid":true},{"point":[153.39187,-28.08156],"sequence":1279,"sender":668123,"mono":641383321471454,"valid":true},{"point":[153.39187,-28.08156],"sequence":1280,"sender":668623,"mono":641384191780646,"valid":true},{"point":[153.39186,-28.08156],"sequence":1281,"sender":669352,"mono":641384549942415,"valid":true},{"point":[153.39186,-28.08156],"sequence":1282,"sender":669852,"mono":641385051199799,"valid":true},{"point":[153.39186,-28.08156],"sequence":1283,"sender":670352,"mono":641385549935568,"valid":true},{"point":[153.39184,-28.08157],"sequence":1284,"sender":670852,"mono":641386050742491,"valid":true},{"point":[153.39183,-28.08157],"sequence":1285,"sender":671352,"mono":641386549110760,"valid":true},{"point":[153.39183,-28.08158],"sequence":1286,"sender":671852,"mono":641387050189759,"valid":true},{"point":[153.39182,-28.08158],"sequence":1287,"sender":672352,"mono":641387550472220,"valid":true},{"point":[153.39182,-28.08159],"sequence":1288,"sender":672852,"mono":641388049306412,"valid":true},{"point":[153.39182,-28.0816],"sequence":1289,"sender":673352,"mono":641388556813604,"valid":true},{"point":[153.39182,-28.08161],"sequence":1290,"sender":673852,"mono":641389420509065,"valid":true},{"point":[153.39182,-28.08162],"sequence":1291,"sender":674581,"mono":641389787340988,"valid":true},{"point":[153.39181,-28.08163],"sequence":1292,"sender":675081,"mono":641390280305449,"valid":true},{"point":[153.39181,-28.08164],"sequence":1293,"sender":675581,"mono":641390782828641,"valid":true},{"point":[153.3918,-28.08164],"sequence":1294,"sender":676081,"mono":641391279421487,"valid":true},{"point":[153.39179,-28.08165],"sequence":1295,"sender":676581,"mono":641391781761294,"valid":true},{"point":[153.39178,-28.08165],"sequence":1296,"sender":677081,"mono":641392279616063,"valid":true},{"point":[153.39177,-28.08165],"sequence":1297,"sender":677581,"mono":641392781568755,"valid":true},{"point":[153.39176,-28.08165],"sequence":1298,"sender":678081,"mono":641393279707755,"valid":true},{"point":[153.39174,-28.08164],"sequence":1299,"sender":678581,"mono":641393781918524,"valid":true},{"point":[153.39173,-28.08164],"sequence":1300,"sender":679081,"mono":641394651565408,"valid":true},{"point":[153.3917,-28.08164],"sequence":1301,"sender":679810,"mono":641395011741715,"valid":true},{"point":[153.39169,-28.08164],"sequence":1302,"sender":680310,"mono":641395506772099,"valid":true},{"point":[153.39167,-28.08163],"sequence":1303,"sender":680810,"mono":641396012423099,"valid":true},{"point":[153.39165,-28.08163],"sequence":1304,"sender":681310,"mono":641396507912060,"valid":true},{"point":[153.39164,-28.08163],"sequence":1305,"sender":681810,"mono":641397007502329,"valid":true},{"point":[153.39162,-28.08163],"sequence":1306,"sender":682310,"mono":641397506935367,"valid":true},{"point":[153.3916,-28.08163],"sequence":1307,"sender":682810,"mono":641398008104444,"valid":true},{"point":[153.39159,-28.08163],"sequence":1308,"sender":683310,"mono":641398507694597,"valid":true},{"point":[153.39157,-28.08163],"sequence":1309,"sender":683810,"mono":641399029349366,"valid":true},{"point":[153.39156,-28.08163],"sequence":1310,"sender":684310,"mono":641399988439865,"valid":true},{"point":[153.39154,-28.08162],"sequence":1311,"sender":685038,"mono":641400302074057,"valid":true},{"point":[153.39153,-28.08162],"sequence":1312,"sender":685538,"mono":641400815831403,"valid":true},{"point":[153.39151,-28.08163],"sequence":1313,"sender":686038,"mono":641401433353595,"valid":true},{"point":[153.3915,-28.08163],"sequence":1314,"sender":686538,"mono":641401840153364,"valid":true},{"point":[153.39149,-28.08163],"sequence":1315,"sender":687038,"mono":641402353361825,"valid":true},{"point":[153.39147,-28.08163],"sequence":1316,"sender":687538,"mono":641402765419210,"valid":true},{"point":[153.39146,-28.08163],"sequence":1317,"sender":688038,"mono":641403275916209,"valid":true},{"point":[153.39144,-28.08164],"sequence":1318,"sender":688538,"mono":641403737663555,"valid":true},{"point":[153.39143,-28.08164],"sequence":1319,"sender":689038,"mono":641404393627170,"valid":true},{"point":[153.39142,-28.08163],"sequence":1320,"sender":689538,"mono":641405219032169,"valid":true},{"point":[153.3914,-28.08163],"sequence":1321,"sender":690266,"mono":641405523715823,"valid":true},{"point":[153.39139,-28.08162],"sequence":1322,"sender":690766,"mono":641406046192169,"valid":true},{"point":[153.39137,-28.08161],"sequence":1323,"sender":691266,"mono":641406558014630,"valid":true},{"point":[153.39136,-28.0816],"sequence":1324,"sender":691766,"mono":641407068803937,"valid":true},{"point":[153.39134,-28.08159],"sequence":1325,"sender":692266,"mono":641407576016860,"valid":true},{"point":[153.39133,-28.08158],"sequence":1326,"sender":692766,"mono":641407984401706,"valid":true},{"point":[153.39131,-28.08157],"sequence":1327,"sender":693266,"mono":641408599630821,"valid":true},{"point":[153.39129,-28.08156],"sequence":1328,"sender":693766,"mono":641409009697167,"valid":true},{"point":[153.39127,-28.08156],"sequence":1329,"sender":694266,"mono":641409520439743,"valid":true},{"point":[153.39126,-28.08155],"sequence":1330,"sender":694766,"mono":641410448248281,"valid":true},{"point":[153.39122,-28.08152],"sequence":1331,"sender":695494,"mono":641410755168704,"valid":true},{"point":[153.39121,-28.08151],"sequence":1332,"sender":695994,"mono":641411260422857,"valid":true},{"point":[153.3912,-28.08149],"sequence":1333,"sender":696494,"mono":641411769247780,"valid":true},{"point":[153.39119,-28.08148],"sequence":1334,"sender":696994,"mono":641412195525857,"valid":true},{"point":[153.39118,-28.08146],"sequence":1335,"sender":697494,"mono":641412796630818,"valid":true},{"point":[153.39116,-28.08145],"sequence":1336,"sender":697994,"mono":641413309122394,"valid":true},{"point":[153.39115,-28.08143],"sequence":1337,"sender":698494,"mono":641413719487856,"valid":true},{"point":[153.39114,-28.08142],"sequence":1338,"sender":698994,"mono":641414198321355,"valid":true},{"point":[153.39112,-28.0814],"sequence":1339,"sender":699494,"mono":641414742902432,"valid":true},{"point":[153.39111,-28.08138],"sequence":1340,"sender":699994,"mono":641415666649816,"valid":true},{"point":[153.3911,-28.08137],"sequence":1341,"sender":700722,"mono":641415970570239,"valid":true},{"point":[153.39108,-28.08135],"sequence":1342,"sender":701222,"mono":641416419567007,"valid":true},{"point":[153.39107,-28.08133],"sequence":1343,"sender":701722,"mono":641416924067276,"valid":true},{"point":[153.39106,-28.08132],"sequence":1344,"sender":702222,"mono":641417710301583,"valid":true},{"point":[153.39105,-28.0813],"sequence":1345,"sender":702722,"mono":641418017402468,"valid":true},{"point":[153.39104,-28.08128],"sequence":1346,"sender":703222,"mono":641418531722698,"valid":true},{"point":[153.39103,-28.08127],"sequence":1347,"sender":703722,"mono":641418940631852,"valid":true},{"point":[153.39101,-28.08125],"sequence":1348,"sender":704222,"mono":641419451474851,"valid":true},{"point":[153.391,-28.08124],"sequence":1349,"sender":704722,"mono":641420066623966,"valid":true},{"point":[153.39099,-28.08122],"sequence":1350,"sender":705222,"mono":641420885243197,"valid":true},{"point":[153.39097,-28.0812],"sequence":1351,"sender":705950,"mono":641421185996427,"valid":true},{"point":[153.39097,-28.08119],"sequence":1352,"sender":706450,"mono":641421708615388,"valid":true},{"point":[153.39096,-28.08118],"sequence":1353,"sender":706950,"mono":641422218830311,"valid":true},{"point":[153.39095,-28.08117],"sequence":1354,"sender":707450,"mono":641422736181349,"valid":true},{"point":[153.39094,-28.08116],"sequence":1355,"sender":707950,"mono":641423147303926,"valid":true},{"point":[153.39094,-28.08115],"sequence":1356,"sender":708450,"mono":641423753836079,"valid":true},{"point":[153.39093,-28.08114],"sequence":1357,"sender":708950,"mono":641424263536156,"valid":true},{"point":[153.39093,-28.08114],"sequence":1358,"sender":709450,"mono":641424676792271,"valid":true},{"point":[153.39093,-28.08113],"sequence":1359,"sender":709950,"mono":641425289342270,"valid":true},{"point":[153.39092,-28.08112],"sequence":1360,"sender":710450,"mono":641426020069193,"valid":true},{"point":[153.39092,-28.08111],"sequence":1361,"sender":711178,"mono":641426375697039,"valid":true},{"point":[153.39092,-28.0811],"sequence":1362,"sender":711678,"mono":641426874741077,"valid":true},{"point":[153.39092,-28.08109],"sequence":1363,"sender":712178,"mono":641427439703384,"valid":true},{"point":[153.39092,-28.08108],"sequence":1364,"sender":712678,"mono":641427953625115,"valid":true},{"point":[153.39093,-28.08106],"sequence":1365,"sender":713178,"mono":641428463452614,"valid":true},{"point":[153.39093,-28.08105],"sequence":1366,"sender":713678,"mono":641429081024383,"valid":true},{"point":[153.39093,-28.08104],"sequence":1367,"sender":714178,"mono":641429489127113,"valid":true},{"point":[153.39093,-28.08103],"sequence":1368,"sender":714678,"mono":641429896558613,"valid":true},{"point":[153.39094,-28.08101],"sequence":1369,"sender":715178,"mono":641430408428382,"valid":true},{"point":[153.39094,-28.081],"sequence":1370,"sender":715678,"mono":641431338958766,"valid":true},{"point":[153.39094,-28.08097],"sequence":1371,"sender":716407,"mono":641431637903073,"valid":true},{"point":[153.39094,-28.08096],"sequence":1372,"sender":716907,"mono":641432149774458,"valid":true},{"point":[153.39094,-28.08095],"sequence":1373,"sender":717407,"mono":641432665654996,"valid":true},{"point":[153.39094,-28.08094],"sequence":1374,"sender":717907,"mono":641433174124265,"valid":true},{"point":[153.39093,-28.08093],"sequence":1375,"sender":718407,"mono":641433687925957,"valid":true},{"point":[153.39093,-28.08091],"sequence":1376,"sender":718907,"mono":641434300189918,"valid":true},{"point":[153.39093,-28.0809],"sequence":1377,"sender":719407,"mono":641434709797071,"valid":true},{"point":[153.39093,-28.08089],"sequence":1378,"sender":719907,"mono":641435222990725,"valid":true},{"point":[153.39092,-28.08088],"sequence":1379,"sender":720407,"mono":641435634191301,"valid":true},{"point":[153.39092,-28.08086],"sequence":1380,"sender":720907,"mono":641436554721224,"valid":true},{"point":[153.39091,-28.08085],"sequence":1381,"sender":721636,"mono":641436858029685,"valid":true},{"point":[153.39091,-28.08084],"sequence":1382,"sender":722136,"mono":641437479438454,"valid":true},{"point":[153.39091,-28.08083],"sequence":1383,"sender":722636,"mono":641437883042107,"valid":true},{"point":[153.3909,-28.08082],"sequence":1384,"sender":723136,"mono":641438395261569,"valid":true},{"point":[153.3909,-28.08081],"sequence":1385,"sender":723636,"mono":641438915406030,"valid":true},{"point":[153.3909,-28.08079],"sequence":1386,"sender":724136,"mono":641439420226491,"valid":true},{"point":[153.39091,-28.08078],"sequence":1387,"sender":724636,"mono":641440034149529,"valid":true},{"point":[153.39091,-28.08077],"sequence":1388,"sender":725136,"mono":641440546639375,"valid":true},{"point":[153.39091,-28.08076],"sequence":1389,"sender":725636,"mono":641440851219759,"valid":true},{"point":[153.3909,-28.08072],"sequence":1391,"sender":726992,"mono":641442289207720,"valid":true},{"point":[153.39091,-28.08071],"sequence":1392,"sender":727492,"mono":641442799050565,"valid":true},{"point":[153.39091,-28.0807],"sequence":1393,"sender":727992,"mono":641443211083642,"valid":true},{"point":[153.39092,-28.08069],"sequence":1394,"sender":728492,"mono":641443721375488,"valid":true},{"point":[153.39093,-28.08068],"sequence":1395,"sender":728992,"mono":641444239842603,"valid":true},{"point":[153.39094,-28.08068],"sequence":1396,"sender":729492,"mono":641444742779641,"valid":true},{"point":[153.39095,-28.08068],"sequence":1397,"sender":729992,"mono":641445258776218,"valid":true},{"point":[153.39096,-28.08069],"sequence":1398,"sender":730492,"mono":641445768712602,"valid":true},{"point":[153.39096,-28.0807],"sequence":1399,"sender":730992,"mono":641446284028525,"valid":true},{"point":[153.39097,-28.08071],"sequence":1400,"sender":731492,"mono":641447101049870,"valid":true},{"point":[153.39097,-28.08072],"sequence":1401,"sender":732221,"mono":641447511517293,"valid":true},{"point":[153.39096,-28.08073],"sequence":1402,"sender":732721,"mono":641448023478177,"valid":true},{"point":[153.39096,-28.08074],"sequence":1403,"sender":733221,"mono":641448536375408,"valid":true},{"point":[153.39096,-28.08075],"sequence":1404,"sender":733721,"mono":641448943157984,"valid":true},{"point":[153.39095,-28.08076],"sequence":1405,"sender":734221,"mono":641449457357138,"valid":true},{"point":[153.39095,-28.08077],"sequence":1406,"sender":734721,"mono":641449969907445,"valid":true},{"point":[153.39095,-28.08078],"sequence":1407,"sender":735221,"mono":641450588987598,"valid":true},{"point":[153.39096,-28.08079],"sequence":1408,"sender":735721,"mono":641450991219021,"valid":true},{"point":[153.39096,-28.0808],"sequence":1409,"sender":736221,"mono":641451507378944,"valid":true},{"point":[153.39097,-28.08081],"sequence":1410,"sender":736721,"mono":641452323511289,"valid":true},{"point":[153.39098,-28.08082],"sequence":1411,"sender":737450,"mono":641452731708789,"valid":true},{"point":[153.39099,-28.08081],"sequence":1412,"sender":737950,"mono":641453246184596,"valid":true},{"point":[153.391,-28.08081],"sequence":1413,"sender":738450,"mono":641453763176673,"valid":true},{"point":[153.39101,-28.0808],"sequence":1414,"sender":738950,"mono":641454269757365,"valid":true},{"point":[153.39102,-28.08079],"sequence":1415,"sender":739450,"mono":641454678937672,"valid":true},{"point":[153.39103,-28.08079],"sequence":1416,"sender":739950,"mono":641455186833941,"valid":true},{"point":[153.39103,-28.08078],"sequence":1417,"sender":740450,"mono":641455701318364,"valid":true},{"point":[153.39104,-28.08077],"sequence":1418,"sender":740950,"mono":641456216240325,"valid":true},{"point":[153.39105,-28.08076],"sequence":1419,"sender":741450,"mono":641456728969709,"valid":true},{"point":[153.39105,-28.08075],"sequence":1420,"sender":741950,"mono":641457544959324,"valid":true},{"point":[153.39105,-28.08074],"sequence":1421,"sender":742679,"mono":641457956580593,"valid":true},{"point":[153.39104,-28.08072],"sequence":1423,"sender":743679,"mono":641458982745131,"valid":true},{"point":[153.39104,-28.0807],"sequence":1424,"sender":744179,"mono":641459494090169,"valid":true},{"point":[153.39103,-28.08069],"sequence":1425,"sender":744679,"mono":641459900020746,"valid":true},{"point":[153.39103,-28.08068],"sequence":1426,"sender":745179,"mono":641460409815707,"valid":true},{"point":[153.39103,-28.08067],"sequence":1427,"sender":745679,"mono":641460926833668,"valid":true},{"point":[153.39103,-28.08065],"sequence":1428,"sender":746179,"mono":641461444124321,"valid":true},{"point":[153.39104,-28.08064],"sequence":1429,"sender":746679,"mono":641461949130359,"valid":true},{"point":[153.39104,-28.08063],"sequence":1430,"sender":747179,"mono":641462869919243,"valid":true},{"point":[153.39105,-28.08061],"sequence":1431,"sender":747908,"mono":641463175189936,"valid":true},{"point":[153.39106,-28.0806],"sequence":1432,"sender":748408,"mono":641463689656204,"valid":true},{"point":[153.39107,-28.08059],"sequence":1433,"sender":748908,"mono":641464200814896,"valid":true},{"point":[153.39108,-28.08058],"sequence":1434,"sender":749408,"mono":641464712807973,"valid":true},{"point":[153.39108,-28.08057],"sequence":1435,"sender":749908,"mono":641465223254242,"valid":true},{"point":[153.39109,-28.08056],"sequence":1436,"sender":750408,"mono":641465641571203,"valid":true},{"point":[153.3911,-28.08056],"sequence":1437,"sender":750908,"mono":641466153887741,"valid":true},{"point":[153.3911,-28.08055],"sequence":1438,"sender":751408,"mono":641466666703741,"valid":true},{"point":[153.39111,-28.08054],"sequence":1439,"sender":751908,"mono":641467171356279,"valid":true},{"point":[153.39112,-28.08054],"sequence":1440,"sender":752408,"mono":641468088891278,"valid":true},{"point":[153.39112,-28.08053],"sequence":1441,"sender":753137,"mono":641468398641932,"valid":true},{"point":[153.39113,-28.08052],"sequence":1442,"sender":753637,"mono":641468913086547,"valid":true},{"point":[153.39113,-28.08052],"sequence":1443,"sender":754137,"mono":641469365563546,"valid":true},{"point":[153.39114,-28.08051],"sequence":1444,"sender":754637,"mono":641469936378392,"valid":true},{"point":[153.39114,-28.08051],"sequence":1445,"sender":755137,"mono":641470450957853,"valid":true},{"point":[153.39115,-28.0805],"sequence":1446,"sender":755637,"mono":641470858167853,"valid":true},{"point":[153.39115,-28.0805],"sequence":1447,"sender":756137,"mono":641471371193007,"valid":true},{"point":[153.39115,-28.08049],"sequence":1448,"sender":756637,"mono":641471883792160,"valid":true},{"point":[153.39116,-28.08049],"sequence":1449,"sender":757137,"mono":641472395166006,"valid":true},{"point":[153.39116,-28.08048],"sequence":1450,"sender":757637,"mono":641473316706198,"valid":true},{"point":[153.39118,-28.08047],"sequence":1451,"sender":758366,"mono":641473622943390,"valid":true},{"point":[153.39118,-28.08046],"sequence":1452,"sender":758866,"mono":641474134885889,"valid":true},{"point":[153.39119,-28.08046],"sequence":1453,"sender":759366,"mono":641474747226581,"valid":true},{"point":[153.39119,-28.08045],"sequence":1454,"sender":759866,"mono":641475157127850,"valid":true},{"point":[153.3912,-28.08044],"sequence":1455,"sender":760366,"mono":641475673186465,"valid":true},{"point":[153.39121,-28.08044],"sequence":1456,"sender":760866,"mono":641476176560772,"valid":true},{"point":[153.39121,-28.08043],"sequence":1457,"sender":761366,"mono":641476588694964,"valid":true},{"point":[153.39122,-28.08043],"sequence":1458,"sender":761866,"mono":641477099166502,"valid":true},{"point":[153.39123,-28.08043],"sequence":1459,"sender":762366,"mono":641477718030233,"valid":true},{"point":[153.39123,-28.08042],"sequence":1460,"sender":762866,"mono":641478534860309,"valid":true},{"point":[153.39124,-28.08042],"sequence":1461,"sender":763594,"mono":641478843431117,"valid":true},{"point":[153.39125,-28.08041],"sequence":1462,"sender":764094,"mono":641479353343347,"valid":true},{"point":[153.39126,-28.08041],"sequence":1463,"sender":764594,"mono":641479868808885,"valid":true},{"point":[153.39126,-28.0804],"sequence":1464,"sender":765094,"mono":641480383851885,"valid":true},{"point":[153.39127,-28.0804],"sequence":1465,"sender":765594,"mono":641480888479500,"valid":true},{"point":[153.39128,-28.08039],"sequence":1466,"sender":766094,"mono":641481402276769,"valid":true},{"point":[153.39128,-28.08039],"sequence":1467,"sender":766594,"mono":641481812060807,"valid":true},{"point":[153.39129,-28.08038],"sequence":1468,"sender":767094,"mono":641482320555268,"valid":true},{"point":[153.3913,-28.08038],"sequence":1469,"sender":767594,"mono":641482832581037,"valid":true},{"point":[153.3913,-28.08037],"sequence":1470,"sender":768094,"mono":641483860209959,"valid":true},{"point":[153.39132,-28.08036],"sequence":1471,"sender":768823,"mono":641484023313882,"valid":true},{"point":[153.39133,-28.08036],"sequence":1472,"sender":769323,"mono":641484522175728,"valid":true},{"point":[153.39133,-28.08035],"sequence":1473,"sender":769823,"mono":641485192793381,"valid":true},{"point":[153.39134,-28.08035],"sequence":1474,"sender":770323,"mono":641485599992612,"valid":true},{"point":[153.39134,-28.08034],"sequence":1475,"sender":770823,"mono":641486114769996,"valid":true},{"point":[153.39135,-28.08034],"sequence":1476,"sender":771323,"mono":641486727817380,"valid":true},{"point":[153.39136,-28.08034],"sequence":1477,"sender":771823,"mono":641487136964957,"valid":true},{"point":[153.39136,-28.08033],"sequence":1478,"sender":772323,"mono":641487551499649,"valid":true},{"point":[153.39137,-28.08033],"sequence":1479,"sender":772823,"mono":641488061981187,"valid":true},{"point":[153.39138,-28.08033],"sequence":1480,"sender":773323,"mono":641488981882956,"valid":true},{"point":[153.39139,-28.08032],"sequence":1481,"sender":774051,"mono":641489290880571,"valid":true},{"point":[153.3914,-28.08032],"sequence":1482,"sender":774551,"mono":641489801408916,"valid":true},{"point":[153.3914,-28.08032],"sequence":1483,"sender":775051,"mono":641490256529839,"valid":true},{"point":[153.39141,-28.08031],"sequence":1484,"sender":775551,"mono":641490821043454,"valid":true},{"point":[153.39142,-28.08031],"sequence":1485,"sender":776051,"mono":641491336164415,"valid":true},{"point":[153.39143,-28.08031],"sequence":1486,"sender":776551,"mono":641491848800646,"valid":true},{"point":[153.39144,-28.0803],"sequence":1487,"sender":777051,"mono":641492369613261,"valid":true},{"point":[153.39145,-28.0803],"sequence":1488,"sender":777551,"mono":641492769730991,"valid":true},{"point":[153.39146,-28.08029],"sequence":1489,"sender":778051,"mono":641493282815760,"valid":true},{"point":[153.39147,-28.08029],"sequence":1490,"sender":778551,"mono":641494205426298,"valid":true},{"point":[153.39148,-28.08029],"sequence":1491,"sender":779279,"mono":641494506807067,"valid":true},{"point":[153.39149,-28.08028],"sequence":1492,"sender":779779,"mono":641495132945220,"valid":true},{"point":[153.3915,-28.08028],"sequence":1493,"sender":780279,"mono":641495535581220,"valid":true},{"point":[153.39151,-28.08028],"sequence":1494,"sender":780779,"mono":641496149667873,"valid":true},{"point":[153.39152,-28.08028],"sequence":1495,"sender":781279,"mono":641496558565335,"valid":true},{"point":[153.39152,-28.08028],"sequence":1496,"sender":781779,"mono":641497071907604,"valid":true},{"point":[153.39152,-28.08027],"sequence":1497,"sender":782279,"mono":641497583743872,"valid":true},{"point":[153.39153,-28.08027],"sequence":1498,"sender":782779,"mono":641498095158795,"valid":true},{"point":[153.39154,-28.08027],"sequence":1499,"sender":783279,"mono":641498503094141,"valid":true},{"point":[153.39155,-28.08027],"sequence":1500,"sender":783779,"mono":641499429171448,"valid":true},{"point":[153.39156,-28.08027],"sequence":1501,"sender":784507,"mono":641499731694563,"valid":true},{"point":[153.39157,-28.08027],"sequence":1502,"sender":785007,"mono":641500240837717,"valid":true},{"point":[153.39158,-28.08027],"sequence":1503,"sender":785507,"mono":641500759904370,"valid":true},{"point":[153.39158,-28.08027],"sequence":1504,"sender":786007,"mono":641501271732178,"valid":true},{"point":[153.39159,-28.08027],"sequence":1505,"sender":786507,"mono":641501782178716,"valid":true},{"point":[153.3916,-28.08027],"sequence":1506,"sender":787007,"mono":641502290063484,"valid":true},{"point":[153.39161,-28.08027],"sequence":1507,"sender":787507,"mono":641502803899369,"valid":true},{"point":[153.39161,-28.08027],"sequence":1508,"sender":788007,"mono":641503417012945,"valid":true},{"point":[153.39162,-28.08027],"sequence":1509,"sender":788507,"mono":641503724104483,"valid":true},{"point":[153.39162,-28.08027],"sequence":1510,"sender":789007,"mono":641504650543675,"valid":true},{"point":[153.39162,-28.08027],"sequence":1511,"sender":789735,"mono":641504958573983,"valid":true},{"point":[153.39162,-28.08027],"sequence":1512,"sender":790236,"mono":641505476170444,"valid":true},{"point":[153.39162,-28.08027],"sequence":1513,"sender":790736,"mono":641505980750943,"valid":true},{"point":[153.39162,-28.08027],"sequence":1514,"sender":791236,"mono":641506490678712,"valid":true},{"point":[153.39162,-28.08027],"sequence":1515,"sender":791736,"mono":641507001721712,"valid":true},{"point":[153.39162,-28.08027],"sequence":1516,"sender":792236,"mono":641507514676019,"valid":true},{"point":[153.39162,-28.08027],"sequence":1517,"sender":792736,"mono":641508026954711,"valid":true},{"point":[153.39162,-28.08027],"sequence":1518,"sender":793236,"mono":641508643848249,"valid":true},{"point":[153.39162,-28.08027],"sequence":1519,"sender":793736,"mono":641509047804787,"valid":true},{"point":[153.39162,-28.08027],"sequence":1520,"sender":794236,"mono":641510074850748,"valid":true},{"point":[153.39162,-28.08027],"sequence":1521,"sender":794964,"mono":641510167438825,"valid":true},{"point":[153.39162,-28.08027],"sequence":1522,"sender":795464,"mono":641510687335671,"valid":true},{"point":[153.39162,-28.08027],"sequence":1523,"sender":795964,"mono":641511163092901,"valid":true},{"point":[153.39162,-28.08027],"sequence":1524,"sender":796464,"mono":641511718051632,"valid":true},{"point":[153.39162,-28.08027],"sequence":1525,"sender":796964,"mono":641512230034862,"valid":true},{"point":[153.39162,-28.08027],"sequence":1526,"sender":797464,"mono":641512735963400,"valid":true},{"point":[153.39162,-28.08027],"sequence":1527,"sender":797964,"mono":641513249391823,"valid":true},{"point":[153.39162,-28.08027],"sequence":1528,"sender":798464,"mono":641513760037130,"valid":true},{"point":[153.39162,-28.08027],"sequence":1529,"sender":798964,"mono":641514270991245,"valid":true},{"point":[153.39162,-28.08027],"sequence":1530,"sender":799464,"mono":641515089472014,"valid":true},{"point":[153.39162,-28.08027],"sequence":1531,"sender":800193,"mono":641515500383283,"valid":true},{"point":[153.39162,-28.08027],"sequence":1532,"sender":800693,"mono":641515907650590,"valid":true},{"point":[153.39162,-28.08027],"sequence":1533,"sender":801193,"mono":641516422815244,"valid":true},{"point":[153.39162,-28.08027],"sequence":1534,"sender":801693,"mono":641516941519436,"valid":true},{"point":[153.39162,-28.08027],"sequence":1535,"sender":802193,"mono":641517449820743,"valid":true},{"point":[153.39162,-28.08027],"sequence":1536,"sender":802693,"mono":641517957788550,"valid":true},{"point":[153.39162,-28.08027],"sequence":1537,"sender":803193,"mono":641518471855319,"valid":true},{"point":[153.39162,-28.08027],"sequence":1538,"sender":803693,"mono":641518982488780,"valid":true},{"point":[153.39162,-28.08027],"sequence":1539,"sender":804193,"mono":641519502077895,"valid":true},{"point":[153.39162,-28.08027],"sequence":1541,"sender":805549,"mono":641520829185279,"valid":true},{"point":[153.39162,-28.08027],"sequence":1542,"sender":806049,"mono":641521342667048,"valid":true},{"point":[153.39162,-28.08027],"sequence":1543,"sender":806549,"mono":641521848474086,"valid":true},{"point":[153.39162,-28.08027],"sequence":1544,"sender":807049,"mono":641522365252624,"valid":true},{"point":[153.39162,-28.08027],"sequence":1545,"sender":807549,"mono":641522774775047,"valid":true},{"point":[153.39162,-28.08027],"sequence":1546,"sender":808049,"mono":641523287076239,"valid":true},{"point":[153.39162,-28.08027],"sequence":1547,"sender":808549,"mono":641523798241315,"valid":true},{"point":[153.39161,-28.08027],"sequence":1548,"sender":809049,"mono":641524310181238,"valid":true},{"point":[153.39161,-28.08027],"sequence":1549,"sender":809549,"mono":641524821801930,"valid":true},{"point":[153.39161,-28.08027],"sequence":1550,"sender":810049,"mono":641525743975314,"valid":true},{"point":[153.39161,-28.08027],"sequence":1551,"sender":810778,"mono":641526049524698,"valid":true},{"point":[153.39161,-28.08027],"sequence":1552,"sender":811278,"mono":641526566673929,"valid":true},{"point":[153.39161,-28.08027],"sequence":1553,"sender":811778,"mono":641527074936313,"valid":true},{"point":[153.39161,-28.08027],"sequence":1554,"sender":812278,"mono":641527587636120,"valid":true},{"point":[153.39161,-28.08027],"sequence":1555,"sender":812778,"mono":641527999618235,"valid":true},{"point":[153.39161,-28.08027],"sequence":1556,"sender":813278,"mono":641528611508581,"valid":true},{"point":[153.39161,-28.08027],"sequence":1557,"sender":813778,"mono":641529020954388,"valid":true},{"point":[153.39161,-28.08027],"sequence":1558,"sender":814278,"mono":641529528549042,"valid":true},{"point":[153.39161,-28.08027],"sequence":1559,"sender":814778,"mono":641530044621272,"valid":true},{"point":[153.39161,-28.08027],"sequence":1560,"sender":815278,"mono":641531069183695,"valid":true},{"point":[153.39161,-28.08027],"sequence":1561,"sender":816007,"mono":641531206602233,"valid":true},{"point":[153.39161,-28.08027],"sequence":1562,"sender":816507,"mono":641531786982463,"valid":true},{"point":[153.39161,-28.08027],"sequence":1563,"sender":817007,"mono":641532297581886,"valid":true},{"point":[153.39161,-28.08027],"sequence":1564,"sender":817507,"mono":641532810069001,"valid":true},{"point":[153.39162,-28.08027],"sequence":1565,"sender":818007,"mono":641533425264616,"valid":true},{"point":[153.39162,-28.08027],"sequence":1566,"sender":818507,"mono":641533735334731,"valid":true},{"point":[153.39162,-28.08027],"sequence":1567,"sender":819007,"mono":641534245022808,"valid":true},{"point":[153.39162,-28.08027],"sequence":1568,"sender":819507,"mono":641534756913307,"valid":true},{"point":[153.39163,-28.08027],"sequence":1569,"sender":820007,"mono":641535274713115,"valid":true},{"point":[153.39164,-28.08027],"sequence":1570,"sender":820507,"mono":641536191118845,"valid":true},{"point":[153.39164,-28.08027],"sequence":1571,"sender":821236,"mono":641536495381383,"valid":true},{"point":[153.39165,-28.08027],"sequence":1572,"sender":821736,"mono":641537111008806,"valid":true},{"point":[153.39166,-28.08027],"sequence":1573,"sender":822236,"mono":641537518987805,"valid":true},{"point":[153.39166,-28.08027],"sequence":1574,"sender":822736,"mono":641538031737805,"valid":true},{"point":[153.39167,-28.08026],"sequence":1575,"sender":823236,"mono":641538546817343,"valid":true},{"point":[153.39167,-28.08026],"sequence":1576,"sender":823736,"mono":641538953248151,"valid":true},{"point":[153.39168,-28.08026],"sequence":1577,"sender":824236,"mono":641539464179035,"valid":true},{"point":[153.39169,-28.08026],"sequence":1578,"sender":824736,"mono":641539977904188,"valid":true},{"point":[153.3917,-28.08027],"sequence":1579,"sender":825236,"mono":641540490286342,"valid":true},{"point":[153.39171,-28.08027],"sequence":1580,"sender":825736,"mono":641541412145572,"valid":true},{"point":[153.39172,-28.08027],"sequence":1581,"sender":826465,"mono":641541716661918,"valid":true},{"point":[153.39172,-28.08027],"sequence":1582,"sender":826965,"mono":641542235376533,"valid":true},{"point":[153.39172,-28.08027],"sequence":1583,"sender":827465,"mono":641542667402456,"valid":true},{"point":[153.39172,-28.08027],"sequence":1584,"sender":827965,"mono":641543356961724,"valid":true},{"point":[153.39172,-28.08027],"sequence":1585,"sender":828465,"mono":641543766207416,"valid":true},{"point":[153.39172,-28.08027],"sequence":1586,"sender":828965,"mono":641544278615378,"valid":true},{"point":[153.39172,-28.08027],"sequence":1587,"sender":829465,"mono":641544689130377,"valid":true},{"point":[153.39172,-28.08027],"sequence":1588,"sender":829965,"mono":641545198826185,"valid":true},{"point":[153.39172,-28.08027],"sequence":1589,"sender":830465,"mono":641545712490223,"valid":true},{"point":[153.39172,-28.08027],"sequence":1590,"sender":830965,"mono":641546633800799,"valid":true},{"point":[153.39172,-28.08026],"sequence":1591,"sender":831694,"mono":641546939752260,"valid":true},{"point":[153.39172,-28.08026],"sequence":1592,"sender":832194,"mono":641547450905029,"valid":true},{"point":[153.39172,-28.08026],"sequence":1593,"sender":832694,"mono":641547966301913,"valid":true},{"point":[153.39172,-28.08026],"sequence":1594,"sender":833194,"mono":641548477880990,"valid":true},{"point":[153.39172,-28.08026],"sequence":1595,"sender":833694,"mono":641548989282374,"valid":true},{"point":[153.39172,-28.08026],"sequence":1596,"sender":834194,"mono":641549501955258,"valid":true},{"point":[153.39172,-28.08026],"sequence":1597,"sender":834694,"mono":641550012153489,"valid":true},{"point":[153.39172,-28.08026],"sequence":1598,"sender":835194,"mono":641550423499527,"valid":true},{"point":[153.39172,-28.08026],"sequence":1599,"sender":835694,"mono":641550937146719,"valid":true},{"point":[153.39172,-28.08026],"sequence":1600,"sender":836194,"mono":641551958513064,"valid":true},{"point":[153.39172,-28.08026],"sequence":1601,"sender":836923,"mono":641552122712218,"valid":true},{"point":[153.39172,-28.08026],"sequence":1602,"sender":837423,"mono":641552684892833,"valid":true},{"point":[153.39172,-28.08026],"sequence":1603,"sender":837923,"mono":641553124105333,"valid":true},{"point":[153.39172,-28.08026],"sequence":1604,"sender":838423,"mono":641553704559486,"valid":true},{"point":[153.39172,-28.08026],"sequence":1605,"sender":838923,"mono":641554215190332,"valid":true},{"point":[153.39172,-28.08026],"sequence":1606,"sender":839423,"mono":641554724861332,"valid":true},{"point":[153.39172,-28.08026],"sequence":1607,"sender":839923,"mono":641555236850447,"valid":true},{"point":[153.39172,-28.08026],"sequence":1608,"sender":840423,"mono":641555645234985,"valid":true},{"point":[153.39172,-28.08026],"sequence":1609,"sender":840923,"mono":641556164690831,"valid":true},{"point":[153.39172,-28.08026],"sequence":1610,"sender":841423,"mono":641557079965599,"valid":true},{"point":[153.39172,-28.08026],"sequence":1611,"sender":842152,"mono":641557381907291,"valid":true},{"point":[153.39172,-28.08026],"sequence":1612,"sender":842652,"mono":641557900467522,"valid":true},{"point":[153.39172,-28.08026],"sequence":1613,"sender":843152,"mono":641558411442444,"valid":true},{"point":[153.39172,-28.08026],"sequence":1614,"sender":843652,"mono":641558921269790,"valid":true},{"point":[153.39172,-28.08026],"sequence":1615,"sender":844152,"mono":641559543807905,"valid":true},{"point":[153.39172,-28.08026],"sequence":1616,"sender":844652,"mono":641559943778289,"valid":true},{"point":[153.39172,-28.08026],"sequence":1617,"sender":845152,"mono":641560558657558,"valid":true},{"point":[153.39172,-28.08026],"sequence":1618,"sender":845652,"mono":641560969332366,"valid":true},{"point":[153.39172,-28.08026],"sequence":1619,"sender":846152,"mono":641561378806058,"valid":true},{"point":[153.39172,-28.08026],"sequence":1620,"sender":846652,"mono":641562303276826,"valid":true},{"point":[153.39172,-28.08026],"sequence":1621,"sender":847381,"mono":641562609563172,"valid":true},{"point":[153.39172,-28.08026],"sequence":1622,"sender":847881,"mono":641563120220710,"valid":true},{"point":[153.39172,-28.08026],"sequence":1623,"sender":848381,"mono":641563633465325,"valid":true},{"point":[153.39172,-28.08026],"sequence":1624,"sender":848881,"mono":641564143984325,"valid":true},{"point":[153.39172,-28.08026],"sequence":1625,"sender":849381,"mono":641564657925594,"valid":true},{"point":[153.39172,-28.08026],"sequence":1626,"sender":849881,"mono":641565271558363,"valid":true},{"point":[153.39172,-28.08026],"sequence":1627,"sender":850381,"mono":641565678629055,"valid":true},{"point":[153.39172,-28.08026],"sequence":1628,"sender":850881,"mono":641566194171285,"valid":true},{"point":[153.39172,-28.08026],"sequence":1629,"sender":851381,"mono":641566608545131,"valid":true},{"point":[153.39172,-28.08026],"sequence":1630,"sender":851881,"mono":641567527604899,"valid":true},{"point":[153.39172,-28.08026],"sequence":1631,"sender":852609,"mono":641567827906668,"valid":true},{"point":[153.39172,-28.08026],"sequence":1632,"sender":853109,"mono":641568343259668,"valid":true},{"point":[153.39172,-28.08026],"sequence":1633,"sender":853609,"mono":641568856348245,"valid":true},{"point":[153.39172,-28.08026],"sequence":1634,"sender":854109,"mono":641569375117206,"valid":true},{"point":[153.39172,-28.08026],"sequence":1635,"sender":854609,"mono":641569893917013,"valid":true},{"point":[153.39172,-28.08026],"sequence":1636,"sender":855109,"mono":641570392806282,"valid":true},{"point":[153.39172,-28.08026],"sequence":1637,"sender":855609,"mono":641570905067166,"valid":true},{"point":[153.39172,-28.08026],"sequence":1638,"sender":856109,"mono":641571417203858,"valid":true},{"point":[153.39172,-28.08026],"sequence":1639,"sender":856609,"mono":641571926691512,"valid":true},{"point":[153.39172,-28.08026],"sequence":1640,"sender":857109,"mono":641572746328088,"valid":true},{"point":[153.39172,-28.08026],"sequence":1641,"sender":857838,"mono":641573154925665,"valid":true},{"point":[153.39172,-28.08026],"sequence":1642,"sender":858338,"mono":641573564078549,"valid":true},{"point":[153.39172,-28.08026],"sequence":1643,"sender":858838,"mono":641574069104049,"valid":true},{"point":[153.39172,-28.08026],"sequence":1644,"sender":859338,"mono":641574584247971,"valid":true},{"point":[153.39172,-28.08026],"sequence":1645,"sender":859838,"mono":641575098022548,"valid":true},{"point":[153.39172,-28.08026],"sequence":1646,"sender":860338,"mono":641575608690201,"valid":true},{"point":[153.39172,-28.08026],"sequence":1647,"sender":860838,"mono":641576125343047,"valid":true},{"point":[153.39172,-28.08026],"sequence":1648,"sender":861338,"mono":641576636582393,"valid":true},{"point":[153.39172,-28.08026],"sequence":1649,"sender":861838,"mono":641577256635585,"valid":true},{"point":[153.39172,-28.08026],"sequence":1650,"sender":862338,"mono":641577972958661,"valid":true},{"point":[153.39172,-28.08026],"sequence":1651,"sender":863066,"mono":641578376772661,"valid":true},{"point":[153.39172,-28.08026],"sequence":1652,"sender":863566,"mono":641578781380084,"valid":true},{"point":[153.39172,-28.08026],"sequence":1653,"sender":864066,"mono":641579299534622,"valid":true},{"point":[153.39172,-28.08027],"sequence":1654,"sender":864566,"mono":641579816018506,"valid":true},{"point":[153.39173,-28.08027],"sequence":1655,"sender":865066,"mono":641580320708083,"valid":true},{"point":[153.39173,-28.08027],"sequence":1656,"sender":865566,"mono":641580831394890,"valid":true},{"point":[153.39174,-28.08027],"sequence":1657,"sender":866066,"mono":641581343613620,"valid":true},{"point":[153.39174,-28.08028],"sequence":1658,"sender":866566,"mono":641581860051620,"valid":true},{"point":[153.39174,-28.08028],"sequence":1659,"sender":867066,"mono":641582379606196,"valid":true},{"point":[153.39175,-28.08028],"sequence":1660,"sender":867566,"mono":641583191899273,"valid":true},{"point":[153.39176,-28.08029],"sequence":1661,"sender":868294,"mono":641583599591196,"valid":true},{"point":[153.39176,-28.08029],"sequence":1662,"sender":868794,"mono":641584107631657,"valid":true},{"point":[153.39177,-28.08029],"sequence":1663,"sender":869294,"mono":641584522316926,"valid":true},{"point":[153.39177,-28.0803],"sequence":1664,"sender":869794,"mono":641585037890771,"valid":true},{"point":[153.39178,-28.0803],"sequence":1665,"sender":870294,"mono":641585543752348,"valid":true},{"point":[153.39178,-28.0803],"sequence":1666,"sender":870794,"mono":641586163815848,"valid":true},{"point":[153.39179,-28.0803],"sequence":1667,"sender":871294,"mono":641586570914886,"valid":true},{"point":[153.3918,-28.08031],"sequence":1668,"sender":871794,"mono":641587083009155,"valid":true},{"point":[153.3918,-28.08031],"sequence":1669,"sender":872294,"mono":641587595284039,"valid":true},{"point":[153.39181,-28.08031],"sequence":1670,"sender":872794,"mono":641588412273500,"valid":true},{"point":[153.39182,-28.08031],"sequence":1671,"sender":873522,"mono":641588821862384,"valid":true},{"point":[153.39182,-28.08031],"sequence":1672,"sender":874022,"mono":641589334624115,"valid":true},{"point":[153.39183,-28.08031],"sequence":1673,"sender":874522,"mono":641589743124807,"valid":true},{"point":[153.39184,-28.08031],"sequence":1674,"sender":875022,"mono":641590264148345,"valid":true},{"point":[153.39184,-28.08031],"sequence":1675,"sender":875522,"mono":641590768498113,"valid":true},{"point":[153.39185,-28.08032],"sequence":1676,"sender":876022,"mono":641591278811652,"valid":true},{"point":[153.39185,-28.08032],"sequence":1677,"sender":876522,"mono":641591786874728,"valid":true},{"point":[153.39186,-28.08032],"sequence":1678,"sender":877022,"mono":641592303855305,"valid":true},{"point":[153.39186,-28.08033],"sequence":1679,"sender":877522,"mono":641592816461535,"valid":true},{"point":[153.39187,-28.08033],"sequence":1680,"sender":878022,"mono":641593629914842,"valid":true},{"point":[153.39187,-28.08034],"sequence":1681,"sender":878750,"mono":641594040870380,"valid":true},{"point":[153.39188,-28.08034],"sequence":1682,"sender":879250,"mono":641594552781534,"valid":true},{"point":[153.39188,-28.08034],"sequence":1683,"sender":879750,"mono":641594950294918,"valid":true},{"point":[153.39189,-28.08035],"sequence":1684,"sender":880250,"mono":641595576543995,"valid":true},{"point":[153.39189,-28.08035],"sequence":1685,"sender":880750,"mono":641595984771725,"valid":true},{"point":[153.39189,-28.08036],"sequence":1686,"sender":881250,"mono":641596497415417,"valid":true},{"point":[153.3919,-28.08036],"sequence":1687,"sender":881750,"mono":641597015314032,"valid":true},{"point":[153.3919,-28.08037],"sequence":1688,"sender":882250,"mono":641597526818339,"valid":true},{"point":[153.3919,-28.08037],"sequence":1689,"sender":882750,"mono":641598036641185,"valid":true},{"point":[153.39191,-28.08038],"sequence":1690,"sender":883250,"mono":641598858058877,"valid":true},{"point":[153.39192,-28.08039],"sequence":1691,"sender":883978,"mono":641599268898415,"valid":true},{"point":[153.39192,-28.08039],"sequence":1692,"sender":884478,"mono":641599780683915,"valid":true},{"point":[153.39193,-28.0804],"sequence":1693,"sender":884978,"mono":641600293240414,"valid":true},{"point":[153.39193,-28.0804],"sequence":1694,"sender":885478,"mono":641600899298683,"valid":true},{"point":[153.39194,-28.08041],"sequence":1695,"sender":885978,"mono":641601201373491,"valid":true},{"point":[153.39195,-28.08041],"sequence":1696,"sender":886478,"mono":641601728660375,"valid":true},{"point":[153.39195,-28.08042],"sequence":1697,"sender":886978,"mono":641602239310721,"valid":true},{"point":[153.39196,-28.08042],"sequence":1698,"sender":887478,"mono":641602753342836,"valid":true},{"point":[153.39197,-28.08043],"sequence":1699,"sender":887978,"mono":641603263220643,"valid":true},{"point":[153.39197,-28.08043],"sequence":1700,"sender":888478,"mono":641604081188142,"valid":true},{"point":[153.39198,-28.08044],"sequence":1701,"sender":889207,"mono":641604489664219,"valid":true},{"point":[153.39199,-28.08044],"sequence":1702,"sender":889707,"mono":641605105484911,"valid":true},{"point":[153.392,-28.08045],"sequence":1703,"sender":890207,"mono":641605519618795,"valid":true},{"point":[153.392,-28.08045],"sequence":1704,"sender":890707,"mono":641606028357295,"valid":true},{"point":[153.39201,-28.08046],"sequence":1705,"sender":891207,"mono":641606436737679,"valid":true},{"point":[153.39202,-28.08046],"sequence":1706,"sender":891707,"mono":641606949200487,"valid":true},{"point":[153.39202,-28.08047],"sequence":1707,"sender":892207,"mono":641607459264063,"valid":true},{"point":[153.39203,-28.08047],"sequence":1708,"sender":892707,"mono":641607973826024,"valid":true},{"point":[153.39203,-28.08048],"sequence":1709,"sender":893207,"mono":641608488956370,"valid":true},{"point":[153.39204,-28.08048],"sequence":1710,"sender":893707,"mono":641609304129946,"valid":true},{"point":[153.39204,-28.08049],"sequence":1711,"sender":894436,"mono":641609717050446,"valid":true},{"point":[153.39205,-28.0805],"sequence":1712,"sender":894936,"mono":641610226237869,"valid":true},{"point":[153.39205,-28.0805],"sequence":1713,"sender":895436,"mono":641610844777561,"valid":true},{"point":[153.39206,-28.08051],"sequence":1714,"sender":895936,"mono":641611249807176,"valid":true},{"point":[153.39206,-28.08051],"sequence":1715,"sender":896436,"mono":641611657601060,"valid":true},{"point":[153.39207,-28.08052],"sequence":1716,"sender":896936,"mono":641612171242714,"valid":true},{"point":[153.39207,-28.08052],"sequence":1717,"sender":897436,"mono":641612784424252,"valid":true},{"point":[153.39208,-28.08053],"sequence":1718,"sender":897936,"mono":641613194641828,"valid":true},{"point":[153.39208,-28.08053],"sequence":1719,"sender":898436,"mono":641613701788174,"valid":true},{"point":[153.39209,-28.08054],"sequence":1720,"sender":898936,"mono":641614630598404,"valid":true},{"point":[153.39209,-28.08054],"sequence":1721,"sender":899665,"mono":641614934521058,"valid":true},{"point":[153.3921,-28.08055],"sequence":1722,"sender":900165,"mono":641615447208096,"valid":true},{"point":[153.39211,-28.08055],"sequence":1723,"sender":900665,"mono":641615960612172,"valid":true},{"point":[153.39211,-28.08055],"sequence":1724,"sender":901165,"mono":641616471989518,"valid":true},{"point":[153.39212,-28.08056],"sequence":1725,"sender":901665,"mono":641617092966864,"valid":true},{"point":[153.39212,-28.08056],"sequence":1726,"sender":902165,"mono":641617392051133,"valid":true},{"point":[153.39213,-28.08057],"sequence":1727,"sender":902665,"mono":641617904208248,"valid":true},{"point":[153.39213,-28.08057],"sequence":1728,"sender":903165,"mono":641618368314478,"valid":true},{"point":[153.39214,-28.08057],"sequence":1729,"sender":903665,"mono":641618927310286,"valid":true},{"point":[153.39214,-28.08058],"sequence":1730,"sender":904165,"mono":641619848664362,"valid":true},{"point":[153.39215,-28.08059],"sequence":1731,"sender":904894,"mono":641620156236785,"valid":true},{"point":[153.39215,-28.08059],"sequence":1732,"sender":905394,"mono":641620669442477,"valid":true},{"point":[153.39215,-28.08059],"sequence":1733,"sender":905894,"mono":641621183794938,"valid":true},{"point":[153.39216,-28.0806],"sequence":1734,"sender":906394,"mono":641621690166399,"valid":true},{"point":[153.39216,-28.0806],"sequence":1735,"sender":906894,"mono":641622205107591,"valid":true},{"point":[153.39216,-28.08061],"sequence":1736,"sender":907394,"mono":641622718815898,"valid":true},{"point":[153.39216,-28.08062],"sequence":1737,"sender":907894,"mono":641623128060090,"valid":true},{"point":[153.39216,-28.08062],"sequence":1738,"sender":908394,"mono":641623646590859,"valid":true},{"point":[153.39217,-28.08063],"sequence":1739,"sender":908894,"mono":641624151870397,"valid":true},{"point":[153.39217,-28.08063],"sequence":1740,"sender":909394,"mono":641625074205281,"valid":true},{"point":[153.39217,-28.08064],"sequence":1741,"sender":910123,"mono":641625375550820,"valid":true},{"point":[153.39217,-28.08064],"sequence":1742,"sender":910623,"mono":641625884388742,"valid":true},{"point":[153.39217,-28.08065],"sequence":1743,"sender":911123,"mono":641626403788011,"valid":true},{"point":[153.39218,-28.08066],"sequence":1744,"sender":911623,"mono":641626915550434,"valid":true},{"point":[153.39218,-28.08066],"sequence":1745,"sender":912123,"mono":641627428075318,"valid":true},{"point":[153.39218,-28.08067],"sequence":1746,"sender":912623,"mono":641627940641241,"valid":true},{"point":[153.39218,-28.08067],"sequence":1747,"sender":913123,"mono":641628352179279,"valid":true},{"point":[153.39218,-28.08068],"sequence":1748,"sender":913623,"mono":641628861202779,"valid":true},{"point":[153.39219,-28.08068],"sequence":1749,"sender":914123,"mono":641629372197932,"valid":true},{"point":[153.39219,-28.08069],"sequence":1750,"sender":914623,"mono":641630302001124,"valid":true},{"point":[153.39219,-28.0807],"sequence":1751,"sender":915352,"mono":641630601455200,"valid":true},{"point":[153.3922,-28.08071],"sequence":1752,"sender":915852,"mono":641631122097815,"valid":true},{"point":[153.3922,-28.08071],"sequence":1753,"sender":916352,"mono":641631829112430,"valid":true},{"point":[153.3922,-28.08072],"sequence":1754,"sender":916852,"mono":641632053359815,"valid":true},{"point":[153.39221,-28.08072],"sequence":1755,"sender":917352,"mono":641632650102968,"valid":true},{"point":[153.39221,-28.08073],"sequence":1756,"sender":917852,"mono":641633162223852,"valid":true},{"point":[153.39222,-28.08073],"sequence":1757,"sender":918352,"mono":641633573110775,"valid":true},{"point":[153.39222,-28.08074],"sequence":1758,"sender":918852,"mono":641634083696121,"valid":true},{"point":[153.39222,-28.08074],"sequence":1759,"sender":919352,"mono":641634595178313,"valid":true},{"point":[153.39223,-28.08075],"sequence":1760,"sender":919852,"mono":641635519009966,"valid":true},{"point":[153.39223,-28.08075],"sequence":1761,"sender":920581,"mono":641635820185966,"valid":true},{"point":[153.39224,-28.08076],"sequence":1762,"sender":921081,"mono":641636437142696,"valid":true},{"point":[153.39224,-28.08077],"sequence":1763,"sender":921581,"mono":641636849611657,"valid":true},{"point":[153.39225,-28.08077],"sequence":1764,"sender":922081,"mono":641637361246119,"valid":true},{"point":[153.39225,-28.08078],"sequence":1765,"sender":922581,"mono":641637873953426,"valid":true},{"point":[153.39225,-28.08079],"sequence":1766,"sender":923081,"mono":641638384624272,"valid":true},{"point":[153.39226,-28.0808],"sequence":1767,"sender":923581,"mono":641638896958233,"valid":true},{"point":[153.39226,-28.0808],"sequence":1768,"sender":924081,"mono":641639302835963,"valid":true},{"point":[153.39226,-28.08081],"sequence":1769,"sender":924581,"mono":641639817934809,"valid":true},{"point":[153.39227,-28.08082],"sequence":1770,"sender":925081,"mono":641640741283232,"valid":true},{"point":[153.39227,-28.08083],"sequence":1771,"sender":925810,"mono":641641046588347,"valid":true},{"point":[153.39227,-28.08083],"sequence":1772,"sender":926310,"mono":641641663261154,"valid":true},{"point":[153.39227,-28.08084],"sequence":1773,"sender":926810,"mono":641642073641961,"valid":true},{"point":[153.39228,-28.08085],"sequence":1774,"sender":927310,"mono":641642583035846,"valid":true},{"point":[153.39228,-28.08086],"sequence":1775,"sender":927810,"mono":641643094613307,"valid":true},{"point":[153.39228,-28.08087],"sequence":1776,"sender":928310,"mono":641643709316729,"valid":true},{"point":[153.39228,-28.08087],"sequence":1777,"sender":928810,"mono":641644119507075,"valid":true},{"point":[153.39228,-28.08088],"sequence":1778,"sender":929310,"mono":641644636443613,"valid":true},{"point":[153.39228,-28.08089],"sequence":1779,"sender":929810,"mono":641645040007344,"valid":true},{"point":[153.39228,-28.0809],"sequence":1780,"sender":930310,"mono":641646061534305,"valid":true},{"point":[153.39228,-28.0809],"sequence":1781,"sender":931039,"mono":641646240240958,"valid":true},{"point":[153.39228,-28.08091],"sequence":1782,"sender":931539,"mono":641646881970343,"valid":true},{"point":[153.39228,-28.08092],"sequence":1783,"sender":932039,"mono":641647294785381,"valid":true},{"point":[153.39228,-28.08092],"sequence":1784,"sender":932539,"mono":641647807101034,"valid":true},{"point":[153.39229,-28.08093],"sequence":1785,"sender":933039,"mono":641648315900418,"valid":true},{"point":[153.39229,-28.08094],"sequence":1786,"sender":933539,"mono":641648931415841,"valid":true},{"point":[153.39229,-28.08094],"sequence":1787,"sender":934039,"mono":641649342731764,"valid":true},{"point":[153.39229,-28.08095],"sequence":1788,"sender":934539,"mono":641649848569764,"valid":true},{"point":[153.39229,-28.08096],"sequence":1789,"sender":935039,"mono":641650263199456,"valid":true},{"point":[153.3923,-28.08096],"sequence":1790,"sender":935539,"mono":641651187892686,"valid":true},{"point":[153.3923,-28.08097],"sequence":1791,"sender":936267,"mono":641651488319955,"valid":true},{"point":[153.3923,-28.08098],"sequence":1792,"sender":936767,"mono":641652005147531,"valid":true},{"point":[153.39231,-28.08098],"sequence":1793,"sender":937267,"mono":641652513709031,"valid":true},{"point":[153.39231,-28.08099],"sequence":1794,"sender":937767,"mono":641653027100915,"valid":true},{"point":[153.39232,-28.081],"sequence":1795,"sender":938267,"mono":641653543290569,"valid":true},{"point":[153.39233,-28.08101],"sequence":1797,"sender":939267,"mono":641654572106183,"valid":true},{"point":[153.39233,-28.08103],"sequence":1798,"sender":939767,"mono":641655179070298,"valid":true},{"point":[153.39233,-28.08103],"sequence":1799,"sender":940267,"mono":641655588279452,"valid":true},{"point":[153.39233,-28.08104],"sequence":1800,"sender":940767,"mono":641656408925759,"valid":true},{"point":[153.39233,-28.08105],"sequence":1801,"sender":941495,"mono":641656714704412,"valid":true},{"point":[153.39233,-28.08106],"sequence":1802,"sender":941995,"mono":641657224490528,"valid":true},{"point":[153.39233,-28.08106],"sequence":1803,"sender":942495,"mono":641657739417566,"valid":true},{"point":[153.39233,-28.08107],"sequence":1804,"sender":942995,"mono":641658244712527,"valid":true},{"point":[153.39233,-28.08108],"sequence":1805,"sender":943495,"mono":641658761701257,"valid":true},{"point":[153.39233,-28.08108],"sequence":1806,"sender":943995,"mono":641659275208103,"valid":true},{"point":[153.39233,-28.08109],"sequence":1807,"sender":944495,"mono":641659786655872,"valid":true},{"point":[153.39233,-28.0811],"sequence":1808,"sender":944995,"mono":641660306494025,"valid":true},{"point":[153.39233,-28.0811],"sequence":1809,"sender":945495,"mono":641660810887910,"valid":true},{"point":[153.39233,-28.08111],"sequence":1810,"sender":945995,"mono":641661730111870,"valid":true},{"point":[153.39232,-28.08112],"sequence":1811,"sender":946723,"mono":641661923593563,"valid":true},{"point":[153.39232,-28.08112],"sequence":1812,"sender":947223,"mono":641662450533831,"valid":true},{"point":[153.39232,-28.08113],"sequence":1813,"sender":947723,"mono":641662958593946,"valid":true},{"point":[153.39232,-28.08114],"sequence":1814,"sender":948223,"mono":641663480616523,"valid":true},{"point":[153.39232,-28.08115],"sequence":1815,"sender":948723,"mono":641663982979177,"valid":true},{"point":[153.39231,-28.08115],"sequence":1816,"sender":949223,"mono":641664495854061,"valid":true},{"point":[153.39231,-28.08116],"sequence":1817,"sender":949723,"mono":641665112151099,"valid":true},{"point":[153.39231,-28.08117],"sequence":1818,"sender":950223,"mono":641665521538483,"valid":true},{"point":[153.39231,-28.08118],"sequence":1819,"sender":950723,"mono":641666026512098,"valid":true},{"point":[153.3923,-28.08119],"sequence":1820,"sender":951223,"mono":641666953683021,"valid":true},{"point":[153.3923,-28.0812],"sequence":1821,"sender":951951,"mono":641667243400559,"valid":true},{"point":[153.3923,-28.08121],"sequence":1822,"sender":952451,"mono":641667768146635,"valid":true},{"point":[153.39229,-28.08122],"sequence":1823,"sender":952951,"mono":641668180832750,"valid":true},{"point":[153.39229,-28.08123],"sequence":1824,"sender":953451,"mono":641668695638212,"valid":true},{"point":[153.39228,-28.08124],"sequence":1825,"sender":953951,"mono":641669213866788,"valid":true},{"point":[153.39227,-28.08125],"sequence":1826,"sender":954451,"mono":641669712639557,"valid":true},{"point":[153.39227,-28.08125],"sequence":1827,"sender":954951,"mono":641670231357903,"valid":true},{"point":[153.39226,-28.08126],"sequence":1828,"sender":955451,"mono":641670742670095,"valid":true},{"point":[153.39226,-28.08127],"sequence":1829,"sender":955951,"mono":641671256620671,"valid":true},{"point":[153.39226,-28.08128],"sequence":1830,"sender":956451,"mono":641672075915632,"valid":true},{"point":[153.39225,-28.08129],"sequence":1831,"sender":957179,"mono":641672481535709,"valid":true},{"point":[153.39225,-28.0813],"sequence":1832,"sender":957679,"mono":641672993986016,"valid":true},{"point":[153.39224,-28.08131],"sequence":1833,"sender":958179,"mono":641673404256785,"valid":true},{"point":[153.39223,-28.08132],"sequence":1834,"sender":958679,"mono":641673918121862,"valid":true},{"point":[153.39223,-28.08132],"sequence":1835,"sender":959179,"mono":641674431887169,"valid":true},{"point":[153.39222,-28.08133],"sequence":1836,"sender":959679,"mono":641674941746553,"valid":true},{"point":[153.39222,-28.08133],"sequence":1837,"sender":960179,"mono":641675449984861,"valid":true},{"point":[153.39221,-28.08134],"sequence":1838,"sender":960679,"mono":641675967576553,"valid":true},{"point":[153.3922,-28.08135],"sequence":1839,"sender":961179,"mono":641676476825321,"valid":true},{"point":[153.39219,-28.08136],"sequence":1840,"sender":961679,"mono":641677300654859,"valid":true},{"point":[153.39218,-28.08137],"sequence":1841,"sender":962407,"mono":641677704899974,"valid":true},{"point":[153.39217,-28.08137],"sequence":1842,"sender":962907,"mono":641678217904128,"valid":true},{"point":[153.39216,-28.08138],"sequence":1843,"sender":963407,"mono":641678614615935,"valid":true},{"point":[153.39216,-28.08139],"sequence":1844,"sender":963907,"mono":641679142101358,"valid":true},{"point":[153.39215,-28.08139],"sequence":1845,"sender":964407,"mono":641679653760088,"valid":true},{"point":[153.39214,-28.0814],"sequence":1846,"sender":964907,"mono":641680262220242,"valid":true},{"point":[153.39213,-28.08141],"sequence":1847,"sender":965407,"mono":641680673566511,"valid":true},{"point":[153.39213,-28.08141],"sequence":1848,"sender":965907,"mono":641681186154972,"valid":true},{"point":[153.39212,-28.08142],"sequence":1849,"sender":966407,"mono":641681700986510,"valid":true},{"point":[153.39211,-28.08143],"sequence":1850,"sender":966907,"mono":641682519459009,"valid":true},{"point":[153.3921,-28.08143],"sequence":1851,"sender":967636,"mono":641682927126625,"valid":true},{"point":[153.3921,-28.08144],"sequence":1852,"sender":968136,"mono":641683438142778,"valid":true},{"point":[153.39209,-28.08144],"sequence":1853,"sender":968636,"mono":641683951255931,"valid":true},{"point":[153.39208,-28.08145],"sequence":1854,"sender":969136,"mono":641684361696085,"valid":true},{"point":[153.39208,-28.08145],"sequence":1855,"sender":969636,"mono":641684974004854,"valid":true},{"point":[153.39207,-28.08146],"sequence":1856,"sender":970136,"mono":641685384127546,"valid":true},{"point":[153.39206,-28.08147],"sequence":1857,"sender":970636,"mono":641685900156007,"valid":true},{"point":[153.39205,-28.08147],"sequence":1858,"sender":971136,"mono":641686412541199,"valid":true},{"point":[153.39205,-28.08148],"sequence":1859,"sender":971636,"mono":641686921480775,"valid":true},{"point":[153.39204,-28.08148],"sequence":1860,"sender":972136,"mono":641687739816852,"valid":true},{"point":[153.39203,-28.0815],"sequence":1861,"sender":972865,"mono":641688151495852,"valid":true},{"point":[153.39202,-28.0815],"sequence":1862,"sender":973365,"mono":641688663364390,"valid":true},{"point":[153.39202,-28.08151],"sequence":1863,"sender":973865,"mono":641689177229851,"valid":true},{"point":[153.39201,-28.08151],"sequence":1864,"sender":974365,"mono":641689687737774,"valid":true},{"point":[153.39201,-28.08152],"sequence":1865,"sender":974865,"mono":641690098218735,"valid":true},{"point":[153.392,-28.08153],"sequence":1866,"sender":975365,"mono":641690607285350,"valid":true},{"point":[153.39199,-28.08153],"sequence":1867,"sender":975865,"mono":641691120248926,"valid":true},{"point":[153.39199,-28.08154],"sequence":1868,"sender":976365,"mono":641691633877118,"valid":true},{"point":[153.39198,-28.08155],"sequence":1869,"sender":976865,"mono":641692146053810,"valid":true},{"point":[153.39198,-28.08156],"sequence":1870,"sender":977365,"mono":641693166892271,"valid":true},{"point":[153.39197,-28.08157],"sequence":1871,"sender":978094,"mono":641693297458886,"valid":true},{"point":[153.39196,-28.08158],"sequence":1872,"sender":978594,"mono":641693995080232,"valid":true},{"point":[153.39195,-28.08159],"sequence":1873,"sender":979094,"mono":641694399235616,"valid":true},{"point":[153.39194,-28.08159],"sequence":1874,"sender":979594,"mono":641694907528116,"valid":true},{"point":[153.39193,-28.08159],"sequence":1875,"sender":980094,"mono":641695319707500,"valid":true},{"point":[153.39192,-28.08159],"sequence":1876,"sender":980594,"mono":641695832467231,"valid":true},{"point":[153.39191,-28.08158],"sequence":1877,"sender":981094,"mono":641696347635538,"valid":true},{"point":[153.3919,-28.08158],"sequence":1878,"sender":981594,"mono":641696858507691,"valid":true},{"point":[153.3919,-28.08157],"sequence":1879,"sender":982094,"mono":641697365218076,"valid":true},{"point":[153.39189,-28.08157],"sequence":1880,"sender":982594,"mono":641698185142191,"valid":true},{"point":[153.39189,-28.08156],"sequence":1881,"sender":983323,"mono":641698593999690,"valid":true},{"point":[153.39189,-28.08156],"sequence":1882,"sender":983823,"mono":641699111471459,"valid":true},{"point":[153.39189,-28.08156],"sequence":1883,"sender":984323,"mono":641699524837497,"valid":true},{"point":[153.39189,-28.08156],"sequence":1884,"sender":984823,"mono":641700232374728,"valid":true},{"point":[153.39189,-28.08156],"sequence":1885,"sender":985323,"mono":641700641697458,"valid":true},{"point":[153.39189,-28.08156],"sequence":1886,"sender":985823,"mono":641701063493188,"valid":true},{"point":[153.39189,-28.08156],"sequence":1887,"sender":986323,"mono":641701563914803,"valid":true},{"point":[153.39189,-28.08156],"sequence":1888,"sender":986823,"mono":641702076612418,"valid":true},{"point":[153.39189,-28.08156],"sequence":1889,"sender":987323,"mono":641702692928918,"valid":true},{"point":[153.39189,-28.08156],"sequence":1890,"sender":987823,"mono":641703513915341,"valid":true},{"point":[153.39189,-28.08156],"sequence":1891,"sender":988552,"mono":641703817667263,"valid":true},{"point":[153.39189,-28.08156],"sequence":1892,"sender":989052,"mono":641704328776686,"valid":true},{"point":[153.39188,-28.08156],"sequence":1893,"sender":989552,"mono":641704842510532,"valid":true},{"point":[153.39188,-28.08156],"sequence":1894,"sender":990052,"mono":641705354986878,"valid":true},{"point":[153.39189,-28.08156],"sequence":1895,"sender":990552,"mono":641705864397070,"valid":true},{"point":[153.39189,-28.08157],"sequence":1896,"sender":991052,"mono":641706275184492,"valid":true},{"point":[153.39189,-28.08157],"sequence":1897,"sender":991552,"mono":641706787312607,"valid":true},{"point":[153.39189,-28.08158],"sequence":1898,"sender":992052,"mono":641707300540415,"valid":true},{"point":[153.39188,-28.08158],"sequence":1899,"sender":992552,"mono":641707810190261,"valid":true},{"point":[153.39188,-28.08158],"sequence":1900,"sender":993052,"mono":641708730729952,"valid":true},{"point":[153.39188,-28.08158],"sequence":1901,"sender":993781,"mono":641709038982837,"valid":true},{"point":[153.39188,-28.08158],"sequence":1902,"sender":994281,"mono":641709556774221,"valid":true},{"point":[153.39188,-28.08158],"sequence":1903,"sender":994781,"mono":641710063161567,"valid":true},{"point":[153.39188,-28.08158],"sequence":1904,"sender":995281,"mono":641710580594643,"valid":true},{"point":[153.39188,-28.08158],"sequence":1905,"sender":995781,"mono":641711189823412,"valid":true},{"point":[153.39188,-28.08158],"sequence":1906,"sender":996281,"mono":641711601150489,"valid":true},{"point":[153.39188,-28.08157],"sequence":1907,"sender":996781,"mono":641712011192719,"valid":true},{"point":[153.39187,-28.08157],"sequence":1908,"sender":997281,"mono":641712628770411,"valid":true},{"point":[153.39187,-28.08157],"sequence":1909,"sender":997781,"mono":641713037792603,"valid":true},{"point":[153.39187,-28.08157],"sequence":1910,"sender":998281,"mono":641713954738564,"valid":true},{"point":[153.39186,-28.08156],"sequence":1911,"sender":999010,"mono":641714264578256,"valid":true},{"point":[153.39186,-28.08156],"sequence":1912,"sender":999510,"mono":641714776704486,"valid":true},{"point":[153.39187,-28.08156],"sequence":1913,"sender":1000010,"mono":641715293288178,"valid":true},{"point":[153.39187,-28.08155],"sequence":1914,"sender":1000510,"mono":641715797731216,"valid":true},{"point":[153.39188,-28.08155],"sequence":1915,"sender":1001010,"mono":641716311657024,"valid":true},{"point":[153.39188,-28.08155],"sequence":1916,"sender":1001510,"mono":641716925096216,"valid":true},{"point":[153.39188,-28.08155],"sequence":1917,"sender":1002010,"mono":641717229531677,"valid":true},{"point":[153.39188,-28.08155],"sequence":1918,"sender":1002510,"mono":641717840526061,"valid":true},{"point":[153.39188,-28.08155],"sequence":1919,"sender":1003010,"mono":641718356865830,"valid":true},{"point":[153.39188,-28.08155],"sequence":1920,"sender":1003510,"mono":641719179277983,"valid":true},{"point":[153.39188,-28.08155],"sequence":1921,"sender":1004241,"mono":641719483600483,"valid":true},{"point":[153.39188,-28.08155],"sequence":1922,"sender":1004741,"mono":641719999744560,"valid":true},{"point":[153.39188,-28.08155],"sequence":1923,"sender":1005241,"mono":641720496909790,"valid":true},{"point":[153.39188,-28.08155],"sequence":1924,"sender":1005741,"mono":641721016924328,"valid":true},{"point":[153.39188,-28.08155],"sequence":1925,"sender":1006241,"mono":641721529102212,"valid":true},{"point":[153.39188,-28.08155],"sequence":1926,"sender":1006741,"mono":641722042575020,"valid":true},{"point":[153.39188,-28.08155],"sequence":1927,"sender":1007241,"mono":641722552360750,"valid":true},{"point":[153.39188,-28.08155],"sequence":1928,"sender":1007741,"mono":641722959537980,"valid":true},{"point":[153.39188,-28.08155],"sequence":1929,"sender":1008241,"mono":641723483239557,"valid":true},{"point":[153.39188,-28.08155],"sequence":1930,"sender":1008741,"mono":641724400226441,"valid":true},{"point":[153.39188,-28.08155],"sequence":1931,"sender":1009472,"mono":641724707456979,"valid":true},{"point":[153.39188,-28.08155],"sequence":1932,"sender":1009972,"mono":641725215130363,"valid":true},{"point":[153.39188,-28.08155],"sequence":1933,"sender":1010472,"mono":641725731212248,"valid":true},{"point":[153.39188,-28.08155],"sequence":1934,"sender":1010972,"mono":641726245396094,"valid":true},{"point":[153.39188,-28.08155],"sequence":1935,"sender":1011472,"mono":641726759120209,"valid":true},{"point":[153.39188,-28.08155],"sequence":1936,"sender":1011972,"mono":641727267201708,"valid":true},{"point":[153.39188,-28.08155],"sequence":1937,"sender":1012472,"mono":641727778766515,"valid":true},{"point":[153.39188,-28.08154],"sequence":1938,"sender":1012972,"mono":641728294650438,"valid":true},{"point":[153.39188,-28.08154],"sequence":1939,"sender":1013472,"mono":641728700980823,"valid":true},{"point":[153.39188,-28.08154],"sequence":1940,"sender":1013972,"mono":641729569550707,"valid":true},{"point":[153.39188,-28.08154],"sequence":1941,"sender":1014702,"mono":641729908508437,"valid":true},{"point":[153.39188,-28.08154],"sequence":1942,"sender":1015202,"mono":641730436898475,"valid":true},{"point":[153.39188,-28.08154],"sequence":1943,"sender":1015702,"mono":641730905847513,"valid":true},{"point":[153.39188,-28.08154],"sequence":1944,"sender":1016202,"mono":641731408689244,"valid":true},{"point":[153.39188,-28.08154],"sequence":1945,"sender":1016702,"mono":641731903228013,"valid":true}]}],"refs":{"mount":[153.39162,-28.08163],"landmark":[153.39169,-28.08026],"mountField":"#1306","landmarkField":"#1578"},"example":true,"geo":{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3907693,-28.0814385],[153.3906133,-28.0812146],[153.3903667,-28.0808777]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.388865,-28.0791197],[153.3888977,-28.0791676],[153.3889265,-28.0792005],[153.3889993,-28.0792496],[153.389087,-28.0792938],[153.3890954,-28.079298],[153.3891518,-28.0793277],[153.3891758,-28.0793404],[153.3893326,-28.0794378],[153.3895146,-28.0795681],[153.3896458,-28.0796791],[153.389735,-28.0797698],[153.3898035,-28.0798493],[153.3898727,-28.079937]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3906325,-28.0786314],[153.3903877,-28.0783506],[153.3902496,-28.0778501],[153.3902201,-28.0777516],[153.3901598,-28.0775519],[153.3901527,-28.0775099],[153.3901477,-28.0774673],[153.390146,-28.0774229],[153.3901507,-28.0773759],[153.3901598,-28.0773315],[153.3901718,-28.0772933],[153.3901936,-28.0772463],[153.3902214,-28.0772037],[153.3902539,-28.0771663],[153.3902925,-28.0771295],[153.390325,-28.0770996],[153.3903639,-28.0770753],[153.3904112,-28.0770531],[153.3904525,-28.0770377],[153.3905695,-28.0770011],[153.3906204,-28.076981],[153.390662,-28.0769605],[153.3906979,-28.0769354],[153.3907291,-28.0769094],[153.3907616,-28.0768688],[153.3908518,-28.076726],[153.3909135,-28.076623]]},"properties":{"kind":"street","name":"Wayville Place"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3914737,-28.0783559],[153.3913406,-28.0779926],[153.3913081,-28.0779255],[153.3912692,-28.0778758],[153.3912179,-28.0778243],[153.3911679,-28.0777865],[153.3911072,-28.0777527],[153.3910509,-28.0777353],[153.3909785,-28.0777223],[153.3909021,-28.0777214],[153.3908088,-28.0777311],[153.3902496,-28.0778501]]},"properties":{"kind":"street","name":"Aspendale Place"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3934528,-28.0817438],[153.3937121,-28.0820153],[153.3939797,-28.0822776],[153.3941617,-28.0824822],[153.394215,-28.0825538],[153.3943733,-28.0827881],[153.3944227,-28.0828675]]},"properties":{"kind":"street","name":"Corina Close"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3938597,-28.0799894],[153.3937716,-28.079977],[153.3937388,-28.0799474],[153.3937385,-28.0799281],[153.3937423,-28.0799058],[153.3937536,-28.0798904],[153.3937911,-28.0798796],[153.3938239,-28.0798884],[153.3938513,-28.0799198],[153.3938597,-28.0799894],[153.3938954,-28.0800016],[153.3940758,-28.0800293],[153.394275,-28.0800555],[153.3946607,-28.0801039],[153.3947228,-28.0801135],[153.3947712,-28.080128],[153.3948215,-28.0801592],[153.3948439,-28.080183],[153.3948578,-28.0802029],[153.3948754,-28.0802345],[153.3948812,-28.080295],[153.394874,-28.0803594],[153.3947973,-28.0807956],[153.3947694,-28.0809718],[153.394741,-28.08115],[153.3946852,-28.0814624],[153.3946572,-28.0816494],[153.3946264,-28.0817336],[153.3945972,-28.0817891],[153.3945562,-28.081841],[153.3944798,-28.0819032],[153.3943898,-28.0819564],[153.3942256,-28.0820668],[153.3940728,-28.0822005],[153.3939797,-28.0822776]]},"properties":{"kind":"street","name":"Mikado Way"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3941321,-28.0814037],[153.3940965,-28.0813885],[153.3940417,-28.0813753],[153.3939985,-28.081393],[153.3939889,-28.0814133],[153.3939974,-28.0814421],[153.3940123,-28.0814669],[153.3940528,-28.081477],[153.3940877,-28.0814699],[153.3941093,-28.0814523],[153.3941321,-28.0814037],[153.3942014,-28.0813969],[153.3945924,-28.0814499],[153.3946852,-28.0814624]]},"properties":{"kind":"street","name":"Bella Donna Place"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3936886,-28.08071],[153.3938173,-28.0806732],[153.3946935,-28.0807827],[153.3947973,-28.0807956]]},"properties":{"kind":"street","name":"Wild Fire Court"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3893135,-28.0831432],[153.3894116,-28.0831869],[153.3896453,-28.0832618],[153.3899831,-28.0833497],[153.3902594,-28.0834108],[153.3904486,-28.0834499],[153.3905202,-28.0834639],[153.3906033,-28.0834725],[153.3906967,-28.0834639],[153.3907872,-28.0834184],[153.3908313,-28.0833962],[153.390896,-28.0833222],[153.3909406,-28.0832133],[153.390939,-28.0831393],[153.3909246,-28.0830665],[153.3908525,-28.0829367],[153.3906289,-28.0825346],[153.3905442,-28.0823809],[153.3903932,-28.0821067],[153.3903329,-28.0820092],[153.390292,-28.0819729],[153.3902317,-28.0819378],[153.3896483,-28.0817566],[153.389574,-28.0817391],[153.3894605,-28.0817263],[153.3893652,-28.0817364],[153.3891881,-28.081787],[153.389101,-28.0818191],[153.3884423,-28.082071],[153.3883325,-28.0821482],[153.3882564,-28.0822209],[153.388217,-28.0822718],[153.3881918,-28.0823262],[153.3881809,-28.0823627],[153.3881829,-28.0824105],[153.38819,-28.0824487],[153.3882126,-28.0824937],[153.3883281,-28.0826124],[153.3884333,-28.0827049],[153.388529,-28.0827699],[153.3886338,-28.082828],[153.3893135,-28.0831432]]},"properties":{"kind":"arterial","name":"Brabham Circuit"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3880662,-28.0813549],[153.3882397,-28.0812897],[153.388387,-28.0812262],[153.3885501,-28.081144],[153.388901,-28.0809525],[153.389858,-28.0804289]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3899232,-28.0805137],[153.3892887,-28.0808581],[153.3887704,-28.0811403],[153.3885996,-28.0812333],[153.3884545,-28.0813053],[153.3883082,-28.0813709],[153.3881683,-28.0814272],[153.3880145,-28.0814767],[153.3878637,-28.0815177],[153.3877067,-28.0815493],[153.3875263,-28.0815768],[153.3874114,-28.08159],[153.387205,-28.0816075]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3914559,-28.0822129],[153.3913454,-28.0822717]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3914559,-28.0822129],[153.3915363,-28.0821721],[153.3915829,-28.0821519],[153.3916295,-28.0821317],[153.3917444,-28.0820888],[153.3918395,-28.0820614],[153.3919596,-28.0820387],[153.3920738,-28.0820338],[153.3921663,-28.0820305],[153.3922282,-28.0820207],[153.3922867,-28.0820107],[153.392367,-28.0819803],[153.3924369,-28.081939],[153.3925111,-28.0818775],[153.3925677,-28.0818159],[153.3926078,-28.0817343],[153.3926216,-28.0816881],[153.3926323,-28.0816428],[153.3926531,-28.0814946],[153.3926733,-28.0814494],[153.3927008,-28.0814096],[153.3929052,-28.0811413],[153.3929384,-28.0810867],[153.3929694,-28.0810276],[153.3930036,-28.0809271],[153.3930337,-28.0808147],[153.3930847,-28.0805899],[153.3931182,-28.0804124],[153.3931276,-28.0803296],[153.3931236,-28.0802598],[153.3931142,-28.0801923],[153.3930984,-28.0801189],[153.3930643,-28.0800426],[153.3930136,-28.0799571],[153.3928744,-28.0797923],[153.3927362,-28.0796411]]},"properties":{"kind":"street","name":"Prospect Court"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.389858,-28.0804289],[153.3902597,-28.0802063]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903667,-28.0808777],[153.3902912,-28.0808641],[153.3902453,-28.080841],[153.3902076,-28.0808301],[153.3901516,-28.0808237],[153.3900999,-28.0808219],[153.3900135,-28.0808067]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3880662,-28.0813549],[153.3881507,-28.0812554],[153.3883083,-28.0811822],[153.388449,-28.0811049],[153.3885685,-28.0810295],[153.3887421,-28.0809062],[153.3889688,-28.08072],[153.389061,-28.0806546]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3928303,-28.0788881],[153.3927791,-28.0790061],[153.3921866,-28.0794464],[153.3918548,-28.079689],[153.3915735,-28.0799056],[153.3913808,-28.0800406]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3905656,-28.0805044],[153.3905315,-28.0805984],[153.3905188,-28.0806371],[153.3905107,-28.0806706],[153.3905097,-28.0807137],[153.3905,-28.0808348]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3895551,-28.0803594],[153.3896061,-28.0802696],[153.3896763,-28.0802184],[153.3897053,-28.0801846],[153.3897164,-28.0801485],[153.3897254,-28.0801094],[153.389728,-28.0800739],[153.3897266,-28.0799527]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3898727,-28.079937],[153.3899738,-28.0799546],[153.3899931,-28.0799612],[153.3900084,-28.0799664],[153.3900457,-28.079977],[153.3900777,-28.0799792],[153.3901269,-28.0799789],[153.390231,-28.0799922]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3886481,-28.0789541],[153.3886955,-28.0789474],[153.3887429,-28.078927],[153.3888172,-28.0788821],[153.3888649,-28.0788291],[153.3888948,-28.0787884],[153.3889375,-28.07873],[153.3890589,-28.0785643],[153.389128,-28.0784512],[153.3891616,-28.0783847],[153.3891901,-28.0783156],[153.3892166,-28.078221],[153.3892338,-28.078114]]},"properties":{"kind":"arterial","name":"Robina Town Centre Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3893056,-28.0778999],[153.3893163,-28.0779356],[153.3893211,-28.0779682],[153.3893247,-28.0780468],[153.3893224,-28.0781297],[153.3893131,-28.0782008],[153.3892997,-28.0782664],[153.3892805,-28.0783279],[153.389211,-28.0784881],[153.3891482,-28.0785908],[153.3890608,-28.0787139],[153.3890171,-28.0787754],[153.388883,-28.0789642],[153.3888383,-28.0790429]]},"properties":{"kind":"arterial","name":"Robina Town Centre Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3921291,-28.0801477],[153.3922289,-28.0800058],[153.3927362,-28.0796411],[153.3933506,-28.0791835],[153.3934939,-28.0791438]]},"properties":{"kind":"street","name":"Prospect Court"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3933371,-28.0818026],[153.3934528,-28.0817438],[153.3935527,-28.0816456]]},"properties":{"kind":"street","name":"Corina Close"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903286,-28.0802899],[153.3899232,-28.0805137]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3905621,-28.0815493],[153.3909804,-28.0821674],[153.3906058,-28.0823508],[153.3905442,-28.0823809]]},"properties":{"kind":"street","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3890589,-28.0785643],[153.3889884,-28.0784928],[153.3889633,-28.0784276],[153.3889523,-28.0783555],[153.3889523,-28.078282],[153.3890151,-28.0780186],[153.3890544,-28.0779714],[153.3891032,-28.0779284],[153.3891613,-28.0778868],[153.3892164,-28.0778584]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3891901,-28.0783156],[153.3892805,-28.0783279],[153.3893304,-28.0783329],[153.3893662,-28.0783363],[153.3894136,-28.0783474],[153.3894576,-28.0783762],[153.3894717,-28.0784196],[153.3894018,-28.078533],[153.3891282,-28.0789372],[153.3891185,-28.0789576],[153.3891226,-28.0789815],[153.3891466,-28.0790575],[153.389159,-28.0790783],[153.3891786,-28.0790946],[153.389662,-28.0793458],[153.3895933,-28.0794499],[153.389553,-28.0795103],[153.3895146,-28.0795681]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3927164,-28.0828532],[153.3926435,-28.0827103],[153.3923521,-28.0821388],[153.3922867,-28.0820107]]},"properties":{"kind":"street","name":"Dexter Close"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903877,-28.0783506],[153.3902725,-28.0784166]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3905553,-28.0806765],[153.3905805,-28.0806884],[153.3905796,-28.0807234],[153.3905916,-28.0807673],[153.3907161,-28.0810301],[153.3907622,-28.0811058],[153.3910896,-28.0815768],[153.3911255,-28.0816224],[153.3912482,-28.0817558],[153.3913062,-28.0818233],[153.391463,-28.0820511],[153.3914857,-28.0820775],[153.3915515,-28.0820926],[153.3916004,-28.0820812],[153.3916751,-28.0820536],[153.3919484,-28.0819774],[153.391984,-28.0819665],[153.3920458,-28.0819592],[153.3922007,-28.0819649],[153.3923058,-28.0819437],[153.3923731,-28.0819112],[153.39247,-28.0818477],[153.3925111,-28.0818775],[153.3925751,-28.0819341],[153.3928487,-28.0821376],[153.3929426,-28.0822488],[153.393015,-28.082405],[153.3931786,-28.0825541],[153.3933315,-28.0826487],[153.3936614,-28.0827907],[153.3938991,-28.0828363],[153.3939994,-28.0828948],[153.3940851,-28.0829944],[153.3941147,-28.0830288],[153.3941657,-28.0830889],[153.3942193,-28.0831126],[153.3943025,-28.0831339],[153.3943883,-28.0831717],[153.3944285,-28.0832522]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3908128,-28.0804857],[153.3906503,-28.0806132],[153.3906197,-28.0806939],[153.3906553,-28.0808344],[153.3908984,-28.0812437],[153.3910487,-28.0814543],[153.3912044,-28.0816523],[153.3913688,-28.0818419],[153.3915182,-28.0820189],[153.3915853,-28.0820357],[153.3920638,-28.081921],[153.3922611,-28.0819195],[153.3923277,-28.081905],[153.3924041,-28.081865],[153.3924811,-28.08179],[153.3925186,-28.0817368],[153.3925652,-28.0816042],[153.392619,-28.0813492],[153.3923266,-28.0812238],[153.392561,-28.0808036],[153.392404,-28.0806396],[153.3920949,-28.0803031],[153.3920457,-28.0802628],[153.3919767,-28.0802364],[153.3918144,-28.0801981],[153.3916184,-28.0799626],[153.3912334,-28.0802453],[153.3908128,-28.0804857]]},"properties":{"kind":"park","name":"Scottsdale Parklands"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3894717,-28.0784196],[153.389535,-28.0784518],[153.3895514,-28.0784663],[153.3895611,-28.078484],[153.3897495,-28.0791184],[153.3897544,-28.0791549],[153.3897507,-28.079201],[153.3897398,-28.0792353],[153.389662,-28.0793458]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3907089,-28.0768449],[153.3905456,-28.0768044],[153.3901062,-28.0765519],[153.3898677,-28.0763104],[153.3900451,-28.0769216],[153.3891688,-28.0771245],[153.3892069,-28.0772552],[153.3892479,-28.0772957],[153.3892785,-28.0773904],[153.3892632,-28.077458],[153.3893654,-28.077787],[153.3894011,-28.0780125],[153.389396,-28.0781432],[153.3893732,-28.0782423],[153.3895443,-28.0783325],[153.3898152,-28.0792746],[153.3896594,-28.0795135],[153.3898967,-28.0797434],[153.3900091,-28.0798605],[153.3902594,-28.0796892],[153.3916286,-28.0789769],[153.3923899,-28.078896],[153.3920425,-28.0784993],[153.3918843,-28.0787201],[153.3916337,-28.0787111],[153.3915214,-28.0784182],[153.3914653,-28.0784316],[153.3915726,-28.0786976],[153.39145,-28.0789139],[153.3911024,-28.0790041],[153.391123,-28.0789636],[153.3906732,-28.0786931],[153.390571,-28.0787156],[153.3905252,-28.078576],[153.3904026,-28.0784586],[153.3903463,-28.0784451],[153.3902749,-28.0784858],[153.3902084,-28.0783957],[153.3902953,-28.078346],[153.3903208,-28.0782965],[153.3900807,-28.077458],[153.3901113,-28.0772867],[153.3901625,-28.0771965],[153.3902596,-28.0770839],[153.3903873,-28.0770072],[153.3905354,-28.076953],[153.3906325,-28.0769081],[153.3907089,-28.0768449]]},"properties":{"kind":"park","name":"Kerrydale Park"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3936719,-28.07945],[153.3938489,-28.0793874],[153.3939669,-28.0793495],[153.3940917,-28.0793117],[153.394167,-28.0792754],[153.3942326,-28.0792702],[153.3943858,-28.0792911],[153.3943834,-28.0793141]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3929426,-28.0822488],[153.3930778,-28.0821988],[153.3931319,-28.0821588],[153.3931558,-28.082095],[153.3930204,-28.0818876],[153.3929291,-28.0817838],[153.3929167,-28.0817543],[153.3929319,-28.0817234],[153.3931531,-28.0815672],[153.3933447,-28.0814271],[153.3935018,-28.0812928],[153.3935299,-28.0812111],[153.393521,-28.081159],[153.3935059,-28.0811094],[153.3934657,-28.0810585],[153.393462,-28.0810301],[153.3934658,-28.0810021],[153.3935274,-28.0806803],[153.3935367,-28.0806399],[153.3936047,-28.0803429],[153.3936225,-28.0803001],[153.3936482,-28.0801329],[153.3935635,-28.0800173],[153.3935299,-28.0799652],[153.3935246,-28.079938],[153.3935393,-28.079867],[153.3935192,-28.0797735],[153.3935273,-28.079699],[153.3935606,-28.0796525],[153.3936131,-28.079615],[153.3936131,-28.07957],[153.3935928,-28.0795341],[153.3935796,-28.0794943],[153.3936064,-28.079473],[153.3936719,-28.07945],[153.3936089,-28.0793803],[153.3935192,-28.0792789],[153.3934642,-28.0792292],[153.3934939,-28.0791438]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3935299,-28.0799652],[153.3935648,-28.079958],[153.3935894,-28.0799587],[153.3936321,-28.0799863],[153.3936719,-28.0800039],[153.3937349,-28.0800169],[153.3937716,-28.079977]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900519,-28.0799226],[153.3901603,-28.0799232],[153.3903483,-28.0798484],[153.3908551,-28.0795929],[153.3917378,-28.079215],[153.3925235,-28.0788413],[153.3927053,-28.0787189],[153.3929317,-28.078545],[153.3931505,-28.0783356],[153.393323,-28.07811],[153.3934648,-28.0778762],[153.3935834,-28.0775949],[153.393665,-28.0772904],[153.3936912,-28.077009],[153.3936897,-28.07671],[153.3936435,-28.0764354],[153.3932753,-28.0745026],[153.3932383,-28.0741723],[153.3932244,-28.0738338],[153.393246,-28.0733717],[153.3932844,-28.0730786],[153.3932907,-28.0730305],[153.3933485,-28.072748],[153.3934386,-28.0724406],[153.393571,-28.0720708],[153.3937112,-28.0717229],[153.3937417,-28.0716415],[153.394765,-28.0689091],[153.3948666,-28.0685706],[153.3949205,-28.068345],[153.3949236,-28.0682865],[153.3949128,-28.0682362],[153.394876,-28.0681675]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900135,-28.0808067],[153.3898905,-28.0808721]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3908676,-28.081386],[153.3910285,-28.0816193],[153.3912131,-28.0818546],[153.391375,-28.0820936],[153.3914559,-28.0822129],[153.3915902,-28.0824919],[153.3916019,-28.0825208],[153.3916489,-28.0826364],[153.3916979,-28.0827821],[153.3917442,-28.0829934],[153.3917522,-28.083043],[153.3917617,-28.0831015],[153.3917709,-28.0831986],[153.391771,-28.083399],[153.3917657,-28.0834552],[153.391753,-28.0835895],[153.3916925,-28.0838187],[153.3916153,-28.0840381],[153.3915333,-28.0842164],[153.391486,-28.0843235],[153.3914702,-28.0843556],[153.3914383,-28.0844245]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3908279,-28.0796756],[153.3909822,-28.0796014],[153.3914881,-28.0793864],[153.3918755,-28.0792146],[153.3921613,-28.0790798],[153.3923324,-28.078994],[153.3925145,-28.0789004],[153.392692,-28.0788651]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3894657,-28.0796641],[153.3893471,-28.0795694],[153.3893071,-28.0795408],[153.3892202,-28.0794814],[153.3891941,-28.0794662],[153.3891266,-28.0794268],[153.3890317,-28.0793783],[153.3889454,-28.0793361],[153.388905,-28.0793215],[153.3888449,-28.0793044],[153.3887718,-28.0792832]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.394349,-28.0789312],[153.394387,-28.0788921],[153.394414,-28.0788574],[153.3944109,-28.0788347],[153.3944016,-28.0788262],[153.394387,-28.0788148],[153.3943715,-28.0788066],[153.3943087,-28.0787984],[153.3941433,-28.0787719],[153.3940831,-28.0787606],[153.3940499,-28.0787473],[153.3940176,-28.0787247],[153.3939982,-28.0787028],[153.3939875,-28.0786724],[153.3939902,-28.0786357],[153.3940026,-28.0786099],[153.3940008,-28.0785799],[153.3939853,-28.0785318],[153.3939778,-28.0785034],[153.3939734,-28.0784788],[153.3939637,-28.0784272],[153.3939583,-28.0783808],[153.3939614,-28.0783511],[153.3939698,-28.078323],[153.3939862,-28.078282],[153.3940097,-28.078236],[153.3940331,-28.0781919],[153.3940765,-28.0781329],[153.3941057,-28.0780986],[153.3941282,-28.078058],[153.3941561,-28.0779926],[153.3941689,-28.0779539],[153.394176,-28.0778993],[153.3941791,-28.077795],[153.3941813,-28.077738],[153.3941844,-28.0776775],[153.3941933,-28.0776307],[153.3942183,-28.0775775]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3901109,-28.0805144],[153.389943,-28.0802673],[153.3898838,-28.0801802]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3895551,-28.0803594],[153.3897816,-28.080235],[153.3898178,-28.0802156],[153.3898838,-28.0801802]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900005,-28.0801188],[153.3900737,-28.0800779],[153.390231,-28.0799922]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903488,-28.0806165],[153.3903973,-28.0806856],[153.3905,-28.0808348]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3898838,-28.0801802],[153.3898343,-28.0801105],[153.3898269,-28.0801002],[153.3897266,-28.0799527]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.39023,-28.0806804],[153.3901683,-28.0807164],[153.3900135,-28.0808067]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3913093,-28.084423],[153.3913234,-28.0843943],[153.3913593,-28.0843229],[153.3914501,-28.0841362],[153.3914899,-28.0840522],[153.3915437,-28.0839307],[153.3916163,-28.0837329],[153.3916436,-28.0835663],[153.391658,-28.0833818],[153.3916484,-28.0831467],[153.3916249,-28.0829804],[153.3915823,-28.0827903],[153.3914915,-28.0825385],[153.3914037,-28.0823648],[153.3913454,-28.0822717],[153.3911777,-28.0820279],[153.3910118,-28.0817887],[153.3907693,-28.0814385]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3895845,-28.0810153],[153.3890954,-28.0811983],[153.3888576,-28.0812858],[153.3885301,-28.0814142],[153.3883736,-28.0814732],[153.3882027,-28.0815243],[153.3880611,-28.0815623],[153.3878901,-28.0816014],[153.3877139,-28.0816294],[153.3875197,-28.0816485],[153.3873822,-28.0816566],[153.387205,-28.0816075]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903667,-28.0808777],[153.3903056,-28.0807932],[153.3902821,-28.0807568],[153.39023,-28.0806804]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3901053,-28.0802648],[153.3902825,-28.0805207],[153.3903488,-28.0806165]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3905,-28.0808348],[153.3907105,-28.0811542],[153.3908676,-28.081386]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.389061,-28.0806546],[153.3891846,-28.0805766],[153.3893209,-28.0804937],[153.3893869,-28.0804544]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.392692,-28.0788651],[153.3928497,-28.078746],[153.3930029,-28.0786124],[153.3931504,-28.0784645],[153.393276,-28.0783121],[153.3933905,-28.0781485],[153.3934925,-28.0779791],[153.3935786,-28.0778056],[153.3936399,-28.0776499],[153.3936846,-28.0775011],[153.3937204,-28.0773427],[153.3937441,-28.0772018],[153.3937584,-28.0770661],[153.3937624,-28.0768848],[153.3937539,-28.0767091],[153.3937358,-28.0765672],[153.3937087,-28.0764169],[153.3933394,-28.0744943],[153.3933006,-28.0741639],[153.3932843,-28.0737869],[153.3933034,-28.073404],[153.3933624,-28.0730002],[153.3934204,-28.0727666],[153.3934615,-28.0726013],[153.3935988,-28.0721999],[153.3937714,-28.0717329],[153.3937988,-28.0716594],[153.393872,-28.0714631],[153.3946909,-28.0692918],[153.3947898,-28.0690044]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903366,-28.0799331],[153.3905521,-28.0798141],[153.3906972,-28.0797378],[153.3908279,-28.0796756]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3884423,-28.0818699],[153.3890186,-28.0816567],[153.3890294,-28.0816826]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3890294,-28.0816826],[153.3890702,-28.0817604],[153.389101,-28.0818191]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3891881,-28.081787],[153.3891577,-28.0817276],[153.3891192,-28.0816525]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3914857,-28.0820775],[153.3915363,-28.0821721],[153.3915707,-28.0822404],[153.3915963,-28.0822879],[153.3916285,-28.0823476],[153.391695,-28.0824931],[153.3917167,-28.0825406],[153.3917798,-28.0827093],[153.3918353,-28.0829312],[153.3918484,-28.0830352],[153.3918645,-28.083163],[153.3918666,-28.083184],[153.391874,-28.0832576],[153.3918686,-28.0834327],[153.3918682,-28.0834489],[153.3918645,-28.0835972],[153.3918525,-28.0836903],[153.3918227,-28.0838207],[153.3917864,-28.0839358],[153.3917542,-28.0840152],[153.3917054,-28.0841314],[153.3916887,-28.0841792],[153.3916791,-28.0842265],[153.3916708,-28.0843243],[153.3916752,-28.0843656],[153.3916768,-28.0843868],[153.3916906,-28.0844104],[153.3917186,-28.0844471],[153.3917894,-28.0844798],[153.3919265,-28.0845301],[153.3921083,-28.0845776],[153.3923548,-28.0846279],[153.3925736,-28.0846442],[153.392757,-28.0846414],[153.3929787,-28.0846211],[153.3930665,-28.0845885],[153.393236,-28.084564],[153.393313,-28.0845667],[153.3935842,-28.0845219],[153.393712,-28.0844988],[153.393806,-28.0844512],[153.3938522,-28.0844213],[153.3938769,-28.0843846]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3924461,-28.082065],[153.392677,-28.0825155],[153.3932748,-28.083102],[153.3937019,-28.0834932],[153.3937258,-28.0833736],[153.3937643,-28.0832741],[153.3938589,-28.0831359],[153.3939859,-28.083016],[153.3940976,-28.0829488],[153.3939037,-28.0827451],[153.393579,-28.0824133],[153.3931267,-28.0819565],[153.39293,-28.0817502],[153.3928502,-28.0816684],[153.3927343,-28.0815498],[153.3927084,-28.0815568],[153.3927124,-28.0816179],[153.392705,-28.0816877],[153.3926732,-28.0817733],[153.392643,-28.081833],[153.3925408,-28.0819488],[153.3924777,-28.081995],[153.3924371,-28.0820314],[153.3924461,-28.082065]]},"properties":{"kind":"park","name":"Dexter Park"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3922568,-28.0813226],[153.3921688,-28.0814294],[153.3920579,-28.0815256],[153.3919571,-28.0815908],[153.391892,-28.0816547],[153.391891,-28.081728],[153.3919484,-28.0819774],[153.3919596,-28.0820387]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.387735,-28.0753315],[153.3877069,-28.0754274],[153.387693,-28.0754956],[153.3876903,-28.0755515],[153.3876939,-28.0756414],[153.3877128,-28.0757416],[153.3877567,-28.0758623],[153.3877988,-28.0759367],[153.387872,-28.0760407],[153.387952,-28.0761371],[153.3880501,-28.0762206],[153.3881482,-28.0762829],[153.3882412,-28.0763283],[153.3883133,-28.0763634],[153.3885069,-28.0764446],[153.3885758,-28.0764696],[153.3886936,-28.0764977],[153.3887556,-28.0765175],[153.3888081,-28.0765433],[153.3890851,-28.0767384],[153.3891892,-28.0768598],[153.3892946,-28.0770642],[153.3893819,-28.0771718],[153.3894508,-28.0772728],[153.3895368,-28.0775043],[153.3895807,-28.0776478],[153.3896013,-28.0777525],[153.3895833,-28.0778224],[153.3895497,-28.0778854],[153.389517,-28.0779271],[153.3894542,-28.0779848],[153.3894133,-28.0780194],[153.3893876,-28.0780682],[153.3893304,-28.0783329],[153.3892828,-28.0784716],[153.3892243,-28.0785862],[153.3890644,-28.0788023],[153.3890191,-28.0788635]]},"properties":{"kind":"path","name":"Robina Town Centre Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3890191,-28.0788635],[153.3889324,-28.0789912],[153.3889195,-28.0790319],[153.3889278,-28.0790742],[153.3889739,-28.0791336],[153.3890369,-28.0791892],[153.3891621,-28.0792477],[153.3891977,-28.0792686],[153.3893608,-28.0793646],[153.389553,-28.0795103],[153.3899046,-28.0798253],[153.3899924,-28.079896],[153.3900519,-28.0799226]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3889111,-28.0793912],[153.3889454,-28.0793361],[153.3889993,-28.0792496],[153.3890369,-28.0791892]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3938769,-28.0843846],[153.3939085,-28.084326],[153.393925,-28.084279],[153.3939352,-28.0842376],[153.3939352,-28.0841895],[153.3939288,-28.0841313],[153.3939161,-28.0840765],[153.3938996,-28.0840205],[153.3938616,-28.0839377],[153.3938063,-28.0838154],[153.3937969,-28.0837822],[153.3937728,-28.0837083],[153.3937576,-28.0836266],[153.3937563,-28.0835371],[153.3937715,-28.0834263],[153.3937944,-28.0833379],[153.3938362,-28.0832517],[153.3939073,-28.0831477],[153.393958,-28.0830928],[153.3940851,-28.0829944]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.39293,-28.0817502],[153.3935109,-28.0813117],[153.3935439,-28.0811994],[153.3935288,-28.081122],[153.3934764,-28.0810463],[153.3935425,-28.0806665],[153.3935741,-28.0805708],[153.3936212,-28.0803395],[153.3936344,-28.0803066],[153.3936636,-28.0801443],[153.3936893,-28.0801473],[153.3936959,-28.0801234],[153.3937224,-28.0801273],[153.3937356,-28.0801171],[153.3937456,-28.0800479],[153.3937025,-28.0799841],[153.3936567,-28.0799899],[153.3936451,-28.0799285],[153.3936876,-28.0799232],[153.3936975,-28.0799134],[153.3937042,-28.0798891],[153.3935506,-28.0798681],[153.393554,-28.0798598],[153.3935297,-28.0797833],[153.393549,-28.0796829],[153.3936534,-28.0795987],[153.3936009,-28.0795144],[153.3936517,-28.0794807],[153.3937644,-28.0794388],[153.3939742,-28.0793672],[153.3940223,-28.0793789],[153.3940383,-28.079396],[153.394051,-28.0793964],[153.3941885,-28.0792995],[153.39421,-28.0792966],[153.3942189,-28.0792488],[153.3941349,-28.0792537],[153.3940311,-28.0792771],[153.3940101,-28.0792917],[153.3939853,-28.0793009],[153.3939554,-28.0793073],[153.3939295,-28.0793078],[153.3939046,-28.0793048],[153.3938809,-28.0792936],[153.3938571,-28.079281],[153.3938262,-28.0792581],[153.393653,-28.0793668],[153.3935507,-28.0792495],[153.3935276,-28.0792466],[153.3934748,-28.0792786],[153.3935974,-28.0794038],[153.3935549,-28.0794263],[153.3934078,-28.0795282],[153.3933611,-28.0795682],[153.3933324,-28.0795911],[153.3933253,-28.0796135],[153.3933206,-28.079648],[153.3933206,-28.0797013],[153.3933394,-28.0797541],[153.3933776,-28.0799118],[153.3933847,-28.0799434],[153.3933946,-28.0799438],[153.3933956,-28.0799671],[153.3934248,-28.0799671],[153.3934281,-28.080067],[153.3934677,-28.080067],[153.3935191,-28.0801785],[153.3935238,-28.0802887],[153.3935153,-28.0802887],[153.3934427,-28.0806365],[153.3934328,-28.0806357],[153.393397,-28.0808242],[153.3933739,-28.0811037],[153.3934125,-28.0812339],[153.393173,-28.0814573],[153.3931046,-28.0814823],[153.3929584,-28.0816337],[153.3928502,-28.0816684],[153.39293,-28.0817502]]},"properties":{"kind":"park","name":"Mikado Park"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3905805,-28.0806884],[153.3906717,-28.0807411],[153.3907216,-28.0807989],[153.3907632,-28.0808906],[153.39089,-28.0810849]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.39089,-28.0810849],[153.3910365,-28.081305],[153.3911768,-28.081492],[153.3912443,-28.0815782],[153.3913087,-28.0815901],[153.3914199,-28.0816809],[153.391474,-28.0816882]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3912328,-28.0842855],[153.391279,-28.0842602],[153.3913184,-28.0842295],[153.391429,-28.0840129],[153.3914684,-28.083914],[153.391529,-28.0837309],[153.3915456,-28.0836493],[153.3915729,-28.0834943],[153.391585,-28.0833218],[153.3915835,-28.0831935],[153.3915411,-28.0829529],[153.3915002,-28.0828005],[153.3914456,-28.0826414],[153.3913987,-28.0825318],[153.3913502,-28.0824342],[153.3912866,-28.082322],[153.3912456,-28.0822605],[153.3912123,-28.0822391],[153.3911729,-28.082215],[153.3911426,-28.082191],[153.3910835,-28.0820974],[153.3906644,-28.0814945],[153.3903745,-28.0810774],[153.3903108,-28.0809785],[153.3902608,-28.0809291],[153.3902169,-28.0809037],[153.3901866,-28.0808903]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3908676,-28.081386],[153.3907693,-28.0814385],[153.3906644,-28.0814945],[153.3905621,-28.0815493]]},"properties":{"kind":"street","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3901866,-28.0808903],[153.3902076,-28.0808301],[153.3902197,-28.0807902]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3902197,-28.0807902],[153.3902821,-28.0807568],[153.3903478,-28.0807215],[153.3903973,-28.0806856],[153.3904504,-28.0806429]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900519,-28.0799226],[153.3900457,-28.079977],[153.3900411,-28.0800172]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900411,-28.0800172],[153.3900737,-28.0800779],[153.3900987,-28.0801244]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3897744,-28.0801562],[153.3897849,-28.0801366],[153.3898343,-28.0801105],[153.3898926,-28.0800721],[153.3899533,-28.0800496],[153.3900411,-28.0800172]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3897744,-28.0801562],[153.3897164,-28.0801485],[153.3896737,-28.0801431]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900987,-28.0801244],[153.3901056,-28.080162],[153.3902679,-28.080402],[153.3903694,-28.0805411]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903694,-28.0805411],[153.390407,-28.080586],[153.3904478,-28.0806347]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3904703,-28.0806652],[153.3905107,-28.0806706],[153.3905553,-28.0806765]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3904478,-28.0806347],[153.3904504,-28.0806429],[153.3904703,-28.0806652]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3897266,-28.0799527],[153.3896693,-28.0798721],[153.3895817,-28.0797716],[153.3894657,-28.0796641]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3893471,-28.0795694],[153.3893068,-28.07962],[153.3892294,-28.079717],[153.3894206,-28.0799132],[153.3894789,-28.0800069],[153.3894874,-28.0800609],[153.3894658,-28.0801231],[153.3894347,-28.080153],[153.3886212,-28.0806326],[153.3881604,-28.0809835],[153.3881059,-28.0810093],[153.3876686,-28.0811478],[153.3875681,-28.0811423]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3889111,-28.0793912],[153.3890183,-28.0794458],[153.3890859,-28.0794832],[153.3891916,-28.0795417],[153.3893068,-28.07962],[153.3893201,-28.079629],[153.3894191,-28.0797115],[153.3894982,-28.0798007],[153.3895793,-28.0799177],[153.3896481,-28.0800251],[153.3896611,-28.0800724],[153.3896591,-28.0801118],[153.3896522,-28.0801428],[153.3896737,-28.0801431]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3888937,-28.0787051],[153.388796,-28.0788195],[153.3887692,-28.0788399],[153.3887397,-28.0788602],[153.3886991,-28.0788773],[153.3885931,-28.0788993],[153.3885581,-28.078909],[153.3884824,-28.0789448],[153.3884419,-28.0789595],[153.3883856,-28.0789603],[153.3883036,-28.078944]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3889111,-28.0793912],[153.3888512,-28.0793766],[153.3887738,-28.07937],[153.388671,-28.079375],[153.3885946,-28.0793966],[153.3885277,-28.0794307],[153.3885088,-28.0794415]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3944168,-28.0827639],[153.3943967,-28.0827405],[153.3942258,-28.082474],[153.3941617,-28.0823973],[153.3941247,-28.0823573],[153.394085,-28.0823267],[153.3940714,-28.0822966],[153.3940742,-28.0822726],[153.3941037,-28.082231],[153.3940728,-28.0822005],[153.3940401,-28.0821684],[153.394018,-28.0821799],[153.3939936,-28.0821879],[153.3939709,-28.0821884],[153.3939431,-28.0821804],[153.3939255,-28.0821659],[153.3938993,-28.0821218],[153.393553,-28.0817872]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3940401,-28.0821684],[153.3943292,-28.0819356],[153.3943801,-28.0819052],[153.3944226,-28.0818781],[153.3944621,-28.0818391],[153.394532,-28.0817737],[153.3945674,-28.0817358],[153.3945834,-28.0817087],[153.3946191,-28.0815442],[153.3946141,-28.0815253],[153.3946036,-28.0815116],[153.3945829,-28.0814949],[153.3945924,-28.0814499],[153.394604,-28.0813946],[153.394633,-28.0813805],[153.3946482,-28.0813612],[153.394657,-28.0813374],[153.3946541,-28.0812973],[153.3946684,-28.0812353],[153.394678,-28.0812123],[153.3946835,-28.0811792],[153.3946881,-28.081105],[153.3946823,-28.0810883],[153.394681,-28.0810686],[153.3946865,-28.0810478],[153.3946995,-28.0810192],[153.3947088,-28.0810003],[153.3947155,-28.0809345],[153.3947248,-28.0808759],[153.3947189,-28.0808595],[153.3947071,-28.0808476],[153.3946869,-28.0808317],[153.3946935,-28.0807827],[153.3946999,-28.0807351],[153.3947315,-28.0807259],[153.3947517,-28.0807103],[153.3947643,-28.0806884],[153.3947685,-28.0806661],[153.3947761,-28.0806226],[153.394774,-28.0805989],[153.3947727,-28.0805788],[153.3947761,-28.0805588],[153.3947879,-28.0805201],[153.3948144,-28.0803998],[153.3948106,-28.0803672],[153.3948207,-28.0803051],[153.3948291,-28.0802832],[153.3948283,-28.0802595],[153.394822,-28.0802339],[153.3947967,-28.0802012],[153.3947761,-28.08018],[153.3947441,-28.0801663],[153.3947134,-28.0801577],[153.3937576,-28.0800296],[153.393745,-28.0800259],[153.3937349,-28.0800169]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3946999,-28.0807351],[153.3944117,-28.0806999],[153.3943748,-28.0806883],[153.3942508,-28.0806726],[153.394206,-28.0806749],[153.3936698,-28.0806056],[153.3936368,-28.0806085],[153.393596,-28.0806161],[153.3935663,-28.0806243],[153.3935367,-28.0806399]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3915963,-28.0822879],[153.3916366,-28.0822132],[153.3916851,-28.0821804],[153.3917647,-28.0821457],[153.3918308,-28.0821248],[153.3921233,-28.082081],[153.3921684,-28.0820824],[153.3921822,-28.0820828],[153.3922339,-28.0820983],[153.3922794,-28.082143],[153.3922928,-28.0821649],[153.392299,-28.0821749],[153.3924468,-28.0824731],[153.3925363,-28.0827619]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3922928,-28.0821649],[153.3923521,-28.0821388],[153.3924054,-28.0821156],[153.392424,-28.0820865],[153.3924468,-28.0820336],[153.3925222,-28.0819789],[153.3925751,-28.0819341]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3916019,-28.0825208],[153.391695,-28.0824931],[153.3918098,-28.0824588],[153.3917735,-28.0823653],[153.3917756,-28.0823542],[153.3917819,-28.0823198],[153.3918195,-28.0822879],[153.3920788,-28.0822165],[153.3921272,-28.0822186],[153.3921778,-28.0822362],[153.3922238,-28.0822817],[153.3923326,-28.0825412],[153.3924023,-28.0826618],[153.3924553,-28.082802],[153.3921952,-28.0828732],[153.3919882,-28.0829299],[153.3919681,-28.0829272],[153.391952,-28.082925],[153.3919297,-28.0828844],[153.3918098,-28.0824588]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3917522,-28.083043],[153.3918484,-28.0830352],[153.3919478,-28.0830271],[153.3920273,-28.0831021],[153.3922571,-28.0830403],[153.3924525,-28.0829878],[153.392467,-28.0829712],[153.3924957,-28.0829385],[153.3924553,-28.082802],[153.3925363,-28.0827619],[153.3926435,-28.0827103]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3919478,-28.0830271],[153.3919681,-28.0829272]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3921952,-28.0828732],[153.3922571,-28.0830403],[153.3922664,-28.0830758],[153.3922683,-28.0831578]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3916285,-28.0823476],[153.3917756,-28.0823542],[153.3918072,-28.0823556],[153.3918642,-28.0823415],[153.3918728,-28.0823666],[153.3919015,-28.0824498],[153.39189,-28.0824899],[153.3919193,-28.0825644],[153.3919608,-28.0825546]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3921684,-28.0820824],[153.3921272,-28.0822186],[153.3921124,-28.0822677],[153.392027,-28.0822936],[153.3920305,-28.0823078],[153.3920225,-28.0823219],[153.3918728,-28.0823666]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.392467,-28.0829712],[153.3926,-28.0832725]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3908525,-28.0829367],[153.3907565,-28.0829171],[153.3906092,-28.0828871],[153.390656,-28.0829534],[153.3906885,-28.0830377],[153.3907149,-28.0831597],[153.390721,-28.0832153],[153.390656,-28.0832619],[153.3906394,-28.0832857]]},"properties":{"kind":"street","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.395149,-28.0681961],[153.3951301,-28.0683012],[153.395078,-28.068531],[153.3950193,-28.0687367],[153.3949665,-28.0688744],[153.3949137,-28.0690172],[153.393958,-28.0715528],[153.3939351,-28.0716127],[153.3938851,-28.071743],[153.3936935,-28.0722569],[153.3936234,-28.07245],[153.3935704,-28.0726255],[153.393533,-28.0727673],[153.3934891,-28.0729665],[153.3934509,-28.0731876],[153.3934234,-28.0734137],[153.3934088,-28.0735981],[153.393405,-28.0738209],[153.3934106,-28.0740421],[153.3934279,-28.074265],[153.3934473,-28.0744525],[153.3934808,-28.0746438],[153.3936156,-28.0753267],[153.3936505,-28.0755145],[153.3937977,-28.0762824],[153.3938342,-28.076486],[153.3938566,-28.0766243],[153.3938732,-28.0767741],[153.3938742,-28.076922],[153.3938697,-28.0770789],[153.3938554,-28.077225],[153.3938293,-28.0773676],[153.3937884,-28.0775438],[153.3937399,-28.0776922],[153.393684,-28.0778332],[153.3936146,-28.077984],[153.3935214,-28.0781489],[153.3934119,-28.0783144],[153.3932892,-28.0784628],[153.3931185,-28.0786458],[153.392966,-28.0787825],[153.3928303,-28.0788881]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3928303,-28.0788881],[153.3926948,-28.0789842],[153.3925136,-28.0790949],[153.3923221,-28.0792005],[153.3914434,-28.0796837],[153.3903286,-28.0802899]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3902597,-28.0802063],[153.3913666,-28.0796044],[153.3920142,-28.0792478],[153.3924932,-28.0789861],[153.392692,-28.0788651]]},"properties":{"kind":"arterial","name":"Robina Parkway"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3908958,-28.0803209],[153.390756,-28.0804022],[153.3905656,-28.0805044]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3913808,-28.0800406],[153.3911416,-28.0801834],[153.3908958,-28.0803209]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3905656,-28.0805044],[153.3904368,-28.0805711],[153.390407,-28.080586],[153.3903488,-28.0806165]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3903488,-28.0806165],[153.39023,-28.0806804]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3898905,-28.0808721],[153.3896756,-28.080975],[153.3895845,-28.0810153]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3893869,-28.0804544],[153.3895551,-28.0803594]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3898727,-28.079937],[153.3899306,-28.0800164],[153.3899533,-28.0800496],[153.3900005,-28.0801188]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.39023,-28.0806804],[153.3901109,-28.0805144]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3900005,-28.0801188],[153.3901053,-28.0802648]]},"properties":{"kind":"arterial","name":"Scottsdale Drive"}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3898838,-28.0801802],[153.3900005,-28.0801188]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.390231,-28.0799922],[153.3903366,-28.0799331]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3892651,-28.0835873],[153.3894155,-28.0833103],[153.3894311,-28.0832949],[153.3894497,-28.0832859],[153.3894701,-28.0832806],[153.3894899,-28.0832796],[153.3895133,-28.0832849],[153.3897804,-28.0833701],[153.389967,-28.0834167],[153.3901717,-28.0834628],[153.3904567,-28.0835231],[153.390569,-28.083538],[153.3906416,-28.0835422],[153.3906896,-28.083538],[153.3907322,-28.0835263],[153.3907844,-28.0835046],[153.3908823,-28.0834469],[153.3909147,-28.0834178],[153.3909477,-28.0833796],[153.3909771,-28.0833314],[153.3910131,-28.0832245],[153.3910209,-28.0831842],[153.3910203,-28.0831392],[153.3910131,-28.0830979],[153.3910029,-28.0830593],[153.3909813,-28.0830137],[153.3908216,-28.0827162],[153.3906058,-28.0823508],[153.3905858,-28.0823169],[153.3905714,-28.0822825],[153.3905612,-28.0822571],[153.3904501,-28.0820516],[153.3903985,-28.0819674],[153.3903715,-28.081942],[153.3903427,-28.0819166],[153.3903049,-28.0818912],[153.3902539,-28.0818674],[153.3901885,-28.0818451],[153.3898662,-28.0817477],[153.3898362,-28.0817461],[153.3897323,-28.0817122],[153.3897125,-28.0817011],[153.3896477,-28.0816826],[153.3896237,-28.0816826],[153.3895175,-28.0816683],[153.3894773,-28.0816603],[153.3893927,-28.0816688],[153.38929,-28.0816836],[153.3891958,-28.0817133],[153.3891577,-28.0817276],[153.3890702,-28.0817604],[153.3885218,-28.0819664],[153.3884612,-28.0819913],[153.3884158,-28.0820156],[153.3883832,-28.0820331],[153.3883292,-28.0820675],[153.3882325,-28.0821443],[153.3881881,-28.0821819],[153.3881611,-28.0822163],[153.3881371,-28.082255],[153.3881173,-28.0823032],[153.3881083,-28.0823423],[153.3881047,-28.0823752],[153.3881065,-28.0824096],[153.3881131,-28.0824466],[153.3881233,-28.0824747],[153.3881389,-28.0825091],[153.3881635,-28.082542],[153.3881959,-28.0825801],[153.388343,-28.0827257],[153.3883844,-28.0827612],[153.3884324,-28.0827982],[153.3885254,-28.0828602],[153.3885428,-28.0828687],[153.3891616,-28.0831424],[153.3891874,-28.0831557],[153.3892066,-28.0831721],[153.389215,-28.0831901],[153.3892138,-28.0832107],[153.3892012,-28.0832388],[153.3890671,-28.0835076]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.38932,-28.0830559],[153.3894197,-28.0830949],[153.3894874,-28.0831297],[153.3896482,-28.0831961],[153.3898005,-28.0832409],[153.3901861,-28.0833338],[153.3904632,-28.0833918],[153.3904918,-28.0833977],[153.3905736,-28.0834093],[153.3906479,-28.0834077],[153.390709,-28.0833936],[153.3907525,-28.0833678],[153.3907711,-28.0833554],[153.3908247,-28.0833056],[153.3908529,-28.0832492],[153.3908708,-28.0831811],[153.3908632,-28.0831239],[153.3908435,-28.0830749],[153.3907565,-28.0829171],[153.3903197,-28.0821249],[153.3902952,-28.0820776],[153.3902642,-28.0820361],[153.3902266,-28.0820071],[153.3901692,-28.0819838],[153.3900761,-28.0819565],[153.3895993,-28.0818104],[153.3895325,-28.0818005],[153.3894695,-28.0817972],[153.3894046,-28.0817996],[153.3893331,-28.0818096],[153.3892758,-28.0818254],[153.3891488,-28.081871],[153.3888935,-28.0819758],[153.3885466,-28.0821072],[153.3884535,-28.0821628],[153.3883444,-28.0822441],[153.3882908,-28.0822956],[153.388273,-28.0823279],[153.3882673,-28.0823628],[153.3882673,-28.0823935],[153.3882748,-28.0824242],[153.3882908,-28.0824524],[153.3883172,-28.0824823],[153.3885344,-28.0826856],[153.3885937,-28.0827254],[153.388652,-28.0827553],[153.3892708,-28.0830307],[153.38932,-28.0830559]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3888383,-28.0790429],[153.3888566,-28.0790799],[153.388865,-28.0791197]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.388865,-28.0791197],[153.3888616,-28.0791675],[153.3888439,-28.0792128],[153.3888132,-28.0792523],[153.3887718,-28.0792832]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3886481,-28.0789541],[153.3887045,-28.0789574],[153.3887577,-28.0789744],[153.3888034,-28.0790036],[153.3888383,-28.0790429]]},"properties":{"kind":"arterial","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3901399,-28.0806756],[153.3901683,-28.0807164],[153.3902197,-28.0807902]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3897744,-28.0801562],[153.3898178,-28.0802156],[153.3898503,-28.0802613]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3898503,-28.0802613],[153.3899081,-28.080317],[153.390072,-28.0805632],[153.3901399,-28.0806756]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3891521,-28.0793914],[153.3891266,-28.0794268],[153.3890859,-28.0794832]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3891176,-28.0793717],[153.3891518,-28.0793277],[153.3891977,-28.0792686]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3891176,-28.0793717],[153.3891521,-28.0793914]]},"properties":{"kind":"path","name":""}},{"type":"Feature","geometry":{"type":"LineString","coordinates":[[153.3888937,-28.0787051],[153.3889375,-28.07873],[153.3890171,-28.0787754],[153.3890644,-28.0788023]]},"properties":{"kind":"path","name":""}}]}}</script>
+<script>
+"use strict";
+
+const EARTH_M = 6371000;
+const RAD = Math.PI / 180;
+const COUNTS_PER_TURN = 2073600;
+const ENCODER_POLL_MS = 180;
+const PAN_COUNTS_PER_MS_AT_800 = 19.143;
+const UINT_MAX = 0xffffffff;
+const DIRECTION_ZERO_DEG = 1e-7;
+const mod = (value, size) => (value % size + size) % size;
+const angleDelta = (target, origin) => mod(target - origin + 180, 360) - 180;
+const encoderDelta = (target, origin) => mod(target - origin + 0x800000, 0x1000000) - 0x800000;
+
+function shortestEncoderStep(target, origin) {
+  const forward = mod(encoderDelta(target, origin), COUNTS_PER_TURN);
+  return forward * 2 > COUNTS_PER_TURN ? forward - COUNTS_PER_TURN : forward;
+}
+
+function distance(a, b) {
+  const latitude = a[1] * RAD;
+  const nextLatitude = b[1] * RAD;
+  const longitudeDelta = (b[0] - a[0]) * RAD;
+  const h = Math.sin((nextLatitude - latitude) / 2) ** 2
+    + Math.cos(latitude) * Math.cos(nextLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+  return EARTH_M * 2 * Math.asin(Math.sqrt(Math.max(0, Math.min(1, h))));
+}
+
+function bearing(a, b) {
+  const latitude = a[1] * RAD;
+  const nextLatitude = b[1] * RAD;
+  const longitudeDelta = (b[0] - a[0]) * RAD;
+  return mod(Math.atan2(Math.sin(longitudeDelta) * Math.cos(nextLatitude),
+    Math.cos(latitude) * Math.sin(nextLatitude)
+    - Math.sin(latitude) * Math.cos(nextLatitude) * Math.cos(longitudeDelta)) / RAD, 360);
+}
+
+function destination(origin, heading, meters) {
+  const latitude = origin[1] * RAD;
+  const angle = heading * RAD;
+  const arc = meters / EARTH_M;
+  const sine = Math.sin(latitude) * Math.cos(arc) + Math.cos(latitude) * Math.sin(arc) * Math.cos(angle);
+  const targetLat = Math.asin(Math.max(-1, Math.min(1, sine)));
+  const longitudeOffset = Math.atan2(Math.sin(angle) * Math.sin(arc) * Math.cos(latitude),
+    Math.cos(arc) - Math.sin(latitude) * Math.sin(targetLat));
+  return [angleDelta(origin[0] + longitudeOffset / RAD, 0), targetLat / RAD];
+}
+
+function direction(from, to) {
+  const delta = angleDelta(to, from);
+  return Math.abs(delta) < DIRECTION_ZERO_DEG ? 0 : Math.sign(delta);
+}
+
+function samePoint(a, b) { return a[0] === b[0] && a[1] === b[1]; }
+function validPoint(lon, lat) {
+  return Number.isFinite(lon) && Number.isFinite(lat) && Math.abs(lon) <= 180 && Math.abs(lat) <= 90;
+}
+
+function unsigned(value) {
+  const text = String(value ?? "").trim();
+  const integer = Number(text);
+  return /^\d+$/.test(text) && integer <= UINT_MAX ? integer : null;
+}
+
+function coordinateList(text, gx = false) {
+  const values = text.trim();
+  if (!values) return [];
+  const tuples = gx ? [values.split(/\s+/)] : values.split(/\s+/).map(part => part.split(","));
+  return tuples.flatMap(tuple => {
+    if (tuple.length < 2 || !tuple[0] || !tuple[1]) return [];
+    const point = [Number(tuple[0]), Number(tuple[1])];
+    return validPoint(...point) ? [point] : [];
+  });
+}
+
+const children = (node, type) => Array.from(node?.children ?? []).filter(child => child.localName === type);
+const elements = (node, type) => Array.from(node.getElementsByTagNameNS("*", type));
+const child = (node, type) => children(node, type)[0];
+const labelOf = node => child(node, "name")?.textContent.trim() ?? "";
+
+function packetData(mark) {
+  const result = new Map();
+  const extended = child(mark, "ExtendedData");
+  if (!extended) return result;
+  for (const item of [...elements(extended, "Data"), ...elements(extended, "SimpleData")]) {
+    const name = (item.getAttribute("name") ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const value = (child(item, "value")?.textContent ?? item.textContent).trim();
+    if (name && value) result.set(name, value);
+  }
+  return result;
+}
+
+function utcTime(text) {
+  if (!text) return null;
+  const result = Date.parse(text);
+  return Number.isFinite(result) ? result : null;
+}
+
+function optionalNumber(value) {
+  if (value === undefined || value === null || value === "") return null;
+  return Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
+function parseFix(mark) {
+  const pointNode = elements(mark, "Point")[0];
+  if (!pointNode) return null;
+  const fields = packetData(mark);
+  const wire = fields.get("text") ?? fields.get("rawrecord") ?? "";
+  const packet = wire.startsWith("RX,GPS,") ? wire.trim().split(",") : null;
+  const [point] = coordinateList(child(pointNode, "coordinates")?.textContent ?? "");
+  if (!point) return null;
+  if (packet && packet[4]?.trim() && packet[5]?.trim() && validPoint(Number(packet[5]), Number(packet[4]))) {
+    point[0] = Number(packet[5]);
+    point[1] = Number(packet[4]);
+  }
+  const name = labelOf(mark);
+  const description = child(mark, "description")?.textContent ?? "";
+  const match = name.match(/#(\d+)\s*$/);
+  const when = child(child(mark, "TimeStamp"), "when")?.textContent
+    ?? fields.get("phonetimestamp") ?? fields.get("timestamp")
+    ?? description.match(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})/)?.[0];
+  const validWire = !packet || (packet.length === 11 && unsigned(packet[2]) !== null
+    && unsigned(packet[3]) !== null && validPoint(Number(packet[5]), Number(packet[4]))
+    && /^-?\d+$/.test(packet[6]) && Number(packet[6]) > 0
+    && optionalNumber(packet[7]) !== null && Number(packet[7]) >= 0
+    && /^-?\d+$/.test(packet[8]) && Number(packet[8]) >= -32768 && Number(packet[8]) <= 32767
+    && optionalNumber(packet[9]) !== null && Number(packet[9]) >= -128 && Number(packet[9]) <= 127
+    && unsigned(packet[10]) !== null && packet.slice(4, 10).every(value => value.trim()));
+  return {
+    point, name,
+    sequence: unsigned(packet?.[2] ?? fields.get("sequence") ?? fields.get("packet") ?? match?.[1]),
+    sender: unsigned(packet?.[3] ?? fields.get("senderms")),
+    mono: optionalNumber(fields.get("elapsedrealtimens")),
+    utc: optionalNumber(fields.get("phoneepochms")) ?? utcTime(when),
+    valid: Boolean(validWire) && !/Receiver rejection\s*·/i.test(description)
+      && (fields.get("satellites") === undefined || Number(fields.get("satellites")) > 0),
+    explicit: Boolean(packet || fields.get("classification") === "gps" || /\braw GPS\b/i.test(name))
+  };
+}
+
+function readKml(text) {
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.documentElement.localName !== "kml" || elements(doc, "parsererror").length) {
+    throw new Error("This file could not be read as KML.");
+  }
+  const placemarks = elements(doc, "Placemark");
+  const mountMark = placemarks.find(mark => /^(mount(?: position)?|camera pivot)$/i.test(labelOf(mark)));
+  const landmarkMark = placemarks.find(mark => /^(calibration landmark|landmark)$/i.test(labelOf(mark)));
+  const points = placemarks.filter(mark => mark !== mountMark && mark !== landmarkMark).map(parseFix).filter(Boolean);
+  const namedRawFolders = elements(doc, "Folder").filter(folder => /^raw GPS fixes$/i.test(labelOf(folder)));
+  const routes = [];
+  const add = (name, fixes) => {
+    if (fixes.length >= 2) routes.push({ name: name || "GPS track " + (routes.length + 1), fixes });
+  };
+  for (const folder of namedRawFolders) {
+    add(labelOf(folder), elements(folder, "Placemark").map(parseFix).filter(Boolean));
+  }
+  if (!routes.length) add("Recorded GPS fixes", points.filter(fix => fix.explicit));
+
+  if (!routes.length) {
+    for (const mark of placemarks) {
+      const tracks = elements(mark, "Track");
+      const fixes = tracks.flatMap(track => {
+        const times = children(track, "when");
+        return children(track, "coord").flatMap((coord, index) => coordinateList(coord.textContent, true)
+          .map(point => ({ point, utc: utcTime(times[index]?.textContent), valid: true })));
+      });
+      add(labelOf(mark), fixes);
+    }
+    for (const group of elements(doc, "Track").filter(track => !track.closest("Placemark"))) {
+      const times = children(group, "when");
+      const fixes = children(group, "coord").flatMap((coord, index) => coordinateList(coord.textContent, true)
+        .map(point => ({ point, utc: utcTime(times[index]?.textContent), valid: true })));
+      add("", fixes);
+    }
+    if (!routes.length && points.filter(fix => fix.utc != null || fix.mono != null).length >= 2) {
+      add("Timestamped GPS points", points);
+    }
+    if (!routes.length) {
+      for (const mark of placemarks) {
+        const track = [];
+        for (const segment of elements(mark, "LineString")) {
+          const coords = coordinateList(child(segment, "coordinates")?.textContent ?? "");
+          if (track.length && coords.length && samePoint(track[track.length - 1].point, coords[0])) coords.shift();
+          for (const point of coords) track.push({ point, valid: true });
+        }
+        add(labelOf(mark), track);
+      }
+      for (const segment of elements(doc, "LineString").filter(line => !line.closest("Placemark"))) {
+        add("", coordinateList(child(segment, "coordinates")?.textContent ?? "").map(point => ({ point, valid: true })));
+      }
+    }
+    if (!routes.length) add("GPS points", points);
+  }
+  if (!routes.length) throw new Error("This KML has no GPS track with at least two valid positions.");
+  return { routes, refs: {
+    mount: mountMark ? parseFix(mountMark)?.point ?? null : null,
+    landmark: landmarkMark ? parseFix(landmarkMark)?.point ?? null : null
+  }};
+}
+
+async function readVtLog(file) {
+  const fixes = [];
+  const positions = new Set();
+  let ignored = 0;
+
+  function acceptLine(line) {
+    if (!line.includes('"lora_packet"')) return;
+    let row;
+    try { row = JSON.parse(line.trim()); }
+    catch {
+      ignored++;
+      return;
+    }
+    if (row?.event !== "lora_packet") return;
+    const lon = optionalNumber(row.longitude), lat = optionalNumber(row.latitude);
+    const sequence = unsigned(row.sequence), satellites = optionalNumber(row.satellites);
+    if (row.accepted === false || !validPoint(lon, lat) || sequence === null || (satellites !== null && satellites <= 0)) {
+      ignored++;
+      return;
+    }
+    const point = [lon, lat];
+    positions.add(point.join(","));
+    fixes.push({ point, sequence, sender: unsigned(row.senderMs), received: optionalNumber(row.receivedAtMs),
+      logMono: optionalNumber(row.monoMs), utc: optionalNumber(row.epochMs) ?? utcTime(row.timestamp), valid: true });
+  }
+
+  const reader = file.stream().getReader();
+  const decoder = new TextDecoder();
+  let pending = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      pending += done ? decoder.decode() : decoder.decode(value, { stream: true });
+      let start = 0;
+      for (let end; (end = pending.indexOf("\n", start)) >= 0; start = end + 1) {
+        acceptLine(pending.slice(start, end));
+      }
+      pending = pending.slice(start);
+      if (done) {
+        acceptLine(pending);
+        break;
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  if (!fixes.length) throw new Error("This VT log contains no accepted surfer GPS fixes.");
+  const clock = fixes.every(fix => fix.received !== null) ? "received" :
+    fixes.every(fix => fix.logMono !== null) ? "logMono" : null;
+  for (const fix of fixes) fix.mono = clock ? fix[clock] * 1e6 : null;
+  return { routes: [{ name: "VT received GPS fixes", fixes }],
+    refs: { mount: null, landmark: null }, vt: { positions: positions.size, ignored } };
+}
+
+function readTimeline(route, interval) {
+  const raw = route.fixes;
+  const hasMono = raw.filter(fix => Number.isFinite(fix.mono)).length >= 2;
+  const hasUtc = raw.filter(fix => Number.isFinite(fix.utc)).length >= 2;
+  const read = fix => hasMono ? fix.mono : hasUtc ? fix.utc : null;
+  const divisor = hasMono ? 1e6 : 1;
+  const timedOrigin = raw.findIndex(fix => Number.isFinite(read(fix)));
+  const origin = timedOrigin < 0 ? 0 : read(raw[timedOrigin]);
+  const explicitSequences = raw.every(fix => Number.isInteger(fix.sequence));
+  let previous = 0;
+  let lastSender = 0;
+  let estimated = 0;
+  const fixes = raw.map((fix, index) => {
+    const stamp = read(fix);
+    const supplied = Number.isFinite(stamp);
+    const documentedTime = supplied ? Math.floor((stamp - origin) / divisor) + timedOrigin * interval : null;
+    const useTime = supplied && documentedTime >= previous;
+    const time = useTime ? documentedTime : index === 0 ? 0 : previous + interval;
+    if (!useTime) estimated++;
+    previous = time;
+    const sequence = explicitSequences ? fix.sequence : index + 1;
+    const recordedSender = explicitSequences && Number.isInteger(fix.sender);
+    const sender = recordedSender ? fix.sender : Math.max(lastSender + 1, time) >>> 0;
+    lastSender = sender;
+    return { point: fix.point, sequence, sender, time, valid: fix.valid !== false, index };
+  });
+  return { fixes, estimated };
+}
+
+class Receiver {
+  previous = null;
+  candidate = null;
+  count = 0;
+  accept(fix) {
+    if (!fix.valid) return false;
+    const prior = this.previous;
+    if (!prior) { this.previous = fix; return true; }
+    const sequenceDelta = (fix.sequence - prior.sequence) >>> 0;
+    const timeDelta = (fix.sender - prior.sender) >>> 0;
+    if (sequenceDelta === 0) { this.candidate = null; this.count = 0; return false; }
+    if (sequenceDelta < 0x80000000 && timeDelta > 0 && timeDelta < 0x80000000) {
+      this.previous = fix;
+      this.candidate = null;
+      this.count = 0;
+      return true;
+    }
+    if (fix.sequence < prior.sequence && fix.sender < prior.sender) {
+      const candidate = this.candidate;
+      if (candidate?.sequence === fix.sequence) return false;
+      const follows = candidate && fix.sequence === candidate.sequence + 1 && fix.sender > candidate.sender
+        && fix.time >= candidate.time && fix.time - candidate.time <= 3000;
+      this.count = follows ? this.count + 1 : 1;
+      this.candidate = fix;
+      if (this.count >= 3) {
+        this.previous = fix;
+        this.candidate = null;
+        this.count = 0;
+        return true;
+      }
+    } else {
+      this.candidate = null;
+      this.count = 0;
+    }
+    return false;
+  }
+}
+
+// Mirrors LiveGpsFilter from FM 0.1.75. A publication and a freshness refresh have different revisions.
+class GpsProducer {
+  previous = null;
+  firstBearing = null;
+  stationaryCandidate = null;
+  stationaryPosition = null;
+  stationaryBearing = null;
+  latest = null;
+  pending = 0;
+  pendingCount = 0;
+  lastLateral = 0;
+  held = 0;
+  leadActive = false;
+  gap = false;
+  revision = 0;
+
+  constructor(settings) { this.settings = settings; }
+  get stationary() { return this.stationaryBearing !== null; }
+
+  clearVotes() { this.pending = 0; this.pendingCount = 0; }
+
+  expire(now) {
+    if (!this.gap && this.previous && now - this.previous.time > this.settings.age) {
+      this.gap = true;
+      this.clearVotes();
+      this.stationaryCandidate = null;
+    }
+  }
+
+  accept(fix) {
+    const { mount, hold, lead } = this.settings;
+    const range = distance(mount, fix.point);
+    if (range < .1) {
+      this.clearVotes();
+      this.gap = true;
+      this.stationaryCandidate = null;
+      return;
+    }
+    this.expire(fix.time);
+    const nextBearing = bearing(mount, fix.point);
+    const prior = this.previous;
+    this.previous = fix;
+    if (!prior) { this.firstBearing = nextBearing; return; }
+
+    const continuous = !this.gap && ((fix.sequence - prior.sequence) >>> 0) === 1;
+    if (!continuous) {
+      this.clearVotes();
+      this.stationaryCandidate = null;
+    }
+    this.gap = false;
+    const enteredStationary = continuous && !this.stationary && this.confirmStationary(fix, prior);
+    if (enteredStationary) {
+      this.leadActive = false;
+      this.clearVotes();
+      this.refresh(null);
+    }
+
+    const priorBearing = bearing(mount, prior.point);
+    const reference = this.stationaryBearing ?? priorBearing;
+    const publishedBearing = this.latest ? bearing(mount, this.latest.fix.point) : this.firstBearing;
+    const candidate = direction(reference, nextBearing);
+    const agrees = continuous && candidate !== 0 && candidate === this.lastLateral;
+    this.lastLateral = continuous && !this.stationary ? candidate : 0;
+    const directionReady = !this.stationary && this.confirmMoving(candidate);
+
+    if (distance(prior.point, fix.point) <= 1 && this.held < hold) {
+      this.held++;
+      this.refresh(fix.time);
+      return;
+    }
+    if (enteredStationary) return;
+
+    if (this.stationary && candidate) {
+      if (distance(this.stationaryPosition, fix.point) <= 1) {
+        this.refresh(fix.time);
+        return;
+      }
+      this.stationaryPosition = null;
+      this.stationaryBearing = null;
+      this.publish(fix, candidate, 3);
+      if (continuous) this.lastLateral = direction(priorBearing, nextBearing);
+    } else if (directionReady) {
+      if (lead > 0 && !this.leadActive && this.latest?.direction === candidate && agrees) {
+        this.leadActive = range * Math.abs(angleDelta(nextBearing, priorBearing) * RAD) > 1;
+      }
+      this.publish(fix, candidate, 1);
+    } else if (!candidate && !direction(!this.latest && this.stationary ? reference : publishedBearing, nextBearing)) {
+      if (!this.latest) return;
+      if (samePoint(this.latest.fix.point, fix.point)) this.refresh(fix.time);
+      else this.publish(fix, this.latest.direction, 5);
+    }
+  }
+
+  confirmStationary(fix, prior) {
+    const start = this.stationaryCandidate;
+    if (!start) {
+      if (samePoint(prior.point, fix.point)) this.stationaryCandidate = fix;
+      return false;
+    }
+    if (distance(start.point, fix.point) > 1.5) {
+      this.stationaryCandidate = null;
+      return false;
+    }
+    if (fix.time - start.time < this.settings.stationary) return false;
+    this.stationaryPosition = start.point;
+    this.stationaryBearing = bearing(this.settings.mount, start.point);
+    this.stationaryCandidate = null;
+    return true;
+  }
+
+  confirmMoving(candidate) {
+    if (!candidate) { this.clearVotes(); return false; }
+    if (this.latest?.direction === candidate) { this.clearVotes(); return true; }
+    this.pendingCount = this.pending === candidate ? Math.min(this.pendingCount + 1, 3) : 1;
+    this.pending = candidate;
+    return this.pendingCount === 3;
+  }
+
+  publish(fix, turn, rule) {
+    if (this.latest && this.latest.direction !== turn) this.leadActive = false;
+    const lead = this.leadActive ? this.settings.lead : 0;
+    const mount = this.settings.mount;
+    let point = fix.point;
+    if (lead > 0) {
+      const range = distance(mount, point);
+      const offset = ((turn * lead) % (2 * Math.PI * range)) / range / RAD;
+      point = destination(mount, bearing(mount, point) + offset, range);
+    }
+    this.latest = { fix, direction: turn, stationary: this.stationary, revision: ++this.revision,
+      fresh: fix.time, point, lead, rule };
+    this.held = 0;
+    this.clearVotes();
+  }
+
+  refresh(fresh) {
+    if (!this.latest) return;
+    this.latest.stationary = this.stationary;
+    if (fresh !== null) this.latest.fresh = Math.max(fresh, this.latest.fresh);
+  }
+}
+
+// Mirrors LiveTracking's pan decisions with a virtual encoder and immediate command replies.
+class Pan {
+  clock = null;
+  physical = 0;
+  target = null;
+  targetPosition = null;
+  panPosition = 0;
+  lastEncoder = null;
+  evaluatedAtRest = null;
+  activeDirection = 0;
+  events = [];
+
+  constructor(settings) {
+    this.reference = bearing(settings.mount, settings.landmark);
+    this.rate = PAN_COUNTS_PER_MS_AT_800 * settings.speed / 800;
+  }
+
+  get moving() { return this.activeDirection !== 0; }
+  get angle() { return mod(this.reference + this.physical * 360 / COUNTS_PER_TURN, 360); }
+
+  tick(time, fresh) {
+    if (this.clock !== null) this.physical += this.activeDirection * this.rate * (time - this.clock);
+    this.clock = time;
+    if (fresh && fresh !== this.target) {
+      if (this.lastEncoder !== null) this.targetPosition += shortestEncoderStep(fresh.count, this.target.count);
+      this.target = fresh;
+    }
+    if (!this.moving && (!fresh || fresh === this.evaluatedAtRest)) return;
+    if (this.moving && fresh && fresh.direction !== this.activeDirection) {
+      this.stop(fresh, "GP reversal");
+      return;
+    }
+    const encoder = mod(Math.round(this.physical) + 8388608, 0x1000000);
+    if (this.lastEncoder === null) {
+      this.panPosition = encoder;
+      this.targetPosition = encoder + shortestEncoderStep(this.target.count, encoder);
+    } else {
+      this.panPosition += encoderDelta(encoder, this.lastEncoder);
+    }
+    this.lastEncoder = encoder;
+    const turn = this.activeDirection || this.target.direction;
+    const gap = (this.targetPosition - this.panPosition) * turn;
+    if (!this.moving) this.evaluatedAtRest = fresh;
+    if (gap > 0 && !this.moving) {
+      this.activeDirection = turn;
+      this.events.push({ time, type: "Start", sequence: this.target.sequence, direction: turn });
+    } else if (gap <= 0 && this.moving) {
+      this.evaluatedAtRest = this.target;
+      this.stop(this.target, "Target crossed");
+    }
+  }
+
+  stop(target, reason) {
+    this.activeDirection = 0;
+    this.events.push({ time: this.clock, type: "Stop", sequence: target.sequence, reason });
+  }
+}
+
+const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+
+async function simulate(timeline, settings) {
+  const fixes = timeline.fixes;
+  const first = fixes[settings.startIndex].time;
+  const last = fixes[fixes.length - 1].time;
+  const receiver = new Receiver();
+  const gps = new GpsProducer(settings);
+  const pan = new Pan(settings);
+  const frames = [];
+  const targets = [];
+  let accepted = null;
+  let cursor = settings.startIndex;
+  let target = null;
+  let revision = 0;
+  let publications = 0;
+  let rejected = 0;
+  let polls = 0;
+  let time = first;
+  for (;;) {
+    while (cursor < fixes.length && fixes[cursor].time <= time) {
+      const fix = fixes[cursor++];
+      if (!receiver.accept(fix)) { rejected++; continue; }
+      accepted = fix;
+      const before = gps.revision;
+      gps.accept(fix);
+      if (gps.revision !== before) publications++;
+    }
+    gps.expire(time);
+    const latest = gps.latest;
+    const usable = latest && time - latest.fresh <= settings.age;
+    if (usable && latest.revision !== revision) {
+      revision = latest.revision;
+      const heading = bearing(settings.mount, latest.point);
+      const count = mod(8388608 + Math.round(angleDelta(heading, pan.reference) * COUNTS_PER_TURN / 360), 0x1000000);
+      target = { time, sequence: latest.fix.sequence, direction: latest.direction, count,
+        point: latest.point, lead: latest.lead, rule: latest.rule };
+      targets.push(target);
+    }
+    pan.tick(time, usable ? target : null);
+    frames.push({ time, angle: pan.angle, moving: pan.moving, stationary: Boolean(latest?.stationary),
+      gpsTime: accepted?.time ?? null });
+    if (cursor === fixes.length && !pan.moving) break;
+
+    time += ENCODER_POLL_MS;
+    if (!pan.moving && cursor < fixes.length && accepted && time - accepted.time > settings.age + ENCODER_POLL_MS) {
+      time = first + Math.ceil((fixes[cursor].time - first) / ENCODER_POLL_MS) * ENCODER_POLL_MS;
+    }
+    if (++polls % 3000 === 0) await yieldToBrowser();
+  }
+  return { first, last, end: frames[frames.length - 1].time, frames, targets, events: pan.events, publications, rejected };
+}
+</script>
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const example = JSON.parse($("fm-example").textContent);
+const map = $("map");
+const timeSlider = $("time");
+const routeSelect = $("route");
+const playButton = $("play");
+const status = $("status");
+let source = null;
+let timeline = null;
+let result = null;
+let configuration = null;
+let selected = 0;
+let time = 0;
+let currentReplayIndex = null;
+let playing = false;
+let animation = 0;
+let lastAnimation = null;
+let generation = 0;
+let importGeneration = 0;
+let projection = null;
+let structure = null;
+let showFixIds = true;
+let mapSelection = null;
+const pickedReference = { mount: null, landmark: null };
+
+function describeStatus(message, error = false) {
+  status.textContent = message;
+  status.classList.toggle("error", error);
+}
+
+function lastIndex(items, value, getter = item => item.time) {
+  let low = 0, high = items.length;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (getter(items[middle]) <= value) low = middle + 1;
+    else high = middle;
+  }
+  return low - 1;
+}
+
+function formatTime(ms) {
+  const tenths = Math.floor(ms / 100);
+  return Math.floor(tenths / 600) + ":" + String(Math.floor(tenths / 10) % 60).padStart(2, "0") + "." + tenths % 10;
+}
+
+function formatPosition(point) { return point ? point[1].toFixed(8) + ", " + point[0].toFixed(8) : ""; }
+
+function currentFix() {
+  return timeline?.fixes[Math.max(0, lastIndex(timeline.fixes, time))] ?? null;
+}
+
+function reference(fixes, text, label, preferredIndex) {
+  const value = text.trim();
+  if (/^#?\d+$/.test(value)) {
+    const packet = Number(value.replace(/^#/, ""));
+    const preferred = fixes[preferredIndex];
+    const fix = preferred?.sequence === packet ? preferred : fixes.find(item => item.sequence === packet);
+    if (fix) return { point: fix.point, index: fix.index };
+    throw new Error(label + " GPS #" + packet + " is absent from this track.");
+  }
+  const items = value.split(",").map(item => item.trim());
+  if (items.length !== 2 || items.some(item => !item) || !validPoint(Number(items[1]), Number(items[0]))) {
+    throw new Error("Enter " + label.toLowerCase() + " as GPS # or latitude, longitude.");
+  }
+  const point = [Number(items[1]), Number(items[0])];
+  return { point, index: fixes.findIndex(fix => distance(fix.point, point) < .1) };
+}
+
+function readSettings(fixes, currentIndex) {
+  const mount = reference(fixes, $("mount").value, "Mount", pickedReference.mount);
+  const landmark = reference(fixes, $("landmark").value, "Landmark", pickedReference.landmark);
+  if (distance(mount.point, landmark.point) < .1) {
+    throw new Error("Choose a landmark at least 0.1 m from the mount to set a camera direction.");
+  }
+  const start = $("replay-start").value;
+  let startIndex = 0;
+  if (start === "landmark") {
+    startIndex = landmark.index;
+    if (startIndex < 0 || startIndex >= fixes.length - 1) {
+      throw new Error("To start at the landmark, select a landmark fix with at least one later fix in the track.");
+    }
+  } else if (start === "current") {
+    if (!fixes[currentIndex]) throw new Error("Select a current GPS fix before running replay.");
+    startIndex = currentIndex;
+  }
+  const read = name => $(name).valueAsNumber;
+  return { mount: mount.point, mountIndex: mount.index, landmark: landmark.point, landmarkIndex: landmark.index,
+    startIndex, hold: read("hold"), stationary: read("stationary"),
+    age: read("age"), speed: read("speed"), lead: read("lead"), width: read("width") };
+}
+
+function setPlaying(on) {
+  playing = Boolean(on && timeline);
+  playButton.textContent = playing ? "Pause" : "Play";
+  cancelAnimationFrame(animation);
+  lastAnimation = null;
+  if (playing) animation = requestAnimationFrame(advancePlayback);
+}
+
+function advancePlayback(now) {
+  if (!playing) return;
+  if (lastAnimation !== null) {
+    const elapsed = Math.min(100, now - lastAnimation) * Number($("playback-speed").value);
+    seek(time + elapsed);
+  }
+  lastAnimation = now;
+  if (time >= Number(timeSlider.max)) setPlaying(false);
+  else animation = requestAnimationFrame(advancePlayback);
+}
+
+function seek(next, exactFixIndex = null) {
+  time = Math.min(Number(timeSlider.max), Math.max(Number(timeSlider.min), next));
+  currentReplayIndex = exactFixIndex;
+  timeSlider.value = String(Math.round(time));
+  render();
+}
+
+function preview() {
+  timeline = readTimeline(source.routes[selected], $("interval").valueAsNumber || 500);
+  result = null;
+  configuration = null;
+  timeSlider.min = 0;
+  timeSlider.max = timeline.fixes[timeline.fixes.length - 1].time;
+  time = 0;
+  currentReplayIndex = null;
+  timeSlider.value = "0";
+  mapSelection = null;
+  pickedReference.mount = pickedReference.landmark = null;
+  updateMapSelection();
+  setPlaying(false);
+  drawMap();
+}
+
+function setSource(documentData, name) {
+  generation++;
+  $("run").disabled = false;
+  source = documentData;
+  selected = 0;
+  $("file-name").textContent = name;
+  routeSelect.replaceChildren(...source.routes.map((track, number) => new Option(track.name, String(number))));
+  $("route-field").hidden = source.routes.length < 2;
+  $("mount").value = source.refs.mountField ?? formatPosition(source.refs.mount);
+  $("landmark").value = source.refs.landmarkField ?? formatPosition(source.refs.landmark);
+  $("replay-start").value = "beginning";
+  $("jump").hidden = !source.example;
+  $("credits").hidden = !source.example;
+  preview();
+  const total = timeline.fixes.length;
+  const details = [total.toLocaleString() + (total === 1 ? " fix loaded" : " fixes loaded")];
+  if (source.vt) {
+    const { positions, ignored } = source.vt;
+    details.push(positions.toLocaleString() + (positions === 1 ? " distinct GPS position" : " distinct GPS positions"));
+    if (ignored) details.push(ignored.toLocaleString() + " rejected or invalid GPS records skipped");
+  }
+  if (timeline.estimated) details.push(timeline.estimated.toLocaleString() + " timed using the selected interval");
+  describeStatus(details.join(" · "));
+}
+
+async function runReplay() {
+  if (!source || !$("setup").reportValidity()) return;
+  const ticket = ++generation;
+  $("run").disabled = true;
+  setPlaying(false);
+  try {
+    const prepared = readTimeline(source.routes[selected], $("interval").valueAsNumber);
+    const currentIndex = currentReplayIndex ?? currentFix()?.index;
+    const settings = readSettings(prepared.fixes, currentIndex);
+    describeStatus("Calculating replay…");
+    await yieldToBrowser();
+    if (ticket !== generation) return;
+    const replay = await simulate(prepared, settings);
+    if (ticket !== generation) return;
+    timeline = prepared;
+    configuration = settings;
+    result = replay;
+    timeSlider.min = replay.first;
+    timeSlider.max = Math.max(replay.end, replay.last);
+    time = replay.first;
+    currentReplayIndex = settings.startIndex;
+    timeSlider.value = String(Math.round(time));
+    drawMap();
+    const starts = replay.events.filter(event => event.type === "Start").length;
+    const stops = replay.events.length - starts;
+    const total = timeline.fixes.length - settings.startIndex;
+    const details = [total.toLocaleString() + (total === 1 ? " fix" : " fixes"), replay.publications + " GP publications",
+      starts + " pan starts", stops + " pan stops"];
+    if (settings.startIndex > 0) details.unshift("Started at GPS #" + prepared.fixes[settings.startIndex].sequence);
+    if (replay.rejected) details.push(replay.rejected + " receiver rejections");
+    if (timeline.estimated) details.push("estimated timing for " + timeline.estimated.toLocaleString() + " fixes");
+    describeStatus(details.join(" · "));
+  } catch (error) {
+    if (ticket === generation) describeStatus(error.message || "Replay could not be calculated.", true);
+  } finally {
+    if (ticket === generation) $("run").disabled = false;
+  }
+}
+
+function node(tag, properties, parent = map) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [name, value] of Object.entries(properties)) element.setAttribute(name, value);
+  parent.appendChild(element);
+  return element;
+}
+
+function position(point, origin) {
+  const meters = distance(origin, point);
+  const angle = bearing(origin, point) * RAD;
+  return [meters * Math.sin(angle), meters * Math.cos(angle)];
+}
+
+function fitProjection(width, height, origin, points, fitRadius) {
+  const margin = 22;
+  let minX = -fitRadius, maxX = fitRadius, minY = -fitRadius, maxY = fitRadius;
+  for (const pt of points) {
+    const [x, y] = position(pt, origin);
+    minX = Math.min(x, minX); maxX = Math.max(x, maxX);
+    minY = Math.min(y, minY); maxY = Math.max(y, maxY);
+  }
+  const scale = Math.min((width - margin * 2) / (maxX - minX || 1), (height - margin * 2) / (maxY - minY || 1));
+  const cx = width / 2 - (maxX + minX) * scale / 2;
+  const cy = height / 2 + (maxY + minY) * scale / 2;
+  return { scale, cx, cy, unplot: (x, y) => {
+    const east = (x - cx) / scale, north = (cy - y) / scale;
+    return destination(origin, Math.atan2(east, north) / RAD, Math.min(Math.PI * EARTH_M, Math.hypot(east, north)));
+  }, plot: pt => {
+    const [x, y] = position(pt, origin);
+    return [cx + x * scale, cy - y * scale];
+  }};
+}
+
+function path(points) {
+  return points.length < 2 ? "" : points.map((p, index) =>
+    (index === 0 ? "M" : "L") + p.map(value => value.toFixed(2)).join(",")).join("");
+}
+
+function line(element, a, b) {
+  element.setAttribute("x1", a[0]); element.setAttribute("y1", a[1]);
+  element.setAttribute("x2", b[0]); element.setAttribute("y2", b[1]);
+}
+
+function circle(element, p) { element.setAttribute("cx", p[0]); element.setAttribute("cy", p[1]); }
+function text(element, p, label) {
+  element.setAttribute("x", p[0]); element.setAttribute("y", p[1]); element.textContent = label;
+}
+function niceStep(meters) {
+  const unit = 10 ** Math.floor(Math.log10(meters));
+  const ratio = meters / unit;
+  return (ratio < 2 ? 1 : ratio < 5 ? 2 : 5) * unit;
+}
+
+function representativeFixes(plotted, references) {
+  const locations = new Map();
+  timeline.fixes.forEach((fix, index) => {
+    const key = fix.point.join(",");
+    if (!locations.has(key)) locations.set(key, index);
+  });
+  const available = [...locations.values()];
+  const chosen = [...new Set(references.filter(index => index >= 0))];
+  if (!chosen.length) chosen.push(available[0]);
+  const squared = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+  const nearest = available.map(index => Math.min(...chosen.map(other => squared(plotted[index], plotted[other]))));
+  while (chosen.length < 8) {
+    let farthest = -1;
+    let gap = 25 ** 2;
+    nearest.forEach((value, index) => {
+      if (value > gap) { gap = value; farthest = index; }
+    });
+    if (farthest < 0) break;
+    const best = available[farthest];
+    chosen.push(best);
+    nearest.forEach((value, index) => { nearest[index] = Math.min(value, squared(plotted[available[index]], plotted[best])); });
+  }
+  return chosen;
+}
+
+function drawFixIds(plotted, references, width, height) {
+  const layer = node("g", { id: "map-fix-ids" });
+  layer.style.display = showFixIds ? "" : "none";
+  const occupied = references.map(ref => ref.bounds);
+  const intersects = (a, b) => a.x < b.x + b.width && a.x + a.width > b.x
+    && a.y < b.y + b.height && a.y + a.height > b.y;
+  const fixed = references.map(ref => ref.index);
+  for (const index of representativeFixes(plotted, fixed)) {
+    if (fixed.includes(index)) continue;
+    const [x, y] = plotted[index];
+    const packet = "#" + timeline.fixes[index].sequence;
+    const labelWidth = packet.length * 7.5 + 5;
+    const labelPlaces = [[9, -6], [9, 15], [-labelWidth - 8, -6], [-labelWidth - 8, 15]];
+    const place = labelPlaces.map(([dx, dy]) => ({ x: x + dx, y: y + dy - 13, width: labelWidth, height: 17 }))
+      .find(box => box.x >= 4 && box.y >= 3 && box.x + box.width <= width - 4
+        && box.y + box.height <= height - 18 && !occupied.some(existing => intersects(box, existing)));
+    if (!place) continue;
+    const group = node("g", { "data-fix-index": index }, layer);
+    circle(node("circle", { class: "fix-pin", r: 3.6 }, group), [x, y]);
+    text(node("text", { class: "fix-label" }, group), [place.x, place.y + 13], packet);
+    occupied.push(place);
+  }
+}
+
+function updateMapSelection() {
+  const selected = mapSelection;
+  $("map-mount").disabled = $("map-landmark").disabled = !selected;
+  const picker = $("same-point-fixes");
+  picker.replaceChildren();
+  $("coincident-fixes").hidden = true;
+  if (!selected) {
+    $("map-selection").textContent = "Click a GPS fix or another position on the map.";
+    return;
+  }
+  const fix = selected.index === null ? null : timeline.fixes[selected.index];
+  $("map-selection").textContent = (fix ? "GPS #" + fix.sequence + " at " + formatTime(fix.time) : "Map position")
+    + " · " + formatPosition(selected.point);
+  if (fix) {
+    const coincident = timeline.fixes.filter(item => samePoint(item.point, selected.point));
+    if (coincident.length > 1) {
+      for (const item of coincident) picker.add(new Option("GPS #" + item.sequence + " · " + formatTime(item.time), item.index));
+      picker.value = fix.index;
+      $("coincident-fixes").hidden = false;
+    }
+  }
+}
+
+function selectFix(index) {
+  const fix = timeline.fixes[index];
+  setPlaying(false);
+  mapSelection = { point: fix.point, index };
+  updateMapSelection();
+  if (fix.time >= Number(timeSlider.min)) seek(fix.time, index);
+  else {
+    currentReplayIndex = index;
+    render();
+  }
+}
+
+function assignReference(key, selection) {
+  if (!selection) return;
+  const fix = selection.index === null ? null : timeline.fixes[selection.index];
+  pickedReference[key] = selection.index;
+  $(key).value = fix ? "#" + fix.sequence : formatPosition(selection.point);
+  describeStatus((key === "mount" ? "Mount" : "Landmark") + " set to "
+    + (fix ? "GPS #" + fix.sequence : formatPosition(selection.point)) + (result ? ". Run replay to apply." : "."));
+  updateCameraSetup();
+  if (!result && hasCameraReferences() && !$("run").disabled) runReplay();
+}
+
+function hasCameraReferences() {
+  return Boolean($("mount").value.trim() && $("landmark").value.trim());
+}
+
+function updateCameraSetup() {
+  const hint = $("camera-setup");
+  hint.hidden = Boolean(result);
+  if (hint.hidden) return;
+  const mount = $("mount").value.trim();
+  const landmark = $("landmark").value.trim();
+  if (hasCameraReferences()) {
+    hint.textContent = "GPS preview. Run replay to show camera pan.";
+  } else if (mount || landmark) {
+    hint.textContent = mount
+      ? "GPS preview. Choose a landmark for the camera’s initial aim."
+      : "GPS preview. Choose a mount position for the camera.";
+  } else {
+    hint.textContent = "GPS preview. Choose a mount position and landmark on the map to see camera pan.";
+  }
+}
+
+function drawMap() {
+  if (!timeline) return;
+  map.replaceChildren();
+  const width = Math.max(264, Math.round(map.getBoundingClientRect().width));
+  const height = Math.round(map.getBoundingClientRect().height);
+  map.setAttribute("viewBox", "0 0 " + width + " " + height);
+  const raw = timeline.fixes.map(fix => fix.point);
+  const origin = configuration?.mount ?? raw[0];
+  let reach = 8;
+  if (configuration) {
+    let farthest = distance(origin, configuration.landmark);
+    for (const p of raw) farthest = Math.max(farthest, distance(origin, p));
+    reach = Math.max(20, farthest * .83);
+  }
+  projection = fitProjection(width, height, origin, raw, reach);
+  const { plot, scale, cx, cy } = projection;
+  const gap = niceStep(width / scale / 6) * scale;
+  for (let x = mod(cx, gap); x <= width; x += gap) line(node("line", { class: "grid-line" }), [x, 0], [x, height]);
+  for (let y = mod(cy, gap); y <= height; y += gap) line(node("line", { class: "grid-line" }), [0, y], [width, y]);
+
+  if (source.example) {
+    for (const feature of source.geo.features) {
+      node("path", { class: "road " + feature.properties.kind, d: path(feature.geometry.coordinates.map(plot)) });
+    }
+  }
+  const plotted = raw.map(plot);
+  node("path", { class: "track", d: path(plotted) });
+  const wedge = node("path", { class: "wedge" });
+  const trail = node("path", { class: "trail" });
+  const aim = node("line", { class: "aim" });
+  const camera = node("line", { class: "camera" });
+  const cameraTip = node("circle", { class: "camera", r: 3 });
+  const references = [];
+  if (configuration) {
+    for (const key of ["mount", "landmark"]) {
+      const index = configuration[key + "Index"];
+      const [x, y] = plot(configuration[key]);
+      const group = node("g", index >= 0 ? { "data-fix-index": index } : {});
+      const name = key === "mount" ? "Mount" : "Landmark";
+      const label = showFixIds && index >= 0 ? name + " #" + timeline.fixes[index].sequence : name;
+      const labelWidth = label.length * 7.4 + 4;
+      const left = Math.min(width - labelWidth - 5, Math.max(5, key === "mount" ? x + 8 : x - labelWidth / 2));
+      const baseline = Math.max(15, Math.min(height - 18, y + (key === "mount" ? 17 : -10)));
+      circle(node("circle", { class: key, r: 5 }, group), [x, y]);
+      const caption = node("text", {}, group);
+      text(caption, [left, baseline], label);
+      const bounds = caption.getBBox();
+      references.push({ index, bounds: { x: bounds.x - 2, y: bounds.y - 2,
+        width: bounds.width + 4, height: bounds.height + 4 } });
+    }
+  }
+  const gps = node("circle", { class: "gps", r: 5.5, "pointer-events": "none" });
+  text(node("text", {}), [10, 17], "N ↑");
+  const meters = niceStep(width / scale * .18);
+  const size = meters * scale;
+  line(node("line", { class: "scale" }), [width - 12 - size, height - 9], [width - 12, height - 9]);
+  text(node("text", { "text-anchor": "middle" }), [width - 12 - size / 2, height - 14],
+    meters >= 1000 ? meters / 1000 + " km" : meters + " m");
+  drawFixIds(plotted, references, width, height);
+  const selectionPin = node("circle", { class: "selected-pin", r: 9, "pointer-events": "none" });
+  structure = { wedge, trail, aim, camera, cameraTip, gps, plotted, selectionPin, trailEnd: -1 };
+  updateCameraSetup();
+  render();
+}
+
+function render() {
+  if (!structure || !timeline) return;
+  const activeFix = currentFix();
+  const startFix = timeline.fixes[currentReplayIndex] ?? activeFix;
+  const optionText = "Current GPS fix #" + startFix.sequence;
+  if ($("current-start-option").textContent !== optionText) $("current-start-option").textContent = optionText;
+  const { trail, plotted, gps, camera, cameraTip, wedge, aim, selectionPin } = structure;
+  const { plot } = projection;
+  if (activeFix.index !== structure.trailEnd) {
+    const first = configuration?.startIndex ?? 0;
+    trail.setAttribute("d", path(plotted.slice(first, activeFix.index + 1)));
+    structure.trailEnd = activeFix.index;
+  }
+  circle(gps, plot(activeFix.point));
+  selectionPin.style.display = mapSelection ? "" : "none";
+  if (mapSelection) circle(selectionPin, plot(mapSelection.point));
+  $("clock").textContent = formatTime(time) + " / " + formatTime(Number(timeSlider.max));
+  timeSlider.setAttribute("aria-valuetext", formatTime(time));
+  $("fix").textContent = "GPS #" + activeFix.sequence;
+  for (const element of [aim, camera, cameraTip, wedge]) element.style.display = "none";
+  $("pan").textContent = "";
+  $("shot").textContent = "";
+  $("target").textContent = "";
+  if (!result) return;
+  const frame = result.frames[Math.max(0, lastIndex(result.frames, time))];
+  const target = result.targets[lastIndex(result.targets, time)];
+  const { mount, width, age } = configuration;
+  const range = distance(mount, activeFix.point);
+  const heading = frame.angle;
+  const pivot = plot(mount);
+  const end = plot(destination(mount, heading, Math.max(range, 2)));
+  const usable = frame.gpsTime !== null && time - frame.gpsTime <= age && activeFix.valid;
+  const halfAngle = Math.atan2(width / 2, range) / RAD;
+  const gap = Math.abs(angleDelta(bearing(mount, activeFix.point), heading));
+  $("fix").textContent += " · " + range.toFixed(1) + " m from mount";
+  $("pan").textContent = frame.moving ? "Pan moving" : "Pan idle";
+  $("shot").textContent = !usable ? "GPS unavailable" : range < .1 ? "GPS at mount" :
+    gap <= halfAngle ? "In simulated shot" : "Outside simulated shot";
+  $("target").textContent = target ? "GP aim #" + target.sequence + " · " + target.lead + " m lead" : "Waiting for GP aim";
+  line(camera, pivot, end);
+  circle(cameraTip, end);
+  camera.style.display = cameraTip.style.display = "";
+  if (usable && range >= .1) {
+    const farEdge = Math.hypot(range, width / 2);
+    wedge.setAttribute("d", path([pivot, plot(destination(mount, heading - halfAngle, farEdge)),
+      plot(destination(mount, heading + halfAngle, farEdge))]) + "Z");
+    wedge.style.display = "";
+  }
+  if (target) {
+    line(aim, pivot, plot(target.point));
+    aim.style.display = "";
+  }
+}
+
+function loadExample() {
+  importGeneration++;
+  setSource(example, "Example · 690 recorded GPS fixes");
+  runReplay();
+}
+
+$("setup").addEventListener("submit", event => { event.preventDefault(); runReplay(); });
+$("example").addEventListener("click", loadExample);
+async function openRecording(input, label, parse) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = "";
+  const ticket = ++importGeneration;
+  describeStatus("Reading " + label + "…");
+  try {
+    const imported = await parse(file);
+    if (ticket !== importGeneration) return;
+    setSource(imported, file.name);
+    if (imported.refs.mount && imported.refs.landmark) runReplay();
+  } catch (error) {
+    if (ticket === importGeneration) describeStatus(error.message || "The " + label + " could not be opened.", true);
+  }
+}
+$("file").addEventListener("change", event => openRecording(event.currentTarget, "KML file",
+  async file => readKml(await file.text())));
+$("vt-log").addEventListener("change", event => openRecording(event.currentTarget, "VT log", readVtLog));
+routeSelect.addEventListener("change", () => {
+  generation++;
+  $("run").disabled = false;
+  selected = Number(routeSelect.value);
+  preview();
+  describeStatus(timeline.fixes.length.toLocaleString() + " fixes loaded. Check the references and run replay.");
+});
+for (const key of ["mount", "landmark"]) {
+  $(key).addEventListener("input", () => {
+    pickedReference[key] = null;
+    updateCameraSetup();
+  });
+  $("pick-" + key).addEventListener("click", () => {
+    const gps = currentFix();
+    if (gps) assignReference(key, gps);
+  });
+  $("map-" + key).addEventListener("click", () => assignReference(key, mapSelection));
+}
+$("fix-ids").addEventListener("click", event => {
+  showFixIds = !showFixIds;
+  event.currentTarget.setAttribute("aria-pressed", showFixIds);
+  event.currentTarget.textContent = showFixIds ? "Hide fix IDs" : "Show fix IDs";
+  if (timeline) drawMap();
+});
+$("same-point-fixes").addEventListener("change", event => selectFix(Number(event.target.value)));
+map.addEventListener("click", event => {
+  if (!structure) return;
+  const marker = event.target.closest("[data-fix-index]");
+  if (marker) { selectFix(Number(marker.dataset.fixIndex)); return; }
+  const point = map.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  const screen = map.getScreenCTM();
+  if (!screen) return;
+  const hit = point.matrixTransform(screen.inverse());
+  let nearest = -1;
+  let nearestDistance = 15 ** 2;
+  const currentIndex = currentFix().index;
+  for (let index = 0; index < structure.plotted.length; index++) {
+    const [x, y] = structure.plotted[index];
+    const gap = (x - hit.x) ** 2 + (y - hit.y) ** 2;
+    if (gap < nearestDistance || gap === nearestDistance && Math.abs(index - currentIndex) < Math.abs(nearest - currentIndex)) {
+      nearest = index;
+      nearestDistance = gap;
+    }
+  }
+  if (nearest >= 0) { selectFix(nearest); return; }
+  setPlaying(false);
+  currentReplayIndex = null;
+  mapSelection = { point: projection.unplot(hit.x, hit.y), index: null };
+  updateMapSelection();
+  render();
+});
+timeSlider.addEventListener("input", () => { setPlaying(false); seek(Number(timeSlider.value)); });
+playButton.addEventListener("click", () => {
+  if (playing) { setPlaying(false); return; }
+  if (time >= Number(timeSlider.max)) seek(Number(timeSlider.min));
+  setPlaying(true);
+});
+$("jump").addEventListener("click", () => {
+  setPlaying(false);
+  seek((timeline.fixes.find(fix => fix.sequence === 1324)?.time ?? 0) + ENCODER_POLL_MS);
+});
+new ResizeObserver(drawMap).observe(map);
+loadExample();
+</script>
+</body>
+</html>

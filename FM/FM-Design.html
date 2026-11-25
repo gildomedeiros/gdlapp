@@ -6,16 +6,35 @@
 .pan-stop-callout{padding:.8rem 1rem;border-left:5px solid #b42318;background:#fff1f1;color:#861d1d}
 .pan-stop-callout h3{margin:0 0 .5rem;font-size:1.05rem}
 .pan-stop-callout ol{margin:0;padding-left:1.4rem}
-.gp-takeoff-finding{margin:1.5rem 0;padding:1rem 1.25rem;border:1px solid #ba822e;border-left:6px solid #a25a0a;border-radius:8px;background:#fff6df}
-.gp-takeoff-finding h4{margin:0 0 .65rem;font-size:1.15rem;color:#5c3606;scroll-margin-top:1.25rem}
-.gp-takeoff-finding p{margin:.65rem 0 0}
+.gp-finding{margin:1.5rem 0;padding:1rem 1.25rem;border:1px solid;border-left-width:6px;border-radius:8px}
+.gp-finding h4{margin:0 0 .65rem;font-size:1.15rem;scroll-margin-top:1.25rem}
+.gp-finding p{margin:.65rem 0 0}
+.gp-takeoff-finding{border-color:#84b594;border-left-color:#28794a;background:#eaf7ee}
+.gp-takeoff-finding h4{color:#174e30}
+.gp-stationary-finding{border-color:#c69c55;border-left-color:#946013;background:#fff6df}
+.gp-stationary-finding h4{color:#5c3606}
 .vt-movement-report{display:block;width:100%;height:76vh;min-height:28rem;border:1px solid #d9e3e0;border-radius:8px;background:white;box-sizing:border-box}
 </style>
 <style>body{font:16px/1.55 system-ui;color:#172827;background:#f5f8f7;margin:24px}main{max-width:1100px;margin:auto}h1{margin-bottom:0}h2{margin-top:32px}table{width:100%;border-collapse:collapse;background:white}th,td{padding:10px 13px;border:1px solid #d9e3e0;text-align:left;vertical-align:top}th{background:#e6efed}tr:nth-child(even) td{background:#f7faf9}.flow{overflow:auto}.flow table{min-width:690px}.flow td:nth-child(4){width:45%;background:#edf5f2}.axis-flow table{min-width:1070px}.axis-flow td:nth-child(4),.axis-flow td:nth-child(5){width:26%;background:#edf5f2}li+li{margin-top:6px}.gti-commands{margin:8px 0;padding-left:24px}.gti-commands code{white-space:nowrap}.ref{font:600 .78rem system-ui;color:#245b52;white-space:nowrap;margin-right:.4em}.component-figure{margin:1rem 0;background:#fff;border:1px solid #d9e3e0;border-radius:8px;overflow:hidden}.component-figure figcaption{padding:.65rem .9rem;border-bottom:1px solid #e6efed;color:#304d46}.component-scroll{overflow:auto}.component-scroll svg{display:block;width:100%;min-width:56rem;height:auto}.component-scroll svg a:hover text,.component-scroll svg a:focus text{text-decoration:underline}.gp-rules table{min-width:1080px;table-layout:fixed}.gp-rules th:nth-child(1){width:4%}.gp-rules th:nth-child(2){width:20%}.gp-rules th:nth-child(3){width:31%}.gp-rules th:nth-child(4){width:21%}.gp-rules td:nth-child(4){width:auto;background:inherit}.gp-rules code{overflow-wrap:anywhere}</style></head>
 <body><main><h1>FM Design</h1>
+<section aria-labelledby="lead-simulation">
+<h2 id="lead-simulation">Lead simulation</h2>
+<p><strong>FM 0.1.74 settings.</strong> <a href="#setup-live-pan-lead">Live pan lead</a> defaults to <strong>5 m</strong> and applies selectively. <a href="#setup-simulator-shot-width">Simulator horizontal shot width</a> defaults to <strong>40 m</strong>, or 20 m on either side of centre, for the framing report.</p>
+<p><strong>Earlier simulation.</strong> Zero lead versus a fixed <strong>2 m lead</strong> on every GPS position GP published, in its published direction. Framing uses a <strong>5 m-wide horizontal shot at the surfer</strong>, giving 2.5 m on either side of centre.</p>
+<div class="flow" tabindex="0" role="region" aria-labelledby="lead-simulation"><table>
+<thead><tr><th scope="col">Surfer mode</th><th scope="col">Good thing</th><th scope="col">Bad thing &middot; Does the surfer leave the frame?</th></tr></thead>
+<tbody>
+<tr><th scope="row">1 &middot; Sitting or waiting</th><td>Both runs had five pan starts.</td><td><strong>Yes, with lead.</strong> The surfer went <strong>3.0 m off-centre</strong>, up from <strong>1.0 m</strong> without lead. The led shot needed about <strong>6 m</strong> of width.</td></tr>
+<tr><th scope="row">2 &middot; Slow paddling</th><td>Pan kept moving <strong>0.4 s longer</strong> toward the first target.</td><td><strong>Stays in the 5 m frame.</strong> The camera got <strong>2.0 m ahead</strong> of the slow paddle. A shot narrower than about <strong>4.1 m</strong> would lose the surfer.</td></tr>
+<tr><th scope="row">3 &middot; Paddling in the ride direction</th><td>The largest trailing gap fell from <strong>1.9 m to 0.8 m</strong>.</td><td><strong>Stays in the 5 m frame.</strong> Pan later got <strong>2.1 m ahead</strong>, so the shot needed about <strong>4.2 m</strong> of width.</td></tr>
+<tr><th scope="row">4 &middot; Paddling toward the peak, then turning</th><td>Once GP confirmed the turn, the aim pointed <strong>2 m into the ride direction</strong>.</td><td><strong>Yes, around the turn.</strong> The fixed lead took the camera farther toward the peak before the reversal. The shot needed <strong>10.8 m</strong> of width, up from <strong>6.8 m</strong> without lead.</td></tr>
+<tr><th scope="row">5 &middot; Takeoff</th><td>The largest trailing gap fell from <strong>2.3 m to 0.5 m</strong>.</td><td><strong>Stays in the 5 m frame.</strong> Pan later got <strong>2.2 m ahead</strong>, so the shot needed about <strong>4.4 m</strong> of width.</td></tr>
+</tbody></table></div>
+<p>The replay used the existing GPS filter, 0.5 s GPS intervals, an eight-fix hold and a simulated GTi at roughly 100 m range. Mode 4 ran for six seconds to capture the turn. <a href="#live-takeoff-findings">Takeoff findings from the field logs</a></p>
+</section>
 <section aria-labelledby="live-pan-patterns">
 <h2 id="live-pan-patterns">Surfer GPS patterns and pan response</h2>
-<p><a href="#gps-sim-surfer-continuous">Switch between these behaviours live in GP Simulator</a> &middot; <a href="#gps-sim-surfer-prepare">Save or load a behaviour sequence</a></p>
+<p><a href="#gps-sim-surfer-continuous">Switch between these behaviours live in GP Simulator</a> &middot; <a href="#gps-sim-surfer-prepare">Save or load a behaviour sequence</a> &middot; <a href="#live-takeoff-findings">Live Tracking takeoff findings</a></p>
 <p><strong>Same</strong> and <strong>opposite</strong> describe the paddle relative to the eventual ride. FM determines pan direction from changes in bearing as seen from the mount. <strong>Jitter</strong> means unwanted back-and-forth camera pan.</p>
 <p id="live-pan-catch-up"><strong>Pan can stop mid-ride when it catches up.</strong> FM sends pan Stop on the first encoder reading at or past the latest published target. If GP publishes a farther target in the same direction before pan reaches the current one, the same move continues. A restart requires pan to report stopped and a published target ahead in the commanded direction. If pan coasts past that target, FM waits for a farther one.</p>
 <div class="flow pan-patterns" tabindex="0" role="region" aria-labelledby="live-pan-patterns"><table>
@@ -27,8 +46,8 @@
 <td>Fixes stay in a tight cluster or bounce between nearby positions.</td>
 <td><strong>801</strong> windows. Typical spread <strong>0.98 m</strong>.</td>
 <td><strong>Rule 0</strong> holds small changes. <strong>Rule 2</strong> checks for Stationary. <strong>Rule 7</strong> keeps the target and direction. <strong>Rule 3</strong> can publish a new direction on departure.</td>
-<td>Repeats count toward Rule 0’s hold limit. Once it fills, a nearby fix can trigger pan through Rule 3.</td>
-<td><strong>Yes.</strong> FM panned back and forth in the <strong>0.9 m</strong> simulator test.</td>
+<td>Repeats count toward Rule 0’s hold limit. Rule 3 still holds bearing changes within 1 m of the Stationary reference.</td>
+<td><strong>Reduced in replay.</strong> FM 0.1.74 panned on the <strong>0.982 m</strong> sitting bounce. The <a href="#gp-rule-3-replay">1 m check</a> blocked those targets.</td>
 <td>Quick pan can chase the bounce. A short delay costs little while the surfer stays near the same spot.</td>
 </tr>
 <tr id="live-pattern-slow">
@@ -53,8 +72,8 @@
 <th scope="row">4 · Paddling toward the peak first, then turning into the ride</th>
 <td><strong>Paddle ← ← toward the peak, turn →, then ride → → faster.</strong></td>
 <td>Peak-positioning scenario. The field report groups tracks by speed and direction consistency.</td>
-<td>While Moving, <strong>Rule 1</strong> requires <strong>three consecutive opposite bearing changes</strong> to publish the turn. If GP enters Stationary around the turn, <strong>Rule 3</strong> can publish the first eligible bearing change.</td>
-<td>A repeat during the turn clears Rule 1’s pending reversal streak. If the pause qualifies as Stationary, Rule 3 can set the new direction from one eligible fix.</td>
+<td>While Moving, <strong>Rule 1</strong> requires <strong>three consecutive opposite bearing changes</strong> to publish the turn. If GP enters Stationary around the turn, <strong>Rule 3</strong> can publish the first eligible bearing change more than 1 m from the Stationary reference.</td>
+<td>A repeat during the turn clears Rule 1’s pending reversal streak. If the pause qualifies as Stationary, Rule 3 can set the new direction from one eligible fix more than 1 m from the Stationary reference.</td>
 <td><strong>One reversal is expected.</strong> Extra back-and-forth around the turn is jitter.</td>
 <td>Quick pan follows the real paddle toward the peak. If pan is still slewing when GP publishes the turn, it must stop before reversing. A quick response <strong>to the turn</strong> matters most.</td>
 </tr>
@@ -92,16 +111,16 @@
 <td>All fixes stay within 2.25 m of each other. They can bounce between nearby coordinates.</td>
 <td><strong>801 windows.</strong> Typical spread <strong>0.98 m</strong>.</td>
 <td><strong>Rule 0</strong> holds changes of 1 m or less up to the configured limit. <strong>Rule 2</strong> checks for Stationary. <strong>Rule 7</strong> retains the target and direction while Stationary.</td>
-<td>Repeats count toward the hold limit. An exact repeat can start the Stationary check. Later, <strong>Rule 3</strong> can publish the first eligible change in bearing from the stationary reference.</td>
-<td><strong>Possible.</strong> A nearby bounce can change the published direction after Stationary.</td>
+<td>Repeats count toward the hold limit. An exact repeat can start the Stationary check. Later, <strong>Rule 3</strong> can publish the first eligible bearing change more than 1 m from the Stationary reference.</td>
+<td><strong>Possible.</strong> A bounce beyond 1 m can change the published direction after Stationary if the fix is eligible.</td>
 <td>Quick pan can chase small GPS bounces. A short delay costs little while the position stays in the cluster.</td>
 </tr>
 <tr>
 <th scope="row">Shifting around</th>
 <td>Spread exceeds 2.25 m and net displacement is less than 55% of the distance travelled between fixes.</td>
 <td><strong>130 windows.</strong> Typical spread <strong>2.97 m</strong>.</td>
-<td><strong>Rule 0</strong> filters small changes. While Moving, <strong>Rule 1</strong> requires three consecutive opposite bearing changes before GP can publish a reversal. After Stationary, <strong>Rule 3</strong> can accept one eligible bearing change.</td>
-<td>A repeat clears a pending direction streak while Moving. A pause that passes <strong>Rule 2</strong> allows the next eligible bearing change to set direction under Rule 3.</td>
+<td><strong>Rule 0</strong> filters small changes. While Moving, <strong>Rule 1</strong> requires three consecutive opposite bearing changes before GP can publish a reversal. After Stationary, <strong>Rule 3</strong> can accept one eligible bearing change more than 1 m from the Stationary reference.</td>
+<td>A repeat clears a pending direction streak while Moving. A pause that passes <strong>Rule 2</strong> allows the first eligible bearing change more than 1 m from the Stationary reference to set direction under Rule 3.</td>
 <td><strong>Possible.</strong> Alternating published directions can make pan reverse repeatedly.</td>
 <td>Quick pan follows each published change sooner, including brief excursions that the next fixes undo.</td>
 </tr>
@@ -111,7 +130,7 @@
 <td><strong>472 windows.</strong> Typical speed <strong>2.66 km/h</strong>.</td>
 <td><strong>Rule 0</strong> can hold small changes. <strong>Rule 1</strong> allows eligible fixes in the established direction. <strong>Rule 2</strong> can detect Stationary during a slow drift.</td>
 <td>A repeat clears a pending direction streak and can start the Stationary check. Confirmation requires the fixes to stay within 1.5 m of the repeat for the configured time.</td>
-<td><strong>Possible.</strong> After Stationary, Rule 3 can publish a direction change from one eligible fix.</td>
+<td><strong>Possible.</strong> After Stationary, Rule 3 can publish a direction change from one eligible fix more than 1 m from the Stationary reference.</td>
 <td>One extra 0.5 s costs about <strong>0.37 m</strong> of travel at the typical speed.</td>
 </tr>
 <tr>
@@ -143,6 +162,43 @@
 </tr>
 </tbody></table></div>
 <p><a href="#vt-movement-report">Full VT report with the original data, maps and method</a>.</p>
+</section>
+<section aria-labelledby="live-takeoff-findings">
+<h2 id="live-takeoff-findings">Live Tracking takeoff findings</h2>
+<p><strong>FM 0.1.75.</strong> <a href="#GPS_DATA_FILTER_RULE_3">Rule 3</a> holds bearing-changing fixes within <strong>1 m</strong> of the position where GP entered Stationary. The first eligible fix beyond 1 m can publish immediately. Rule 2 uses its 1.5 m radius when checking for entry into Stationary. Early response at takeoff remains the priority.</p>
+<h3 id="gp-rule-3-replay">Rule 3 replay results</h3>
+<p><strong>Good thing.</strong> The 1 m check blocked all eight targets from the 0.982 m sitting bounce in the recorded run. With the same eight-fix hold, the takeoff pattern published its first target at 1.5 s in both replays.</p>
+<div class="flow" tabindex="0" role="region" aria-labelledby="gp-rule-3-replay"><table>
+<thead><tr><th scope="col">Replay</th><th scope="col">FM 0.1.74</th><th scope="col">FM 0.1.75 Rule 3</th></tr></thead>
+<tbody>
+<tr><th scope="row">Mode 1 · Sitting with an eight-fix hold</th><td>8 targets from 85 raw fixes. Four led to actual pan moves in the recorded run.</td><td><strong>0 targets</strong> from the recorded fixes.</td></tr>
+<tr><th scope="row">Mode 5 · Takeoff with an eight-fix hold</th><td>First target at 1.5 s.</td><td>First target at 1.5 s.</td></tr>
+<tr><th scope="row">Mode 5 · Takeoff with a four-fix hold</th><td>First target at 0.5 s.</td><td>First target at 1.5 s.</td></tr>
+</tbody></table></div>
+<p><strong>Bad thing.</strong> The four-fix takeoff replay took an extra second to publish its first target, which could cost the start of a ride in a tight shot. The takeoff timers start at the first simulated Mode 5 fix and end at GP publication. Sitting source <code>FM-832ea614-c80.jsonl</code> and its matching KML report.</p>
+<div class="flow" tabindex="0" role="region" aria-label="Takeoff response by GPS state and design">
+<table>
+<thead><tr><th scope="col">Takeoff setup</th><th scope="col">Current design</th><th scope="col">Proposed hard 2 m boundary</th></tr></thead>
+<tbody>
+<tr><th scope="row">Sitting, GP Stationary</th><td><a href="#GPS_DATA_FILTER_RULE_2">Rule 2</a> needs an exact repeat followed by 2 s within 1.5 m. That repeat may never come in moving water. Once Stationary, <a href="#GPS_DATA_FILTER_RULE_3">Rule 3</a> can publish the first fix that passes <a href="#GPS_DATA_FILTER_RULE_0">Rule 0</a>, changes bearing and is more than 1 m from the Stationary reference. The quick response helps when that bearing change points in the ride direction.</td><td>Hold the target inside 2 m of the fixed centre. The first valid outside fix can set a new direction. That would suppress the <a href="#gp-stationary-cluster">0.982 m sitting bounce</a> and delay a real departure that starts inside the boundary.</td></tr>
+<tr><th scope="row">Sitting or drifting, GP Moving</th><td>The first eligible fix can publish if it agrees with GP&rsquo;s published direction. If sitting jitter picks left and right equally and independently of the ride, the direction matches in 50% of cases. This is a test assumption for that situation. The first fix must still be eligible. Establishing or reversing direction while Moving takes three consecutive agreeing bearing changes.</td><td>Rules 0 and 1 handle takeoff from Moving.</td></tr>
+<tr><th scope="row">Slow paddling into the ride</th><td>If GP already published the ride direction, <a href="#GPS_DATA_FILTER_RULE_1">Rule 1</a> can publish the first eligible takeoff fix. A pan already moving that way can keep following. If the surfer turns the other way, GP needs three consecutive agreeing bearing changes to confirm the reversal while Moving.</td><td>Rules 0 and 1 handle takeoff from Moving. If GP has entered Stationary during slow paddling, the first update waits for a fix outside 2 m.</td></tr>
+</tbody></table></div>
+<p>Publication and physical motion have separate timings. In the <a href="#gp-takeoff-reaction">Mode 5 simulator run</a>, the first pan moved counterclockwise after <strong>618 ms</strong>. The first pan in the clockwise ride direction came after <strong>4.491 s</strong>.</p>
+<h3 id="live-takeoff-field-data">What the 5&ndash;6 November GPS logs showed</h3>
+<div class="flow" tabindex="0" role="region" aria-labelledby="live-takeoff-field-data">
+<table>
+<thead><tr><th scope="col">Movement shortly before candidate takeoff</th><th scope="col">All classifiable GPS candidates</th><th scope="col">With a nearby VT ride-start flag</th></tr></thead>
+<tbody>
+<tr><th scope="row">Already moving in the ride direction (Mode 3 pattern)</th><td><strong>26 of 44 (59%)</strong></td><td><strong>12 of 25 (48%)</strong></td></tr>
+<tr><th scope="row">Holding position or drifting a little</th><td><strong>12 of 44 (27%)</strong></td><td><strong>10 of 25 (40%)</strong></td></tr>
+<tr><th scope="row">Moving across the ride direction or shifting around</th><td>6 of 44 (14%)</td><td>3 of 25 (12%)</td></tr>
+</tbody></table></div>
+<p>Same-direction movement was more common overall. The gap was smaller among candidates with a nearby VT ride-start flag. One 6 November example accelerated from <strong>7.5 km/h</strong> to <strong>17.8 km/h</strong> in almost the same direction. These are GPS movement patterns. Matching them to footage would establish when paddling and takeoff happened. <a href="#vt-movement-report">Original VT movement report</a></p>
+<details>
+<summary>How the candidate takeoffs were counted</summary>
+<p>From the 18,731 accepted fixes, find directed bursts averaging at least 12 km/h for roughly 2 s. Group qualifying starts within 3 s and look at the roughly 3 s before the first qualifying burst. Hold-position examples had a GPS spread of 2.25 m or less. Same-direction movement had a heading within 45 degrees of the burst. Exclude 17 of 61 candidates with insufficient GPS coverage before the burst. The VT-flagged column uses a subset of the same GPS candidates.</p>
+</details>
 </section>
 <section aria-labelledby="vt-movement-report">
 <h2 id="vt-movement-report">VT GPS movement report</h2>
@@ -1059,15 +1115,19 @@
 <tr id="GPS_DATA_FILTER_RULE_7"><td>3</td><td><a href="#GPS_DATA_FILTER_RULE_7"><code>GPS_DATA_FILTER_RULE_7</code></a><br><strong>Keep direction while Stationary</strong></td><td>Retain the last published direction throughout Stationary. A state update retains the current published target and position revision. LT lets any active pan finish at its existing target.</td><td>GP becomes Stationary during a clockwise motor move toward <strong>A</strong>.</td><td><strong>A, clockwise</strong>, with the same revision and the new Stationary state.</td></tr>
 <tr id="GPS_DATA_FILTER_RULE_1"><td>4</td><td><a href="#GPS_DATA_FILTER_RULE_1"><code>GPS_DATA_FILTER_RULE_1</code></a><br><strong>Confirm moving direction</strong></td><td>Compare the bearing of each trusted fix with the bearing of the previous trusted fix. Count three consecutive changes in one direction at startup, or three consecutive changes opposite the published direction to reverse while Moving. Count votes while Rule 0 holds the coordinates. A same-direction change clears a pending reversal and can publish as soon as Rule 0 allows. See Rule 3 for a departure from Stationary. <a href="#gp-rule-1-comparison">Compare the existing and proposed rules</a>.</td><td>The current target is <strong>A, clockwise</strong>. Each of the changes <strong>A → B</strong>, <strong>B → C</strong> and <strong>C → D</strong> moves counterclockwise around the mount.</td><td>GP keeps <strong>A, clockwise</strong> while it gathers evidence. Once the streak reaches three, publish the latest eligible position and the new direction together. If Rule 0 holds the third fix, continue the streak until an eligible fix can publish.</td></tr>
 <tr id="GPS_DATA_FILTER_RULE_0"><td>5</td><td><a href="#GPS_DATA_FILTER_RULE_0"><code>GPS_DATA_FILTER_RULE_0</code></a><br><strong>Hold small steps</strong></td><td>Compare with the previous raw fix, using offset coordinates for both fixes when the LoRa test offset is active. A step of <strong>1 m or less in any direction</strong> holds the published coordinates and refreshes their age. After <strong>X held fixes</strong>, the next fix becomes eligible. A step over 1 m is eligible immediately. <strong>X defaults to 4 and is configurable.</strong><p><strong>Drawback.</strong> Holding small GPS changes can delay tracking real slow movement. At two readings per second with 0.5 m of movement between readings and X set to 4, the next position becomes eligible after 2.5 seconds and 2.5 m of movement. <strong>Tracking slow movement is secondary to keeping the surfer in frame during the ride.</strong></p></td><td>Four successive steps of 0.5 m can point in any direction.</td><td>Keep <strong>A and its existing direction</strong> for the four held fixes. On the fifth, GP can publish the latest coordinates and its direction if the direction rules allow it.</td></tr>
-<tr id="GPS_DATA_FILTER_RULE_3"><td>6</td><td><a href="#GPS_DATA_FILTER_RULE_3"><code>GPS_DATA_FILTER_RULE_3</code></a><br><strong>Leave Stationary</strong></td><td>After Stationary entry, the first eligible fix at a different bearing from the stationary reference sets the departing direction, even inside Rule 2’s 1.5 m radius. Keep this one-fix rule alongside Rule 1 for review. <strong>Risk.</strong> A surfer may paddle right into a wave that carries them left, so GP can publish right first.<p><strong>Risk of reversing on one fix.</strong> Slow movement can still fit inside the radius for the full <a href="#GPS_DATA_FILTER_RULE_2">Rule 2</a> check. The next eligible fix can then publish the opposite direction. While Moving, <a href="#GPS_DATA_FILTER_RULE_1">Rule 1</a> requires three consecutive opposite bearing changes.</p></td><td>GP is Stationary at <strong>A</strong>. The first eligible fix <strong>B</strong> is clockwise of <strong>A</strong>.</td><td><strong>B, clockwise</strong>, as one publication.</td></tr>
-<tr><td colspan="5"><strong>In other words, Rule 3 leaves Stationary on the first eligible fix with a different bearing. GP publishes that fix and the direction calculated from the stationary reference together. The calculated direction can match the previous one.</strong></td></tr>
+<tr id="GPS_DATA_FILTER_RULE_3"><td>6</td><td><a href="#GPS_DATA_FILTER_RULE_3"><code>GPS_DATA_FILTER_RULE_3</code></a><br><strong>Leave Stationary</strong></td><td>After Stationary entry, compare a bearing-changing fix that passes Rule 0 with the stored Stationary reference. A fix <strong>within 1 m</strong> holds the existing target and refreshes its age. The first eligible fix <strong>more than 1 m</strong> away sets the departing direction, including fixes inside Rule 2’s 1.5 m radius. <strong>Risk.</strong> A surfer may paddle right into a wave that carries them left, so GP can publish right first.<p><strong>Risk of reversing on one fix.</strong> Slow movement can still fit inside the radius for the full <a href="#GPS_DATA_FILTER_RULE_2">Rule 2</a> check. The first eligible fix more than 1 m from the Stationary reference can then publish the opposite direction. While Moving, <a href="#GPS_DATA_FILTER_RULE_1">Rule 1</a> requires three consecutive opposite bearing changes.</p></td><td>GP is Stationary at <strong>A</strong>. An eligible fix <strong>B</strong> is 0.98 m from <strong>A</strong>. A later eligible fix <strong>C</strong> is 1.2 m from <strong>A</strong> clockwise.</td><td>Keep the existing target through <strong>B</strong>. Publish <strong>C, clockwise</strong> as one publication.</td></tr>
+<tr><td colspan="5"><strong>In other words, Rule 3 leaves Stationary on the first eligible fix with a different bearing and more than 1 m of displacement from the stationary reference. GP publishes that fix and the direction calculated from the stationary reference together. The calculated direction can match the previous one.</strong></td></tr>
 <tr id="GPS_DATA_FILTER_RULE_5"><td>7</td><td><a href="#GPS_DATA_FILTER_RULE_5"><code>GPS_DATA_FILTER_RULE_5</code></a><br><strong>Publish a range change</strong></td><td>An eligible move along the same line from the mount can publish with GP’s existing direction. If there is no established direction, keep gathering evidence.</td><td>The surfer moves straight away from the mount, from <strong>100 m</strong> to <strong>103 m</strong>. The bearing stays the same. GP’s direction is clockwise.</td><td><strong>The coordinates at 103 m, clockwise</strong>.</td></tr>
 <tr id="GPS_DATA_FILTER_RULE_6"><td>8</td><td><a href="#GPS_DATA_FILTER_RULE_6"><code>GPS_DATA_FILTER_RULE_6</code></a><br><strong>Publish to LT</strong></td><td><strong>Every published position includes a direction decided by GP.</strong> Store the coordinates, direction, state, age and position revision together. Age or state updates alone retain the revision.</td><td>GP refreshes <strong>A</strong>’s age and later accepts <strong>B</strong> with a confirmed reversal.</td><td><strong>A, clockwise, revision 12</strong> through the refresh. Then <strong>B, counterclockwise, revision 13</strong>.</td></tr>
 </tbody></table></div>
-<aside class="gp-takeoff-finding" aria-labelledby="gp-takeoff-reaction">
+<aside class="gp-finding gp-stationary-finding" aria-labelledby="gp-stationary-cluster">
+<h4 id="gp-stationary-cluster">When a fix can trigger pan after Stationary</h4>
+<p><a href="#GPS_DATA_FILTER_RULE_2">Rule 2</a> applies the 1.5 m radius when confirming entry. After entry, <a href="#GPS_DATA_FILTER_RULE_3">Rule 3</a> holds bearing changes within 1 m of the stored reference even if <a href="#GPS_DATA_FILTER_RULE_0">Rule 0</a> has used up its hold count. An eligible bearing change between 1 m and 1.5 m can still publish. <a href="#gp-rule-3-replay">Sitting and takeoff replay results</a></p>
+</aside>
+<aside class="gp-finding gp-takeoff-finding" aria-labelledby="gp-takeoff-reaction">
 <h4 id="gp-takeoff-reaction">Best case for a quick takeoff response</h4>
-<p><strong>From rest, pan can react to the first eligible fix.</strong> GP has already confirmed <a href="#GPS_DATA_FILTER_RULE_2">Stationary</a>. <a href="#GPS_DATA_FILTER_RULE_0">Rule 0</a> makes the fix eligible, and its bearing change from the stationary reference matches the actual ride direction. <a href="#GPS_DATA_FILTER_RULE_3">Rule 3</a> sets direction from that single fix and <a href="#GPS_DATA_FILTER_RULE_6">Rule 6</a> publishes the target. Live Tracking can start pan when that target is ahead in the published direction.</p>
-<p><strong>Mode 5 simulator run.</strong> GP published fix <strong>#4427</strong> at <strong>183 ms</strong> after selection. The encoder first showed movement at <strong>618 ms</strong>, counterclockwise. The simulated takeoff advanced clockwise, with the first clockwise pan observed at <strong>4.491 s</strong> toward <strong>#4433</strong>. A fast first publication helps when its direction matches the ride. Run log <code>FM-1805df56-e04.jsonl</code>.</p>
+<p><strong>From rest, pan can react to the first eligible fix.</strong> GP has already confirmed <a href="#GPS_DATA_FILTER_RULE_2">Stationary</a>. <a href="#GPS_DATA_FILTER_RULE_0">Rule 0</a> makes the fix eligible. It is more than 1 m from the stationary reference and its bearing change matches the actual ride direction. <a href="#GPS_DATA_FILTER_RULE_3">Rule 3</a> sets direction from that single fix and <a href="#GPS_DATA_FILTER_RULE_6">Rule 6</a> publishes the target. Live Tracking can start pan when that target is ahead in the published direction.</p>
+<p><strong>Earlier Mode 5 simulator run.</strong> GP published fix <strong>#4427</strong> at <strong>183 ms</strong> after selection. The encoder first showed movement at <strong>618 ms</strong>, counterclockwise. The simulated takeoff advanced clockwise, with the first clockwise pan observed at <strong>4.491 s</strong> toward <strong>#4433</strong>. A fast first publication helps when its direction matches the ride. Run log <code>FM-1805df56-e04.jsonl</code>. <a href="#live-takeoff-findings">Takeoff comparison and field data</a></p>
 </aside>
 <h4 id="gp-rule-1-comparison">Rule 1 comparison</h4>
 <p>The first number is the published target. GP starts Moving clockwise, and increasing numbers mean clockwise movement around the mount. All fixes pass validation. Rule 0 uses its default four-fix hold.</p>
@@ -1096,7 +1156,7 @@
 <li>Keep the latest raw receipt time separate from the published target’s age. Use the configured GPS age limit to determine whether a target can start a new move. Keep the last published direction during Stationary or a GPS gap. The active motor can finish toward its last target.</li>
 <li>Compare bearings around the mount through north wrap. Use the first trusted fix as the initial comparison point for Rule 1. Compare each newer trusted bearing with its predecessor. A GPS gap clears pending votes before processing the next fix. A fix with unchanged bearing clears the streak. A bearing change in the already published direction clears a pending reversal. For a Stationary departure, use the saved stationary reference. A position publication resets the Rule 0 hold count.</li>
 <li><strong>Test input.</strong> For <a href="#gps-simulator">GP Simulator</a>, feed the pad fixes directly into GP. In LoRa mode, the clockwise and counterclockwise test offsets can adjust receiver positions during Live Tracking. Keep the original GPS coordinates and mark the source. Rule 0 compares successive inputs before filtering.</li>
-<li><strong>Direction rule review.</strong> Rule 1 covers startup when there is no Stationary reference and reversal during movement. Rule 3 covers a departure from Stationary, including a departure before the first publication. Keep the one-fix departure and three-fix confirmation visible for review against the paddling-into-a-wave risk.</li>
+<li><strong>Direction rule review.</strong> Rule 1 covers startup when there is no Stationary reference and reversal during movement. Rule 3 covers a departure from Stationary more than 1 m from the reference, including a departure before the first publication. Keep the one-fix departure and three-fix confirmation visible for review against the paddling-into-a-wave risk.</li>
 </ul>
 <h4 id="gp-filter-log">GPS events in the Live Tracking JSONL</h4>
 <p>Use the same attempt ID and monotonic clock for GPS and GTi commands. For LoRa, log raw fixes, decisions and refreshes. For GP Simulator, log mode starts and new published positions with the rule IDs. Use the source packet and revision to trace publications to LT motion.</p>
@@ -1106,9 +1166,10 @@
 <tr id="gp-log-raw"><td><code>live_gps_raw_fix</code></td><td>LoRa receiver input</td><td>Packet sequence and sender time, received time, original latitude and longitude, validity or rejection. When test offset is active, include the offset and the resulting candidate latitude and longitude.</td></tr>
 <tr id="gp-log-rule"><td><code>live_gps_filter_decision</code></td><td>GP rule applied to LoRa input</td><td>Rule ID, input packet, action, reason and affected revision. Include the compared step distance, held count and X for Rule 0, and previous trusted bearing, candidate direction and count for Rule 1. For Rule 2, log check start, cancellation or confirmation, with the centre, timing and radius when applicable. Include the reference or state for Rules 3 and 7 when applicable.</td></tr>
 <tr id="gp-log-mode-start"><td><code>gps_simulator_mode_started</code></td><td>First fix generated in a selected mode</td><td>Simulator run, mode number and label, UTC start time and first-fix time on the monotonic clock. For a manual selection, record the selection time, time to first fix, and configured limit when the mode is timed. For an automatic return to Mode 1, record the time-limit reason, expired mode and limit. The simulator log also records this event.</td></tr>
-<tr id="gp-log-published"><td><code>live_gps_published_fix</code></td><td>New GP target</td><td>Source packet sequence, published latitude and longitude, direction, state, position revision and publication time. Include the rule IDs leading to publication and the surfer mode for continuous simulator input. The simulator log records the same publication as <code>gps_simulator_published_fix</code>.</td></tr>
+<tr id="gp-log-published"><td><code>live_gps_published_fix</code></td><td>New GP target</td><td>Source packet sequence, published latitude and longitude, direction, state, position revision and publication time. Include applied lead and the pan aim coordinates. Include the rule IDs leading to publication and the surfer mode for continuous simulator input. The simulator log records the same publication as <code>gps_simulator_published_fix</code>.</td></tr>
 <tr id="gp-log-refresh"><td><code>live_gps_published_refresh</code></td><td>Same GP target from LoRa</td><td>Source packet, unchanged coordinates, direction and revision, plus the updated freshness or state. Identify the rule that refreshed it.</td></tr>
-<tr id="gp-log-consumed"><td><code>live_gps_consumed</code></td><td>LT target update</td><td>Consumed revision, published packet, coordinates and GP direction. Log when LT enters or exits the waiting state, why a target is unavailable, and which revision is used for motion.</td></tr>
+<tr id="gp-log-consumed"><td><code>live_gps_consumed</code></td><td>LT target update</td><td>Consumed revision, published packet, coordinates, GP direction, applied lead and pan aim coordinates. Log when LT enters or exits the waiting state, why a target is unavailable, and which revision is used for motion.</td></tr>
+<tr id="gp-log-takeoff-framing"><td><code>live_takeoff_framing</code></td><td>Simulator takeoff summary</td><td>Shot width, full takeoff duration, observed encoder duration and estimated time outside the frame. Report unavailable when no encoder interval can be evaluated.</td></tr>
 </tbody></table></div>
 <h4 id="gp-filter-checks">Checks for the next build</h4>
 <div class="flow" tabindex="0" aria-label="GPS filter and KML checks"><table>
@@ -1116,7 +1177,7 @@
 <tbody>
 <tr id="gp-check-startup"><td>Startup and null output</td><td>Before the first GP publication, Live Tracking shows a waiting state. The LoRa JSONL also has raw fixes and filter decisions. Once GP selects a direction, it publishes the first target with that direction. LT takes the matching revision.</td></tr>
 <tr id="gp-check-small"><td>Four small steps</td><td>Feed four 0.5 m steps with X at its default. The raw coordinates change each time and the published revision stays the same. The fifth fix becomes eligible.</td></tr>
-<tr id="gp-check-stationary"><td>Stationary and reversal</td><td>Feed a repeat followed by a fix outside 1.5 m before time is up. GP stays Moving. Then feed a new repeat and fixes within 1.5 m for the full confirmation time. GP enters Stationary with the same target and direction. Feed an eligible bearing change to exercise Rule 3, including a fix inside the entry radius. In a separate moving case, check Rule 1 with three consecutive opposite bearing changes and the <a href="#gp-rule-1-comparison">comparison sequences</a>.</td></tr>
+<tr id="gp-check-stationary"><td>Stationary and reversal</td><td>Feed a repeat followed by a fix outside 1.5 m before time is up. GP stays Moving. Then feed a new repeat and fixes within 1.5 m for the full confirmation time. GP enters Stationary with the same target and direction. Feed an eligible bearing change within 1 m of the reference and check that the revision stays fixed. Then feed an eligible bearing change more than 1 m away and check that GP publishes it on the first fix, including when it is inside the 1.5 m entry radius. In a separate moving case, check Rule 1 with three consecutive opposite bearing changes and the <a href="#gp-rule-1-comparison">comparison sequences</a>.</td></tr>
 <tr id="gp-check-kml"><td>KML and log match</td><td>Pick a raw packet held by a filter and a packet that publishes a new revision. Both appear as raw GPS points. The published point matches its source packet, GP coordinates, direction and revision in the JSONL.</td></tr>
 </tbody></table></div>
 </section>
@@ -1132,6 +1193,8 @@
 <tr id="setup-05"><td><a href="#setup-05">SETUP-05</a></td><th scope="row">Pointing reference</th><td>Enter the landmark coordinates and height. Use <a href="#cal-00d">Capture landmark from LoRa GPS</a> to fill the coordinates from a fix taken at the landmark.</td><td>Use the saved reference angles and stopped encoder readings. Verify both axis direction signs.</td><td></td></tr>
 <tr id="setup-live-gp"><td><a href="#setup-live-gp">SETUP-LIVE-GP</a></td><th scope="row">GPS small-step hold</th><td>Set <strong>Live GPS small-step hold (fixes)</strong>. Default <strong>4</strong>.</td><td>Use the session setting for X in <a href="#GPS_DATA_FILTER_RULE_0">GPS_DATA_FILTER_RULE_0</a>. Capture the value when Live Tracking starts and record it in the session log.</td><td></td></tr>
 <tr id="setup-live-gp-stationary"><td><a href="#setup-live-gp-stationary">SETUP-LIVE-GP-STATIONARY</a></td><th scope="row">GPS stationary confirmation</th><td>Set <strong>Live GPS stationary confirmation (ms)</strong>. Default <strong>2,000</strong>. Enter a positive whole number.</td><td>Load the setting when Live Tracking starts and record it in the session log. Use it in <a href="#GPS_DATA_FILTER_RULE_2">GPS_DATA_FILTER_RULE_2</a>.</td><td></td></tr>
+<tr id="setup-live-pan-lead"><td><a href="#setup-live-pan-lead">SETUP-LIVE-PAN-LEAD</a></td><th scope="row">Live pan lead</th><td>Set <strong>Live pan lead (m)</strong>. Default <strong>5</strong>. Enter <strong>0</strong> for direct aim at the published GPS fix.</td><td>Load at Live Tracking start. The GPS Data Producer applies the <a href="#gp-pan-lead">selective lead</a> to the pan aim when eligible.</td><td></td></tr>
+<tr id="setup-simulator-shot-width"><td><a href="#setup-simulator-shot-width">SETUP-SIMULATOR-SHOT-WIDTH</a></td><th scope="row">Simulator horizontal shot width</th><td>Set <strong>Simulator horizontal shot width (m)</strong>. Default <strong>40</strong>. Enter the full width at the surfer’s distance.</td><td>Use this positive width for the simulator framing report. It affects reporting only.</td><td></td></tr>
 </tbody></table></div>
 <h2 id="gti-connect-sequence">Connect GTi sequence <a class="ref" href="#gti-connect-sequence">CONN</a></h2>
 <p><strong>Setup only.</strong> FM discovers and connects to the GTi when its foreground service starts. Use <strong>Connect GTi</strong> to retry the saved endpoint after a connection failure or a network change.</p>
@@ -1477,10 +1540,13 @@
 </div></td></tr>
 <tr id="live-tracking-sequence"><td><a href="#live-tracking-sequence">LIVE</a></td><td colspan="3"><details open><summary><strong>Live Tracking pseudocode · FM 0.1.64</strong></summary>
 <p id="live-tracking-contract"><strong>Live Tracking contract.</strong> LT gets all tracking targets and their direction from the GPS Data Producer (GP). Ask the user before changing Live Tracking or the GP-to-LT contract.</p>
+<p id="gp-pan-lead"><strong>Selective pan lead.</strong> Arm the configured lead when GP is Moving and Rule 1 publishes in the established direction. The last two consecutive GPS displacements must agree with that direction, and the latest must advance more than 1 m sideways around the mount. Place the pan aim the fixed lead distance ahead along the same range. Keep the lead through same-direction slowdowns. A confirmed reversal or entry to Stationary clears lead for future publications. A held or freshness-only fix keeps the current aim. The first eligible fix out of Stationary can publish immediately with zero lead.</p>
+<p><strong>Simulator framing.</strong> During continuous Mode 5 (Takeoff), compare the existing pan encoder samples with the latest fresh simulated surfer positions before filtering and lead. Use half the configured shot width on either side of centre. Estimate time outside the frame across observed encoder intervals and report observation coverage against the full takeoff window. Manual or CSV fixes carry no continuous takeoff label. Compare identical runs with 0 m and 5 m of lead at the same report width.</p>
 <pre style="white-space:pre-wrap">ON LIVE TRACKING PRESS
     Load fixed HS pan speed (default 800×) and calculate its step period once.
     Load fixed slow tilt speed (default 64×) and GP’s hold count X (default 4).
     Load GP’s stationary confirmation time (default 2,000 ms).
+    Load the pan lead distance (default 5 m) and the simulator report shot width (default 40 m).
     Reset the GPS simulation offset and GP publication cache.
     Use one GTi worker and distinct recent UDP reply ports.
     Wait for each reply or timeout before sending the next command.
@@ -1491,14 +1557,18 @@ ON SIMULATION PRESS
 ON EACH RECEIVER PACKET
     GP records the raw fix from LoRa or the GP Simulator pad. Apply the test offset only to LoRa fixes.
     GP runs the GPS filter rules and updates its published snapshot when eligible.
+    GP applies the <a href="#gp-pan-lead">selective pan lead</a> to the aim on a new publication.
     For Rule 2, start the confirmation clock at the first repeated coordinate.
     Enter Stationary after consecutive fixes stay within 1.5 m of that fixed position for the configured time.
+    For Rule 3, hold bearing changes within 1 m of that reference even after the Rule 0 hold fills.
+    Publish the first eligible bearing change more than 1 m from that reference.
 
 TRACKING LOOP
     Read GP’s latest published coordinates, direction, revision, state and age.
     If the snapshot is null, show Waiting for GP target and return to the loop.
     If only age or state changed, keep the current target and direction.
-    If the revision changed, calculate target counts from the published coordinates.
+    If the revision changed, calculate pan counts from GP’s published pan aim.
+    Use the published fix’s range for tilt.
     Map GP’s clockwise or counterclockwise direction to the calibrated pan encoder sign.
 
     If GP publishes the opposite direction while pan is slewing:

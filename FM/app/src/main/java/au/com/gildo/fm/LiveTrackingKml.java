@@ -101,13 +101,16 @@ final class LiveTrackingKml {
 
     private void writePublishedFixes(Writer out, Instant pressedAt, long press) throws IOException {
         out.write("<Folder><name>Published GPS fixes</name>\n");
-        writeTrack(out, "Tracking target path", "target", publishedFixes, item -> item.fix().target());
+        writeTrack(out, "Tracking target path", "target", publishedFixes, LiveGpsFilter.Snapshot::panTarget);
+        if (publishedFixes.stream().anyMatch(item -> item.panLeadM() > 0))
+            writeTrack(out, "Published GPS path", "raw", publishedFixes, item -> item.fix().target());
         for (LiveGpsFilter.Snapshot item : publishedFixes) {
             String details = (item.fix().simulated() ? "Simulator GPS #" : "Source GPS #") + item.fix().packet().sequence
                 + "\nGP direction · " + item.direction().name()
                 + "\nGP state · " + item.state().name()
                 + "\nPublished · " + pressedAt.plusMillis(item.publishedAt() - press)
-                + "\nPosition revision · " + item.revision();
+                + "\nPosition revision · " + item.revision() + "\nPan lead · " + item.panLeadM() + " m"
+                + "\nPan aim · " + item.panTarget().lat() + ", " + item.panTarget().lon();
             placemark(out, "◆ Published revision " + item.revision(), "target", item.fix().target(), details);
         }
         out.write("</Folder>\n");

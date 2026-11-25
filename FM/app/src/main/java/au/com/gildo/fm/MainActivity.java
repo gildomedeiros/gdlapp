@@ -166,6 +166,8 @@ public final class MainActivity extends Activity {
         addSetting(settingsPanel,values,FmService.LIVE_TILT_SPEED);
         addSetting(settingsPanel,values,FmService.LIVE_GPS_HOLD);
         addSetting(settingsPanel,values,FmService.LIVE_GPS_STATIONARY_MS);
+        addSetting(settingsPanel,values,FmService.LIVE_PAN_LEAD);
+        addSetting(settingsPanel,values,FmService.SIMULATOR_SHOT_WIDTH);
         button(settingsPanel,"Save settings",this::submitSettings);
 
         calibrationPanel=collapsibleSection(root,"Landmark calibration",state!=null&&state.getBoolean(CALIBRATION_OPEN));
@@ -763,7 +765,8 @@ public final class MainActivity extends Activity {
         input.setId(View.generateViewId());
         caption.setLabelFor(input.getId());
         if(isCoordinatePair(index)) input.setHint("e.g. "+MountCoordinates.EXAMPLE);
-        if(index==FmService.HS_GAP_WARNING||index==FmService.LIVE_PAN_SPEED||index==FmService.LIVE_TILT_SPEED)
+        if(index==FmService.HS_GAP_WARNING||index==FmService.LIVE_PAN_SPEED||index==FmService.LIVE_TILT_SPEED
+            ||index==FmService.LIVE_PAN_LEAD||index==FmService.SIMULATOR_SHOT_WIDTH)
             input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         if(index==FmService.LIVE_GPS_HOLD||index==FmService.LIVE_GPS_STATIONARY_MS)
             input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);

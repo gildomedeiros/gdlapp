@@ -9,9 +9,11 @@ import java.util.Locale;
 /** GP's filtered, revisioned output for one Live Tracking session. */
 final class LiveGpsFilter {
     static final int DEFAULT_HOLD_FIXES = 4;
+    static final int DEFAULT_PAN_LEAD_M = 5;
     static final int DEFAULT_STATIONARY_CONFIRMATION_MS = 2_000;
     private static final int REQUIRED_DIRECTION_FIXES = 3;
     private static final double STATIONARY_RADIUS_M = 1.5;
+    private static final double STATIONARY_DEPARTURE_M = 1;
     private static final double SMALL_STEP_M = 1, BEARING_ROUNDING_DEG = 1e-7;
 
     enum State { MOVING, STATIONARY }
@@ -23,7 +25,8 @@ final class LiveGpsFilter {
     }
 
     record Snapshot(LiveGpsSource.Fix fix, LiveGpsSource.Direction direction, State state,
-                    long revision, long publishedAt, long freshAt, List<String> rules) {
+                    long revision, long publishedAt, long freshAt, List<String> rules,
+                    GoTo.Point panTarget, double panLeadM) {
         long ageMs(long now) { return Math.max(0, now - freshAt); }
     }
 
@@ -31,22 +34,27 @@ final class LiveGpsFilter {
     private final int maxHeld;
     private final double maxAgeMs;
     private final int stationaryConfirmationMs;
+    private final double panLeadM;
     private final GoTo.Trace log;
     private LiveGpsSource.Fix previous;
     private LiveGpsSource.Fix stationaryAnchor;
+    private GoTo.Point stationaryPosition;
     private Snapshot latest;
     private RuleStatus currentRule = new RuleStatus(4, null, "Waiting for a receiver fix");
     private Double firstBearing, stationaryBearing;
-    private LiveGpsSource.Direction pending;
+    private LiveGpsSource.Direction pending, lastLateralDirection;
     private int pendingCount, heldCount;
+    private boolean leadActive;
     private boolean gap;
     private long revision;
 
-    LiveGpsFilter(GoTo.Point mount, int maxHeld, double maxAgeMs, int stationaryConfirmationMs, GoTo.Trace log) {
+    LiveGpsFilter(GoTo.Point mount, int maxHeld, double maxAgeMs, int stationaryConfirmationMs,
+                  double panLeadM, GoTo.Trace log) {
         this.mount = mount;
         this.maxHeld = maxHeld;
         this.maxAgeMs = maxAgeMs;
         this.stationaryConfirmationMs = stationaryConfirmationMs;
+        this.panLeadM = panLeadM;
         this.log = log;
     }
 
@@ -56,11 +64,14 @@ final class LiveGpsFilter {
     void resetInput() {
         previous = null;
         stationaryAnchor = null;
+        stationaryPosition = null;
         latest = null;
         firstBearing = null;
         stationaryBearing = null;
         heldCount = 0;
         gap = false;
+        leadActive = false;
+        lastLateralDirection = null;
         clearDirectionEvidence();
         currentRule = new RuleStatus(4, null, "Waiting for a receiver fix");
     }
@@ -116,6 +127,7 @@ final class LiveGpsFilter {
         decision(4, packet, "accept", "Valid distinct GPS input");
         boolean enteredStationary = continuous && stationaryBearing == null && confirmStationary(input, prior);
         if (enteredStationary) {
+            leadActive = false;
             clearDirectionEvidence();
             decision(7, packet, "retain", "Stationary retains the published target and direction",
                 "direction", directionOfLatest(), "state", State.STATIONARY.name());
@@ -124,8 +136,11 @@ final class LiveGpsFilter {
         }
 
         double publishedBearing = latest == null ? firstBearing : bearing(latest.fix().target());
-        double reference = stationaryBearing == null ? bearing(prior) : stationaryBearing;
+        double priorBearing = bearing(prior);
+        double reference = stationaryBearing == null ? priorBearing : stationaryBearing;
         LiveGpsSource.Direction candidate = direction(reference, bearing);
+        boolean agreesWithLastStep = continuous && candidate != null && candidate == lastLateralDirection;
+        lastLateralDirection = continuous && stationaryBearing == null ? candidate : null;
         boolean directionReady = stationaryBearing == null && confirmMovingDirection(packet, candidate, reference);
 
         double stepM = Geo.distance(prior.lat(), prior.lon(), point.lat(), point.lon());
@@ -144,12 +159,29 @@ final class LiveGpsFilter {
         if (enteredStationary) return;
 
         if (stationaryBearing != null && candidate != null) {
-            decision(3, packet, "confirm", "First eligible bearing change from Stationary",
-                "referenceBearingDeg", stationaryBearing, "direction", candidate.name());
+            double departureM = Geo.distance(stationaryPosition.lat(), stationaryPosition.lon(), point.lat(), point.lon());
+            if (departureM <= STATIONARY_DEPARTURE_M) {
+                decision(3, packet, "hold", "Fix within 1 m of the Stationary reference",
+                    "distanceFromStationaryM", departureM, "thresholdM", STATIONARY_DEPARTURE_M);
+                refresh(packet, State.STATIONARY, input.receivedAt(), 3, 7);
+                showRule(3, packet, "Holding a fix within 1 m of the Stationary reference");
+                return;
+            }
+            decision(3, packet, "confirm", "First eligible bearing change beyond 1 m from Stationary",
+                "referenceBearingDeg", stationaryBearing, "direction", candidate.name(),
+                "distanceFromStationaryM", departureM, "thresholdM", STATIONARY_DEPARTURE_M);
             stationaryBearing = null;
+            stationaryPosition = null;
             publish(input, candidate, now, 4, 0, 3, 6);
+            // The first eligible departure also counts as a step for the next Rule 1 fix.
+            if (continuous) lastLateralDirection = direction(priorBearing, bearing);
             showRule(3, packet, "Left Stationary. Published " + directionText(candidate) + " direction.");
         } else if (directionReady) {
+            if (panLeadM > 0 && !leadActive && latest != null && latest.direction() == candidate && agreesWithLastStep) {
+                double sidewaysM = Geo.distance(mount.lat(), mount.lon(), point.lat(), point.lon())
+                    * Math.abs(Math.toRadians(Geo.delta(bearing, priorBearing)));
+                leadActive = sidewaysM > SMALL_STEP_M;
+            }
             publish(input, candidate, now, 4, 1, 0, 6);
             showRule(6, packet, "Published new target · " + directionText(candidate));
         } else if (candidate == null
@@ -183,6 +215,7 @@ final class LiveGpsFilter {
         long elapsedMs = input.receivedAt() - stationaryAnchor.receivedAt();
         if (elapsedMs < stationaryConfirmationMs) return false;
 
+        stationaryPosition = anchor;
         stationaryBearing = bearing(anchor);
         stationaryAnchor = null;
         decision(2, packet, "stationary", "Consecutive fixes stayed within the stationary radius",
@@ -242,7 +275,15 @@ final class LiveGpsFilter {
     private String directionOfLatest() { return latest == null ? null : latest.direction().name(); }
 
     private void publish(LiveGpsSource.Fix input, LiveGpsSource.Direction direction, long now, int... rules) {
-        latest = new Snapshot(input, direction, state(), ++revision, now, input.receivedAt(), ruleIds(rules));
+        if (latest != null && latest.direction() != direction) leadActive = false;
+        double appliedLeadM = leadActive ? panLeadM : 0;
+        GoTo.Point panTarget = input.target();
+        if (appliedLeadM > 0) {
+            double signedLeadM = direction == LiveGpsSource.Direction.CLOCKWISE ? appliedLeadM : -appliedLeadM;
+            panTarget = LiveGpsSource.rotateAroundMount(mount, panTarget, signedLeadM);
+        }
+        latest = new Snapshot(input, direction, state(), ++revision, now, input.receivedAt(), ruleIds(rules),
+            panTarget, appliedLeadM);
         heldCount = 0;
         clearDirectionEvidence();
         decision(6, input.packet().sequence, "publish", "New position and GP direction",
@@ -254,7 +295,7 @@ final class LiveGpsFilter {
         long time = freshAt == null ? latest.freshAt() : Math.max(freshAt, latest.freshAt());
         if (state == latest.state() && time == latest.freshAt()) return;
         latest = new Snapshot(latest.fix(), latest.direction(), state, latest.revision(), latest.publishedAt(),
-            time, ruleIds(rules));
+            time, ruleIds(rules), latest.panTarget(), latest.panLeadM());
         decision(6, packet, "refresh", "Position revision and direction retained", "state", state.name());
     }
 
