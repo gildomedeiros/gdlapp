@@ -66,7 +66,7 @@ final class DeviceDiscovery {
         }
         if(preferred!=null){
             List<Link> preferredLinks=links.stream().filter(l->preferred.equals(l.network())).collect(java.util.stream.Collectors.toList());
-            if(preferredLinks.isEmpty()) throw new IOException("GDL Wi-Fi has no usable IPv4 address");
+            if(preferredLinks.isEmpty()) throw new IOException("Hotspot Wi-Fi has no usable IPv4 address");
             links=preferredLinks;
         }
         if(links.size()==1)return links.get(0);

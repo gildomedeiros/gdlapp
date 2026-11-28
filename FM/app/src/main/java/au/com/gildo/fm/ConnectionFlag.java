@@ -4,7 +4,7 @@ package au.com.gildo.fm;
 record ConnectionFlag(Level level, String label) {
     enum Level { IDLE, PENDING, GOOD, FAILED }
     enum Channel {
-        GDL("GDL Wi-Fi"), GPS("GPS"), GTI("GTi"), CALIBRATION("Calibration"), CANON("Canon link"), RECORDING("Recording"),
+        GDL("Hotspot Wi-Fi"), GPS("GPS"), GTI("GTi"), CALIBRATION("Calibration"), CANON("Canon link"), RECORDING("Recording"),
         EVENTS("Canon events"), ZOOM("Zoom");
 
         final String title;

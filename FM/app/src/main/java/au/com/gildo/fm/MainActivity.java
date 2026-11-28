@@ -58,6 +58,8 @@ public final class MainActivity extends Activity {
     private String displayedFileStatus="";
     private static final int GDL_PERMISSION=7;
     private boolean showGdlCredentials;
+    private Button connectHotspot;
+    private String lastHotspotName;
     private final SettingsAutosave autosave=new SettingsAutosave(this::writeSettingsEdit,this::settingsSaveResult);
     private CheckBox calibrationConfirmed, disableTilt, manualCamera;
     private Button cameraPreviewButton, liveStart, cancelCapture, stopFm, discoverCanon, chooseCsv, linkFolder;
@@ -98,6 +100,7 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs=getSharedPreferences("fm",MODE_PRIVATE);
+        lastHotspotName=HotspotSettings.cached(prefs).name();
         if(state!=null && state.getString("pendingSimKml")!=null) pendingSimKml=Uri.parse(state.getString("pendingSimKml"));
         if(state!=null && state.getString("pendingReplayCsv")!=null) pendingReplayCsv=Uri.parse(state.getString("pendingReplayCsv"));
         ScrollView scroll=new ScrollView(this);
@@ -170,7 +173,7 @@ public final class MainActivity extends Activity {
         liveGpsRuleStatus.setVisibility(View.GONE);
         addGpsPad(root,state);
         gtiStatus=text(root,"GTi disconnected",15);
-        button(root,"Connect to GDL",this::chooseGdl);
+        connectHotspot=button(root,"Connect to hotspot",this::chooseGdl);
         button(root,"Connect GTi",()->afterSettings(()->service.connectGti()));
         savedStatus=text(root,"",15);
         calibrationPanel=collapsibleSection(root,"Landmark calibration",state!=null&&state.getBoolean(CALIBRATION_OPEN));
@@ -343,7 +346,7 @@ public final class MainActivity extends Activity {
             if(gdlPermissionGranted()) { showGdlCredentials=true; render(); }
             else {
                 if(service!=null) service.gdlPermissionDenied();
-                Toast.makeText(this,"GDL Wi-Fi permission denied",Toast.LENGTH_LONG).show();
+                Toast.makeText(this,"Hotspot Wi-Fi permission denied",Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -354,6 +357,7 @@ public final class MainActivity extends Activity {
             startForegroundService(intent);
             bound=bindService(intent,connection,BIND_AUTO_CREATE);
             startMonitoring.setVisibility(View.GONE);
+            render();
         } catch(RuntimeException e) { result.setText("Cannot start FM: "+e.getMessage()); }
     }
     private void disconnect() {
@@ -419,6 +423,7 @@ public final class MainActivity extends Activity {
 
     private void render() {
         if(service!=null && service.stopped()) {
+            showGdlCredentials=false;
             result.setText(service.resultText());
             disconnect();
             gpsStatus.setText("FM stopped");
@@ -450,14 +455,21 @@ public final class MainActivity extends Activity {
             if(!displayedFileStatus.isEmpty()) settingsSaveStatus.setText(displayedFileStatus);
         }
         for(Button b:buttons) b.setEnabled(ready);
+        boolean hotspotAvailable=service==null?bound:service.canConnectHotspot();
+        hotspotAvailable=hotspotAvailable && !startingLive && !autosave.waitingForAction();
+        if(service!=null && service.settingsLoaded()) lastHotspotName=service.hotspot().name();
+        String hotspotLabel="Connect to "+lastHotspotName;
+        if(!TextUtils.equals(connectHotspot.getText(),hotspotLabel)) connectHotspot.setText(hotspotLabel);
+        connectHotspot.setEnabled(hotspotAvailable && !showGdlCredentials);
         stopFm.setEnabled(service!=null && !service.stopping());
         stopFm.setText(service!=null && service.stopping()?"Waiting for full stop":"Stop FM");
         discoverCanon.setEnabled(ready && !service.manualCamera());
         manualCamera.setEnabled(editSettings);
         chooseCsv.setEnabled(editSettings);
         linkFolder.setEnabled(editSettings && !service.linkingSettingsFolder());
-        if(ready && showGdlCredentials) {
+        if(showGdlCredentials && hotspotAvailable && service!=null && service.settingsLoaded()) {
             showGdlCredentials=false;
+            connectHotspot.setEnabled(true);
             gdlCredentials();
         }
         String block=service==null?"":service.landmarkRangeBlock();
@@ -1156,10 +1168,13 @@ public final class MainActivity extends Activity {
                 new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},GDL_PERMISSION);
             return;
         }
-        gdlCredentials();
+        showGdlCredentials=true;
+        render();
     }
 
     private void gdlCredentials() {
+        if(service==null) return;
+        HotspotSettings selected=service.hotspot();
         LinearLayout fields=new LinearLayout(this);
         fields.setOrientation(LinearLayout.VERTICAL);
         fields.setPadding(dp(20),dp(4),dp(20),0);
@@ -1168,8 +1183,9 @@ public final class MainActivity extends Activity {
         fields.addView(security);
         EditText password=new EditText(this);
         password.setSingleLine();
-        password.setHint("GDL Wi-Fi password");
+        password.setHint("Hotspot Wi-Fi password");
         password.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        password.setText(selected.password());
         fields.addView(password);
         security.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent,View view,int position,long id) {
@@ -1177,7 +1193,8 @@ public final class MainActivity extends Activity {
             }
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Connect to GDL").setView(fields)
+        if(selected.password().isEmpty()) security.setSelection(2);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Connect to "+selected.name()).setView(fields)
             .setNegativeButton("Cancel",null).setPositiveButton("Connect",null).create();
         dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
             String pass=password.getText().toString();
@@ -1185,7 +1202,7 @@ public final class MainActivity extends Activity {
                 password.setError("Enter the 8–63 character Wi-Fi password");
                 return;
             }
-            if(service!=null) service.connectGdl(security.getSelectedItem().toString(),pass);
+            if(service!=null) service.connectGdl(selected.name(),security.getSelectedItem().toString(),pass);
             dialog.dismiss();
         }));
         dialog.show();

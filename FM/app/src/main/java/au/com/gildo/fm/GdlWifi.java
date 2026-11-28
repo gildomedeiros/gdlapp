@@ -31,11 +31,11 @@ final class GdlWifi {
 
     Network route() throws IOException {
         Network selected=network;
-        if(requested && selected==null) throw new IOException("GDL Wi-Fi is disconnected");
+        if(requested && selected==null) throw new IOException("Hotspot Wi-Fi is disconnected");
         return selected;
     }
 
-    void request(String security,String password) {
+    void request(String name,String security,String password) {
         release();
         requested=true;
         if(Build.VERSION.SDK_INT<29) {
@@ -43,7 +43,7 @@ final class GdlWifi {
             return;
         }
         try {
-            WifiNetworkSpecifier.Builder wifi=new WifiNetworkSpecifier.Builder().setSsid("GDL");
+            WifiNetworkSpecifier.Builder wifi=new WifiNetworkSpecifier.Builder().setSsid(name);
             if("WPA2".equals(security)) wifi.setWpa2Passphrase(password);
             else if("WPA3".equals(security)) wifi.setWpa3Passphrase(password);
             NetworkRequest request=new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
@@ -54,7 +54,7 @@ final class GdlWifi {
                     for(android.net.LinkAddress address:properties.getLinkAddresses()) {
                         if(address.getAddress() instanceof java.net.Inet4Address) {
                             network=available;
-                            flag=ConnectionFlag.good("Connected");
+                            flag=ConnectionFlag.good("Connected · "+name);
                             changed.accept(true);
                             break;
                         }
@@ -71,10 +71,10 @@ final class GdlWifi {
                     fail("Unavailable or denied");
                 }
             };
-            flag=ConnectionFlag.pending("Connecting");
+            flag=ConnectionFlag.pending("Connecting · "+name);
             manager.requestNetwork(request,callback,main);
         } catch(SecurityException e) { release(); fail("Wi-Fi permission required"); }
-          catch(IllegalArgumentException e) { release(); fail("Check GDL security and password"); }
+          catch(IllegalArgumentException e) { release(); fail("Check hotspot name, security and password"); }
           catch(RuntimeException e) { release(); fail("Connection request failed"); }
     }
 

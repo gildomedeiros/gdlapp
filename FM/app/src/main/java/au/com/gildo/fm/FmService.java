@@ -71,6 +71,10 @@ public final class FmService extends Service {
     }
 
     private void recordSettingsLoad(SettingsFile.Snapshot snapshot,byte[] contents) {
+        if(!snapshot.hotspot().equals(hotspot)) {
+            hotspot=snapshot.hotspot();
+            hotspot.cache(prefs);
+        }
         lastSettingsLoad=new SettingsFile.LastLoad(snapshot.displayVersion(),SystemClock.elapsedRealtime(),contents);
         main.post(this::publish);
     }
@@ -80,42 +84,42 @@ public final class FmService extends Service {
     private SharedPreferences prefs;
     private ConnectivityManager network;
     private GdlWifi gdl;
-    private boolean waitingForGdl;
-    private volatile boolean discoverGdlWhenIdle;
+    private volatile HotspotSettings hotspot;
+    HotspotSettings hotspot() { return hotspot; }
+    private final StartupWifi startupWifi=new StartupWifi();
     private DeviceDiscovery.Link deviceLink(String host) throws IOException {
         return DeviceDiscovery.selectLink(network,gdl.route(),host);
     }
 
-    void connectGdl(String security,String password) {
-        if(!ready()) return;
-        waitingForGdl=true;
-        begin("Connecting to GDL Wi-Fi");
-        gdl.request(security,password);
+    void connectGdl(String name,String security,String password) {
+        if(!canConnectHotspot()) return;
+        startupWifi.request();
+        gtiConnection=null;
+        resultText="Connecting to "+name;
+        gdl.request(name,security,password);
         publish();
+        refreshNotification();
     }
 
     void gdlPermissionDenied() { gdl.fail("Permission denied"); }
 
     private void gdlChanged(boolean available) {
         if(destroyed || stopWhenIdle) return;
-        boolean waiting=waitingForGdl;
-        waitingForGdl=false;
-        if(waiting) busy=false;
-        if(available) discoverGdlWhenIdle=true;
-        else {
-            discoverGdlWhenIdle=false;
+        boolean waiting=startupWifi.requesting;
+        startupWifi.networkChanged(available);
+        if(!available) {
             if(gdl.requested()) gtiExchangeFailed=true;
-            if(waiting) resultText="GDL Wi-Fi · "+gdl.flag().label();
+            if(waiting) resultText="Hotspot Wi-Fi · "+gdl.flag().label();
         }
         discoverGdlIfReady();
         publish();
+        refreshNotification();
     }
 
     private void discoverGdlIfReady() {
-        if(!discoverGdlWhenIdle || !ready()) return;
-        discoverGdlWhenIdle=false;
-        begin("GDL connected · Discovering GTi");
-        worker.execute(()->{ resetGps(); finish(connectMount(true)); });
+        if(!startupWifi.takeDiscovery(ready())) return;
+        begin("Hotspot connected · Discovering GTi");
+        worker.execute(()->{ resetGps(); finish(connectMount(MountConnect.HOTSPOT)); });
     }
     private volatile CameraZoomReader camera;
     private volatile CameraSettings cameraSettings;
@@ -222,6 +226,7 @@ public final class FmService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         prefs=getSharedPreferences("fm",MODE_PRIVATE);
+        hotspot=HotspotSettings.cached(prefs);
         network=getSystemService(ConnectivityManager.class);
         gdl=new GdlWifi(network,main,this::gdlChanged);
         wake=getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"FM:ConnectedDevices");
@@ -241,7 +246,9 @@ public final class FmService extends Service {
             else startForeground(NOTIFICATION,notification());
             foreground=true;
             wake.acquire();
-            begin("Loading FM settings");
+            startupWifi.starting=true;
+            resultText="Loading FM settings";
+            publish(); refreshNotification();
             worker.execute(this::startMonitoring);
         }
         return START_NOT_STICKY;
@@ -266,7 +273,7 @@ public final class FmService extends Service {
                     settingsStatus+="\nUse Link FM settings folder to load "+SettingsFile.LOCATION+".";
             } else {
                 calibrationSession.reconcile(values);
-                SettingsFile.Snapshot created=new SettingsFile.Snapshot(values,"");
+                SettingsFile.Snapshot created=new SettingsFile.Snapshot(values,"",hotspot);
                 recordSettingsLoad(created,SettingsFile.write(this,prefs,created));
                 settingsLocation=SettingsFile.LOCATION;
                 settingsStatus="FM active · Settings created at "+settingsLocation;
@@ -283,11 +290,23 @@ public final class FmService extends Service {
         // Publishing a startup record makes the public folder available before any attempt.
         String startup=settingsStatus+"\n"+publishStartupLog(settingsStatus,settingsLocation,values);
         if(!motionAllowed()) return;
-        updateResult("Finding GTi on local Wi-Fi");
-        String mountStatus=connectMount(true);
+        main.post(()->{
+            if(startupWifi.useOriginalRoute() && motionAllowed()) {
+                resultText="Finding GTi on local Wi-Fi";
+                publish(); refreshNotification();
+            }
+        });
+        String mountStatus=startupWifi.useOriginalRoute()?connectMount(MountConnect.STARTUP):"";
         if(destroyed) return;
         worker.scheduleWithFixedDelay(this::readGps,0,75,TimeUnit.MILLISECONDS);
-        finish(mountStatus+"\n"+startup);
+        main.post(()->{
+            startupWifi.starting=false;
+            if(!motionAllowed()) return;
+            if(startupWifi.useOriginalRoute()) resultText=mountStatus+"\n"+startup;
+            else gtiConnection=null;
+            discoverGdlIfReady();
+            publish(); refreshNotification();
+        });
     }
 
     private String publishStartupLog(String settingsStatus,String settingsLocation,String[] values) {
@@ -313,7 +332,7 @@ public final class FmService extends Service {
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,FmService.class).setAction(STOP),
             PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-        String summary=stopWhenIdle?resultText():busy?resultText:"Receiving GPS · Tap to open FM";
+        String summary=stopWhenIdle?resultText():(busy || startupWifi.starting || startupWifi.requesting)?resultText:"Receiving GPS · Tap to open FM";
         return new Notification.Builder(this,CHANNEL).setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setContentTitle("FM is running").setContentText(summary.split("\n",2)[0])
             .setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true).setVisibility(Notification.VISIBILITY_PUBLIC)
@@ -665,7 +684,9 @@ public final class FmService extends Service {
     boolean calibrating() { return calibrating; }
     String calibrationError() { return prefs.getString(LAST_CALIBRATION_ERROR,""); }
     boolean stopped() { return destroyed; }
-    boolean ready() { return foreground&&motionAllowed()&&!busy&&!linkingSettings; }
+    private boolean serviceIdle() { return foreground && motionAllowed() && !busy && !linkingSettings; }
+    boolean ready() { return startupWifi.canUseMount(serviceIdle()); }
+    boolean canConnectHotspot() { return startupWifi.canRequest(serviceIdle()); }
     boolean settingsLoaded() { return settingsLoaded; }
     boolean linkingSettingsFolder() { return linkingSettings; }
     boolean settingsEditable() {
@@ -779,10 +800,18 @@ public final class FmService extends Service {
     void connectGti() {
         if(!ready()) return;
         begin("Connecting to GTi");
-        worker.execute(()->finish(connectMount(false)));
+        worker.execute(()->finish(connectMount(MountConnect.BUTTON)));
     }
 
-    private String connectMount(boolean automatic) {
+    private enum MountConnect { STARTUP, HOTSPOT, BUTTON }
+
+    private void requireConnectRoute(MountConnect trigger) throws IOException {
+        if(!motionAllowed()) throw new IOException("FM stopped before connecting to GTi");
+        if(trigger==MountConnect.STARTUP && !startupWifi.useOriginalRoute())
+            throw new IOException("Startup discovery superseded by hotspot selection");
+    }
+
+    private String connectMount(MountConnect trigger) {
         gtiConnection=null;
         String id=UUID.randomUUID().toString().substring(0,12);
         String name="FM-"+id+".jsonl";
@@ -792,12 +821,14 @@ public final class FmService extends Service {
             trace=log;
             prefs.edit().putString("lastLog",name).apply();
             log.event("gti_connect_attempt","wallTimeMs",System.currentTimeMillis(),"host",settings[4],"port",settings[5],
-                "trigger",automatic?"startup":"button");
+                "trigger",trigger.name().toLowerCase(java.util.Locale.ROOT));
             try {
+                requireConnectRoute(trigger);
                 DeviceDiscovery.Link link=deviceLink(settings[4]);
-                DeviceDiscovery.Device discovered=automatic?
-                    DeviceDiscovery.findStartupMount(link,settings[4],port(5),this::motionAllowed):null;
-                if(!motionAllowed()) throw new IOException("FM stopped before connecting to GTi");
+                DeviceDiscovery.Device discovered=trigger==MountConnect.BUTTON?null:
+                    DeviceDiscovery.findStartupMount(link,settings[4],port(5),
+                        ()->motionAllowed() && (trigger!=MountConnect.STARTUP || startupWifi.useOriginalRoute()));
+                requireConnectRoute(trigger);
                 SettingsFile.requireUnchanged(settings,SettingsFile.cached(prefs),4,5);
                 if(discovered!=null)
                     log.event("gti_startup_discovery","address",discovered.address(),"identity",discovered.identity());
@@ -806,15 +837,17 @@ public final class FmService extends Service {
                 String[] selectedEndpoint=candidate==null?settings:candidate;
                 InetSocketAddress target=discovered==null?endpoint(4,5):
                     new InetSocketAddress(InetAddress.getByName(discovered.address()),port(5));
-                GoTo client=new GoTo(link::udp,target,log);
+                GoTo client=new GoTo(()->{ requireConnectRoute(trigger); return link.udp(); },target,log);
                 GoTo.MountSetup setup=client.connect(()->{
+                    requireConnectRoute(trigger);
                     rememberDiscoveredEndpoint(candidate,log);
                     invalidateReferenceForInitialization(settings,log);
                 });
+                requireConnectRoute(trigger);
                 rememberDiscoveredEndpoint(candidate,log);
                 HsTiming pan=readHsTiming(client,1,log);
                 HsTiming tilt=readHsTiming(client,2,log);
-                if(destroyed) throw new IOException("FM stopped while connecting to GTi");
+                requireConnectRoute(trigger);
                 SettingsFile.requireUnchanged(selectedEndpoint,SettingsFile.cached(prefs),4,5);
                 gtiExchangeFailed=false;
                 gtiConnection=new MountConnection(target,link,setup,pan,tilt);
@@ -1052,7 +1085,7 @@ public final class FmService extends Service {
     private SettingsFile.Snapshot readCurrentSettings() throws Exception {
         byte[] bytes=SettingsFile.contents(this,prefs);
         String[] cached=SettingsFile.cached(prefs);
-        return bytes==null?new SettingsFile.Snapshot(cached,""):
+        return bytes==null?new SettingsFile.Snapshot(cached,"",hotspot):
             SettingsFile.readSnapshot(SettingsFile.parseDocument(bytes).getJSONObject("settings"),cached);
     }
 

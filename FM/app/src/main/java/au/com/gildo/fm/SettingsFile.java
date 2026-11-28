@@ -29,8 +29,8 @@ final class SettingsFile {
     private static final int ACCESS=Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
     static final String LOCATION=PATH+NAME;
 
-    record Snapshot(String[] values,Object version) {
-        Snapshot withValues(String[] updated) { return new Snapshot(updated,version); }
+    record Snapshot(String[] values,Object version,HotspotSettings hotspot) {
+        Snapshot withValues(String[] updated) { return new Snapshot(updated,version,hotspot); }
 
         String displayVersion() {
             if(version==null || version==JSONObject.NULL) return "Not set";
@@ -41,7 +41,9 @@ final class SettingsFile {
 
         JSONObject document() throws Exception {
             JSONObject document=settingsDocument(values);
-            document.getJSONObject("settings").put(VERSION_KEY,version);
+            JSONObject fields=document.getJSONObject("settings");
+            fields.put(VERSION_KEY,version==null?"":version);
+            hotspot.writeTo(fields);
             return document;
         }
     }
@@ -170,9 +172,9 @@ final class SettingsFile {
         try(InputStream in=resolver.openInputStream(uri)) { contents=readBytes(in); }
         JSONObject document=parseDocument(contents);
         JSONObject fields=document.getJSONObject("settings");
-        String[] values=decode(fields,cached(prefs));
+        Snapshot snapshot=readSnapshot(fields,cached(prefs));
         String warning="";
-        if(upgradeSettingsFields(fields,values)) {
+        if(upgradeSettingsFields(fields,snapshot.values())) {
             try {
                 byte[] bytes=encode(document);
                 if("file".equals(uri.getScheme())) writeLegacy(bytes);
@@ -183,7 +185,7 @@ final class SettingsFile {
                 warning="Could not update settings in "+PATH+name+" · "+failure.getMessage();
             }
         }
-        return new Loaded(new Snapshot(values,fields.opt(VERSION_KEY)),PATH+name,warning,contents);
+        return new Loaded(snapshot,PATH+name,warning,contents);
     }
 
     private static byte[] readBytes(InputStream in) throws IOException {
@@ -198,15 +200,21 @@ final class SettingsFile {
     }
 
     static JSONObject parseDocument(byte[] bytes) throws Exception {
-        JSONObject json=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
+        JSONObject json;
+        try { json=new JSONObject(new String(bytes,StandardCharsets.UTF_8)); }
+        catch(org.json.JSONException invalid) {
+            // Android's parser message can contain the entire file, including the Wi-Fi password.
+            throw new IOException("Invalid JSON in "+NAME);
+        }
         if(json.optInt("schema")!=1) throw new IOException("Unsupported FM settings format");
+        if(!(json.opt("settings") instanceof JSONObject)) throw new IOException("Expected a settings object in "+NAME);
         return json;
     }
 
     private static final int MAX_BYTES=1024*1024;
 
     static Snapshot readSnapshot(JSONObject fields,String[] previous) throws Exception {
-        return new Snapshot(decode(fields,previous),fields.opt(VERSION_KEY));
+        return new Snapshot(decode(fields,previous),fields.opt(VERSION_KEY),HotspotSettings.read(fields));
     }
 
     static String[] decode(JSONObject fields,String[] previous) throws Exception {
@@ -258,6 +266,10 @@ final class SettingsFile {
         boolean changed=fields.remove("Live HS pan speed (× sidereal)")!=null;
         if(!fields.has(VERSION_KEY)) {
             fields.put(VERSION_KEY,"");
+            changed=true;
+        }
+        if(!fields.has(HotspotSettings.NAME_KEY) || !fields.has(HotspotSettings.PASSWORD_KEY)) {
+            HotspotSettings.read(fields).writeTo(fields);
             changed=true;
         }
         for(int i=0;i<values.length;i++) {
