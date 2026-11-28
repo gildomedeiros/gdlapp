@@ -40,6 +40,20 @@ public class CameraSettingsFileTest {
         assertEquals(Boolean.TRUE,SettingsFile.settingsDocument(enabled).getJSONObject("settings").get("tilt-disable"));
     }
 
+    @Test public void livePanMultiplierMigratesAndRoundTrips() throws Exception {
+        String key="Live pan speed multiplier";
+        JSONObject fields=new JSONObject();
+        SettingsFile.upgradeSettingsFields(fields,SettingsFile.decode(fields,defaults));
+        assertEquals("1.0",fields.getString(key));
+        fields.put(key,1.3);
+        String[] settings=SettingsFile.decode(fields,defaults);
+        assertEquals(1.3,SettingsFile.settingsDocument(settings).getJSONObject("settings").getDouble(key),0);
+        for(String invalid : new String[]{"0","-1","NaN","Infinity"}) {
+            fields.put(key,invalid);
+            assertThrows(IllegalArgumentException.class,()->SettingsFile.decode(fields,defaults));
+        }
+    }
+
     @Test public void externalZoomScaleSurvivesConcurrentChangeToAnotherField() throws Exception {
         JSONObject fields=SettingsFile.settingsDocument(defaults).getJSONObject("settings");
         fields.put(scalesKey,new JSONArray("[1.2]"));

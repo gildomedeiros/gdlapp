@@ -7,7 +7,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,7 +34,7 @@ public class LiveTrackingTest {
         ))) {
             var events = new CopyOnWriteArrayList<String>();
             GoTo client = mount.client((name, fields) -> events.add(name));
-            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, false, () -> true, value -> {});
+            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, false, 1.0, () -> true, value -> {});
             var first = new LiveTracking.Targets(1, 1, 120, 85, 1, 20);
             var update = new LiveTracking.Targets(2, 2, 140, 90, 1, 20);
             tracking.tick(first);
@@ -55,7 +58,7 @@ public class LiveTrackingTest {
             reply("K3", "=")
         ))) {
             GoTo client = mount.client((name, fields) -> {});
-            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, null, false, () -> true, value -> {});
+            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, null, false, 1.0, () -> true, value -> {});
             var first = new LiveTracking.Targets(1, 1, 0xffffff, 100, -1, 20);
             var behind = new LiveTracking.Targets(2, 2, 1, 100, -1, 20);
             tracking.tick(first);
@@ -77,7 +80,7 @@ public class LiveTrackingTest {
             GoTo client = mount.client((name, fields) -> {
                 if (name.equals("gti_rx") && mount.commands.contains("G130")) active.set(false);
             });
-            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, false, active::get, value -> {});
+            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, false, 1.0, active::get, value -> {});
             tracking.tick(new LiveTracking.Targets(1, 1, 120, 90, 1, 20));
             client.stopBothMotors();
             mount.verify();
@@ -91,7 +94,7 @@ public class LiveTrackingTest {
             reply("G131", "="), period(1, PAN_PERIOD), reply("J1", "="), reply("K3", "=")
         ))) {
             GoTo client = mount.client((name, fields) -> {});
-            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, false, () -> true, value -> {});
+            LiveTracking tracking = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, false, 1.0, () -> true, value -> {});
             tracking.tick(null);
             assertTrue(mount.commands.isEmpty());
             tracking.tick(new LiveTracking.Targets(1, 1, 140, 85, 1, 20));
@@ -105,16 +108,33 @@ public class LiveTrackingTest {
     }
 
     @Test public void distanceSelectsSpeedOnlyOnAnExistingStopAndTiltCanBeDisabled() throws Exception {
-        // 100 m and 200 m are different restart rates. The first move must still use maximum speed.
-        int restartPeriod = TIMING.period(AimAtSurfer.siderealForRange(200) * CPR / GoTo.SIDEREAL_DAY_SECONDS);
+        verifyRestart(1.0, AimAtSurfer.siderealForRange(200), false);
+    }
+
+    @Test public void multiplierAppliesOnlyAfterStopAndLogsRatesWithTheFix() throws Exception {
+        double base = AimAtSurfer.siderealForRange(200);
+        verifyRestart(0.9, base * 0.9, false);
+        verifyRestart(1.3, base * 1.3, false);
+        verifyRestart(0.1, GoTo.MIN_HS_SIDEREAL, true);
+        verifyRestart(10.0, GoTo.MAX_HS_SIDEREAL, true);
+    }
+
+    private void verifyRestart(double multiplier, double expectedRate, boolean limited) throws Exception {
+        int restartPeriod = TIMING.period(expectedRate * CPR / GoTo.SIDEREAL_DAY_SECONDS);
         try (Mount mount = new Mount(List.of(
             reply("f1", "=101"), encoder(1, 100), reply("G130", "="), period(1, PAN_PERIOD), reply("J1", "="),
             encoder(1, 105), encoder(1, 141), reply("K1", "="),
             reply("f1", "=111"), reply("f1", "=101"), encoder(1, 145),
             reply("G130", "="), period(1, restartPeriod), reply("J1", "=")
         ))) {
-            var tracker = new LiveTracking(mount.client((name, fields) -> {}), CPR, TIMING, TILT_PERIOD,
-                true, () -> true, value -> {});
+            List<Map<String,Object>> selections = new ArrayList<>(), starts = new ArrayList<>();
+            GoTo client = mount.client((name, fields) -> {
+                if (!name.equals("live_pan_speed_selected") && !name.equals("live_pan_start_sent")) return;
+                Map<String,Object> row = new HashMap<>();
+                for (int i = 0; i < fields.length; i += 2) row.put((String)fields[i], fields[i + 1]);
+                (name.equals("live_pan_speed_selected") ? selections : starts).add(row);
+            });
+            var tracker = new LiveTracking(client, CPR, TIMING, TILT_PERIOD, true, multiplier, () -> true, value -> {});
             tracker.tick(new LiveTracking.Targets(1, 1, 120, null, 1, 100));
             var duringPan = new LiveTracking.Targets(2, 2, 140, null, 1, 300);
             tracker.tick(duringPan);
@@ -123,6 +143,21 @@ public class LiveTrackingTest {
             tracker.tick(restart);
             tracker.tick(restart);
             mount.verify();
+            for (var rows : List.of(selections, starts)) {
+                assertEquals(2, rows.size());
+                var initial = rows.get(0);
+                assertEquals(1L, initial.get("packet"));
+                assertEquals(1.0, initial.get("appliedMultiplier"));
+                assertEquals(800.0, initial.get("calculatedRateSidereal"));
+                assertEquals(800.0, initial.get("commandedRateSidereal"));
+                var resumed = rows.get(1);
+                assertEquals(3L, resumed.get("packet"));
+                assertEquals(multiplier, resumed.get("appliedMultiplier"));
+                assertEquals(AimAtSurfer.siderealForRange(200), resumed.get("calculatedRateSidereal"));
+                assertEquals(expectedRate, resumed.get("commandedRateSidereal"));
+            }
+            assertEquals(limited, selections.get(1).get("rateLimited"));
+            assertEquals(expectedRate, selections.get(1).get("rateSidereal"));
         }
     }
 
@@ -133,7 +168,7 @@ public class LiveTrackingTest {
             encoder(1,90),encoder(1,79),reply("K1","="),
             reply("f1","=101"),encoder(1,78),reply("G130","="),period(1,restart),reply("J1","=")))) {
             var events=new CopyOnWriteArrayList<String>();
-            var tracker=new LiveTracking(mount.client((name,fields)->events.add(name)),CPR,TIMING,null,true,()->true,v->{});
+            var tracker=new LiveTracking(mount.client((name,fields)->events.add(name)),CPR,TIMING,null,true,1.0,()->true,v->{});
             var first=new LiveTracking.Targets(1,1,80,null,1,200);
             var next=new LiveTracking.Targets(2,2,120,null,1,200);
             tracker.track(null,true);
@@ -152,7 +187,7 @@ public class LiveTrackingTest {
             reply("f1","=101"),encoder(1,100),
             reply("f1","=101"),encoder(1,100),reply("G130","="),period(1,PAN_PERIOD),reply("J1","="),
             reply("K1","="),reply("f1","=101"),encoder(1,115)))) {
-            var tracker=new LiveTracking(mount.client((n,f)->{}),CPR,TIMING,null,true,()->true,v->{});
+            var tracker=new LiveTracking(mount.client((n,f)->{}),CPR,TIMING,null,true,1.0,()->true,v->{});
             tracker.offerStartupTarget(1,100,100,Long.MAX_VALUE);
             tracker.track(null,false);
             tracker.track(new LiveTracking.Targets(2,2,150,null,1,100),false);
@@ -166,7 +201,7 @@ public class LiveTrackingTest {
 
     @Test public void failedStartupSetterDoesNotRetryOnTheSamePublication() throws Exception {
         try (Mount mount=new Mount(List.of(reply("f1","=101"),encoder(1,100),reply("G131","!0")))) {
-            var tracker=new LiveTracking(mount.client((n,f)->{}),CPR,TIMING,null,true,()->true,v->{});
+            var tracker=new LiveTracking(mount.client((n,f)->{}),CPR,TIMING,null,true,1.0,()->true,v->{});
             var first=new LiveTracking.Targets(1,1,80,null,1,200);
             tracker.offerStartupTarget(first.packet(),first.pan(),first.surferRangeM(),Long.MAX_VALUE);
             tracker.track(null,false);
@@ -183,7 +218,7 @@ public class LiveTrackingTest {
         var events=new CopyOnWriteArrayList<String>();
         try(Mount mount=new Mount(List.of(reply("f1","=101"),encoder(1,100),reply("G131","="),
             period(1,PAN_PERIOD),reply("J1","="),encoder(1,80),reply("K1","=")))) {
-            var tracker=new LiveTracking(mount.client((name,fields)->events.add(name)),CPR,TIMING,null,true,()->true,s->{});
+            var tracker=new LiveTracking(mount.client((name,fields)->events.add(name)),CPR,TIMING,null,true,1.0,()->true,s->{});
             for(int i=0;i<89;i++) {
                 var packet=LoRaTelemetry.parse("RX,GPS,"+(2121+i)+","+(1000+500*i)+",-28.07012,153.38716,25,0.6,-75,10,0");
                 var position=source.toFilterInput(packet,500L*i,pivot,0);
@@ -202,7 +237,7 @@ public class LiveTrackingTest {
 
     @Test public void expiredStartupWaitsForAnotherFix() throws Exception {
         try(Mount mount=new Mount(List.of(reply("f1","=101"),encoder(1,100)))) {
-            var tracker=new LiveTracking(mount.client((n,f)->{}),CPR,TIMING,null,true,()->true,s->{});
+            var tracker=new LiveTracking(mount.client((n,f)->{}),CPR,TIMING,null,true,1.0,()->true,s->{});
             tracker.offerStartupTarget(1,99,10,-1);
             tracker.track(null,false);
             assertTrue(tracker.needsStartupTarget());

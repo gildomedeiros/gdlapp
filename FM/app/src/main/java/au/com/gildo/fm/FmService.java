@@ -19,7 +19,8 @@ import java.util.function.Consumer;
 
 public final class FmService extends Service {
     static final int HS_GAP_WARNING=22, TILT_DISABLE=23, LIVE_TILT_SPEED=24, LIVE_GPS_HOLD=25,
-        LIVE_GPS_STATIONARY_MS=26, LIVE_PAN_LEAD=27, SIMULATOR_SHOT_WIDTH=28, LIVE_MIN_RANGE=37, MANUAL_CAMERA=38;
+        LIVE_GPS_STATIONARY_MS=26, LIVE_PAN_LEAD=27, SIMULATOR_SHOT_WIDTH=28, LIVE_MIN_RANGE=37, MANUAL_CAMERA=38,
+        LIVE_PAN_SPEED_MULTIPLIER=39;
     static final String[] KEYS={"GPS IP","GPS port","Listen port","GPS max age (ms)",
         "GTi IP","GTi port","Canon IP","Canon port","Mount latitude","Mount longitude",
         "Pivot elevation (m)","Target elevation (m)","Reference bearing","Reference elevation",
@@ -28,16 +29,18 @@ public final class FmService extends Service {
         "tilt-disable","Live slow tilt speed (× sidereal)","Live GPS small-step hold (fixes)",
         "Live GPS stationary confirmation (ms)","Live pan lead (m)","Simulator horizontal shot width (m)",
         "Canon clip limit (minutes)","Canon zoom mode","Canon frame width (m)","Canon wide frame factor",
-        "Canon zoom bands (JSON)","Canon zoom mapping (JSON)","Canon zoom scales","Canon zoom scale interval (s)","Minimum surfer-to-mount distance (m)","Manual camera"};
+        "Canon zoom bands (JSON)","Canon zoom mapping (JSON)","Canon zoom scales","Canon zoom scale interval (s)","Minimum surfer-to-mount distance (m)","Manual camera",
+        "Live pan speed multiplier"};
     static final String[] DEFAULTS={"192.168.4.1","5006","5005","2000","192.168.4.4","11880",
         "192.168.4.3","8080","","","","","","","","","1","-1","","","","","30",
         "false",Integer.toString(LiveTracking.DEFAULT_TILT_SPEED),
         Integer.toString(LiveGpsFilter.DEFAULT_HOLD_FIXES),
         Integer.toString(LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS),
         Integer.toString(LiveGpsFilter.DEFAULT_PAN_LEAD_M),Integer.toString(LiveFraming.DEFAULT_SHOT_WIDTH_M),
-        "20","bands","40","1.648",CameraSettings.DEFAULT_BANDS,ZoomMapping.DEFAULT,"[1.0]","10","5","false"};
+        "20","bands","40","1.648",CameraSettings.DEFAULT_BANDS,ZoomMapping.DEFAULT,"[1.0]","10","5","false","1.0"};
 
     private static final String CHANNEL="fm_connected";
+    static final String REPLAY_URI="replayCsvUri";
     private static final int NOTIFICATION=101;
     private static final String STOP="au.com.gildo.fm.STOP";
     private static final String LAST_CALIBRATION_ERROR="lastCalibrationError";
@@ -55,6 +58,7 @@ public final class FmService extends Service {
     private final LandmarkCalibration.Session calibrationSession=new LandmarkCalibration.Session();
     private byte[] lastSettingsBytes;
     private volatile long settingsRevision;
+    private volatile boolean settingsLoaded;
     private volatile String settingsFileStatus="";
     long settingsRevision() { return settingsRevision; }
     String settingsFileStatus() { return settingsFileStatus; }
@@ -109,7 +113,7 @@ public final class FmService extends Service {
     private record CameraPosition(GoTo.Point mount,GoTo.Point surfer,long freshAt,double maxAgeMs) {}
     private PowerManager.WakeLock wake;
     private Listener listener;
-    private boolean foreground,busy;
+    private boolean foreground,busy,linkingSettings;
     private volatile boolean stopWhenIdle;
     private MountConnection lastMovingMount;
     private String gpsText="GPS waiting for receiver", resultText="Starting FM";
@@ -158,6 +162,7 @@ public final class FmService extends Service {
     private volatile String landmarkRangeBlock="";
     String landmarkRangeBlock() { return landmarkRangeBlock; }
     private volatile String[] settings;
+    private String workerReferenceIssue;
     private volatile MountConnection gtiConnection;
     private volatile boolean destroyed;
     private long lastGpsUi;
@@ -255,6 +260,8 @@ public final class FmService extends Service {
         SettingsFile.cache(prefs,values);
         apply(values);
         configureCamera(values);
+        settingsLoaded=true;
+        main.post(this::publish);
         settingsWatcher.scheduleWithFixedDelay(this::checkSettingsFile,1,2,TimeUnit.SECONDS);
 
         // Publishing a startup record makes the public folder available before any attempt.
@@ -366,7 +373,7 @@ public final class FmService extends Service {
     @Override public void onDestroy() {
         destroyed=true;
         gdl.release();
-        settingsWatcher.shutdownNow();
+        settingsWatcher.shutdown(); // Finish any accepted file save.
         cancelLandmarkCapture();
         cameraSession=-1;
         CameraZoomReader closingCamera=camera;
@@ -642,7 +649,12 @@ public final class FmService extends Service {
     boolean calibrating() { return calibrating; }
     String calibrationError() { return prefs.getString(LAST_CALIBRATION_ERROR,""); }
     boolean stopped() { return destroyed; }
-    boolean ready() { return foreground&&motionAllowed()&&!busy; }
+    boolean ready() { return foreground&&motionAllowed()&&!busy&&!linkingSettings; }
+    boolean settingsLoaded() { return settingsLoaded; }
+    boolean linkingSettingsFolder() { return linkingSettings; }
+    boolean settingsEditable() {
+        return foreground && motionAllowed() && SettingsAutosave.editable(settingsLoaded(),liveGps!=null,liveStopConfirmed);
+    }
     private void begin(String message) { busy=true; resultText=message; publish(); refreshNotification(); }
     private void finish(String message) { finish(message,null); }
 
@@ -676,42 +688,58 @@ public final class FmService extends Service {
     }
 
     void linkSettingsFolder(Uri tree,int flags,Runnable refreshForm) {
-        if(!ready()) return;
-        begin("Reading "+SettingsFile.LOCATION);
-        worker.execute(()->{
+        if(!settingsEditable() || linkingSettings) return;
+        linkingSettings=true;
+        setSettingsFileStatus("Reading "+SettingsFile.LOCATION);
+        settingsWatcher.execute(()->{
             try {
-                SettingsFile.Loaded loaded;
-                String[] values;
                 synchronized(settingsIo) {
-                    loaded=SettingsFile.linkFolder(this,prefs,tree,flags);
-                    values=loaded.values();
+                    SettingsFile.Loaded loaded=SettingsFile.linkFolder(this,prefs,tree,flags);
+                    String[] values=loaded.values();
                     if(calibrationSession.reconcile(values)) SettingsFile.write(this,prefs,values);
                     SettingsFile.cache(prefs,values);
                     lastSettingsBytes=null;
                     configureCamera(values);
+                    settingsRevision++;
+                    applySavedSettingsWhenIdle();
+                    String status="Loaded "+SettingsFile.LOCATION;
+                    if(!loaded.warning().isEmpty()) status+="\n"+loaded.warning();
+                    String coordinates=MountCoordinates.format(values);
+                    if(!coordinates.isEmpty()) status+="\nMount coordinates · "+coordinates;
+                    if(!LandmarkCalibration.hasReference(values)) {
+                        prefs.edit().remove(LAST_CALIBRATION_ERROR).apply();
+                        status+="\nCentre the landmark and tap Calibrate here.";
+                    }
+                    setSettingsFileStatus(status);
                 }
-                apply(values);
-                setSettingsFileStatus("Loaded "+SettingsFile.LOCATION);
-                String mount=MountCoordinates.format(values);
-                String status="Settings loaded from "+SettingsFile.LOCATION;
-                if(!loaded.warning().isEmpty()) status+="\n"+loaded.warning();
-                if(!mount.isEmpty()) status+="\nMount coordinates · "+mount;
-                if(!LandmarkCalibration.hasReference(values)) {
-                    prefs.edit().remove(LAST_CALIBRATION_ERROR).apply();
-                    status+="\nCentre the landmark and tap Calibrate here.";
-                }
-                main.post(refreshForm);
-                finish(status);
-            } catch(Exception e) { finish("Could not link settings folder: "+e.getMessage()); }
+            } catch(Exception e) {
+                setSettingsFileStatus("Could not link settings folder: "+e.getMessage());
+            } finally {
+                main.post(()->{
+                    linkingSettings=false;
+                    refreshForm.run();
+                    discoverGdlIfReady();
+                    publish();
+                });
+            }
         });
     }
 
+    void releaseOldReplayFile(String previous) {
+        // An active replay keeps its grant until the mount worker finishes reading it.
+        worker.execute(()->main.post(()->{
+            if(previous.equals(prefs.getString(REPLAY_URI,""))) return;
+            try { getContentResolver().releasePersistableUriPermission(Uri.parse(previous),Intent.FLAG_GRANT_READ_URI_PERMISSION); }
+            catch(SecurityException ignored) { }
+        }));
+    }
+
     void saveEdit(SettingsAutosave.Edit edit, Consumer<String> completed) {
-        if(destroyed) {
-            completed.accept("FM has stopped");
+        if(!settingsEditable()) {
+            completed.accept("Settings are unavailable");
             return;
         }
-        worker.execute(()->{
+        settingsWatcher.execute(()->{
             String error=null;
             try {
                 synchronized(settingsIo) {
@@ -719,7 +747,8 @@ public final class FmService extends Service {
                     String[] values=disk.clone();
                     edit.apply(values);
                     LandmarkCalibration.clearStaleReference(disk,values);
-                    writeSettings(values);
+                    storeSettings(values,false);
+                    applySavedSettingsWhenIdle();
                 }
             } catch(Exception e) {
                 error=Objects.toString(e.getMessage(),e.getClass().getSimpleName());
@@ -751,10 +780,12 @@ public final class FmService extends Service {
                 DeviceDiscovery.Device discovered=automatic?
                     DeviceDiscovery.findStartupMount(link,settings[4],port(5),this::motionAllowed):null;
                 if(!motionAllowed()) throw new IOException("FM stopped before connecting to GTi");
+                SettingsFile.requireUnchanged(settings,SettingsFile.cached(prefs),4,5);
                 if(discovered!=null)
                     log.event("gti_startup_discovery","address",discovered.address(),"identity",discovered.identity());
                 String[] candidate=discovered!=null&&!settings[4].equals(discovered.address())?settings.clone():null;
                 if(candidate!=null) candidate[4]=discovered.address();
+                String[] selectedEndpoint=candidate==null?settings:candidate;
                 InetSocketAddress target=discovered==null?endpoint(4,5):
                     new InetSocketAddress(InetAddress.getByName(discovered.address()),port(5));
                 GoTo client=new GoTo(link::udp,target,log);
@@ -766,6 +797,7 @@ public final class FmService extends Service {
                 HsTiming pan=readHsTiming(client,1,log);
                 HsTiming tilt=readHsTiming(client,2,log);
                 if(destroyed) throw new IOException("FM stopped while connecting to GTi");
+                SettingsFile.requireUnchanged(selectedEndpoint,SettingsFile.cached(prefs),4,5);
                 gtiExchangeFailed=false;
                 gtiConnection=new MountConnection(target,link,setup,pan,tilt);
                 log.event("gti_connected","panCpr",setup.panCpr(),"tiltCpr",setup.tiltCpr(),
@@ -800,9 +832,9 @@ public final class FmService extends Service {
     }
 
     private void rememberDiscoveredEndpoint(String[] candidate,Trace log) throws IOException {
-        if(candidate==null||candidate==settings) return;
+        if(candidate==null||candidate[4].equals(settings[4])) return;
         boolean cleared=LandmarkCalibration.clearStaleReference(settings,candidate);
-        try { persistSettings(candidate); }
+        try { persistSettings(candidate,4,5); }
         catch(Exception failure) { throw new IOException("Could not save discovered GTi address "+candidate[4]+": "+
             failure.getMessage(),failure); }
         log.event("gti_discovered_endpoint_saved","address",candidate[4],"referenceCleared",cleared);
@@ -871,7 +903,8 @@ public final class FmService extends Service {
                     log.event("landmark_receiver_packet","line",packet.line(),"receivedMs",packet.receivedAt(),
                         "accepted",packet.rejection()==null,"reason",packet.rejection());
                     if(packet.rejection()==null) collect.accept(new LandmarkGpsCapture.Reading(packet.fix(),packet.receivedAt()));
-                }),GoTo::now,()->Thread.sleep(100),this::persistSettings,status->{
+                }),GoTo::now,()->Thread.sleep(100),next->persistSettings(next,
+                    LandmarkCalibration.LANDMARK_LAT,LandmarkCalibration.LANDMARK_LON),status->{
                     captureProgress=status;
                     main.post(this::publish);
                 },log);
@@ -922,11 +955,15 @@ public final class FmService extends Service {
                     log.event("calibration_inputs","settings",new JSONArray(Arrays.asList(values)));
                     LandmarkCalibration calibration=captureLandmark(values,log);
                     synchronized(settingsIo) {
-                        String[] merged=SettingsFile.mergeEdit(settings,values,readCurrentSettings());
+                        String[] disk=readCurrentSettings();
+                        if(!LandmarkCalibration.basis(values).equals(LandmarkCalibration.basis(disk)))
+                            throw new IOException("Mount or landmark changed during calibration");
+                        String[] merged=SettingsFile.mergeEdit(settings,values,disk);
                         if(!LandmarkCalibration.basis(values).equals(LandmarkCalibration.basis(merged))
                             || !LandmarkCalibration.hasReference(merged))
                             throw new IOException("Mount or landmark changed during calibration");
-                        writeSettings(merged,true);
+                        storeSettings(merged,true);
+                        apply(merged);
                     }
                     mapPan=new MapPan(new LiveTrackingKml.CameraHeading(calibration.bearing(),Integer.parseInt(values[14]),GoTo.now()),"Stopped");
                     saved=true;
@@ -984,9 +1021,13 @@ public final class FmService extends Service {
         return new GoTo.Point(number(lat),number(lon),number(height));
     }
 
-    private void persistSettings(String[] values) throws Exception {
+    private void persistSettings(String[] values,int... protectedFields) throws Exception {
         synchronized(settingsIo) {
-            writeSettings(SettingsFile.mergeEdit(settings,values,readCurrentSettings()));
+            String[] disk=readCurrentSettings();
+            SettingsFile.requireUnchanged(settings,disk,protectedFields);
+            String[] merged=SettingsFile.mergeEdit(settings,values,disk);
+            storeSettings(merged,false);
+            apply(merged);
         }
     }
 
@@ -996,11 +1037,7 @@ public final class FmService extends Service {
         return bytes==null?cached:SettingsFile.decode(SettingsFile.parseDocument(bytes).getJSONObject("settings"),cached);
     }
 
-    private void writeSettings(String[] values) throws Exception {
-        writeSettings(values,false);
-    }
-
-    private void writeSettings(String[] values,boolean captured) throws Exception {
+    private void storeSettings(String[] values,boolean captured) throws Exception {
         hsGapWarningM(values);
         validateLiveSettings(values);
         new CameraSettings(values);
@@ -1012,7 +1049,20 @@ public final class FmService extends Service {
         SettingsFile.cache(prefs,values);
         configureCamera(values);
         settingsRevision++;
-        apply(values);
+    }
+
+    private void applySavedSettingsWhenIdle() {
+        // Only the mount worker may replace the settings used by its current operation.
+        if(!motionAllowed()) return;
+        try {
+            worker.execute(()->{
+                if(!motionAllowed()) return;
+                apply(SettingsFile.cached(prefs));
+                main.post(this::publish);
+            });
+        } catch(RejectedExecutionException stopped) {
+            if(!destroyed) throw stopped;
+        }
     }
 
     private void apply(String[] values) {
@@ -1027,6 +1077,7 @@ public final class FmService extends Service {
             }
         }
         settings=values;
+        workerReferenceIssue=calibrationSession.reasonFor(values);
         landmarkRangeBlock=MountCoordinates.liveStartBlock(values);
     }
 
@@ -1045,8 +1096,7 @@ public final class FmService extends Service {
                     SettingsFile.cache(prefs,loaded);
                     configureCamera(loaded);
                     settingsRevision++;
-                    // A running mount sequence owns its settings until it exits the serial worker.
-                    worker.execute(()->{ if(!destroyed && !stopWhenIdle) apply(SettingsFile.cached(prefs)); });
+                    applySavedSettingsWhenIdle();
                 } else if(settingsFileStatus.isEmpty()) return;
             }
             setSettingsFileStatus("Reloaded "+SettingsFile.LOCATION);
@@ -1308,11 +1358,18 @@ public final class FmService extends Service {
     static void validateLiveSettings(String[] values) {
         tiltDisabled(values);
         LiveTracking.tiltSpeed(number(values,LIVE_TILT_SPEED));
+        livePanSpeedMultiplier(values);
         liveGpsHold(values);
         stationaryConfirmationMs(values);
         livePanLead(values);
         simulatorShotWidth(values);
         if(number(values,LIVE_MIN_RANGE)<0) throw new IllegalArgumentException(KEYS[LIVE_MIN_RANGE]+" must be non-negative");
+    }
+
+    private static double livePanSpeedMultiplier(String[] values) {
+        double multiplier=number(values,LIVE_PAN_SPEED_MULTIPLIER);
+        if(multiplier<=0) throw new IllegalArgumentException(KEYS[LIVE_PAN_SPEED_MULTIPLIER]+" must be positive");
+        return multiplier;
     }
 
     private static double livePanLead(String[] values) {
@@ -1496,13 +1553,15 @@ public final class FmService extends Service {
             int holdCount=liveGpsHold(values);
             int confirmationMs=stationaryConfirmationMs(values);
             double minimumRange=number(values,LIVE_MIN_RANGE);
+            double panSpeedMultiplier=livePanSpeedMultiplier(values);
             double lead=livePanLead(values), shotWidth=simulatorShotWidth(values);
             LiveFraming framingReport=new LiveFraming(pointing.pivot(),shotWidth,maximumGpsAge,press);
             framing=framingReport;
-            log.event("live_tracking_ready","initialPanSpeed",GoTo.MAX_HS_SIDEREAL,"restartSpeedSource","surfer-to-mount distance","tiltDisabled",disableTilt,"tiltSpeed",tiltSpeed,
+            log.event("live_tracking_ready","initialPanSpeed",GoTo.MAX_HS_SIDEREAL,"restartSpeedSource","surfer-to-mount distance",
+                "panSpeedMultiplier",panSpeedMultiplier,"tiltDisabled",disableTilt,"tiltSpeed",tiltSpeed,
                 "tiltPeriod",tiltPeriod,"maxGpsAgeMs",maximumGpsAge,"gpsSmallStepHold",holdCount,
                 "gpsStationaryConfirmationMs",confirmationMs,"panLeadM",lead,"simulatorShotWidthM",shotWidth,"minimumSurferRangeM",minimumRange);
-            LiveTracking controller=new LiveTracking(mount,panCpr,panTiming,tiltPeriod,disableTilt,this::liveActive,this::updateResult);
+            LiveTracking controller=new LiveTracking(mount,panCpr,panTiming,tiltPeriod,disableTilt,panSpeedMultiplier,this::liveActive,this::updateResult);
             readyToTrack=true;
             idleSimulatorFilter=null;
             LiveGpsFilter filter=new LiveGpsFilter(pointing.pivot(),holdCount,maximumGpsAge,confirmationMs,lead,
@@ -1645,27 +1704,23 @@ public final class FmService extends Service {
             if(framing!=null) framing.endTakeoff(liveStopRequested<0?GoTo.now():liveStopRequested);
             if(mount!=null&&(readyToTrack||liveStopRequested>=0)) {
                 log.event("live_stop_requested","pressMs",liveStopRequested<0?null:liveStopRequested,"reason",reason);
-                try {
-                    if(liveStopRequested>=0) {
-                        MountConnection active=lastMovingMount!=null?lastMovingMount:gtiConnection;
-                        GoTo stopper=active==null?mount:shutdownClient(active,log);
-                        boolean confirmed=LiveTracking.awaitFullStop(stopper,()->!destroyed);
-                        if(confirmed) lastMovingMount=null;
-                        liveStopConfirmed=confirmed;
-                        stop=confirmed?"Both motors stopped":"Full stop unconfirmed";
-                        main.post(this::publish);
-                        log.event("live_full_stop_result","confirmed",confirmed,"elapsedMs",GoTo.now()-liveStopRequested);
-                    } else {
-                        mount.stopBothMotors();
-                        stop="Stop accepted";
-                    }
-                } catch(InterruptedException failure) {
-                    Thread.currentThread().interrupt();
-                    stop="Full stop unconfirmed · worker interrupted";
-                } catch(IOException|RuntimeException failure) {
-                    stop="Stop reply unconfirmed · "+failure.getMessage();
-                    log.event("live_stop_unconfirmed","reason",failure.getMessage());
+                if(liveStopRequested<0) {
+                    liveStopRequested=GoTo.now();
+                    main.post(this::publish);
                 }
+                MountConnection active=lastMovingMount!=null?lastMovingMount:gtiConnection;
+                GoTo stopper=active==null?mount:shutdownClient(active,log);
+                while(!destroyed && !liveStopConfirmed) {
+                    try {
+                        liveStopConfirmed=LiveTracking.awaitFullStop(stopper,()->!destroyed);
+                    } catch(InterruptedException interrupted) {
+                        log.event("live_stop_unconfirmed","reason","Stop check interrupted");
+                    }
+                }
+                if(liveStopConfirmed) lastMovingMount=null;
+                stop=liveStopConfirmed?"Both motors stopped":"Full stop unconfirmed";
+                main.post(this::publish);
+                log.event("live_full_stop_result","confirmed",liveStopConfirmed,"elapsedMs",GoTo.now()-liveStopRequested);
                 mapPan=new MapPan(mapPan.heading(),stop);
             }
         }
@@ -2543,7 +2598,7 @@ public final class FmService extends Service {
     }
 
     private GoTo.Reference reference() {
-        if(calibrationSession.reasonFor(settings)!=null)
+        if(workerReferenceIssue!=null)
             throw new IllegalArgumentException(LandmarkCalibration.requiredMessage(calibrationError()));
         GoTo.Point pivot=point(MountCoordinates.LATITUDE,MountCoordinates.LONGITUDE,LandmarkCalibration.PIVOT_ELEVATION);
         double bearing=number(12), elevation=number(13);

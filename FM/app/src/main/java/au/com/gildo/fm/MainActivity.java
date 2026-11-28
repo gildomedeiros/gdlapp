@@ -23,7 +23,7 @@ import java.util.Locale;
 public final class MainActivity extends Activity {
     private static final int CHOOSE_REPLAY_CSV=1, LINK_SETTINGS_FOLDER=5, CHOOSE_SIM_KML=6;
     private static final String SETTINGS_OPEN="settingsExpanded", CALIBRATION_OPEN="calibrationExpanded", REPORT_OPEN="reportExpanded";
-    private static final String REPLAY_URI="replayCsvUri", REPLAY_NAME="replayCsvName";
+    private static final String REPLAY_NAME="replayCsvName";
     private static final String GPS_PAD_STEP="gpsPadStep";
     private static final String SURFER_SEQUENCE="surferSequence", SURFER_RIDE_SECONDS="surferRideSecondsText";
     private static final String[] REPLAY_TIMING_COLUMNS={"Viewpoint","GoToPosition time","Since previous call",
@@ -47,14 +47,14 @@ public final class MainActivity extends Activity {
     private TextView cameraStatus,settingsSaveStatus;
     private final EnumMap<ConnectionFlag.Channel,TextView> connectionFlags=new EnumMap<>(ConnectionFlag.Channel.class);
     private TextView dashboardTelemetry;
-    private boolean restoringSettings;
+    private boolean restoringSettings,startingLive;
     private long displayedSettingsRevision=-1;
     private String displayedFileStatus="";
     private static final int GDL_PERMISSION=7;
     private boolean showGdlCredentials;
     private final SettingsAutosave autosave=new SettingsAutosave(this::writeSettingsEdit,this::settingsSaveResult);
     private CheckBox calibrationConfirmed, disableTilt, manualCamera;
-    private Button cameraPreviewButton, liveStart, cancelCapture, stopFm, discoverCanon;
+    private Button cameraPreviewButton, liveStart, cancelCapture, stopFm, discoverCanon, chooseCsv, linkFolder;
     private TextView landmarkRangeBanner;
     private LiveMapDialog liveMap;
     private boolean cameraPreviewPending;
@@ -63,7 +63,7 @@ public final class MainActivity extends Activity {
     private Button gpsPadToggle;
     private Button saveSurferModes,loadSurferModes,loadKml,applySurferModes;
     private RadioButton oneHz,twoHz;
-    private Uri pendingSimKml;
+    private Uri pendingSimKml,pendingReplayCsv;
     private record ContinuousModeControls(CheckBox select,Button duration) {}
     private final EnumMap<SurferModes.Mode,ContinuousModeControls> continuousSurferModes=new EnumMap<>(SurferModes.Mode.class);
     private EditText gpsPadStep;
@@ -93,6 +93,7 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         prefs=getSharedPreferences("fm",MODE_PRIVATE);
         if(state!=null && state.getString("pendingSimKml")!=null) pendingSimKml=Uri.parse(state.getString("pendingSimKml"));
+        if(state!=null && state.getString("pendingReplayCsv")!=null) pendingReplayCsv=Uri.parse(state.getString("pendingReplayCsv"));
         ScrollView scroll=new ScrollView(this);
         LinearLayout root=new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -223,10 +224,10 @@ public final class MainActivity extends Activity {
         root.addView(startMonitoring);
         settingsPanel=collapsibleSection(root,"Settings",state!=null&&state.getBoolean(SETTINGS_OPEN));
         mountCoordinates=addSetting(settingsPanel,values,MountCoordinates.LATITUDE);
-        button(settingsPanel,"Choose replay CSV",this::chooseReplayCsv);
+        chooseCsv=button(settingsPanel,"Choose replay CSV",this::chooseReplayCsv);
         settingsSaveStatus=text(settingsPanel,"Autosave on",14);
         settingsSaveStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        button(settingsPanel,"Link FM settings folder",this::chooseSettingsFolder);
+        linkFolder=button(settingsPanel,"Link FM settings folder",this::chooseSettingsFolder);
         for(int i=0;i<6;i++) addSetting(settingsPanel,values,i);
         LinearLayout canon=collapsibleSection(settingsPanel,"Canon camera",false);
         manualCamera=new CheckBox(this);
@@ -259,6 +260,7 @@ public final class MainActivity extends Activity {
             autosave.finishField(FmService.TILT_DISABLE);
         });
         addSetting(settingsPanel,values,FmService.LIVE_MIN_RANGE);
+        addSetting(settingsPanel,values,FmService.LIVE_PAN_SPEED_MULTIPLIER);
         addSetting(settingsPanel,values,FmService.LIVE_TILT_SPEED);
         addSetting(settingsPanel,values,FmService.LIVE_GPS_HOLD);
         addSetting(settingsPanel,values,FmService.LIVE_GPS_STATIONARY_MS);
@@ -307,6 +309,7 @@ public final class MainActivity extends Activity {
         state.putBoolean(SETTINGS_OPEN,settingsPanel.getVisibility()==View.VISIBLE);
         state.putBoolean(CALIBRATION_OPEN,calibrationPanel.getVisibility()==View.VISIBLE);
         if(pendingSimKml!=null) state.putString("pendingSimKml",pendingSimKml.toString());
+        if(pendingReplayCsv!=null) state.putString("pendingReplayCsv",pendingReplayCsv.toString());
         state.putString(GPS_PAD_STEP,gpsPadStep.getText().toString());
         state.putString(SURFER_SEQUENCE,surferSequence.getText().toString());
         state.putString(SURFER_RIDE_SECONDS,surferRideSeconds.getText().toString());
@@ -352,7 +355,7 @@ public final class MainActivity extends Activity {
         service=null;
     }
     @Override protected void onStop() {
-        if(service!=null && service.ready()) autosave.finishAll(null);
+        if(service!=null && service.settingsEditable()) autosave.finishAll(null);
         if(liveMap!=null) { liveMap.dismiss(); liveMap=null; }
         disconnect();
         super.onStop();
@@ -413,9 +416,10 @@ public final class MainActivity extends Activity {
         if(!TextUtils.equals(dashboardTelemetry.getText(),telemetry)) dashboardTelemetry.setText(telemetry);
         if(cameraStatus!=null) cameraStatus.setText(service==null?"Canon waiting for FM":service.cameraStatus());
         boolean ready=service!=null && service.ready() && !autosave.waitingForAction();
+        boolean editSettings=service!=null && service.settingsEditable() && !startingLive;
         long revision=service==null?-1:service.settingsRevision();
         boolean reloaded=service!=null && formService==service && displayedSettingsRevision!=revision;
-        if((ready && formService!=service) || reloaded) {
+        if((service!=null && service.settingsLoaded() && formService!=service) || reloaded) {
             restoringSettings=true;
             String[] saved=SettingsFile.cached(prefs);
             for(int i=0;i<inputs.length;i++) if(inputs[i]!=null && !autosave.hasDraft(i)
@@ -434,7 +438,9 @@ public final class MainActivity extends Activity {
         stopFm.setEnabled(service!=null && !service.stopping());
         stopFm.setText(service!=null && service.stopping()?"Waiting for full stop":"Stop FM");
         discoverCanon.setEnabled(ready && !service.manualCamera());
-        manualCamera.setEnabled(ready);
+        manualCamera.setEnabled(editSettings);
+        chooseCsv.setEnabled(editSettings);
+        linkFolder.setEnabled(editSettings && !service.linkingSettingsFolder());
         if(ready && showGdlCredentials) {
             showGdlCredentials=false;
             gdlCredentials();
@@ -449,8 +455,8 @@ public final class MainActivity extends Activity {
             landmarkGpsStatus.setVisibility(View.VISIBLE);
             landmarkGpsStatus.setText(service.captureProgress());
         }
-        for(EditText input:inputs) if(input!=null) input.setEnabled(ready);
-        disableTilt.setEnabled(ready);
+        for(EditText input:inputs) if(input!=null) input.setEnabled(editSettings);
+        disableTilt.setEnabled(editSettings);
         calibrationConfirmed.setEnabled(ready);
         hsCancel.setVisibility(service!=null&&service.canCancelHs()?View.VISIBLE:View.GONE);
         boolean tracking=service!=null&&service.canStopLiveTracking();
@@ -503,7 +509,12 @@ public final class MainActivity extends Activity {
             pendingSimKml=null;
             service.prepareSurferModes(List.of(),0,FmService.SimulatorFile.LOAD_KML,file,replayDisplayName(file));
         }
-        if(ready&&pendingSettingsFolder!=null) {
+        if(editSettings && pendingReplayCsv!=null) {
+            Uri file=pendingReplayCsv;
+            pendingReplayCsv=null;
+            saveReplayCsv(file);
+        }
+        if(linkFolder.isEnabled()&&pendingSettingsFolder!=null) {
             SettingsFolderSelection selection=pendingSettingsFolder;
             pendingSettingsFolder=null;
             service.linkSettingsFolder(selection.uri(),selection.flags(),()->formService=null);
@@ -990,7 +1001,7 @@ public final class MainActivity extends Activity {
         input.setId(View.generateViewId());
         caption.setLabelFor(input.getId());
         if(isCoordinatePair(index)) input.setHint("e.g. "+MountCoordinates.EXAMPLE);
-        if(index==FmService.HS_GAP_WARNING||index==FmService.LIVE_TILT_SPEED
+        if(index==FmService.HS_GAP_WARNING||index==FmService.LIVE_TILT_SPEED||index==FmService.LIVE_PAN_SPEED_MULTIPLIER
             ||index==FmService.LIVE_PAN_LEAD||index==FmService.SIMULATOR_SHOT_WIDTH||index==FmService.LIVE_MIN_RANGE)
             input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         if(index==FmService.LIVE_GPS_HOLD||index==FmService.LIVE_GPS_STATIONARY_MS)
@@ -1044,11 +1055,12 @@ public final class MainActivity extends Activity {
         long press=GoTo.now(),wallTime=System.currentTimeMillis();
         View focused=getCurrentFocus();
         if(focused instanceof EditText) focused.clearFocus();
+        SettingsAutosave.Edit previousDraft=autosave.draft(LandmarkCalibration.LANDMARK_LAT);
         landmarkGpsStatus.setText("Waiting for 10 fresh LoRa GPS fixes…");
         landmarkGpsStatus.setVisibility(View.VISIBLE);
         autosave.afterPendingWrites(()->connected.captureLandmarkGps(press,wallTime,capture->{
             if(capture.coordinates()!=null) {
-                autosave.discardDraft(LandmarkCalibration.LANDMARK_LAT);
+                autosave.discardDraft(previousDraft);
                 formService=null; // Reload the committed pair without triggering a second write.
             }
             if(bound && service==connected) {
@@ -1069,6 +1081,7 @@ public final class MainActivity extends Activity {
     }
 
     private void settingsSaveResult(SettingsAutosave.Edit edit,String error) {
+        if(error!=null) startingLive=false;
         EditText input=inputs[edit.index()];
         if(input!=null) input.setError(error);
         String message=error==null?"Saved · "+settingLabel(edit.index()):"Settings not saved · "+error;
@@ -1092,8 +1105,10 @@ public final class MainActivity extends Activity {
         if(connected==null || !connected.ready() || autosave.waitingForAction()) return;
         long press=GoTo.now();
         java.time.Instant pressedAt=java.time.Instant.now();
+        startingLive=true;
         autosave.finishAll(()->{
-            connected.launchLiveTracking(SettingsFile.cached(prefs),press,pressedAt);
+            startingLive=false;
+            if(service==connected && connected.ready()) connected.launchLiveTracking(SettingsFile.cached(prefs),press,pressedAt);
             if(bound) render();
         });
         if(autosave.waitingForAction()) render();
@@ -1182,7 +1197,10 @@ public final class MainActivity extends Activity {
         if(request==CHOOSE_SIM_KML) {
             pendingSimKml=uri;
             render();
-        } else if(request==CHOOSE_REPLAY_CSV) saveReplayCsv(uri);
+        } else if(request==CHOOSE_REPLAY_CSV) {
+            pendingReplayCsv=uri;
+            render();
+        }
         else if(request==LINK_SETTINGS_FOLDER) {
             pendingSettingsFolder=new SettingsFolderSelection(uri,data.getFlags());
             render();
@@ -1198,11 +1216,10 @@ public final class MainActivity extends Activity {
                 Toast.LENGTH_LONG).show();
             return;
         }
-        String previous=prefs.getString(REPLAY_URI,"");
-        prefs.edit().putString(REPLAY_URI,uri.toString()).putString(REPLAY_NAME,replayDisplayName(uri)).apply();
+        String previous=prefs.getString(FmService.REPLAY_URI,"");
+        prefs.edit().putString(FmService.REPLAY_URI,uri.toString()).putString(REPLAY_NAME,replayDisplayName(uri)).apply();
         if(!previous.isEmpty()&&!previous.equals(uri.toString())) {
-            try { resolver.releasePersistableUriPermission(Uri.parse(previous),Intent.FLAG_GRANT_READ_URI_PERMISSION); }
-            catch(SecurityException ignored) { }
+            service.releaseOldReplayFile(previous);
         }
         updateReplayFileStatus();
     }
@@ -1224,7 +1241,7 @@ public final class MainActivity extends Activity {
 
     private void replayViewpoints() {
         if(service==null||!service.ready()) return;
-        String selected=prefs.getString(REPLAY_URI,"");
+        String selected=prefs.getString(FmService.REPLAY_URI,"");
         if(selected.isEmpty()) {
             Toast.makeText(this,"Use Choose replay CSV in Settings first.",Toast.LENGTH_LONG).show();
             return;
@@ -1234,7 +1251,7 @@ public final class MainActivity extends Activity {
 
     private void replayHighSpeed() {
         if(service==null||!service.ready()) return;
-        String selected=prefs.getString(REPLAY_URI,"");
+        String selected=prefs.getString(FmService.REPLAY_URI,"");
         if(selected.isEmpty()) {
             Toast.makeText(this,"Use Choose replay CSV in Settings first.",Toast.LENGTH_LONG).show();
             return;

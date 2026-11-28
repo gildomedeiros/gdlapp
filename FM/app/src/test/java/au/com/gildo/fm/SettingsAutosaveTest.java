@@ -95,8 +95,37 @@ public class SettingsAutosaveTest {
         reply(null);
         assertEquals(List.of("write -28,","failed","capture"),events);
         assertTrue(form.hasDraft(index));
-        form.discardDraft(index);
+        form.discardDraft(form.draft(index));
         assertFalse(form.hasDraft(index));
+    }
+
+    @Test public void settingsOpenAfterLoadAndLiveHoldsThemUntilBothMotorsStop() {
+        assertFalse(SettingsAutosave.editable(false,false,false));
+        assertTrue(SettingsAutosave.editable(true,false,false)); // Discovery can still be running.
+        assertFalse(SettingsAutosave.editable(true,true,false)); // Includes Stop sent and braking.
+        assertTrue(SettingsAutosave.editable(true,true,true));   // Report may still be writing.
+    }
+
+    @Test public void newerLandmarkDraftSurvivesCaptureCompletion() {
+        int index=LandmarkCalibration.LANDMARK_LAT;
+        form.edit(index,"-28, 153");
+        var atCapture=form.draft(index);
+        form.edit(index,"-28, 154");
+        form.discardDraft(atCapture);
+        assertEquals("-28, 154",form.draft(index).value());
+    }
+
+    @Test public void startupDiscoveryCannotReplaceEditedEndpointOrOtherEdits() throws Exception {
+        String[] starting=saved.clone();
+        String[] discovered=starting.clone();
+        discovered[4]="192.168.4.25";
+        saved[FmService.LIVE_PAN_SPEED_MULTIPLIER]="1.3";
+        SettingsFile.requireUnchanged(starting,saved,4,5);
+        String[] merged=SettingsFile.mergeEdit(starting,discovered,saved);
+        assertEquals("1.3",merged[FmService.LIVE_PAN_SPEED_MULTIPLIER]);
+        assertEquals(discovered[4],merged[4]);
+        saved[4]="192.168.4.35";
+        assertThrows(java.io.IOException.class,()->SettingsFile.requireUnchanged(starting,saved,4,5));
     }
 
     @Test public void incompleteCoordinateKeepsOldPairAndOtherCheckboxCanSave() {

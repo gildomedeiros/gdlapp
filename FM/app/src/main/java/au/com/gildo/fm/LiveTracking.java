@@ -22,6 +22,7 @@ final class LiveTracking {
     private final int panCpr;
     private final GoTo.PanTiming panTiming;
     private final boolean tiltDisabled;
+    private final double panSpeedMultiplier;
     private double panRate = GoTo.MAX_HS_SIDEREAL;
     private String acknowledgedStop;
     private final Integer tiltPeriod;
@@ -39,11 +40,12 @@ final class LiveTracking {
     private long lastPanStartReply = -1;
 
     LiveTracking(GoTo mount, int panCpr, GoTo.PanTiming panTiming, Integer tiltPeriod, boolean tiltDisabled,
-                 BooleanSupplier active, Consumer<String> progress) {
+                 double panSpeedMultiplier, BooleanSupplier active, Consumer<String> progress) {
         this.mount = mount;
         this.panCpr = panCpr;
         this.panTiming = panTiming;
         this.tiltDisabled = tiltDisabled;
+        this.panSpeedMultiplier = panSpeedMultiplier;
         this.tiltPeriod = tiltPeriod;
         this.active = active;
         this.progress = progress;
@@ -212,24 +214,32 @@ final class LiveTracking {
 
     private void startPan(int direction) throws IOException {
         // tick has already confirmed a stopped motor and an eligible target ahead.
-        double rate = acknowledgedStop == null ? panRate : AimAtSurfer.siderealForRange(target.surferRangeM());
-        int panPeriod = mount.highSpeedPanPeriod(panTiming, rate * panCpr / GoTo.SIDEREAL_DAY_SECONDS);
+        boolean restarting = acknowledgedStop != null;
+        double calculatedRate = restarting ? AimAtSurfer.siderealForRange(target.surferRangeM()) : panRate;
+        double appliedMultiplier = restarting ? panSpeedMultiplier : 1.0;
+        double scaledRate = calculatedRate * appliedMultiplier;
+        double commandedRate = Math.max(GoTo.MIN_HS_SIDEREAL, Math.min(scaledRate, GoTo.MAX_HS_SIDEREAL));
+        int panPeriod = mount.highSpeedPanPeriod(panTiming, commandedRate * panCpr / GoTo.SIDEREAL_DAY_SECONDS);
         mount.trace.event("live_pan_speed_selected", "packet", target.packet(), "positionRevision", target.revision(),
-            "source", acknowledgedStop != null ? "surfer-to-mount range" :
+            "source", restarting ? "surfer-to-mount range" :
                 (lastPanStartReply < 0 ? "initial maximum" : "retained speed"),
             "stopReason", acknowledgedStop, "rangeM", target.surferRangeM(),
-            "previousRateSidereal", panRate, "rateSidereal", rate, "period", panPeriod);
+            "previousRateSidereal", panRate, "calculatedRateSidereal", calculatedRate, "appliedMultiplier", appliedMultiplier,
+            "commandedRateSidereal", commandedRate, "rateLimited", commandedRate != scaledRate,
+            "rateSidereal", commandedRate, "period", panPeriod);
         exchange(() -> mount.setHighSpeedMode(1, direction));
         exchange(() -> mount.setStepPeriod(1, panPeriod));
         try {
             lastPanStartReply = exchange(() -> mount.startAxis(1, sent -> {
-                panRate = rate;
+                panRate = commandedRate;
                 acknowledgedStop = null;
                 slewing = true;
                 panState = "Panning";
                 activeDirection = direction;
                 mount.trace.event("live_pan_start_sent", "packet", target.packet(), "sentMs", sent,
-                    "direction", direction, "period", panPeriod);
+                    "wallTimeMs", System.currentTimeMillis(),
+                    "direction", direction, "period", panPeriod, "calculatedRateSidereal", calculatedRate,
+                    "appliedMultiplier", appliedMultiplier, "commandedRateSidereal", commandedRate);
             }));
         } catch (IOException failure) {
             if (slewing && active.getAsBoolean()) {
@@ -289,7 +299,7 @@ final class LiveTracking {
                 try {
                     stopped[axis - 1] = !mount.moving(axis);
                     mount.trace.event("live_full_stop_status", "axis", axis, "stopped", stopped[axis - 1]);
-                } catch (IOException failure) {
+                } catch (IOException | RuntimeException failure) {
                     mount.trace.event("live_full_stop_status_unknown", "axis", axis, "reason", failure.toString());
                 }
                 if (!stopped[axis - 1]) requestFinalStop(mount, axis);
@@ -304,7 +314,7 @@ final class LiveTracking {
         try {
             long ack = mount.stopAxis(axis, sent -> mount.trace.event("live_final_stop_sent", "axis", axis, "sentMs", sent));
             mount.trace.event("live_final_stop_ack", "axis", axis, "replyMs", ack);
-        } catch (IOException failure) {
+        } catch (IOException | RuntimeException failure) {
             mount.trace.event("live_final_stop_unconfirmed", "axis", axis, "reason", failure.toString());
         }
     }

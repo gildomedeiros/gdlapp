@@ -38,6 +38,10 @@ final class SettingsAutosave {
         this.status = status;
     }
 
+    static boolean editable(boolean loaded,boolean liveTracking,boolean bothMotorsStopped) {
+        return loaded && (!liveTracking || bothMotorsStopped);
+    }
+
     void edit(int index, String value) { drafts.put(index, new Edit(index, value)); }
     boolean hasDraft(int index) { return drafts.containsKey(index); }
     List<Edit> drafts() { return new ArrayList<>(drafts.values()); }
@@ -50,7 +54,10 @@ final class SettingsAutosave {
         drain();
     }
 
-    void discardDraft(int index) { drafts.remove(index); }
+    Edit draft(int index) { return drafts.get(index); }
+    void discardDraft(Edit original) {
+        if(original!=null && drafts.get(original.index())==original) drafts.remove(original.index());
+    }
 
     void finishField(int index) {
         Edit draft = drafts.get(index);

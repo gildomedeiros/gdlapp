@@ -1091,7 +1091,7 @@
 <tr id="fm-gps-availability"><td><a href="#fm-gps-availability">TRACK-02</a></td><th scope="row">GPS Data Producer · age and loss</th><td>Show GPS loss.</td><td>Use a monotonic clock to publish usable or expired state even when packets stop. Keep receipt age distinct from fix age. Test delays from a busy worker.</td><td></td></tr>
 <tr id="fm-movement-trend"><td><a href="#fm-movement-trend">TRACK-03</a></td><th scope="row">Surfer movement trend</th><td>Show estimated speed, direction and estimate age.</td><td>Consume successive usable fixes and their timestamps to estimate horizontal movement. One fix gives position only. After a dropout, rebuild the trend from fresh fixes.</td><td></td></tr>
 <tr id="fm-target-prediction"><td><a href="#fm-target-prediction">TRACK-04</a></td><th scope="row">Optional target prediction</th><td></td><td>Use the fix and trend to predict position when the mount responds. Bound the prediction horizon. Compare bench gap with and without prediction.</td><td></td></tr>
-<tr id="fm-tracking-controller"><td><a href="#fm-tracking-controller">TRACK-05</a></td><th scope="row">Live pan control</th><td>Show tracking, hold or GPS loss.</td><td>The <a href="#live-tracking-sequence">LIVE sequence</a> uses the position and direction from the <a href="#gps-data-filter-rules">GPS Data Producer</a>. LT uses the encoder to execute that target.</td><td>First pan at 800×. After a tracking Stop, use the surfer range for the next slew.</td></tr>
+<tr id="fm-tracking-controller"><td><a href="#fm-tracking-controller">TRACK-05</a></td><th scope="row">Live pan control</th><td>Show tracking, hold or GPS loss.</td><td>The <a href="#live-tracking-sequence">LIVE sequence</a> uses the position and direction from the <a href="#gps-data-filter-rules">GPS Data Producer</a>. LT uses the encoder to execute that target.</td><td>First pan at 800×. After a tracking Stop, use the surfer range and <a href="#live-pan-speed-multiplier">Live pan speed multiplier</a> for the next slew.</td></tr>
 <tr id="fm-tracking-measurement"><td><a href="#fm-tracking-measurement">TRACK-06</a></td><th scope="row">Tracking quality</th><td>Show peak gap, time over the warning threshold, GPS dropouts and rate-change response.</td><td>Match fixes and encoder samples by time. Convert pointing error to metres at the surfer’s range.</td><td></td></tr>
 </tbody></table></div>
 <section aria-labelledby="pending-changes">
@@ -1118,6 +1118,12 @@
 </section>
 <h2 id="android-operation">Android operation</h2>
 <p><strong>Settings</strong> and <strong>Landmark calibration</strong> start collapsed. Expand <strong>Settings</strong> to edit the mount coordinates, choose a CSV or change the other settings.</p>
+<p id="settings-availability"><strong>When can I edit Settings? · FM 0.1.95</strong></p>
+<ul>
+<li><strong>At launch.</strong> Enable editing as soon as FM loads the settings file or its cached fallback. GTi discovery can still be searching. Completed edits save on the settings worker.</li>
+<li><strong>During calibration, Aim or replay.</strong> Settings stays editable. The active mount operation uses its starting settings. New mount settings apply to the next operation. Hardware actions such as Discover GTi still use the mount’s availability check.</li>
+<li><strong>During Live Tracking.</strong> Pressing Live Tracking commits pending edits, then locks Settings for the run. If setup blocks before motion, release the lock when the attempt ends. After motion, keep Settings locked through <strong>Waiting for full stop</strong>. Unlock when GTi confirms both pan and tilt have stopped, even if the report is still being saved.</li>
+</ul>
 <div class="flow" tabindex="0" aria-label="Settings, service and phone checks"><table>
 <thead><tr><th scope="col">ID</th><th scope="col">Step</th><th scope="col">User and FM screen</th><th scope="col">GPS and mount worker thread</th><th scope="col">Sky-Watcher GTi</th></tr></thead>
 <tbody>
@@ -1588,17 +1594,19 @@
 </ol>
 <p>Inside the <a href="#live-minimum-range">minimum surfer range</a>, pause motion. The <a href="#pending-live-startup-aim">startup aim</a> uses its locked target until crossing. A <a href="#live-full-stop">user Stop</a> waits for both motors.</p>
 </div></td></tr>
-<tr id="live-tracking-sequence"><td><a href="#live-tracking-sequence">LIVE</a></td><td colspan="3"><details open><summary><strong>Live Tracking pseudocode · FM 0.1.90</strong></summary>
+<tr id="live-tracking-sequence"><td><a href="#live-tracking-sequence">LIVE</a></td><td colspan="3"><details open><summary><strong>Live Tracking pseudocode · FM 0.1.94</strong></summary>
 <p id="live-tracking-contract"><strong>Live Tracking contract.</strong> LT gets all tracking targets and their direction from the GPS Data Producer (GP). Ask the user before changing Live Tracking or the GP-to-LT contract.</p>
 <p id="gp-pan-lead"><strong>Selective pan lead.</strong> Arm the configured lead when GP is Moving and Rule 1 publishes in the established direction. The last two consecutive GPS displacements must agree with that direction, and the latest must advance more than 1 m sideways around the mount. Place the pan aim the fixed lead distance ahead along the same range. Keep the lead through same-direction slowdowns. A confirmed reversal or entry to Stationary clears lead for future publications. A held or freshness-only fix keeps the current aim. The first eligible fix out of Stationary can publish immediately with zero lead.</p>
 <p><strong>Simulator framing.</strong> During continuous Mode 5 (Takeoff), compare the existing pan encoder samples with the latest fresh simulated surfer positions before filtering and lead. Use half the configured shot width on either side of centre. Estimate time outside the frame across observed encoder intervals and report observation coverage against the full takeoff window. Manual or CSV fixes carry no continuous takeoff label. Compare identical runs with 0 m and 5 m of lead at the same report width.</p>
-<p><strong>Pan speed.</strong> The first pan starts at 800×. This replaces the saved fixed Live HS pan speed. During a slew, a change in distance can affect speed only at the next eligible restart after a Stop. At 100 m the restart rate is about 343×. At 200 m it is about 171×. A user Stop ends the session. Log the GPS packet, distance, Stop reason, old and selected rates, and encoded period.</p>
+<p id="live-pan-speed-multiplier"><strong>Live pan speed multiplier.</strong> Set a positive multiplier in Settings before starting Live Tracking. The default is 1.0. The first pan always starts at 800×. LT applies the multiplier once when restarting after an acknowledged tracking Stop and confirmed standstill. Each restart uses the latest surfer-to-mount distance before lead. At 200 m, LT calculates about 171×. With a multiplier of 1.3 it commands about 223×. The motor keeps that rate through the slew. A user Stop ends the session.</p>
+<p><strong>Matching speed to footage.</strong> Each timestamped <code>live_pan_start_sent</code> row includes the GPS fix ID (<code>packet</code>), calculated speed, applied multiplier and commanded speed in sidereal units. The preceding <code>live_pan_speed_selected</code> row includes surfer range, Stop reason, previous rate, motor period and whether the scaled rate hit a limit. Encoder samples show the resulting motion.</p>
 <pre style="white-space:pre-wrap">ON LIVE TRACKING PRESS
     Finish the active settings edit. Wait for pending saves before starting tracking.
     On validation or write failure, show the reason and return to editing.
     Block Start if saved mount and landmark are more than 2 km apart.
     Arm the one-time startup aim. Load the configurable minimum surfer range (default 5 m).
     First pan of each session uses maximum HS speed (800×).
+    Load Live pan speed multiplier for restarts (default 1.0).
     Read tilt-disable (default false).
     When tilt is enabled, load its slow speed (default 64×).
     Load GP’s hold count X (default 4).
@@ -1648,10 +1656,12 @@ TRACKING LOOP
           using unwrapped counts
 
     IF gap &gt; 0 AND pan is stopped:
-        If the previous pan Stop was acknowledged, use the latest published surfer-to-mount
-        distance before lead to choose the restart speed. Use the <a href="#aim-rate-selection">Aim range calculation</a>
-        (9 km/h sideways reference, clamped to 128× through 800×).
-        Otherwise keep the current speed. A speed change cannot request Stop.
+        If restarting after an acknowledged pan Stop:
+            Calculate the base speed from the latest published surfer-to-mount distance before lead.
+            Use the <a href="#aim-rate-selection">Aim range calculation</a> (9 km/h sideways reference, bounded to 128×–800×).
+            Command clamp(base speed × configured multiplier, 128×, 800×).
+        Otherwise use the current speed with an applied multiplier of 1.0.
+        Log the fix ID, calculated speed, applied multiplier and commanded speed.
         Send :G13&lt;dir&gt; (set HS pan mode and direction).
         Send :I1&lt;period&gt; (apply the fixed HS speed for this slew).
         After both setters acknowledge, send :J1 (start pan).

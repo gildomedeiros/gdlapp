@@ -235,7 +235,8 @@ a { color:var(--camera); }
     <div class="readouts">
       <span id="fix"></span>
       <strong id="fix-zoom" class="readout-highlight"></strong>
-      <strong id="hs-speed" class="readout-highlight"></strong>
+      <strong id="hs-speed" class="readout-highlight"
+        title="Camera equivalent is sideways speed at the shown range. Surfer speed uses distance and time between valid GPS fixes."></strong>
       <strong id="fix-range" class="readout-highlight"></strong>
       <span id="pan"></span><span id="shot"></span><span id="frame-width"></span><span id="target"></span>
     </div>
@@ -249,6 +250,7 @@ a { color:var(--camera); }
 const EARTH_M = 6371000;
 const RAD = Math.PI / 180;
 const COUNTS_PER_TURN = 2073600;
+const SIDEREAL_DAY_SECONDS = 86164.09065;
 const ENCODER_POLL_MS = 180;
 const CAMERA_ZOOM_MAX_AGE_MS = 5000;
 const CANON_WIDE_FRAME_FACTOR_SETTING = 32;
@@ -271,6 +273,10 @@ function distance(a, b) {
   const h = Math.sin((nextLatitude - latitude) / 2) ** 2
     + Math.cos(latitude) * Math.cos(nextLatitude) * Math.sin(longitudeDelta / 2) ** 2;
   return EARTH_M * 2 * Math.asin(Math.sqrt(Math.max(0, Math.min(1, h))));
+}
+
+function groundSpeedKmh(from, to, elapsedMs) {
+  return elapsedMs > 0 ? distance(from, to) * 3600 / elapsedMs : null;
 }
 
 function bearing(a, b) {
@@ -757,6 +763,7 @@ function readTimeline(route, interval) {
   let previous = 0;
   let lastSender = 0;
   let estimated = 0;
+  let previousSpeedFix = null;
   const fixes = raw.map((fix, index) => {
     const stamp = read(fix);
     const supplied = Number.isFinite(stamp);
@@ -769,8 +776,12 @@ function readTimeline(route, interval) {
     const recordedSender = explicitSequences && Number.isInteger(fix.sender);
     const sender = recordedSender ? fix.sender : Math.max(lastSender + 1, time) >>> 0;
     lastSender = sender;
-    return { point: fix.point, sequence, sender, time, utc: fix.utc, video: fix.video, valid: fix.valid !== false, index,
-      leadPublication: fix.leadPublication, leadTarget: fix.leadTarget, panSpeed: fix.panSpeed };
+    const valid = fix.valid !== false;
+    const surferSpeed = valid && useTime && previousSpeedFix
+      ? groundSpeedKmh(previousSpeedFix.point, fix.point, (stamp - previousSpeedFix.stamp) / divisor) : null;
+    if (valid) previousSpeedFix = useTime ? { point: fix.point, stamp } : null;
+    return { point: fix.point, sequence, sender, time, utc: fix.utc, video: fix.video, valid, index,
+      leadPublication: fix.leadPublication, leadTarget: fix.leadTarget, panSpeed: fix.panSpeed, surferSpeed };
   });
   return { fixes, estimated };
 }
@@ -1364,13 +1375,21 @@ function renderMapTelemetry(fix, range, settings, frame) {
   if (output.textContent !== text) output.textContent = text;
   output.title = readback ? "Canon readback " + recordingTime.format(readback.time) + " AEST" : "";
   const speed = fix?.panSpeed;
-  const formatRate = rate => rate.toLocaleString("en-AU", { maximumFractionDigits: 1 }) + "× sidereal";
-  const speedText = speed
-    ? "HS speed · " + formatRate(speed.rate) + (speed.active ? "" : " (last applied)")
-    : speed === null ? "HS speed · awaiting Start"
-    : frame && Number.isFinite(settings?.speed)
-      ? "Simulated HS speed · " + formatRate(settings.speed) + (frame.moving ? "" : " (idle)")
-      : "HS speed · unavailable";
+  let speedLabel = "HS speed";
+  let rate = speed?.rate ?? null;
+  let state = speed && !speed.active ? "last applied" : "";
+  if (speed === undefined && frame && Number.isFinite(settings?.speed)) {
+    speedLabel = "Simulated HS speed";
+    rate = settings.speed;
+    state = frame.moving ? "" : "idle";
+  }
+  let rateText = speed === null ? "awaiting Start" : "unavailable";
+  if (rate !== null) rateText = rate.toLocaleString("en-AU", { maximumFractionDigits: 1 }) + "× sidereal";
+  const cameraSpeed = rate !== null && fix && Number.isFinite(range)
+    ? range * rate * 2 * Math.PI / SIDEREAL_DAY_SECONDS * 3.6 : null;
+  const kmh = value => Number.isFinite(value) ? value.toFixed(1) + " km/h" : "—";
+  const paces = [state, "camera equivalent " + kmh(cameraSpeed), "surfer " + kmh(fix?.surferSpeed)].filter(Boolean);
+  const speedText = speedLabel + " · " + rateText + " (" + paces.join(" · ") + ")";
   if ($("hs-speed").textContent !== speedText) $("hs-speed").textContent = speedText;
   const rangeText = "Surfer-to-mount · " + (fix && range !== null ? range.toFixed(1) + " m" : "unavailable");
   if ($("fix-range").textContent !== rangeText) $("fix-range").textContent = rangeText;
@@ -2173,8 +2192,9 @@ function addLiveFix(point, input, now = performance.now()) {
   const prior = session.fixes.at(-1);
   if (prior && samePoint(prior.point, point) && input !== "Hold") return;
   const time = Math.max(prior?.time ?? 0, now - session.origin);
+  const surferSpeed = prior ? groundSpeedKmh(prior.point, point, time - prior.time) : null;
   const fix = { point, input, time, utc: session.started + time, sequence: session.fixes.length + 1,
-    previousLeadTarget: session.target };
+    previousLeadTarget: session.target, surferSpeed };
   session.fixes.push(fix);
   recordLiveEvent(session, "gps_input", time, { fixId: fix.sequence, ...tracePoint(point), inputType: input });
   const gps = session.gps;

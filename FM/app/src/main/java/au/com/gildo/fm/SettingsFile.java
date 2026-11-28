@@ -201,6 +201,11 @@ final class SettingsFile {
         return merged;
     }
 
+    static void requireUnchanged(String[] started,String[] saved,int... fields) throws IOException {
+        for(int field:fields) if(!started[field].equals(saved[field]))
+            throw new IOException(FmService.KEYS[field]+" changed during the operation. Keeping the edited value.");
+    }
+
     private static Object fileValue(int index,String value) throws Exception {
         if(index==FmService.TILT_DISABLE || index==FmService.MANUAL_CAMERA) return Boolean.valueOf(value);
         if(index==CameraSettings.BANDS) return new JSONObject(value);
