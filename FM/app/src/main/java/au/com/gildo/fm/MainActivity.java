@@ -58,7 +58,8 @@ public final class MainActivity extends Activity {
     private String displayedFileStatus="";
     private static final int GDL_PERMISSION=7;
     private boolean showGdlCredentials;
-    private Button connectHotspot;
+    private Button connectHotspot,connectGti,connectSx;
+    private AlertDialog discoveryDialog;
     private String lastHotspotName;
     private final SettingsAutosave autosave=new SettingsAutosave(this::writeSettingsEdit,this::settingsSaveResult);
     private CheckBox calibrationConfirmed, disableTilt, manualCamera;
@@ -174,7 +175,8 @@ public final class MainActivity extends Activity {
         addGpsPad(root,state);
         gtiStatus=text(root,"GTi disconnected",15);
         connectHotspot=button(root,"Connect to hotspot",this::chooseGdl);
-        button(root,"Connect GTi",()->afterSettings(()->service.connectGti()));
+        connectGti=button(root,"Connect GTi",()->afterSettings(()->service.connectGti()));
+        connectSx=button(root,"Connect to SX",()->afterSettings(()->service.connectCanon()));
         savedStatus=text(root,"",15);
         calibrationPanel=collapsibleSection(root,"Landmark calibration",state!=null&&state.getBoolean(CALIBRATION_OPEN));
         landmarkCoordinates=addSetting(calibrationPanel,values,LandmarkCalibration.LANDMARK_LAT);
@@ -370,6 +372,7 @@ public final class MainActivity extends Activity {
         settingsVersion.removeCallbacks(refreshSettingsAge);
         if(service!=null && service.settingsEditable()) autosave.finishAll(null);
         if(liveMap!=null) { liveMap.dismiss(); liveMap=null; }
+        closeDiscoveryDialog();
         disconnect();
         super.onStop();
     }
@@ -421,6 +424,29 @@ public final class MainActivity extends Activity {
         if(!TextUtils.equals(settingsVersion.getText(),version)) settingsVersion.setText(version);
     }
 
+    private void closeDiscoveryDialog() {
+        if(discoveryDialog!=null) {
+            discoveryDialog.dismiss();
+            discoveryDialog=null;
+        }
+    }
+
+    private void renderDiscovery() {
+        String message=service==null?"":service.discoveryProgress();
+        if(message.isEmpty()) {
+            closeDiscoveryDialog();
+        } else if(discoveryDialog!=null) {
+            discoveryDialog.setMessage(message);
+        } else if(!isFinishing() && !isDestroyed()) {
+            discoveryDialog=new AlertDialog.Builder(this).setTitle("Device discovery")
+                .setMessage(message).setCancelable(false)
+                .setNegativeButton("Hide",(dialog,which)->{
+                    if(service!=null) service.hideDiscovery();
+                    discoveryDialog=null;
+                }).show();
+        }
+    }
+
     private void render() {
         if(service!=null && service.stopped()) {
             showGdlCredentials=false;
@@ -431,6 +457,7 @@ public final class MainActivity extends Activity {
             startMonitoring.setVisibility(View.VISIBLE);
         }
         renderConnectionFlags();
+        renderDiscovery();
         renderSettingsVersion();
         String telemetry=LiveMapFrame.dashboardStatus(service==null?null:service.liveMapFrame());
         if(!TextUtils.equals(dashboardTelemetry.getText(),telemetry)) dashboardTelemetry.setText(telemetry);
@@ -461,6 +488,9 @@ public final class MainActivity extends Activity {
         String hotspotLabel="Connect to "+lastHotspotName;
         if(!TextUtils.equals(connectHotspot.getText(),hotspotLabel)) connectHotspot.setText(hotspotLabel);
         connectHotspot.setEnabled(hotspotAvailable && !showGdlCredentials);
+        boolean canFindDevice=ready && service.canConnectDevice();
+        connectGti.setEnabled(canFindDevice);
+        connectSx.setEnabled(canFindDevice && !service.manualCamera());
         stopFm.setEnabled(service!=null && !service.stopping());
         stopFm.setText(service!=null && service.stopping()?"Waiting for full stop":"Stop FM");
         discoverCanon.setEnabled(ready && !service.manualCamera());

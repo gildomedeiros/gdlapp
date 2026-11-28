@@ -4,6 +4,78 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class StartupWifiTest {
+    @Test public void startupProgressFollowsBothSearchesOnlyOnFirstHotspotConnection() {
+        StartupWifi wifi=new StartupWifi();
+        assertEquals("",wifi.progress());
+        wifi.networkChanged(true);
+        assertFalse(wifi.takeDiscovery(false));
+        assertEquals("",wifi.progress());
+        assertTrue(wifi.takeDiscovery(true));
+        assertEquals("Finding GTi…",wifi.progress());
+        assertTrue(wifi.startCanon(wifi.routeRevision(),true));
+        assertEquals("Finding Canon SX…",wifi.progress());
+        wifi.finishDiscovery(wifi.routeRevision());
+        assertEquals("",wifi.progress());
+        wifi.networkChanged(false);
+        wifi.networkChanged(true);
+        assertTrue(wifi.takeDiscovery(true));
+        assertTrue(wifi.startCanon(wifi.routeRevision(),true));
+        assertEquals("",wifi.progress());
+    }
+
+    @Test public void pressingConnectToHotspotAgainShowsBothPhasesAndDiscardsOldResults() {
+        StartupWifi wifi=new StartupWifi();
+        wifi.networkChanged(true);
+        assertTrue(wifi.takeDiscovery(true));
+        long old=wifi.routeRevision();
+        assertTrue(wifi.startCanon(old,true));
+        wifi.hideProgress();
+        wifi.request();
+        wifi.networkChanged(true);
+        assertTrue(wifi.takeDiscovery(true));
+        assertEquals("Finding GTi…",wifi.progress());
+        assertFalse(wifi.startCanon(old,true));
+        assertTrue(wifi.startCanon(wifi.routeRevision(),true));
+        wifi.finishDiscovery(old);
+        assertEquals("Finding Canon SX…",wifi.progress());
+    }
+
+    @Test public void eachManualButtonShowsJustItsDeviceAndCanBeRepeated() {
+        StartupWifi wifi=new StartupWifi();
+        for(boolean mount:new boolean[]{true,false,false,true}) {
+            assertTrue(wifi.canSearchDevice());
+            wifi.startDeviceSearch(mount);
+            assertFalse(wifi.canSearchDevice());
+            assertEquals(mount?"Finding GTi…":"Finding Canon SX…",wifi.progress());
+            assertEquals(!mount,wifi.findingCanon(wifi.routeRevision()));
+            wifi.hideProgress();
+            wifi.finishDiscovery(wifi.routeRevision());
+            assertEquals("",wifi.progress());
+        }
+    }
+
+    @Test public void manualCameraEndsDialogAfterMountAttempt() {
+        StartupWifi wifi=new StartupWifi();
+        wifi.networkChanged(true);
+        wifi.takeDiscovery(true);
+        assertFalse(wifi.startCanon(wifi.routeRevision(),false));
+        assertFalse(wifi.findingCanon(wifi.routeRevision()));
+        assertEquals("",wifi.progress());
+    }
+
+    @Test public void hiddenDialogAllowsCameraSearchAndNetworkLossEndsIt() {
+        StartupWifi wifi=new StartupWifi();
+        wifi.networkChanged(true);
+        wifi.takeDiscovery(true);
+        wifi.hideProgress();
+        assertTrue(wifi.startCanon(wifi.routeRevision(),true));
+        assertTrue(wifi.findingCanon(wifi.routeRevision()));
+        assertEquals("",wifi.progress());
+        wifi.networkChanged(false);
+        assertFalse(wifi.findingCanon(wifi.routeRevision()));
+        assertEquals("",wifi.progress());
+    }
+
     @Test public void earlyConnectSupersedesOriginalScanAndDiscoversNewRouteOnce() {
         StartupWifi wifi=new StartupWifi();
         wifi.starting=true;

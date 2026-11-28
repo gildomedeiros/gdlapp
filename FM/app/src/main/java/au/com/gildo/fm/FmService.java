@@ -110,6 +110,7 @@ public final class FmService extends Service {
         if(!available) {
             if(gdl.requested()) gtiExchangeFailed=true;
             if(waiting) resultText="Hotspot Wi-Fi · "+gdl.flag().label();
+            else if(resultText.equals("Finding Canon SX…")) resultText="Canon SX discovery stopped · Hotspot Wi-Fi disconnected";
         }
         discoverGdlIfReady();
         publish();
@@ -118,8 +119,83 @@ public final class FmService extends Service {
 
     private void discoverGdlIfReady() {
         if(!startupWifi.takeDiscovery(ready())) return;
+        long route=startupWifi.routeRevision();
         begin("Hotspot connected · Discovering GTi");
-        worker.execute(()->{ resetGps(); finish(connectMount(MountConnect.HOTSPOT)); });
+        worker.execute(()->{
+            resetGps();
+            String mountResult=connectMount(MountConnect.HOTSPOT,route);
+            finish(mountResult);
+            main.post(()->{
+                if(startupWifi.startCanon(route,motionAllowed() && camera!=null && !manualCamera()))
+                    runCanonDiscovery(route,mountResult);
+                publish();
+            });
+        });
+    }
+
+    String discoveryProgress() { return motionAllowed()?startupWifi.progress():""; }
+    void hideDiscovery() { startupWifi.hideProgress(); }
+
+    boolean canConnectDevice() { return ready() && startupWifi.canSearchDevice(); }
+
+    void connectCanon() {
+        if(!canConnectDevice() || camera==null || manualCamera()) return;
+        startupWifi.startDeviceSearch(false);
+        resultText="Finding Canon SX…";
+        runCanonDiscovery(startupWifi.routeRevision(),null);
+        publish();
+    }
+
+    private void runCanonDiscovery(long route,String mountResult) {
+        camera.execute(()->{
+            String outcome;
+            try {
+                outcome=findCanon(route);
+            } catch(Exception failure) {
+                if(failure instanceof InterruptedException) Thread.currentThread().interrupt();
+                outcome="Canon SX discovery · "+Objects.toString(failure.getMessage(),failure.getClass().getSimpleName());
+            }
+            String message=outcome;
+            main.post(()->{
+                if(canSearchCanon(route) && !message.isEmpty()) {
+                    if(mountResult==null && resultText.equals("Finding Canon SX…")) resultText=message;
+                    else if(resultText.equals(mountResult)) resultText=mountResult+"\n"+message;
+                } else if(startupWifi.findingCanon(route) && manualCamera() && resultText.equals("Finding Canon SX…")) {
+                    resultText="Manual camera";
+                }
+                startupWifi.finishDiscovery(route);
+                publish();
+            });
+        });
+    }
+
+    private String findCanon(long revision) throws Exception {
+        String[] before=SettingsFile.cached(prefs);
+        CameraSettings canon=new CameraSettings(before);
+        if(canon.manual || !canSearchCanon(revision)) return "";
+        Network route=gdl.route();
+        List<DeviceDiscovery.Device> found=DeviceDiscovery.find(network,route,false,canon.cameraHost,
+            canon.cameraPort,()->canSearchCanon(revision));
+        if(!canSearchCanon(revision)) return "";
+        if(found.isEmpty()) return "Canon SX not found";
+        if(found.size()>1) return "Several cameras found · Choose one in Discover Canon SX";
+        String address=found.get(0).address();
+        if(!address.equals(canon.cameraHost)) {
+            synchronized(settingsIo) {
+                SettingsFile.Snapshot disk=readCurrentSettings();
+                SettingsFile.requireUnchanged(before,disk.values(),6,7,MANUAL_CAMERA);
+                if(!canSearchCanon(revision)) return "";
+                String[] values=disk.values().clone();
+                values[6]=address;
+                storeSettings(disk.withValues(values),false);
+                applySavedSettingsWhenIdle();
+            }
+        }
+        return "Canon SX found · "+address;
+    }
+
+    private boolean canSearchCanon(long route) {
+        return motionAllowed() && startupWifi.findingCanon(route) && !manualCamera();
     }
     private volatile CameraZoomReader camera;
     private volatile CameraSettings cameraSettings;
@@ -296,7 +372,7 @@ public final class FmService extends Service {
                 publish(); refreshNotification();
             }
         });
-        String mountStatus=startupWifi.useOriginalRoute()?connectMount(MountConnect.STARTUP):"";
+        String mountStatus=startupWifi.useOriginalRoute()?connectMount(MountConnect.STARTUP,startupWifi.routeRevision()):"";
         if(destroyed) return;
         worker.scheduleWithFixedDelay(this::readGps,0,75,TimeUnit.MILLISECONDS);
         main.post(()->{
@@ -798,20 +874,29 @@ public final class FmService extends Service {
     }
 
     void connectGti() {
-        if(!ready()) return;
-        begin("Connecting to GTi");
-        worker.execute(()->finish(connectMount(MountConnect.BUTTON)));
+        if(!canConnectDevice()) return;
+        startupWifi.startDeviceSearch(true);
+        long route=startupWifi.routeRevision();
+        begin("Finding GTi…");
+        worker.execute(()->{
+            String message=connectMount(MountConnect.BUTTON,route);
+            main.post(()->startupWifi.finishDiscovery(route));
+            finish(message);
+        });
     }
 
     private enum MountConnect { STARTUP, HOTSPOT, BUTTON }
 
-    private void requireConnectRoute(MountConnect trigger) throws IOException {
-        if(!motionAllowed()) throw new IOException("FM stopped before connecting to GTi");
-        if(trigger==MountConnect.STARTUP && !startupWifi.useOriginalRoute())
-            throw new IOException("Startup discovery superseded by hotspot selection");
+    private boolean sameConnectRoute(MountConnect trigger,long route) {
+        return trigger==MountConnect.STARTUP?startupWifi.useOriginalRoute():route==startupWifi.routeRevision();
     }
 
-    private String connectMount(MountConnect trigger) {
+    private void requireConnectRoute(MountConnect trigger,long route) throws IOException {
+        if(!motionAllowed()) throw new IOException("FM stopped before connecting to GTi");
+        if(!sameConnectRoute(trigger,route)) throw new IOException("Wi-Fi changed while finding GTi");
+    }
+
+    private String connectMount(MountConnect trigger,long route) {
         gtiConnection=null;
         String id=UUID.randomUUID().toString().substring(0,12);
         String name="FM-"+id+".jsonl";
@@ -823,31 +908,29 @@ public final class FmService extends Service {
             log.event("gti_connect_attempt","wallTimeMs",System.currentTimeMillis(),"host",settings[4],"port",settings[5],
                 "trigger",trigger.name().toLowerCase(java.util.Locale.ROOT));
             try {
-                requireConnectRoute(trigger);
+                requireConnectRoute(trigger,route);
                 DeviceDiscovery.Link link=deviceLink(settings[4]);
-                DeviceDiscovery.Device discovered=trigger==MountConnect.BUTTON?null:
-                    DeviceDiscovery.findStartupMount(link,settings[4],port(5),
-                        ()->motionAllowed() && (trigger!=MountConnect.STARTUP || startupWifi.useOriginalRoute()));
-                requireConnectRoute(trigger);
+                DeviceDiscovery.Device discovered=DeviceDiscovery.findStartupMount(link,settings[4],port(5),
+                    ()->motionAllowed() && sameConnectRoute(trigger,route));
+                requireConnectRoute(trigger,route);
                 SettingsFile.requireUnchanged(settings,SettingsFile.cached(prefs),4,5);
-                if(discovered!=null)
-                    log.event("gti_startup_discovery","address",discovered.address(),"identity",discovered.identity());
-                String[] candidate=discovered!=null&&!settings[4].equals(discovered.address())?settings.clone():null;
+                log.event(trigger==MountConnect.BUTTON?"gti_button_discovery":"gti_startup_discovery",
+                    "address",discovered.address(),"identity",discovered.identity());
+                String[] candidate=!settings[4].equals(discovered.address())?settings.clone():null;
                 if(candidate!=null) candidate[4]=discovered.address();
                 String[] selectedEndpoint=candidate==null?settings:candidate;
-                InetSocketAddress target=discovered==null?endpoint(4,5):
-                    new InetSocketAddress(InetAddress.getByName(discovered.address()),port(5));
-                GoTo client=new GoTo(()->{ requireConnectRoute(trigger); return link.udp(); },target,log);
+                InetSocketAddress target=new InetSocketAddress(InetAddress.getByName(discovered.address()),port(5));
+                GoTo client=new GoTo(()->{ requireConnectRoute(trigger,route); return link.udp(); },target,log);
                 GoTo.MountSetup setup=client.connect(()->{
-                    requireConnectRoute(trigger);
+                    requireConnectRoute(trigger,route);
                     rememberDiscoveredEndpoint(candidate,log);
                     invalidateReferenceForInitialization(settings,log);
                 });
-                requireConnectRoute(trigger);
+                requireConnectRoute(trigger,route);
                 rememberDiscoveredEndpoint(candidate,log);
                 HsTiming pan=readHsTiming(client,1,log);
                 HsTiming tilt=readHsTiming(client,2,log);
-                requireConnectRoute(trigger);
+                requireConnectRoute(trigger,route);
                 SettingsFile.requireUnchanged(selectedEndpoint,SettingsFile.cached(prefs),4,5);
                 gtiExchangeFailed=false;
                 gtiConnection=new MountConnection(target,link,setup,pan,tilt);
