@@ -1,6 +1,7 @@
 {
   "schema": 1,
   "settings": {
+    "Settings version": "",
     "GPS IP": "192.168.4.1",
     "GPS port": "5006",
     "Listen port": "5005",

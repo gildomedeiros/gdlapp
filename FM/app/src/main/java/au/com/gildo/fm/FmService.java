@@ -56,12 +56,24 @@ public final class FmService extends Service {
     private final ScheduledExecutorService settingsWatcher=Executors.newSingleThreadScheduledExecutor();
     private final Object settingsIo=new Object();
     private final LandmarkCalibration.Session calibrationSession=new LandmarkCalibration.Session();
-    private byte[] lastSettingsBytes;
     private volatile long settingsRevision;
     private volatile boolean settingsLoaded;
+    private volatile SettingsFile.LastLoad lastSettingsLoad;
     private volatile String settingsFileStatus="";
     long settingsRevision() { return settingsRevision; }
     String settingsFileStatus() { return settingsFileStatus; }
+    String settingsVersionLabel() {
+        if(!settingsLoaded) return "Loading…";
+        SettingsFile.LastLoad load=lastSettingsLoad;
+        if(load==null) return "File not loaded";
+        String version=load.labelAt(SystemClock.elapsedRealtime());
+        return settingsFileStatus.startsWith("Settings file error")?version+" (reload failed)":version;
+    }
+
+    private void recordSettingsLoad(SettingsFile.Snapshot snapshot,byte[] contents) {
+        lastSettingsLoad=new SettingsFile.LastLoad(snapshot.displayVersion(),SystemClock.elapsedRealtime(),contents);
+        main.post(this::publish);
+    }
     private final Handler main=new Handler(Looper.getMainLooper());
     private final List<ReplayRowReport> replayReports=new ArrayList<>();
     private final Connection binder=new Connection();
@@ -242,8 +254,11 @@ public final class FmService extends Service {
         try {
             SettingsFile.Loaded stored=SettingsFile.read(this,prefs);
             if(stored!=null) {
-                values=stored.values();
-                if(calibrationSession.reconcile(values)) SettingsFile.write(this,prefs,values);
+                SettingsFile.Snapshot snapshot=stored.snapshot();
+                values=snapshot.values();
+                byte[] contents=stored.contents();
+                if(calibrationSession.reconcile(values)) contents=SettingsFile.write(this,prefs,snapshot);
+                recordSettingsLoad(snapshot,contents);
                 settingsLocation=stored.location();
                 settingsStatus="FM active · Settings loaded from "+settingsLocation;
                 if(!stored.warning().isEmpty()) settingsStatus+="\n"+stored.warning();
@@ -251,7 +266,8 @@ public final class FmService extends Service {
                     settingsStatus+="\nUse Link FM settings folder to load "+SettingsFile.LOCATION+".";
             } else {
                 calibrationSession.reconcile(values);
-                SettingsFile.write(this,prefs,values);
+                SettingsFile.Snapshot created=new SettingsFile.Snapshot(values,"");
+                recordSettingsLoad(created,SettingsFile.write(this,prefs,created));
                 settingsLocation=SettingsFile.LOCATION;
                 settingsStatus="FM active · Settings created at "+settingsLocation;
             }
@@ -695,13 +711,15 @@ public final class FmService extends Service {
             try {
                 synchronized(settingsIo) {
                     SettingsFile.Loaded loaded=SettingsFile.linkFolder(this,prefs,tree,flags);
-                    String[] values=loaded.values();
-                    if(calibrationSession.reconcile(values)) SettingsFile.write(this,prefs,values);
+                    SettingsFile.Snapshot snapshot=loaded.snapshot();
+                    String[] values=snapshot.values();
+                    byte[] contents=loaded.contents();
+                    if(calibrationSession.reconcile(values)) contents=SettingsFile.write(this,prefs,snapshot);
                     SettingsFile.cache(prefs,values);
-                    lastSettingsBytes=null;
                     configureCamera(values);
                     settingsRevision++;
                     applySavedSettingsWhenIdle();
+                    recordSettingsLoad(snapshot,contents);
                     String status="Loaded "+SettingsFile.LOCATION;
                     if(!loaded.warning().isEmpty()) status+="\n"+loaded.warning();
                     String coordinates=MountCoordinates.format(values);
@@ -743,11 +761,11 @@ public final class FmService extends Service {
             String error=null;
             try {
                 synchronized(settingsIo) {
-                    String[] disk=readCurrentSettings();
-                    String[] values=disk.clone();
+                    SettingsFile.Snapshot disk=readCurrentSettings();
+                    String[] values=disk.values().clone();
                     edit.apply(values);
-                    LandmarkCalibration.clearStaleReference(disk,values);
-                    storeSettings(values,false);
+                    LandmarkCalibration.clearStaleReference(disk.values(),values);
+                    storeSettings(disk.withValues(values),false);
                     applySavedSettingsWhenIdle();
                 }
             } catch(Exception e) {
@@ -955,14 +973,14 @@ public final class FmService extends Service {
                     log.event("calibration_inputs","settings",new JSONArray(Arrays.asList(values)));
                     LandmarkCalibration calibration=captureLandmark(values,log);
                     synchronized(settingsIo) {
-                        String[] disk=readCurrentSettings();
-                        if(!LandmarkCalibration.basis(values).equals(LandmarkCalibration.basis(disk)))
+                        SettingsFile.Snapshot disk=readCurrentSettings();
+                        if(!LandmarkCalibration.basis(values).equals(LandmarkCalibration.basis(disk.values())))
                             throw new IOException("Mount or landmark changed during calibration");
-                        String[] merged=SettingsFile.mergeEdit(settings,values,disk);
+                        String[] merged=SettingsFile.mergeEdit(settings,values,disk.values());
                         if(!LandmarkCalibration.basis(values).equals(LandmarkCalibration.basis(merged))
                             || !LandmarkCalibration.hasReference(merged))
                             throw new IOException("Mount or landmark changed during calibration");
-                        storeSettings(merged,true);
+                        storeSettings(disk.withValues(merged),true);
                         apply(merged);
                     }
                     mapPan=new MapPan(new LiveTrackingKml.CameraHeading(calibration.bearing(),Integer.parseInt(values[14]),GoTo.now()),"Stopped");
@@ -1023,32 +1041,36 @@ public final class FmService extends Service {
 
     private void persistSettings(String[] values,int... protectedFields) throws Exception {
         synchronized(settingsIo) {
-            String[] disk=readCurrentSettings();
-            SettingsFile.requireUnchanged(settings,disk,protectedFields);
-            String[] merged=SettingsFile.mergeEdit(settings,values,disk);
-            storeSettings(merged,false);
+            SettingsFile.Snapshot disk=readCurrentSettings();
+            SettingsFile.requireUnchanged(settings,disk.values(),protectedFields);
+            String[] merged=SettingsFile.mergeEdit(settings,values,disk.values());
+            storeSettings(disk.withValues(merged),false);
             apply(merged);
         }
     }
 
-    private String[] readCurrentSettings() throws Exception {
+    private SettingsFile.Snapshot readCurrentSettings() throws Exception {
         byte[] bytes=SettingsFile.contents(this,prefs);
         String[] cached=SettingsFile.cached(prefs);
-        return bytes==null?cached:SettingsFile.decode(SettingsFile.parseDocument(bytes).getJSONObject("settings"),cached);
+        return bytes==null?new SettingsFile.Snapshot(cached,""):
+            SettingsFile.readSnapshot(SettingsFile.parseDocument(bytes).getJSONObject("settings"),cached);
     }
 
-    private void storeSettings(String[] values,boolean captured) throws Exception {
+    private void storeSettings(SettingsFile.Snapshot snapshot,boolean captured) throws Exception {
+        String[] values=snapshot.values();
         hsGapWarningM(values);
         validateLiveSettings(values);
         new CameraSettings(values);
         String why=captured?null:calibrationSession.reasonFor(values);
         if(why!=null) LandmarkCalibration.clearReference(values);
-        SettingsFile.write(this,prefs,values);
+        byte[] contents=SettingsFile.write(this,prefs,snapshot);
         if(captured) calibrationSession.captured(values);
         else if(why!=null) calibrationSession.require(why);
         SettingsFile.cache(prefs,values);
         configureCamera(values);
         settingsRevision++;
+        if(settingsFileStatus.startsWith("Settings file error")) setSettingsFileStatus("Saved "+SettingsFile.LOCATION);
+        recordSettingsLoad(snapshot,contents);
     }
 
     private void applySavedSettingsWhenIdle() {
@@ -1087,17 +1109,21 @@ public final class FmService extends Service {
             synchronized(settingsIo) {
                 byte[] bytes=SettingsFile.contents(this,prefs);
                 if(bytes==null) throw new FileNotFoundException(SettingsFile.LOCATION);
-                if(Arrays.equals(bytes,lastSettingsBytes) && !settingsFileStatus.startsWith("Settings file error")) return;
+                SettingsFile.LastLoad last=lastSettingsLoad;
+                if(last!=null && last.matches(bytes) && !settingsFileStatus.startsWith("Settings file error")) return;
                 String[] before=SettingsFile.cached(prefs);
-                String[] loaded=SettingsFile.decode(SettingsFile.parseDocument(bytes).getJSONObject("settings"),before);
-                if(calibrationSession.reconcile(loaded)) SettingsFile.write(this,prefs,loaded);
-                lastSettingsBytes=bytes;
-                if(!Arrays.equals(before,loaded)) {
+                SettingsFile.Snapshot snapshot=SettingsFile.readSnapshot(SettingsFile.parseDocument(bytes).getJSONObject("settings"),before);
+                String[] loaded=snapshot.values();
+                if(calibrationSession.reconcile(loaded)) bytes=SettingsFile.write(this,prefs,snapshot);
+                boolean changed=!Arrays.equals(before,loaded);
+                if(changed) {
                     SettingsFile.cache(prefs,loaded);
                     configureCamera(loaded);
                     settingsRevision++;
                     applySavedSettingsWhenIdle();
-                } else if(settingsFileStatus.isEmpty()) return;
+                }
+                recordSettingsLoad(snapshot,bytes);
+                if(!changed && settingsFileStatus.isEmpty()) return;
             }
             setSettingsFileStatus("Reloaded "+SettingsFile.LOCATION);
         } catch(Exception error) {

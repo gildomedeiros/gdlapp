@@ -46,7 +46,13 @@ public final class MainActivity extends Activity {
     private LinearLayout settingsPanel,calibrationPanel,reportPanel;
     private TextView cameraStatus,settingsSaveStatus;
     private final EnumMap<ConnectionFlag.Channel,TextView> connectionFlags=new EnumMap<>(ConnectionFlag.Channel.class);
-    private TextView dashboardTelemetry;
+    private TextView dashboardTelemetry,settingsVersion;
+    private final Runnable refreshSettingsAge=new Runnable() {
+        @Override public void run() {
+            renderSettingsVersion();
+            settingsVersion.postDelayed(this,1000);
+        }
+    };
     private boolean restoringSettings,startingLive;
     private long displayedSettingsRevision=-1;
     private String displayedFileStatus="";
@@ -105,6 +111,7 @@ public final class MainActivity extends Activity {
         setContentView(screen);
         TextView title=text(screen,"FM "+BuildConfig.VERSION_NAME,24);
         addConnectionFlags(screen);
+        settingsVersion=text(screen,"Settings version · —",14);
         dashboardTelemetry=text(screen,LiveMapFrame.dashboardStatus(null),14);
         stopFm=new Button(this);
         stopFm.setAllCaps(false);
@@ -180,7 +187,6 @@ public final class MainActivity extends Activity {
         landmarkGpsStatus=text(calibrationPanel,"",14);
         landmarkGpsStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         landmarkGpsStatus.setVisibility(View.GONE);
-        addSetting(calibrationPanel,values,LandmarkCalibration.LANDMARK_HEIGHT);
         addSetting(calibrationPanel,values,16);
         addSetting(calibrationPanel,values,17);
         text(calibrationPanel,"Centre the landmark in the preview.",14);
@@ -224,6 +230,9 @@ public final class MainActivity extends Activity {
         root.addView(startMonitoring);
         settingsPanel=collapsibleSection(root,"Settings",state!=null&&state.getBoolean(SETTINGS_OPEN));
         mountCoordinates=addSetting(settingsPanel,values,MountCoordinates.LATITUDE);
+        addSetting(settingsPanel,values,LandmarkCalibration.PIVOT_ELEVATION);
+        addSetting(settingsPanel,values,LandmarkCalibration.LANDMARK_HEIGHT);
+        addSetting(settingsPanel,values,11);
         chooseCsv=button(settingsPanel,"Choose replay CSV",this::chooseReplayCsv);
         settingsSaveStatus=text(settingsPanel,"Autosave on",14);
         settingsSaveStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
@@ -247,8 +256,6 @@ public final class MainActivity extends Activity {
             if(i!=CameraSettings.BANDS && i!=CameraSettings.MAPPING) addSetting(canon,values,i);
         }
         button(settingsPanel,"Discover GTi",()->afterSettings(()->discover(true)));
-        addSetting(settingsPanel,values,LandmarkCalibration.PIVOT_ELEVATION);
-        addSetting(settingsPanel,values,11);
         addSetting(settingsPanel,values,FmService.HS_GAP_WARNING);
         disableTilt=new CheckBox(this);
         disableTilt.setText("Disable tilt motor");
@@ -317,6 +324,7 @@ public final class MainActivity extends Activity {
 
     @Override protected void onStart() {
         super.onStart();
+        settingsVersion.post(refreshSettingsAge);
         if(Build.VERSION.SDK_INT<29 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED
             && !prefs.getBoolean("legacyPermissionAsked",false)) {
             prefs.edit().putBoolean("legacyPermissionAsked",true).apply();
@@ -355,6 +363,7 @@ public final class MainActivity extends Activity {
         service=null;
     }
     @Override protected void onStop() {
+        settingsVersion.removeCallbacks(refreshSettingsAge);
         if(service!=null && service.settingsEditable()) autosave.finishAll(null);
         if(liveMap!=null) { liveMap.dismiss(); liveMap=null; }
         disconnect();
@@ -403,6 +412,11 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void renderSettingsVersion() {
+        String version="Settings version · "+(service==null?"—":service.settingsVersionLabel());
+        if(!TextUtils.equals(settingsVersion.getText(),version)) settingsVersion.setText(version);
+    }
+
     private void render() {
         if(service!=null && service.stopped()) {
             result.setText(service.resultText());
@@ -412,6 +426,7 @@ public final class MainActivity extends Activity {
             startMonitoring.setVisibility(View.VISIBLE);
         }
         renderConnectionFlags();
+        renderSettingsVersion();
         String telemetry=LiveMapFrame.dashboardStatus(service==null?null:service.liveMapFrame());
         if(!TextUtils.equals(dashboardTelemetry.getText(),telemetry)) dashboardTelemetry.setText(telemetry);
         if(cameraStatus!=null) cameraStatus.setText(service==null?"Canon waiting for FM":service.cameraStatus());

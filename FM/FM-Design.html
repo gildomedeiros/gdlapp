@@ -1117,7 +1117,9 @@
 </ol>
 </section>
 <h2 id="android-operation">Android operation</h2>
-<p><strong>Settings</strong> and <strong>Landmark calibration</strong> start collapsed. Expand <strong>Settings</strong> to edit the mount coordinates, choose a CSV or change the other settings.</p>
+<p><strong>Settings</strong> and <strong>Landmark calibration</strong> start collapsed. Expand <strong>Settings</strong> to edit the mount coordinates or choose a CSV. Directly below Mount coordinates, enter <strong>Pivot elevation (m)</strong>, <strong>Landmark elevation (m)</strong>, then <strong>Target elevation (m)</strong>. Use the same height reference for all three.</p>
+<p id="settings-file-version"><strong>Settings version.</strong> Set <code>"Settings version": "beach-02"</code> inside the <code>settings</code> object in <code>FM-settings.json</code>. Below the connection flags, <strong>Settings version · beach-02 [2 min ago]</strong> means FM last accepted the file two minutes ago. A successful load or save resets the age, even when the version label stays the same. Autosave reads the current file, merges the edit and uses the saved values. Routine checks of unchanged content leave the timer running.</p>
+<p>Editing just the label refreshes the line on the next file check. A missing or blank label shows <strong>Not set</strong>. A failed reload keeps the previous label and age and adds <strong>(reload failed)</strong>. A startup using only cached settings shows <strong>File not loaded</strong>. Saves preserve the label you supplied.</p>
 <p id="settings-availability"><strong>When can I edit Settings? · FM 0.1.95</strong></p>
 <ul>
 <li><strong>At launch.</strong> Enable editing as soon as FM loads the settings file or its cached fallback. GTi discovery can still be searching. Completed edits save on the settings worker.</li>

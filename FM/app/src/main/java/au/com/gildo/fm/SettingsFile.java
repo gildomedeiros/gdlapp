@@ -17,6 +17,7 @@ import java.nio.file.StandardCopyOption;
 
 final class SettingsFile {
     static final String NAME="FM-settings.json";
+    static final String VERSION_KEY="Settings version";
     private static final String ROW="downloadSettingsUri";
     private static final String GENERATED_NAME="FM-settings(?: \\([0-9]+\\))?\\.json";
     private static final String FOLDER="FM";
@@ -28,7 +29,38 @@ final class SettingsFile {
     private static final int ACCESS=Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
     static final String LOCATION=PATH+NAME;
 
-    record Loaded(String[] values,String location,String warning) {}
+    record Snapshot(String[] values,Object version) {
+        Snapshot withValues(String[] updated) { return new Snapshot(updated,version); }
+
+        String displayVersion() {
+            if(version==null || version==JSONObject.NULL) return "Not set";
+            if(!(version instanceof String || version instanceof Number)) return "Use text or a number";
+            String label=version.toString().trim();
+            return label.isEmpty()?"Not set":label;
+        }
+
+        JSONObject document() throws Exception {
+            JSONObject document=settingsDocument(values);
+            document.getJSONObject("settings").put(VERSION_KEY,version);
+            return document;
+        }
+    }
+    record Loaded(Snapshot snapshot,String location,String warning,byte[] contents) {}
+
+    record LastLoad(String version,long loadedAtMs,byte[] contents) {
+        boolean matches(byte[] bytes) { return java.util.Arrays.equals(contents,bytes); }
+
+        String labelAt(long nowMs) {
+            long seconds=(nowMs-loadedAtMs)/1000;
+            String age;
+            if(seconds<1) age="just now";
+            else if(seconds<60) age=seconds+" s ago";
+            else if(seconds<3600) age=(seconds/60)+" min ago";
+            else if(seconds<86400) age=(seconds/3600)+" h ago";
+            else age=(seconds/86400)+" d ago";
+            return version+" ["+age+"]";
+        }
+    }
     private record DownloadRow(Uri uri,String name) {}
 
     static Uri initialFolder() {
@@ -134,8 +166,9 @@ final class SettingsFile {
 
     private static Loaded loadFile(Context context,SharedPreferences prefs,Uri uri,String name) throws Exception {
         ContentResolver resolver=context.getContentResolver();
-        JSONObject document;
-        try(InputStream in=resolver.openInputStream(uri)) { document=parseDocument(readBytes(in)); }
+        byte[] contents;
+        try(InputStream in=resolver.openInputStream(uri)) { contents=readBytes(in); }
+        JSONObject document=parseDocument(contents);
         JSONObject fields=document.getJSONObject("settings");
         String[] values=decode(fields,cached(prefs));
         String warning="";
@@ -144,12 +177,13 @@ final class SettingsFile {
                 byte[] bytes=encode(document);
                 if("file".equals(uri.getScheme())) writeLegacy(bytes);
                 else writeBytes(resolver,uri,bytes);
+                contents=bytes;
                 refreshFileMetadata(context,name);
             } catch(IOException|SecurityException failure) {
                 warning="Could not update settings in "+PATH+name+" · "+failure.getMessage();
             }
         }
-        return new Loaded(values,PATH+name,warning);
+        return new Loaded(new Snapshot(values,fields.opt(VERSION_KEY)),PATH+name,warning,contents);
     }
 
     private static byte[] readBytes(InputStream in) throws IOException {
@@ -170,6 +204,10 @@ final class SettingsFile {
     }
 
     private static final int MAX_BYTES=1024*1024;
+
+    static Snapshot readSnapshot(JSONObject fields,String[] previous) throws Exception {
+        return new Snapshot(decode(fields,previous),fields.opt(VERSION_KEY));
+    }
 
     static String[] decode(JSONObject fields,String[] previous) throws Exception {
         String[] values=previous.clone();
@@ -218,6 +256,10 @@ final class SettingsFile {
     static boolean upgradeSettingsFields(JSONObject fields,String[] values) throws Exception {
         // Live Tracking now starts at maximum and selects restart speed from range.
         boolean changed=fields.remove("Live HS pan speed (× sidereal)")!=null;
+        if(!fields.has(VERSION_KEY)) {
+            fields.put(VERSION_KEY,"");
+            changed=true;
+        }
         for(int i=0;i<values.length;i++) {
             if(i!=6 && i!=7 && i!=FmService.TILT_DISABLE && i<CameraSettings.FIRST) continue;
             String key=FmService.KEYS[i];
@@ -254,8 +296,8 @@ final class SettingsFile {
         return new JSONObject().put("schema",1).put("settings",settings);
     }
 
-    static void write(Context context,SharedPreferences prefs,String[] values) throws Exception {
-        byte[] bytes=encode(settingsDocument(values));
+    static byte[] write(Context context,SharedPreferences prefs,Snapshot snapshot) throws Exception {
+        byte[] bytes=encode(snapshot.document());
         ContentResolver resolver=context.getContentResolver();
         String tree=prefs.getString(TREE,"");
         if(!tree.isEmpty()) {
@@ -263,12 +305,12 @@ final class SettingsFile {
             catch(SecurityException e) {
                 throw new IOException("Access to "+LOCATION+" expired. Use Link FM settings folder again.",e);
             }
-            return;
+            return bytes;
         }
         if(Build.VERSION.SDK_INT<29) {
             writeLegacy(bytes);
             refreshFileMetadata(context,NAME);
-            return;
+            return bytes;
         }
         DownloadRow found=find(resolver,prefs);
         Uri row=found==null?null:found.uri();
@@ -300,6 +342,7 @@ final class SettingsFile {
             if(created) resolver.delete(row,null,null);
             throw e;
         }
+        return bytes;
     }
 
     private static void writeLegacy(byte[] bytes) throws IOException {
