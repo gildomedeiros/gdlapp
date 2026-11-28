@@ -25,6 +25,29 @@ public class LandmarkCalibrationTest {
         LandmarkCalibration.calculate(new GoTo.Point(0,0,2),new GoTo.Point(0,0,0));
     }
 
+    @Test public void freshSessionClearsReferenceAndRejectsReloadOfPreviousSession() {
+        String[] saved=FmService.DEFAULTS.clone();
+        MountCoordinates.apply("0,0",saved);
+        MountCoordinates.apply("0,0.001",saved,LandmarkCalibration.LANDMARK_LAT,LandmarkCalibration.LANDMARK_LON,LandmarkCalibration.COORDINATES);
+        new LandmarkCalibration(90,0).saveReference(saved,new GoTo.Encoders(100,200));
+        var original=saved.clone();
+        var session=new LandmarkCalibration.Session();
+        assertTrue(session.reconcile(saved));
+        assertEquals("0.001",saved[LandmarkCalibration.LANDMARK_LON]);
+        assertFalse(LandmarkCalibration.hasReference(saved));
+        assertTrue(session.reconcile(original.clone()));
+        session.captured(original);
+        assertFalse(session.reconcile(original.clone()));
+        String[] moved=original.clone();
+        moved[LandmarkCalibration.LANDMARK_LON]="0.002";
+        assertTrue(session.reconcile(moved));
+        assertEquals("Landmark coordinates changed",session.reasonFor(moved));
+        assertTrue(session.reconcile(original.clone()));
+        var next=new LandmarkCalibration.Session();
+        assertTrue(next.reconcile(original.clone()));
+        assertEquals("New FM session",next.reasonFor(original));
+    }
+
     @Test public void savedReferenceIsTiedToTheCalibratedSetup() {
         assertEquals(FmService.KEYS.length,FmService.DEFAULTS.length);
         String[] calibrated=FmService.DEFAULTS.clone();

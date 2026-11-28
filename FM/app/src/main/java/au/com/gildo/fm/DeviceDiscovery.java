@@ -66,7 +66,8 @@ final class DeviceDiscovery {
         }
         if(preferred!=null){
             List<Link> preferredLinks=links.stream().filter(l->preferred.equals(l.network())).collect(java.util.stream.Collectors.toList());
-            if(!preferredLinks.isEmpty())links=preferredLinks;
+            if(preferredLinks.isEmpty()) throw new IOException("GDL Wi-Fi has no usable IPv4 address");
+            links=preferredLinks;
         }
         if(links.size()==1)return links.get(0);
         if(DeviceDiscovery.ipv4(saved)){
@@ -78,7 +79,8 @@ final class DeviceDiscovery {
             "More than one local Wi-Fi interface is available. Enter the device IP or select a single network.");
     }
 
-    static List<Device> find(ConnectivityManager manager,Network preferred,boolean mount,String saved,int port)
+    static List<Device> find(ConnectivityManager manager,Network preferred,boolean mount,String saved,int port,
+                             java.util.function.BooleanSupplier active)
         throws IOException,InterruptedException {
         Link link=selectLink(manager,preferred,saved);
         if(mount){
@@ -87,20 +89,20 @@ final class DeviceDiscovery {
         }
         long tried=savedAddressOnLink(link,saved);
         if(tried>=0){
-            Device hit=probe(link,mount,tried,port);
+            Device hit=probe(link,mount,tried,port,active);
             if(hit!=null)return List.of(hit);
         }
-        return scanLocal(link,mount,port,tried);
+        return scanLocal(link,mount,port,tried,active);
     }
 
-    static Device findStartupMount(Link link,String saved,int port)throws IOException,InterruptedException {
+    static Device findStartupMount(Link link,String saved,int port,java.util.function.BooleanSupplier active)throws IOException,InterruptedException {
         long tried=savedAddressOnLink(link,saved);
         if(tried>=0){
-            Device hit=probe(link,true,tried,port);
+            Device hit=probe(link,true,tried,port,active);
             if(hit!=null)return hit;
         }
         List<Device> found=broadcast(link,port);
-        if(found.isEmpty())found=scanLocal(link,true,port,tried);
+        if(found.isEmpty())found=scanLocal(link,true,port,tried,active);
         return selectStartupMount(found,saved);
     }
 
@@ -117,10 +119,10 @@ final class DeviceDiscovery {
         return link.contains(ip)&&ip!=number(link.local())?ip:-1;
     }
 
-    private static List<Device> scanLocal(Link link,boolean mount,int port,long tried)
+    private static List<Device> scanLocal(Link link,boolean mount,int port,long tried,java.util.function.BooleanSupplier active)
         throws IOException,InterruptedException {
         if(!link.canScan())throw new IOException("This subnet is too large for a local search. Enter the device IP.");
-        return scan(link,mount,port,tried);
+        return scan(link,mount,port,tried,active);
     }
 
     private static List<Device> broadcast(Link link,int port)throws IOException,InterruptedException {
@@ -149,7 +151,7 @@ final class DeviceDiscovery {
         return List.copyOf(found.values());
     }
 
-    private static List<Device> scan(Link link,boolean mount,int port,long tried)throws InterruptedException {
+    private static List<Device> scan(Link link,boolean mount,int port,long tried,java.util.function.BooleanSupplier active)throws InterruptedException {
         ExecutorService pool=Executors.newFixedThreadPool(WORKERS);
         try{
             List<Callable<List<Device>>> workers=new ArrayList<>();
@@ -160,9 +162,9 @@ final class DeviceDiscovery {
                 long start=first+i;
                 workers.add(()->{
                     List<Device> matches=new ArrayList<>();
-                    for(long n=start;n<=last&&!Thread.currentThread().isInterrupted();n+=WORKERS){
+                    for(long n=start;n<=last&&active.getAsBoolean()&&!Thread.currentThread().isInterrupted();n+=WORKERS){
                         if(n==own||n==tried)continue;
-                        Device d=probe(link,mount,n,port);
+                        Device d=probe(link,mount,n,port,active);
                         if(d!=null)matches.add(d);
                     }
                     return matches;
@@ -178,11 +180,12 @@ final class DeviceDiscovery {
         }finally{pool.shutdownNow();}
     }
 
-    private static Device probe(Link link,boolean mount,long number,int port)throws InterruptedException {
+    private static Device probe(Link link,boolean mount,long number,int port,java.util.function.BooleanSupplier active)throws InterruptedException {
         if(Thread.currentThread().isInterrupted())throw new InterruptedException();
         try{
             InetAddress address=ip(number);
-            if(!mount)return camera(link,address,port);
+            if(!active.getAsBoolean())return null;
+            if(!mount)return camera(link,address,port,active);
             try(DatagramSocket socket=link.udp()){
                 socket.connect(address,port);
                 socket.setSoTimeout(PROBE_TIMEOUT_MS);
@@ -200,13 +203,14 @@ final class DeviceDiscovery {
         return new Device(reply.getAddress().getHostAddress(),"GTi · firmware "+value.substring(1,7));
     }
 
-    private static Device camera(Link link,InetAddress address,int port)throws IOException {
+    private static Device camera(Link link,InetAddress address,int port,java.util.function.BooleanSupplier active)throws IOException {
         String host=address.getHostAddress();
         try(Socket socket=link.tcp()){
             socket.connect(new InetSocketAddress(address,port),PROBE_TIMEOUT_MS);
             socket.setSoTimeout(CAMERA_TIMEOUT_MS);
             String request="GET /ccapi/ver100/deviceinformation HTTP/1.1\r\nHost: "+host+":"+port+
                 "\r\nAccept: application/json\r\nConnection: close\r\n\r\n";
+            if(!active.getAsBoolean())return null;
             socket.getOutputStream().write(request.getBytes(StandardCharsets.US_ASCII));
             return identifyCamera(host,readCameraBody(socket.getInputStream()));
         }

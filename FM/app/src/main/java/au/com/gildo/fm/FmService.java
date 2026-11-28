@@ -18,21 +18,24 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public final class FmService extends Service {
-    static final int HS_GAP_WARNING=22, LIVE_PAN_SPEED=23, LIVE_TILT_SPEED=24, LIVE_GPS_HOLD=25,
-        LIVE_GPS_STATIONARY_MS=26, LIVE_PAN_LEAD=27, SIMULATOR_SHOT_WIDTH=28;
+    static final int HS_GAP_WARNING=22, TILT_DISABLE=23, LIVE_TILT_SPEED=24, LIVE_GPS_HOLD=25,
+        LIVE_GPS_STATIONARY_MS=26, LIVE_PAN_LEAD=27, SIMULATOR_SHOT_WIDTH=28, LIVE_MIN_RANGE=37, MANUAL_CAMERA=38;
     static final String[] KEYS={"GPS IP","GPS port","Listen port","GPS max age (ms)",
         "GTi IP","GTi port","Canon IP","Canon port","Mount latitude","Mount longitude",
         "Pivot elevation (m)","Target elevation (m)","Reference bearing","Reference elevation",
         "Reference pan count","Reference tilt count","Pan sign","Tilt sign",
         "Landmark latitude","Landmark longitude","Landmark elevation (m)","Calibration basis","HS gap warning (m)",
-        "Live HS pan speed (× sidereal)","Live slow tilt speed (× sidereal)","Live GPS small-step hold (fixes)",
-        "Live GPS stationary confirmation (ms)","Live pan lead (m)","Simulator horizontal shot width (m)"};
+        "tilt-disable","Live slow tilt speed (× sidereal)","Live GPS small-step hold (fixes)",
+        "Live GPS stationary confirmation (ms)","Live pan lead (m)","Simulator horizontal shot width (m)",
+        "Canon clip limit (minutes)","Canon zoom mode","Canon frame width (m)","Canon wide frame factor",
+        "Canon zoom bands (JSON)","Canon zoom mapping (JSON)","Canon zoom scales","Canon zoom scale interval (s)","Minimum surfer-to-mount distance (m)","Manual camera"};
     static final String[] DEFAULTS={"192.168.4.1","5006","5005","2000","192.168.4.4","11880",
         "192.168.4.3","8080","","","","","","","","","1","-1","","","","","30",
-        Integer.toString(LiveTracking.DEFAULT_PAN_SPEED),Integer.toString(LiveTracking.DEFAULT_TILT_SPEED),
+        "false",Integer.toString(LiveTracking.DEFAULT_TILT_SPEED),
         Integer.toString(LiveGpsFilter.DEFAULT_HOLD_FIXES),
         Integer.toString(LiveGpsFilter.DEFAULT_STATIONARY_CONFIRMATION_MS),
-        Integer.toString(LiveGpsFilter.DEFAULT_PAN_LEAD_M),Integer.toString(LiveFraming.DEFAULT_SHOT_WIDTH_M)};
+        Integer.toString(LiveGpsFilter.DEFAULT_PAN_LEAD_M),Integer.toString(LiveFraming.DEFAULT_SHOT_WIDTH_M),
+        "20","bands","40","1.648",CameraSettings.DEFAULT_BANDS,ZoomMapping.DEFAULT,"[1.0]","10","5","false"};
 
     private static final String CHANNEL="fm_connected";
     private static final int NOTIFICATION=101;
@@ -47,14 +50,68 @@ public final class FmService extends Service {
     private static final String REPLAY_MOTION_PENDING="Total distance displaced · —\nAverage speed · —";
     private final ScheduledExecutorService worker=Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService surferFiles=Executors.newSingleThreadExecutor();
+    private final ScheduledExecutorService settingsWatcher=Executors.newSingleThreadScheduledExecutor();
+    private final Object settingsIo=new Object();
+    private final LandmarkCalibration.Session calibrationSession=new LandmarkCalibration.Session();
+    private byte[] lastSettingsBytes;
+    private volatile long settingsRevision;
+    private volatile String settingsFileStatus="";
+    long settingsRevision() { return settingsRevision; }
+    String settingsFileStatus() { return settingsFileStatus; }
     private final Handler main=new Handler(Looper.getMainLooper());
     private final List<ReplayRowReport> replayReports=new ArrayList<>();
     private final Connection binder=new Connection();
     private SharedPreferences prefs;
     private ConnectivityManager network;
+    private GdlWifi gdl;
+    private boolean waitingForGdl;
+    private volatile boolean discoverGdlWhenIdle;
+    private DeviceDiscovery.Link deviceLink(String host) throws IOException {
+        return DeviceDiscovery.selectLink(network,gdl.route(),host);
+    }
+
+    void connectGdl(String security,String password) {
+        if(!ready()) return;
+        waitingForGdl=true;
+        begin("Connecting to GDL Wi-Fi");
+        gdl.request(security,password);
+        publish();
+    }
+
+    void gdlPermissionDenied() { gdl.fail("Permission denied"); }
+
+    private void gdlChanged(boolean available) {
+        if(destroyed || stopWhenIdle) return;
+        boolean waiting=waitingForGdl;
+        waitingForGdl=false;
+        if(waiting) busy=false;
+        if(available) discoverGdlWhenIdle=true;
+        else {
+            discoverGdlWhenIdle=false;
+            if(gdl.requested()) gtiExchangeFailed=true;
+            if(waiting) resultText="GDL Wi-Fi · "+gdl.flag().label();
+        }
+        discoverGdlIfReady();
+        publish();
+    }
+
+    private void discoverGdlIfReady() {
+        if(!discoverGdlWhenIdle || !ready()) return;
+        discoverGdlWhenIdle=false;
+        begin("GDL connected · Discovering GTi");
+        worker.execute(()->{ resetGps(); finish(connectMount(true)); });
+    }
+    private volatile CameraZoomReader camera;
+    private volatile CameraSettings cameraSettings;
+    private volatile long cameraSession=-1;
+    private volatile CameraPosition cameraPosition;
+
+    private record CameraPosition(GoTo.Point mount,GoTo.Point surfer,long freshAt,double maxAgeMs) {}
     private PowerManager.WakeLock wake;
     private Listener listener;
-    private boolean foreground,busy,stopWhenIdle;
+    private boolean foreground,busy;
+    private volatile boolean stopWhenIdle;
+    private MountConnection lastMovingMount;
     private String gpsText="GPS waiting for receiver", resultText="Starting FM";
     private String liveGpsRuleText="";
     private String replayMotionText=REPLAY_MOTION_PENDING;
@@ -64,7 +121,16 @@ public final class FmService extends Service {
     private volatile boolean hsCancelled;
     private LiveGpsSource liveGps;
     private boolean calibrating;
+    private volatile LandmarkGpsCapture landmarkCapture;
+    private volatile String captureProgress="";
+    boolean capturingLandmark() { return landmarkCapture!=null; }
+    String captureProgress() { return captureProgress; }
+    void cancelLandmarkCapture() {
+        LandmarkGpsCapture capture=landmarkCapture;
+        if(capture!=null) capture.cancel();
+    }
     private volatile long liveStopRequested=-1;
+    private volatile boolean liveStopConfirmed;
     private final Queue<GpsPadEvent> gpsPadEvents=new ConcurrentLinkedQueue<>();
     private Trace gpsPadLog;
     private final LiveGpsSource idleSimulatorGps=new LiveGpsSource(0);
@@ -73,17 +139,25 @@ public final class FmService extends Service {
     private GpsPadSimulator workerGpsPad;
     private GpsPadSimulator.Playback workerPlayback;
     private List<GoTo.Point> preparedSurferFixes;
+    private String preparedFixFile=SurferFixFile.LOCATION;
     private boolean preparingSurferFixes;
     private String surferFileStatus="Save selected modes or load the existing file before Apply.";
     private DatagramSocket gps;
     private InetSocketAddress receiver;
     private DeviceDiscovery.Link gpsLink;
     private LoRaTelemetry.Tracker tracker=new LoRaTelemetry.Tracker();
+    private record MapGps(GoTo.Point point,long at,String simulatorId,long packet) {}
+    private record MapPan(LiveTrackingKml.CameraHeading heading,String state) {}
+    private volatile MapGps mapGps;
+    private volatile MapPan mapPan=new MapPan(null,"Awaiting encoder");
     private LoRaTelemetry latest;
     private Long latestGpsTap;
     private SurferModes.Mode latestGpsMode;
+    private volatile long lastReceiverMs=-1;
     private long received, lastHello=-5000;
-    private String[] settings;
+    private volatile String landmarkRangeBlock="";
+    String landmarkRangeBlock() { return landmarkRangeBlock; }
+    private volatile String[] settings;
     private volatile MountConnection gtiConnection;
     private volatile boolean destroyed;
     private long lastGpsUi;
@@ -98,9 +172,8 @@ public final class FmService extends Service {
             if(trace!=null) trace.axisEvent(0,name,at,fields);
         }
     }
-    record LandmarkGpsCapture(String coordinates,String status) {}
     record ReplayRowReport(int viewpoint,String callTime,Long sincePreviousCallMs,String stopMotor,long csvDelayMs,Long actualWaitMs,
-                           Long callToBothStartsMs,Long stopCheckWaitMs,Long rowToBothStoppedMs,String details) {}
+                           Long callToRequiredStartsMs,Long stopCheckWaitMs,Long rowToBothStoppedMs,String details) {}
     record HsRow(int viewpoint,boolean observed,boolean distanceGapOverLimit,String[] cells,String details) {}
     record HsReport(String summary,List<HsRow> rows,Double gapWarningM) {}
     private record Viewpoint(GoTo.Point point,long delayMs,boolean waitForStop,boolean stopMotor,HighSpeedReplay.SpeedUp speedUp,int row) {}
@@ -133,6 +206,7 @@ public final class FmService extends Service {
         super.onCreate();
         prefs=getSharedPreferences("fm",MODE_PRIVATE);
         network=getSystemService(ConnectivityManager.class);
+        gdl=new GdlWifi(network,main,this::gdlChanged);
         wake=getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"FM:ConnectedDevices");
         NotificationChannel channel=new NotificationChannel(CHANNEL,"FM connection",NotificationManager.IMPORTANCE_LOW);
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
@@ -140,13 +214,10 @@ public final class FmService extends Service {
 
     @Override public int onStartCommand(Intent intent,int flags,int startId) {
         if(intent!=null && STOP.equals(intent.getAction())) {
-            if(busy) {
-                stopWhenIdle=true;
-                if(liveGps!=null) stopLiveTracking();
-                refreshNotification();
-            } else stopMonitoring();
+            requestStopFm();
             return START_NOT_STICKY;
         }
+        if(stopWhenIdle || destroyed) return START_NOT_STICKY;
         if(!foreground) {
             if(Build.VERSION.SDK_INT>=29)
                 startForeground(NOTIFICATION,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
@@ -162,26 +233,33 @@ public final class FmService extends Service {
     private void startMonitoring() {
         String[] values=SettingsFile.cached(prefs);
         String settingsStatus,settingsLocation=null;
+        prefs.edit().remove(LAST_CALIBRATION_ERROR).apply();
         try {
             SettingsFile.Loaded stored=SettingsFile.read(this,prefs);
             if(stored!=null) {
                 values=stored.values();
+                if(calibrationSession.reconcile(values)) SettingsFile.write(this,prefs,values);
                 settingsLocation=stored.location();
                 settingsStatus="FM active · Settings loaded from "+settingsLocation;
+                if(!stored.warning().isEmpty()) settingsStatus+="\n"+stored.warning();
                 if(!SettingsFile.LOCATION.equals(settingsLocation))
                     settingsStatus+="\nUse Link FM settings folder to load "+SettingsFile.LOCATION+".";
             } else {
+                calibrationSession.reconcile(values);
                 SettingsFile.write(this,prefs,values);
                 settingsLocation=SettingsFile.LOCATION;
                 settingsStatus="FM active · Settings created at "+settingsLocation;
             }
-            SettingsFile.cache(prefs,values);
         } catch(Exception e) { settingsStatus="Settings file unavailable: "+e.getMessage()+" · Using cached settings"; }
+        calibrationSession.reconcile(values);
+        SettingsFile.cache(prefs,values);
         apply(values);
+        configureCamera(values);
+        settingsWatcher.scheduleWithFixedDelay(this::checkSettingsFile,1,2,TimeUnit.SECONDS);
 
         // Publishing a startup record makes the public folder available before any attempt.
         String startup=settingsStatus+"\n"+publishStartupLog(settingsStatus,settingsLocation,values);
-        if(destroyed) return;
+        if(!motionAllowed()) return;
         updateResult("Finding GTi on local Wi-Fi");
         String mountStatus=connectMount(true);
         if(destroyed) return;
@@ -196,7 +274,8 @@ public final class FmService extends Service {
             try(log) {
                 log.event("service_started","wallTimeMs",System.currentTimeMillis(),
                     "build",BuildConfig.VERSION_NAME,"settingsStatus",settingsStatus,"logsDirectory",AttemptDownload.DIRECTORY,
-                    "settingsLocation",settingsLocation,"mountCoordinates",MountCoordinates.format(values));
+                    "settingsLocation",settingsLocation,"canonZoomScales",values[CameraSettings.SCALES],
+                    "manualCamera",Boolean.parseBoolean(values[MANUAL_CAMERA]),"mountCoordinates",MountCoordinates.format(values));
             }
             if(log.downloadError!=null)
                 return "Could not create "+AttemptDownload.DIRECTORY+": "+log.downloadError;
@@ -211,7 +290,7 @@ public final class FmService extends Service {
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,FmService.class).setAction(STOP),
             PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-        String summary=stopWhenIdle?"Stopping after current operation":busy?resultText:"Receiving GPS · Tap to open FM";
+        String summary=stopWhenIdle?resultText():busy?resultText:"Receiving GPS · Tap to open FM";
         return new Notification.Builder(this,CHANNEL).setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setContentTitle("FM is running").setContentText(summary.split("\n",2)[0])
             .setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true).setVisibility(Notification.VISIBILITY_PUBLIC)
@@ -220,6 +299,62 @@ public final class FmService extends Service {
     private void refreshNotification() {
         if(foreground) getSystemService(NotificationManager.class).notify(NOTIFICATION,notification());
     }
+    boolean stopping() { return stopWhenIdle; }
+    private boolean motionAllowed() { return !destroyed && !stopWhenIdle; }
+
+    void requestStopFm() {
+        if(stopWhenIdle || destroyed) return;
+        stopWhenIdle=true;
+        boolean tracking=liveGps!=null;
+        if(tracking) stopLiveTracking();
+        hsCancelled=true;
+        cancelLandmarkCapture();
+        if(camera!=null) camera.cancelOneShotZoom();
+        resultText="Waiting for full stop";
+        publish();
+        refreshNotification();
+        worker.execute(()->finishShutdown(tracking));
+    }
+
+    private GoTo shutdownClient(MountConnection mount,GoTo.Trace trace) {
+        // Resolve the Wi-Fi route for each retry so reconnecting can confirm a lost Stop reply.
+        return new GoTo(()->{
+            try { return mount.link().udp(); }
+            catch(IOException unavailable) { return deviceLink(mount.endpoint().getHostString()).udp(); }
+        },mount.endpoint(),trace,
+            LiveTracking.RETAINED_REPLY_PORTS);
+    }
+
+    private void finishShutdown(boolean tracking) {
+        MountConnection mount=lastMovingMount!=null?lastMovingMount:gtiConnection;
+        if(mount!=null && !(tracking && liveStopConfirmed)) {
+            String id=UUID.randomUUID().toString().substring(0,12);
+            Trace log=null;
+            try { log=new Trace(this,"FM-stop-"+id+".jsonl",id); }
+            catch(IOException error) { android.util.Log.w("FM","Stop log unavailable",error); }
+            try {
+                GoTo.Trace trace=log==null?(name,fields)->android.util.Log.d("FM",name):log;
+                if(!LiveTracking.awaitFullStop(shutdownClient(mount,trace),()->!destroyed)) return;
+            } catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
+                if(!destroyed) worker.execute(()->finishShutdown(false));
+                return;
+            } finally {
+                if(log!=null) try {log.close();} catch(IOException e){android.util.Log.w("FM","Stop log",e);}
+            }
+        }
+        main.post(()->{
+            if(destroyed) return;
+            Runnable stopped=()->{
+                resultText=mount==null?"FM stopped · GTi disconnected":"FM stopped · Both motors stopped";
+                stopMonitoring();
+            };
+            CameraZoomReader reader=camera;
+            if(reader==null) stopped.run();
+            else reader.close(()->main.post(stopped));
+        });
+    }
+
     private void stopMonitoring() {
         foreground=false;
         destroyed=true;
@@ -230,6 +365,12 @@ public final class FmService extends Service {
     }
     @Override public void onDestroy() {
         destroyed=true;
+        gdl.release();
+        settingsWatcher.shutdownNow();
+        cancelLandmarkCapture();
+        cameraSession=-1;
+        CameraZoomReader closingCamera=camera;
+        if(closingCamera!=null) closingCamera.close();
         gtiConnection=null;
         stopGpsSimulator();
         worker.execute(()->{
@@ -247,12 +388,52 @@ public final class FmService extends Service {
     private void publish() { if(listener!=null) listener.changed(); }
     String gpsText() { return gpsText; }
     String liveGpsRuleText() { return liveGpsRuleText; }
+    private volatile boolean gtiExchangeFailed;
+
+    ConnectionFlag connectionFlag(ConnectionFlag.Channel channel) {
+        if(channel==ConnectionFlag.Channel.GDL) return gdl.flag();
+        if(channel==ConnectionFlag.Channel.CALIBRATION) {
+            String why=calibrationSession.reason();
+            return why==null?ConnectionFlag.good("Calibrated"):ConnectionFlag.failed("Required · "+why);
+        }
+        String[] saved=settings;
+        if(saved==null) return ConnectionFlag.pending("Starting");
+        if(channel==ConnectionFlag.Channel.GPS) {
+            GpsPadSimulator simulator=gpsPad;
+            MapGps fix=mapGps;
+            if(fix!=null && !Objects.equals(fix.simulatorId(),simulator==null?null:simulator.id)) fix=null;
+            try {
+                return ConnectionFlag.gps(GoTo.now(),lastReceiverMs,fix==null?-1:fix.at(),
+                    fix==null?-1:fix.packet(),number(saved,3),simulator!=null);
+            } catch(IllegalArgumentException invalid) { return ConnectionFlag.failed("Invalid GPS age setting"); }
+        }
+        if(channel==ConnectionFlag.Channel.GTI) {
+            if(gtiConnection==null) return ConnectionFlag.failed("Disconnected");
+            return gtiExchangeFailed?ConnectionFlag.failed("Last exchange failed"):ConnectionFlag.good("Last reply OK");
+        }
+        if(manualCamera()) return ConnectionFlag.pending("Manual camera");
+        CameraZoomReader reader=camera;
+        if(reader==null) return ConnectionFlag.pending("Starting");
+        CameraFlags flags=reader.flags;
+        return switch(channel) {
+            case CANON -> flags.link;
+            case RECORDING -> flags.recording;
+            case EVENTS -> flags.events;
+            case ZOOM -> flags.zoom;
+            default -> throw new AssertionError(channel);
+        };
+    }
+
     String gtiStatus() {
         MountConnection mounted=gtiConnection;
         return mounted==null ? "GTi disconnected" :
             "GTi connected · "+mounted.endpoint().getHostString()+":"+mounted.endpoint().getPort();
     }
-    String resultText() { return resultText; }
+    String resultText() {
+        if(stopWhenIdle && !destroyed) return "Waiting for full stop";
+        if(liveGps!=null && liveStopRequested>=0) return liveStopConfirmed?"Both motors stopped":"Waiting for full stop";
+        return resultText;
+    }
     List<ReplayRowReport> replayReports() { return Collections.unmodifiableList(replayReports); }
     String replayMotionText() { return replayMotionText; }
     Long replayDurationMs() { return replayDurationMs; }
@@ -312,36 +493,58 @@ public final class FmService extends Service {
         publish();
     }
 
-    void prepareSurferModes(List<SurferModes.Mode> modes,int rideSeconds,boolean load) {
+    enum SimulatorFile { SAVE_CSV, LOAD_CSV, LOAD_KML }
+
+    int simulatorRateHz() { return prefs.getInt(GpsPadSimulator.RATE_PREF,GpsPadSimulator.DEFAULT_RATE_HZ); }
+
+    void setSimulatorRate(int hz) {
+        GpsPadSimulator selected=gpsPad;
+        if(selected==null || hz==simulatorRateHz()) return;
+        selected.setRateHz(hz);
+        prefs.edit().putInt(GpsPadSimulator.RATE_PREF,hz).apply();
+        queueGpsPadEvent("gps_simulator_rate_changed",selected,"rawFixesPerSecond",hz);
+        publish();
+    }
+
+    void prepareSurferModes(List<SurferModes.Mode> modes,int rideSeconds,SimulatorFile action,Uri file,String name) {
         if(gpsPad==null||preparingSurferFixes||(!ready()&&!canStopLiveTracking())) return;
         preparingSurferFixes=true;
         preparedSurferFixes=null;
-        surferFileStatus=(load?"Loading ":"Saving ")+SurferFixFile.LOCATION;
+        boolean load=action!=SimulatorFile.SAVE_CSV;
+        String source=action==SimulatorFile.LOAD_KML?name:SurferFixFile.LOCATION;
+        int hz=simulatorRateHz();
+        surferFileStatus=(load?"Loading ":"Saving ")+source;
         publish();
         String[] saved=SettingsFile.cached(prefs);
         surferFiles.execute(()->{
             try {
                 List<GoTo.Point> fixes;
-                if(load) fixes=SurferFixFile.load(this,prefs);
+                if(action==SimulatorFile.LOAD_KML) {
+                    try(InputStream input=getContentResolver().openInputStream(file)) {
+                        if(input==null) throw new IOException("Could not open "+source);
+                        fixes=LoRaTesterKml.read(input);
+                    }
+                } else if(load) fixes=SurferFixFile.load(this,prefs);
                 else {
                     var landmark=new GoTo.Point(number(saved,LandmarkCalibration.LANDMARK_LAT),
                         number(saved,LandmarkCalibration.LANDMARK_LON),Double.NaN);
                     if(!Geo.valid(landmark.lat(),landmark.lon())) throw new IOException("Save valid landmark coordinates");
-                    fixes=SurferModes.generate(landmark,surferBearing(saved),modes,rideSeconds);
+                    fixes=SurferModes.generate(landmark,surferBearing(saved),modes,rideSeconds,hz);
                     SurferFixFile.save(this,prefs,fixes);
                     if(modes.contains(SurferModes.Mode.RIDING))
                         prefs.edit().putInt(SurferModes.RIDE_SECONDS_PREF,rideSeconds).apply();
                 }
-                main.post(()->finishSurferPreparation(fixes,(load?"Loaded":"Saved")+" · "+fixes.size()+" fixes ready"));
+                main.post(()->finishSurferPreparation(fixes,source,(load?"Loaded ":"Saved ")+source+" · "+fixes.size()+" fixes ready"));
             } catch(IOException|RuntimeException failure) {
-                main.post(()->finishSurferPreparation(null,(load?"Could not load":"Could not save")+" · "+failure.getMessage()));
+                main.post(()->finishSurferPreparation(null,source,(load?"Could not load":"Could not save")+" · "+failure.getMessage()));
             }
         });
     }
 
-    private void finishSurferPreparation(List<GoTo.Point> fixes,String status) {
+    private void finishSurferPreparation(List<GoTo.Point> fixes,String source,String status) {
         if(destroyed) return;
         preparedSurferFixes=fixes;
+        preparedFixFile=source;
         preparingSurferFixes=false;
         surferFileStatus=status;
         publish();
@@ -353,8 +556,8 @@ public final class FmService extends Service {
         GpsPadSimulator selected=gpsPad;
         var playback=selected.apply(preparedSurferFixes,pressedAt,canStopLiveTracking());
         queueGpsPadEvent("gps_simulator_apply",selected,"playback",playback.number(),"pressMs",pressedAt,
-            "fixCount",playback.fixes().size(),"file",SurferFixFile.LOCATION,"measurePan",playback.measurePan(),
-            "scheduledDurationMs",(playback.fixes().size()-1)*GpsPadSimulator.FIX_INTERVAL_MS);
+            "fixCount",playback.fixes().size(),"file",preparedFixFile,"measurePan",playback.measurePan(),"rawFixesPerSecond",simulatorRateHz(),
+            "scheduledDurationMs",(playback.fixes().size()-1L)*1000/simulatorRateHz());
         publish();
     }
 
@@ -366,7 +569,8 @@ public final class FmService extends Service {
                 double lat=number(saved,LandmarkCalibration.LANDMARK_LAT);
                 double lon=number(saved,LandmarkCalibration.LANDMARK_LON);
                 GpsPadSimulator simulator=new GpsPadSimulator(lat,lon);
-                queueGpsPadEvent("gps_simulator_started",simulator,"latitude",lat,"longitude",lon,
+                simulator.setRateHz(simulatorRateHz());
+                queueGpsPadEvent("gps_simulator_started",simulator,"latitude",lat,"longitude",lon,"rawFixesPerSecond",simulatorRateHz(),
                     "build",BuildConfig.VERSION_NAME,"wallTimeMs",System.currentTimeMillis());
                 gpsPad=simulator;
             } catch(IllegalArgumentException e) {
@@ -429,7 +633,8 @@ public final class FmService extends Service {
     void stopLiveTracking() {
         if(!canStopLiveTracking()) return;
         liveStopRequested=GoTo.now();
-        resultText="Stopping Live Tracking";
+        endCameraSession();
+        resultText="Waiting for full stop";
         publish();
         refreshNotification();
     }
@@ -437,7 +642,7 @@ public final class FmService extends Service {
     boolean calibrating() { return calibrating; }
     String calibrationError() { return prefs.getString(LAST_CALIBRATION_ERROR,""); }
     boolean stopped() { return destroyed; }
-    boolean ready() { return foreground&&!destroyed&&!busy; }
+    boolean ready() { return foreground&&motionAllowed()&&!busy; }
     private void begin(String message) { busy=true; resultText=message; publish(); refreshNotification(); }
     private void finish(String message) { finish(message,null); }
 
@@ -448,8 +653,8 @@ public final class FmService extends Service {
                 calibrating=false;
                 prefs.edit().putString(LAST_CALIBRATION_ERROR,calibrationFailure).apply();
             }
-            if(stopWhenIdle) stopMonitoring();
-            else { publish(); refreshNotification(); }
+            discoverGdlIfReady();
+            publish(); refreshNotification();
         });
     }
     private void reportReplayRow(ReplayRowReport row) {
@@ -475,11 +680,21 @@ public final class FmService extends Service {
         begin("Reading "+SettingsFile.LOCATION);
         worker.execute(()->{
             try {
-                String[] values=SettingsFile.linkFolder(this,prefs,tree,flags);
-                SettingsFile.cache(prefs,values);
+                SettingsFile.Loaded loaded;
+                String[] values;
+                synchronized(settingsIo) {
+                    loaded=SettingsFile.linkFolder(this,prefs,tree,flags);
+                    values=loaded.values();
+                    if(calibrationSession.reconcile(values)) SettingsFile.write(this,prefs,values);
+                    SettingsFile.cache(prefs,values);
+                    lastSettingsBytes=null;
+                    configureCamera(values);
+                }
                 apply(values);
+                setSettingsFileStatus("Loaded "+SettingsFile.LOCATION);
                 String mount=MountCoordinates.format(values);
                 String status="Settings loaded from "+SettingsFile.LOCATION;
+                if(!loaded.warning().isEmpty()) status+="\n"+loaded.warning();
                 if(!mount.isEmpty()) status+="\nMount coordinates · "+mount;
                 if(!LandmarkCalibration.hasReference(values)) {
                     prefs.edit().remove(LAST_CALIBRATION_ERROR).apply();
@@ -491,16 +706,26 @@ public final class FmService extends Service {
         });
     }
 
-    void saveSettings(String[] values) {
-        if(!ready()) return;
-        begin("Saving settings");
+    void saveEdit(SettingsAutosave.Edit edit, Consumer<String> completed) {
+        if(destroyed) {
+            completed.accept("FM has stopped");
+            return;
+        }
         worker.execute(()->{
+            String error=null;
             try {
-                boolean cleared=LandmarkCalibration.clearStaleReference(settings,values);
-                persistSettings(values);
-                finish(cleared?"Settings saved. Centre the landmark and tap Calibrate here again.":
-                    "Settings saved in Downloads");
-            } catch(Exception e) { finish("Settings save failed: "+e.getMessage()); }
+                synchronized(settingsIo) {
+                    String[] disk=readCurrentSettings();
+                    String[] values=disk.clone();
+                    edit.apply(values);
+                    LandmarkCalibration.clearStaleReference(disk,values);
+                    writeSettings(values);
+                }
+            } catch(Exception e) {
+                error=Objects.toString(e.getMessage(),e.getClass().getSimpleName());
+            }
+            String result=error;
+            main.post(()->completed.accept(result));
         });
     }
 
@@ -522,10 +747,10 @@ public final class FmService extends Service {
             log.event("gti_connect_attempt","wallTimeMs",System.currentTimeMillis(),"host",settings[4],"port",settings[5],
                 "trigger",automatic?"startup":"button");
             try {
-                DeviceDiscovery.Link link=DeviceDiscovery.selectLink(network,null,settings[4]);
+                DeviceDiscovery.Link link=deviceLink(settings[4]);
                 DeviceDiscovery.Device discovered=automatic?
-                    DeviceDiscovery.findStartupMount(link,settings[4],port(5)):null;
-                if(destroyed) throw new IOException("FM stopped before connecting to GTi");
+                    DeviceDiscovery.findStartupMount(link,settings[4],port(5),this::motionAllowed):null;
+                if(!motionAllowed()) throw new IOException("FM stopped before connecting to GTi");
                 if(discovered!=null)
                     log.event("gti_startup_discovery","address",discovered.address(),"identity",discovered.identity());
                 String[] candidate=discovered!=null&&!settings[4].equals(discovered.address())?settings.clone():null;
@@ -541,6 +766,7 @@ public final class FmService extends Service {
                 HsTiming pan=readHsTiming(client,1,log);
                 HsTiming tilt=readHsTiming(client,2,log);
                 if(destroyed) throw new IOException("FM stopped while connecting to GTi");
+                gtiExchangeFailed=false;
                 gtiConnection=new MountConnection(target,link,setup,pan,tilt);
                 log.event("gti_connected","panCpr",setup.panCpr(),"tiltCpr",setup.tiltCpr(),
                     "panFirmware",setup.panFirmware(),"tiltFirmware",setup.tiltFirmware());
@@ -584,13 +810,26 @@ public final class FmService extends Service {
 
     void discover(boolean mount,String[] values,java.util.function.Consumer<List<DeviceDiscovery.Device>> done) {
         if(!ready()) return;
-        begin(mount?"Discovering GTi":"Discovering Canon SX");
+        if(!mount) {
+            if(camera==null || manualCamera()) return;
+            begin("Discovering Canon SX");
+            camera.execute(()->{
+                try {
+                    CameraSettings requested=new CameraSettings(values);
+                    List<DeviceDiscovery.Device> found=DeviceDiscovery.find(network,gdl.route(),false,requested.cameraHost,requested.cameraPort,()->!manualCamera() && motionAllowed());
+                    finish(found.isEmpty()?"No camera found":"Select a discovered camera");
+                    main.post(()->done.accept(found));
+                } catch(Exception failure) { finish("Camera discovery: "+failure.getMessage()); }
+            });
+            return;
+        }
+        begin("Discovering GTi");
         worker.execute(()->{
             String[] before=settings;
             try {
                 settings=values;
                 int host=mount?4:6;
-                List<DeviceDiscovery.Device> found=DeviceDiscovery.find(network,null,mount,values[host],port(host+1));
+                List<DeviceDiscovery.Device> found=DeviceDiscovery.find(network,gdl.route(),mount,values[host],port(host+1),this::motionAllowed);
                 finish(found.isEmpty()?"No device found":"Select a discovered device");
                 main.post(()->done.accept(found));
             } catch(Exception e) { finish("Discovery: "+e.getMessage()); }
@@ -598,24 +837,59 @@ public final class FmService extends Service {
         });
     }
 
-    void captureLandmarkGps(java.util.function.Consumer<LandmarkGpsCapture> done) {
+    void captureLandmarkGps(long press,long wallTime,Consumer<LandmarkGpsCapture.Result> done) {
         if(!ready()) return;
+        LandmarkGpsCapture capture=new LandmarkGpsCapture(press);
+        landmarkCapture=capture;
+        captureProgress="Waiting for fresh LoRa GPS · 0/10";
         String moveReport=resultText;
-        long press=GoTo.now();
-        begin("Reading landmark LoRa GPS");
+        begin("Capturing landmark from LoRa");
         worker.execute(()->{
-            LandmarkGpsCapture capture;
+            String id=UUID.randomUUID().toString().substring(0,12);
+            String name="FM-landmark-"+id+".jsonl";
+            Trace trace=null;
+            String warning="";
             try {
-                if(gpsPad!=null) throw new IOException("Select Use LoRa GPS to capture the landmark");
-                GpsSnapshot snapshot=usableGps(press,null);
-                LoRaTelemetry fix=snapshot.fix();
-                capture=new LandmarkGpsCapture(MountCoordinates.format(fix.lat,fix.lon),
-                    "Captured GPS #"+fix.sequence+" · "+snapshot.ageMs()+" ms old");
-            } catch(IOException|IllegalArgumentException failure) {
-                capture=new LandmarkGpsCapture(null,"Capture failed · "+failure.getMessage());
+                trace=new Trace(this,name,id);
+                prefs.edit().putString("lastLog",name).apply();
+            } catch(IOException|RuntimeException error) {
+                warning="\nCapture log unavailable · "+error.getMessage();
             }
-            LandmarkGpsCapture result=capture;
-            main.post(()->done.accept(result));
+            GoTo.Trace log=trace!=null?trace:(event,fields)->android.util.Log.w("FM",event+" "+Arrays.toString(fields));
+            boolean simulator=gpsPad!=null;
+            log.event("landmark_capture_pressed","pressMs",press,"wallTimeMs",wallTime,"build",BuildConfig.VERSION_NAME,
+                "gpsSource",simulator?"Simulator":"LoRa","maxGpsAgeMs",settings[3],
+                "previousCoordinates",MountCoordinates.format(settings,LandmarkCalibration.LANDMARK_LAT,LandmarkCalibration.LANDMARK_LON));
+            LandmarkGpsCapture.Result result;
+            if(simulator) {
+                String why="Select Use LoRa GPS to capture the landmark";
+                log.event("landmark_capture_result","outcome","blocked","reason",why);
+                result=new LandmarkGpsCapture.Result(null,why);
+            } else {
+                selectGpsSource(null);
+                result=capture.run(settings,collect->readReceiverGps(GoTo.now(),packet->{
+                    log.event("landmark_receiver_packet","line",packet.line(),"receivedMs",packet.receivedAt(),
+                        "accepted",packet.rejection()==null,"reason",packet.rejection());
+                    if(packet.rejection()==null) collect.accept(new LandmarkGpsCapture.Reading(packet.fix(),packet.receivedAt()));
+                }),GoTo::now,()->Thread.sleep(100),this::persistSettings,status->{
+                    captureProgress=status;
+                    main.post(this::publish);
+                },log);
+            }
+            if(trace!=null) {
+                try {
+                    trace.close();
+                    warning="\nLog · "+trace.location()+trace.downloadWarning();
+                } catch(IOException|RuntimeException error) {
+                    warning="\nCould not publish capture log · "+error.getMessage();
+                }
+            }
+            LandmarkGpsCapture.Result display=new LandmarkGpsCapture.Result(result.coordinates(),result.message()+warning);
+            main.post(()->{
+                landmarkCapture=null;
+                captureProgress=display.message();
+                done.accept(display);
+            });
             finish(moveReport);
         });
     }
@@ -647,7 +921,14 @@ public final class FmService extends Service {
                         throw new IllegalArgumentException("Enter Landmark coordinates, then tap Calibrate here");
                     log.event("calibration_inputs","settings",new JSONArray(Arrays.asList(values)));
                     LandmarkCalibration calibration=captureLandmark(values,log);
-                    persistSettings(values);
+                    synchronized(settingsIo) {
+                        String[] merged=SettingsFile.mergeEdit(settings,values,readCurrentSettings());
+                        if(!LandmarkCalibration.basis(values).equals(LandmarkCalibration.basis(merged))
+                            || !LandmarkCalibration.hasReference(merged))
+                            throw new IOException("Mount or landmark changed during calibration");
+                        writeSettings(merged,true);
+                    }
+                    mapPan=new MapPan(new LiveTrackingKml.CameraHeading(calibration.bearing(),Integer.parseInt(values[14]),GoTo.now()),"Stopped");
                     saved=true;
                     log.event("calibration_saved","bearing",calibration.bearing(),"elevation",calibration.elevation(),
                         "panCount",values[LandmarkCalibration.PAN_COUNT],"tiltCount",values[LandmarkCalibration.TILT_COUNT]);
@@ -681,18 +962,17 @@ public final class FmService extends Service {
                 throw new IllegalArgumentException("Set the checked pan and tilt signs to 1 or -1");
             GoTo.Encoders encoders=connectedMount().client(log).captureReference();
             calibration.saveReference(values,encoders);
-            reference();
             return calibration;
         } finally { settings=before; }
     }
 
     private void invalidateReferenceForInitialization(String[] before,Trace log) throws IOException {
+        calibrationSession.require("GTi axis needs initialization");
         if(!LandmarkCalibration.hasReference(before)) return;
         String[] cleared=before.clone();
         LandmarkCalibration.clearReference(cleared);
         try {
-            SettingsFile.write(this,prefs,cleared);
-            SettingsFile.cache(prefs,cleared);
+            persistSettings(cleared);
         } catch(Exception e) {
             throw new IOException("Could not clear the previous calibration before initializing the GTi",e);
         }
@@ -705,21 +985,159 @@ public final class FmService extends Service {
     }
 
     private void persistSettings(String[] values) throws Exception {
+        synchronized(settingsIo) {
+            writeSettings(SettingsFile.mergeEdit(settings,values,readCurrentSettings()));
+        }
+    }
+
+    private String[] readCurrentSettings() throws Exception {
+        byte[] bytes=SettingsFile.contents(this,prefs);
+        String[] cached=SettingsFile.cached(prefs);
+        return bytes==null?cached:SettingsFile.decode(SettingsFile.parseDocument(bytes).getJSONObject("settings"),cached);
+    }
+
+    private void writeSettings(String[] values) throws Exception {
+        writeSettings(values,false);
+    }
+
+    private void writeSettings(String[] values,boolean captured) throws Exception {
         hsGapWarningM(values);
         validateLiveSettings(values);
+        new CameraSettings(values);
+        String why=captured?null:calibrationSession.reasonFor(values);
+        if(why!=null) LandmarkCalibration.clearReference(values);
         SettingsFile.write(this,prefs,values);
+        if(captured) calibrationSession.captured(values);
+        else if(why!=null) calibrationSession.require(why);
         SettingsFile.cache(prefs,values);
+        configureCamera(values);
+        settingsRevision++;
         apply(values);
     }
 
     private void apply(String[] values) {
         if(settings==null || !Arrays.equals(Arrays.copyOf(settings,3),Arrays.copyOf(values,3))) resetGps();
         if(settings==null||!settings[4].equals(values[4])||!settings[5].equals(values[5])) gtiConnection=null;
-        if(!Arrays.equals(settings,values)) idleSimulatorFilter=null;
+        if(settings!=null && !LandmarkCalibration.basis(settings).equals(LandmarkCalibration.basis(values)))
+            mapPan=new MapPan(null,"Awaiting encoder");
+        if(settings!=null) {
+            for(int key:new int[]{MountCoordinates.LATITUDE,MountCoordinates.LONGITUDE,3,
+                LIVE_GPS_HOLD,LIVE_GPS_STATIONARY_MS,LIVE_PAN_LEAD}) {
+                if(!settings[key].equals(values[key])) { idleSimulatorFilter=null; break; }
+            }
+        }
         settings=values;
+        landmarkRangeBlock=MountCoordinates.liveStartBlock(values);
     }
+
+    private void checkSettingsFile() {
+        if(destroyed || stopWhenIdle) return;
+        try {
+            synchronized(settingsIo) {
+                byte[] bytes=SettingsFile.contents(this,prefs);
+                if(bytes==null) throw new FileNotFoundException(SettingsFile.LOCATION);
+                if(Arrays.equals(bytes,lastSettingsBytes) && !settingsFileStatus.startsWith("Settings file error")) return;
+                String[] before=SettingsFile.cached(prefs);
+                String[] loaded=SettingsFile.decode(SettingsFile.parseDocument(bytes).getJSONObject("settings"),before);
+                if(calibrationSession.reconcile(loaded)) SettingsFile.write(this,prefs,loaded);
+                lastSettingsBytes=bytes;
+                if(!Arrays.equals(before,loaded)) {
+                    SettingsFile.cache(prefs,loaded);
+                    configureCamera(loaded);
+                    settingsRevision++;
+                    // A running mount sequence owns its settings until it exits the serial worker.
+                    worker.execute(()->{ if(!destroyed && !stopWhenIdle) apply(SettingsFile.cached(prefs)); });
+                } else if(settingsFileStatus.isEmpty()) return;
+            }
+            setSettingsFileStatus("Reloaded "+SettingsFile.LOCATION);
+        } catch(Exception error) {
+            if(!destroyed) setSettingsFileStatus("Settings file error · "+error.getMessage());
+        }
+    }
+
+    private void setSettingsFileStatus(String message) {
+        if(settingsFileStatus.equals(message)) return;
+        settingsFileStatus=message;
+        main.post(()->{if(!destroyed) publish();});
+    }
+
+    private void configureCamera(String[] values) {
+        try {
+            CameraSettings next=new CameraSettings(values);
+            CameraSettings current=cameraSettings;
+            if(current==null||!current.cameraHost.equals(next.cameraHost)||current.cameraPort!=next.cameraPort||
+                !current.values.equals(next.values)) cameraSettings=next;
+        } catch(IllegalArgumentException failure) {
+            android.util.Log.w("FM","Invalid Canon settings. Using defaults.",failure);
+            cameraSettings=new CameraSettings(withCameraDisabled(DEFAULTS));
+        }
+        if(camera==null&&!destroyed)
+            camera=new CameraZoomReader(()->cameraSettings,this::cameraNetwork,this::cameraInput,new CameraLog(this),
+                ()->main.post(()->{if(!destroyed) publish();}));
+    }
+
+    private static String[] withCameraDisabled(String[] values) {
+        String[] disabled=values.clone();
+        disabled[6]="";
+        return disabled;
+    }
+
+    private Network cameraNetwork() {
+        CameraSettings current=cameraSettings;
+        if(current==null||current.cameraHost.isEmpty()) return null;
+        if(current.manual) return null;
+        try { return deviceLink(current.cameraHost).network(); }
+        catch(IOException|RuntimeException failure) { return null; }
+    }
+
+    private ZoomPlan.Input cameraInput() {
+        long session=cameraSession;
+        CameraPosition position=cameraPosition;
+        if(position==null) return new ZoomPlan.Input(Double.NaN,0,false,session);
+        long age=Math.max(0,GoTo.now()-position.freshAt());
+        GoTo.Point mount=position.mount(), surfer=position.surfer();
+        double distance=Geo.distance(mount.lat(),mount.lon(),surfer.lat(),surfer.lon());
+        return new ZoomPlan.Input(distance,age,age<=position.maxAgeMs(),session);
+    }
+
+    private void endCameraSession() {
+        long session=cameraSession;
+        if(session<0) return;
+        cameraSession=-1;
+        cameraPosition=null;
+        if(camera!=null) camera.stopRecording(session);
+    }
+
+    LiveMapFrame liveMapFrame() {
+        String[] saved=settings;
+        if(saved==null) return null;
+        MapGps gps=mapGps;
+        MapPan pan=mapPan;
+        CameraSettings canon=cameraSettings;
+        CameraZoomReader reader=camera;
+        CameraZoomReader.MapZoom zoom=reader==null?null:reader.cachedMapZoom(canon);
+        long now=GoTo.now();
+        double ageLimit;
+        try { ageLimit=number(saved,3); } catch(IllegalArgumentException ignored) { ageLimit=0; }
+        return new LiveMapFrame(MountCoordinates.point(saved,MountCoordinates.LATITUDE),
+            MountCoordinates.point(saved,LandmarkCalibration.LANDMARK_LAT),gps==null?null:gps.point(),
+            gps!=null && now-gps.at()<=ageLimit,pan.heading()==null?null:pan.heading().bearingDeg(),
+            pan.heading()!=null && now-pan.heading().sampledAt()<=ageLimit,liveGps!=null && liveStopRequested>=0?resultText():pan.state(),
+            zoom==null?null:zoom.optical(),zoom!=null && zoom.fresh(),canon==null?Double.NaN:canon.wideFrameFactor);
+    }
+
+    boolean manualCamera() { return cameraSettings!=null && cameraSettings.manual; }
+    String cameraStatus() { return manualCamera()?"Manual camera":camera==null?"Canon waiting for FM settings":camera.status(); }
+
+    void cameraPreview(java.util.function.BiConsumer<android.graphics.Bitmap,String> result) {
+        if(camera==null) result.accept(null,"Canon waiting for FM settings");
+        else camera.requestPreview(this::cameraNetwork,(image,error)->main.post(()->result.accept(image,error)));
+    }
+
     private void resetGps() {
         if(gps!=null) gps.close();
+        lastReceiverMs=-1;
+        mapGps=null;
         gps=null; latest=null; latestGpsTap=null; latestGpsMode=null;
         idleSimulatorFilter=null;
         tracker=new LoRaTelemetry.Tracker(); lastHello=-5000;
@@ -734,6 +1152,7 @@ public final class FmService extends Service {
     }
 
     private void readGps() {
+        if(!motionAllowed()) return;
         drainGpsPadEvents(null);
         GpsPadSimulator source=gpsPad;
         selectGpsSource(source);
@@ -810,13 +1229,17 @@ public final class FmService extends Service {
     }
 
     private void readReceiverGps(long time,Consumer<LiveGpsPacket> observe) throws IOException {
+        if(gps!=null && gdl.requested()) {
+            Network selected=gdl.route();
+            if(!Objects.equals(gpsLink.network(),selected)) resetGps();
+        }
         if(gps==null) {
             receiver=endpoint(0,1);
-            gpsLink=DeviceDiscovery.selectLink(network,null,settings[0]);
+            gpsLink=deviceLink(settings[0]);
             gps=gpsLink.udp(port(2));
             gps.setSoTimeout(3);
         }
-        if(lastHello<0 || time-lastHello>=5000) {
+        if(lastHello<0 || time-lastHello>=ConnectionFlag.HELLO_INTERVAL_MS) {
             byte[] hello="HELLO".getBytes(StandardCharsets.US_ASCII);
             gps.send(new DatagramPacket(hello,hello.length,receiver));
             lastHello=time;
@@ -825,7 +1248,8 @@ public final class FmService extends Service {
             byte[] bytes=new byte[2048];
             DatagramPacket p=new DatagramPacket(bytes,bytes.length);
             try { gps.receive(p); } catch(SocketTimeoutException ignored) { break; }
-            if(!receiver.equals(p.getSocketAddress())) continue;
+            if(!receiver.equals(p.getSocketAddress()) || p.getLength()==0) continue;
+            lastReceiverMs=GoTo.now();
             for(String line:new String(bytes,0,p.getLength(),StandardCharsets.US_ASCII).split("\n"))
                 acceptGpsLine(line,GoTo.now(),null,null,false,null,observe);
         }
@@ -844,6 +1268,7 @@ public final class FmService extends Service {
         boolean accepted=tracker.accept(fix,at);
         if(accepted) {
             latest=fix;
+            mapGps=new MapGps(new GoTo.Point(fix.lat,fix.lon,0),at,simulatorId,fix.sequence);
             latestGpsTap=lastTap;
             latestGpsMode=mode;
             received=at;
@@ -873,13 +1298,21 @@ public final class FmService extends Service {
         launch("Replay viewpoints (HS)",file,values,true);
     }
 
+    static boolean tiltDisabled(String[] values) {
+        String flag=values[TILT_DISABLE];
+        if("false".equalsIgnoreCase(flag)) return false;
+        if("true".equalsIgnoreCase(flag)) return true;
+        throw new IllegalArgumentException("tilt-disable must be true or false");
+    }
+
     static void validateLiveSettings(String[] values) {
-        LiveTracking.panSpeed(number(values,LIVE_PAN_SPEED));
+        tiltDisabled(values);
         LiveTracking.tiltSpeed(number(values,LIVE_TILT_SPEED));
         liveGpsHold(values);
         stationaryConfirmationMs(values);
         livePanLead(values);
         simulatorShotWidth(values);
+        if(number(values,LIVE_MIN_RANGE)<0) throw new IllegalArgumentException(KEYS[LIVE_MIN_RANGE]+" must be non-negative");
     }
 
     private static double livePanLead(String[] values) {
@@ -908,16 +1341,21 @@ public final class FmService extends Service {
         return (int)time;
     }
 
-    void launchLiveTracking(String[] values) {
+    void launchLiveTracking(String[] values,long press,Instant pressedAt) {
         if(!ready()) return;
+        String block=MountCoordinates.liveStartBlock(values);
+        if(!block.isEmpty()) { resultText=block; publish(); return; }
+        liveStopConfirmed=false;
         liveStopRequested=-1;
-        long press=GoTo.now();
-        Instant pressedAt=Instant.now();
+        mapPan=new MapPan(mapPan.heading(),"Waiting for GP target");
+        cameraPosition=null;
+        cameraSession=press;
         LiveGpsSource source=new LiveGpsSource(press);
         liveGps=source;
         liveGpsRuleText="";
         begin("Live Tracking · Preparing");
         worker.execute(()->runLiveTracking(values,press,pressedAt,source));
+        if(camera!=null) camera.startRecording(press);
     }
 
     private boolean liveActive() { return liveStopRequested<0&&!destroyed&&!Thread.currentThread().isInterrupted(); }
@@ -940,7 +1378,8 @@ public final class FmService extends Service {
                     "settings",new JSONArray(Arrays.asList(values)),"simulationOffsetM",0,
                     "gpsSource",simulator==null?"LoRa":"Simulator",
                     "simulatorRun",simulator==null?null:simulator.id);
-                result=trackLive(values,press,log,source,report);
+                try { result=trackLive(values,press,log,source,report); }
+                finally { endCameraSession(); }
                 drainGpsPadEvents(log);
                 drainLiveOffsets(source,report,log);
                 kml=publishLiveTrackingKml(values,id,pressedAt,press,result,report,log);
@@ -958,6 +1397,7 @@ public final class FmService extends Service {
             drainLiveOffsets(source,report,null);
             kml=publishLiveTrackingKml(values,id,pressedAt,press,result,report,trace);
         }
+        endCameraSession();
         main.post(()->liveGps=null);
         finish(result+(trace==null?"":"\nAttempt "+id+" · "+trace.location()+trace.downloadWarning())+kml.status());
     }
@@ -970,7 +1410,7 @@ public final class FmService extends Service {
         }
     }
 
-    private void processLiveGps(LiveGpsPacket raw,LiveGpsSource source,LiveGpsFilter filter,
+    private LiveGpsSource.Fix processLiveGps(LiveGpsPacket raw,LiveGpsSource source,LiveGpsFilter filter,
                                        GoTo.Point mount,double elevation,LiveTrackingKml report,Trace log) {
         LoRaTelemetry packet=raw.fix();
         LoRaTelemetry.RawFix position=packet==null?LoRaTelemetry.rawFix(raw.line()):
@@ -992,19 +1432,20 @@ public final class FmService extends Service {
         }
         if(input==null) {
             filter.reject(position==null?null:position.sequence(),raw.rejection());
-            return;
+            return null;
         }
 
         LiveGpsFilter.Snapshot before=filter.latest();
         filter.accept(input,GoTo.now());
         LiveGpsFilter.Snapshot after=filter.latest();
-        if(after==null||after==before) return;
+        if(after==null||after==before) return input;
         boolean newPosition=before==null||after.revision()!=before.revision();
         if(newPosition) {
             report.publishedFixes.add(after);
             if(raw.simulated()) writeSimulatorPublication(raw,after,log.id);
-        } else if(raw.simulated()) return;
+        } else if(raw.simulated()) return input;
         writeGpsPublication(log,newPosition?"live_gps_published_fix":"live_gps_published_refresh",raw,after,null);
+        return input;
     }
 
     private void writeSimulatorPublication(LiveGpsPacket raw,LiveGpsFilter.Snapshot after,String liveRun) {
@@ -1032,20 +1473,21 @@ public final class FmService extends Service {
         boolean readyToTrack=false;
         String reason="Stop requested", stop="GTi session unavailable";
         try {
+            String block=MountCoordinates.liveStartBlock(values);
+            if(!block.isEmpty()) throw new IllegalArgumentException(block);
             apply(values);
             MountConnection connected=connectedMount();
             mount=new GoTo(connected.link()::udp,connected.endpoint(),log,LiveTracking.RETAINED_REPLY_PORTS);
             GoTo.Reference pointing=reference();
-            double panSpeed=LiveTracking.panSpeed(number(values,LIVE_PAN_SPEED));
+            boolean disableTilt=tiltDisabled(values);
             double tiltSpeed=LiveTracking.tiltSpeed(number(values,LIVE_TILT_SPEED));
-            double elevation=number(11);
+            double elevation=disableTilt?Double.NaN:number(11);
             double maximumGpsAge=number(3);
             GoTo.MountSetup setup=connected.setup();
             int panCpr=setup.panCpr(), tiltCpr=setup.tiltCpr();
-            int panPeriod=mount.highSpeedPanPeriod(connected.requireHsTiming(),
-                panSpeed*panCpr/GoTo.SIDEREAL_DAY_SECONDS);
+            GoTo.PanTiming panTiming=connected.requireHsTiming();
             Integer tiltPeriod=null;
-            try {
+            if(!disableTilt) try {
                 GoTo.PanTiming timing=connected.tilt().require("tilt");
                 tiltPeriod=new GoTo.PanTiming(timing.frequency(),1).period(tiltSpeed*tiltCpr/GoTo.SIDEREAL_DAY_SECONDS);
             } catch(IOException failure) {
@@ -1053,24 +1495,32 @@ public final class FmService extends Service {
             }
             int holdCount=liveGpsHold(values);
             int confirmationMs=stationaryConfirmationMs(values);
+            double minimumRange=number(values,LIVE_MIN_RANGE);
             double lead=livePanLead(values), shotWidth=simulatorShotWidth(values);
             LiveFraming framingReport=new LiveFraming(pointing.pivot(),shotWidth,maximumGpsAge,press);
             framing=framingReport;
-            log.event("live_tracking_ready","panSpeed",panSpeed,"panPeriod",panPeriod,"tiltSpeed",tiltSpeed,
+            log.event("live_tracking_ready","initialPanSpeed",GoTo.MAX_HS_SIDEREAL,"restartSpeedSource","surfer-to-mount distance","tiltDisabled",disableTilt,"tiltSpeed",tiltSpeed,
                 "tiltPeriod",tiltPeriod,"maxGpsAgeMs",maximumGpsAge,"gpsSmallStepHold",holdCount,
-                "gpsStationaryConfirmationMs",confirmationMs,"panLeadM",lead,"simulatorShotWidthM",shotWidth);
-            LiveTracking controller=new LiveTracking(mount,panCpr,panPeriod,tiltPeriod,this::liveActive,this::updateResult);
+                "gpsStationaryConfirmationMs",confirmationMs,"panLeadM",lead,"simulatorShotWidthM",shotWidth,"minimumSurferRangeM",minimumRange);
+            LiveTracking controller=new LiveTracking(mount,panCpr,panTiming,tiltPeriod,disableTilt,this::liveActive,this::updateResult);
             readyToTrack=true;
             idleSimulatorFilter=null;
             LiveGpsFilter filter=new LiveGpsFilter(pointing.pivot(),holdCount,maximumGpsAge,confirmationMs,lead,
                 (event,fields)->{if(workerGpsPad==null) log.event(event,fields);});
+            LiveRangeGate rangeGate=new LiveRangeGate(pointing.pivot(),minimumRange);
             Consumer<LiveGpsPacket> observe=packet->{
                 if(packet.firstPlaybackFix()) filter.resetInput();
                 if(packet.rejection()==null) {
                     LoRaTelemetry raw=packet.fix();
                     framingReport.fix(packet.mode(),new GoTo.Point(raw.lat,raw.lon,elevation),packet.receivedAt());
                 }
-                processLiveGps(packet,source,filter,pointing.pivot(),elevation,report,log);
+                LiveGpsSource.Fix accepted=processLiveGps(packet,source,filter,pointing.pivot(),elevation,report,log);
+                if(accepted!=null) rangeGate.observe(accepted,controller.needsStartupTarget());
+                if(cameraSession==press && !cameraSettings.cameraHost.isEmpty()) {
+                    LiveGpsFilter.Snapshot published=filter.latest();
+                    cameraPosition=published==null?null:
+                        new CameraPosition(pointing.pivot(),published.fix().target(),published.freshAt(),maximumGpsAge);
+                }
             };
             GpsPadSimulator initialGpsSource=gpsPad;
             selectGpsSource(initialGpsSource);
@@ -1090,6 +1540,8 @@ public final class FmService extends Service {
                     framingReport.endTakeoff(GoTo.now());
                     filter.resetInput();
                     targets=null;
+                    rangeGate.reset();
+                    controller.discardUnstartedAim();
                     previousRule=null;
                     previousAvailability=null;
                     log.event("live_gps_source_changed","gpsSource",selectedGpsSource==null?"LoRa":"Simulator",
@@ -1111,9 +1563,17 @@ public final class FmService extends Service {
                 LiveGpsFilter.Snapshot fix=filter.latest();
                 Long age=fix==null?null:fix.ageMs(now);
                 boolean usable=age!=null&&age<=maximumGpsAge;
-                String availability=fix==null?"Waiting for GP target":usable?"GP target available":"GP target is stale";
+                boolean holdForRange=rangeGate.inside() || (!controller.startupPending() && usable && !rangeGate.allows(fix));
+                LiveGpsSource.Fix first=rangeGate.takeFirst();
+                String availability;
+                if(holdForRange) availability="Surfer too close · waiting for an in-range fix";
+                else if(controller.startupPending())
+                    availability=first!=null || !controller.needsStartupTarget()?"Aiming at first GPS fix":"Waiting for first fresh in-range GPS fix";
+                else availability=fix==null?"Waiting for GP target":usable?"GP target available":"GP target is stale";
                 if(!availability.equals(previousAvailability)) {
                     log.event("live_gps_availability","usable",usable,"reason",availability,
+                        "rawRangeM",latest==null?null:Geo.distance(pointing.pivot().lat(),pointing.pivot().lon(),latest.lat,latest.lon),
+                        "minimumSurferRangeM",minimumRange,
                         "packet",fix==null?null:fix.fix().packet().sequence,"positionRevision",fix==null?null:fix.revision(),
                         "rawReceiptMs",latest==null?null:received,"ageMs",age);
                     updateResult("Live Tracking · "+availability);
@@ -1125,25 +1585,38 @@ public final class FmService extends Service {
                     LiveGpsSource.Fix published=fix.fix();
                     try {
                         AimAtSurfer.Target pan=AimAtSurfer.target(fix.panTarget(),pointing,panCpr);
-                        AimAtSurfer.Target tilt=AimAtSurfer.tiltTarget(elevation,pointing,pan.rangeM(),tiltCpr);
+                        double surferRange=Geo.distance(pointing.pivot().lat(),pointing.pivot().lon(),published.target().lat(),published.target().lon());
+                        AimAtSurfer.Target tilt=disableTilt?null:AimAtSurfer.tiltTarget(elevation,pointing,pan.rangeM(),tiltCpr);
                         int direction=pointing.panSign()*(fix.direction()==LiveGpsSource.Direction.CLOCKWISE?1:-1);
                         targets=new LiveTracking.Targets(published.packet().sequence,fix.revision(),
-                            pan.count(),tilt.count(),direction);
+                            pan.count(),tilt==null?null:tilt.count(),direction,surferRange);
                         log.event("live_gps_consumed","packet",published.packet().sequence,
                             "positionRevision",fix.revision(),"latitude",published.target().lat(),
                             "longitude",published.target().lon(),"direction",fix.direction().name(),"ageMs",age,
                             "panLeadM",fix.panLeadM(),"panTargetLatitude",fix.panTarget().lat(),
                             "panTargetLongitude",fix.panTarget().lon());
                         log.event("live_target","packet",published.packet().sequence,"positionRevision",fix.revision(),
-                            "direction",fix.direction().name(),"panCount",pan.count(),"tiltCount",tilt.count(),
-                            "bearingDeg",pan.angleDeg(),"elevationDeg",tilt.angleDeg(),"rangeM",pan.rangeM(),
+                            "direction",fix.direction().name(),"panCount",pan.count(),"tiltCount",tilt==null?null:tilt.count(),
+                            "bearingDeg",pan.angleDeg(),"elevationDeg",tilt==null?null:tilt.angleDeg(),"rangeM",pan.rangeM(),
                             "offsetM",published.offsetM(),"panLeadM",fix.panLeadM());
                     } catch(IllegalArgumentException failure) {
                         log.event("live_target_unusable","packet",published.packet().sequence,"reason",failure.getMessage());
                     }
                 }
                 long priorReply=controller.lastPanStartReply();
-                controller.tick(usable?targets:null);
+                boolean inRange=usable && rangeGate.allows(fix);
+                if(first!=null && now-first.receivedAt()<=maximumGpsAge) {
+                    try {
+                        GoTo.Point position=first.target();
+                        AimAtSurfer.Target aim=AimAtSurfer.target(position,pointing,panCpr);
+                        controller.offerStartupTarget(first.packet().sequence,aim.count(),aim.rangeM(),first.receivedAt()+maximumGpsAge);
+                        log.event("live_startup_fix","packet",first.packet().sequence,"latitude",position.lat(),
+                            "longitude",position.lon(),"rangeM",aim.rangeM(),"ageMs",now-first.receivedAt());
+                    } catch(IllegalArgumentException failure) {
+                        log.event("live_startup_target_unusable","packet",first.packet().sequence,"reason",failure.getMessage());
+                    }
+                }
+                controller.track(inRange?targets:null,holdForRange);
                 long reply=controller.lastPanStartReply();
                 if(reply!=priorReply && selectedGpsSource!=null && selectedGpsSource.recordFirstReply(workerPlayback,reply)) {
                     long applied=workerPlayback.pressedAt();
@@ -1156,6 +1629,10 @@ public final class FmService extends Service {
                     report.cameraHeading=new LiveTrackingKml.CameraHeading(bearing,sample.count(),sample.timeMs());
                     framingReport.sample(bearing,sample.timeMs());
                 }
+                MapPan previousPan=mapPan;
+                LiveTrackingKml.CameraHeading heading=report.cameraHeading!=null?report.cameraHeading:previousPan.heading();
+                if(previousPan.heading()!=heading || !previousPan.state().equals(controller.panState()))
+                    mapPan=new MapPan(heading,controller.panState());
                 if(liveActive()) Thread.sleep(LiveTracking.POLL_MS);
             }
         } catch(InterruptedException failure) {
@@ -1169,14 +1646,27 @@ public final class FmService extends Service {
             if(mount!=null&&(readyToTrack||liveStopRequested>=0)) {
                 log.event("live_stop_requested","pressMs",liveStopRequested<0?null:liveStopRequested,"reason",reason);
                 try {
-                    long stopAck=mount.stopBothMotors();
-                    stop="Stop accepted";
-                    log.event("live_stop_ack","replyMs",stopAck,
-                        "buttonToStopReplyMs",liveStopRequested<0?null:stopAck-liveStopRequested);
+                    if(liveStopRequested>=0) {
+                        MountConnection active=lastMovingMount!=null?lastMovingMount:gtiConnection;
+                        GoTo stopper=active==null?mount:shutdownClient(active,log);
+                        boolean confirmed=LiveTracking.awaitFullStop(stopper,()->!destroyed);
+                        if(confirmed) lastMovingMount=null;
+                        liveStopConfirmed=confirmed;
+                        stop=confirmed?"Both motors stopped":"Full stop unconfirmed";
+                        main.post(this::publish);
+                        log.event("live_full_stop_result","confirmed",confirmed,"elapsedMs",GoTo.now()-liveStopRequested);
+                    } else {
+                        mount.stopBothMotors();
+                        stop="Stop accepted";
+                    }
+                } catch(InterruptedException failure) {
+                    Thread.currentThread().interrupt();
+                    stop="Full stop unconfirmed · worker interrupted";
                 } catch(IOException|RuntimeException failure) {
                     stop="Stop reply unconfirmed · "+failure.getMessage();
                     log.event("live_stop_unconfirmed","reason",failure.getMessage());
                 }
+                mapPan=new MapPan(mapPan.heading(),stop);
             }
         }
         Long firstStart=log.firstStartMs==null?null:log.firstStartMs-press;
@@ -1237,13 +1727,15 @@ public final class FmService extends Service {
                 aim.target=AimAtSurfer.target(fix,aim.reference,cpr);
                 return null;
             });
-            prepareTiltTarget(tilt, values, aim, connected.setup());
+            if(camera!=null && motionAllowed()) camera.zoomOnce("Aim at Surfer HS",press,aim.target.rangeM());
+            if(tiltDisabled(values)) tilt.skip("Tilt disabled");
+            else prepareTiltTarget(tilt, values, aim, connected.setup());
             log.axisEvent(1,"aim_target",GoTo.now(),"panCount",aim.target.count(),"bearing",aim.target.angleDeg(),
                 "rangeM",aim.target.rangeM(),"panCpr",cpr,"panFirmware",connected.setup().panFirmware());
             updateResult(String.format(Locale.US,"Aim at Surfer HS · GPS #%d · Range %.2f m",aim.packet,aim.target.rangeM()));
             GoTo.PanTiming timing=aim.time(AimAtSurfer.Stage.TIMING,connected::requireHsTiming);
             GoTo mount=new GoTo(connected.link()::udp,connected.endpoint(),aim::mountEvent,true);
-            AimAtSurfer.run(aim,mount,timing,cpr,tiltCpr,()->!destroyed);
+            AimAtSurfer.run(aim,mount,timing,cpr,tiltCpr,this::motionAllowed);
         } catch(IOException|RuntimeException failure) {
             aim.fail("Aim blocked",failure);
         }
@@ -1337,6 +1829,14 @@ public final class FmService extends Service {
                         gapWarningM=hsGapWarningM(values);
                         status=replayHighSpeed(file,gapWarningM,log,reportPoints,hsRows);
                     } else if(file!=null) status=replay(file,log,reportPoints);
+                    else if(action.equals("Go to landmark")) {
+                        MountConnection mount=connectedMount();
+                        GoTo.Reference ref=reference();
+                        GoTo.Point landmark=point(LandmarkCalibration.LANDMARK_LAT,LandmarkCalibration.LANDMARK_LON,
+                            LandmarkCalibration.LANDMARK_HEIGHT);
+                        status=mount.client(log).goToPosition(mount.setup(),landmark,ref,this::motionAllowed,
+                            press,tiltDisabled(settings)).report();
+                    }
                     else if(action.equals("GoToMe")) status=goToMe(press,log);
                     else status=goHome(press,log);
                 } catch(Exception e) {
@@ -1396,8 +1896,10 @@ public final class FmService extends Service {
         LoRaTelemetry fix=snapshot.fix();
         GoTo.Point surfer=new GoTo.Point(fix.lat,fix.lon,number(11));
         save(surfer,fix,log.id,log);
+        if(camera!=null && motionAllowed()) camera.zoomOnce("GoToMe",press,
+            Geo.distance(reference.pivot().lat(),reference.pivot().lon(),surfer.lat(),surfer.lon()));
         return connected.client(log).goToPosition(connected.setup(),surfer,reference,
-            ()->!destroyed && GoTo.now()-snapshot.receivedAt()<=number(3),press).report()
+            ()->motionAllowed() && GoTo.now()-snapshot.receivedAt()<=number(3),press,tiltDisabled(settings)).report()
             +"\nGPS #"+fix.sequence+" · "+snapshot.ageMs()+" ms at selection";
     }
 
@@ -1408,7 +1910,7 @@ public final class FmService extends Service {
         if(saved==null) throw new IOException("No saved start position");
         log.event("saved_target","sourceAttempt",saved.attempt,"sequence",saved.sequence,
             "captureAgeMs",System.currentTimeMillis()-saved.captured);
-        return connected.client(log).goToPosition(connected.setup(),saved.point,reference,()->!destroyed,press).report()
+        return connected.client(log).goToPosition(connected.setup(),saved.point,reference,this::motionAllowed,press,tiltDisabled(settings)).report()
             +"\nSaved GPS #"+saved.sequence+" · source "+saved.attempt;
     }
 
@@ -1430,7 +1932,7 @@ public final class FmService extends Service {
         int attempted=0,acknowledged=0,blocked=0,stopsConfirmed=0,stopFailures=0;
         StringJoiner outcomes=new StringJoiner("\n\n");
         for(Viewpoint vp:points) {
-            if(destroyed) throw new IOException("Replay closed");
+            if(!motionAllowed()) throw new IOException("Replay closed");
             long rowStarted=GoTo.now();
             int index=attempted+1;
             log.attempt=log.id+"-"+index;
@@ -1483,7 +1985,7 @@ public final class FmService extends Service {
             if(dispatchReport==null) {
                 due=waitFrom+vp.delayMs;
                 waitUntil(due);
-                if(destroyed) throw new IOException("Replay closed");
+                if(!motionAllowed()) throw new IOException("Replay closed");
                 begin=GoTo.now();
                 waited=begin-waitFrom;
             }
@@ -1494,20 +1996,20 @@ public final class FmService extends Service {
                 "latitude",vp.point.lat(),"longitude",vp.point.lon(),"elevation",vp.point.elevation());
             updateResult("Replay "+index+" / "+points.size());
 
-            Long callMs=null,bothStartsAcknowledgedAtMs=null;
+            Long callMs=null,requiredStartsAcknowledgedAtMs=null;
             if(dispatchReport==null) {
                 try {
                     MountConnection connected=connectedMount();
                     if(client==null) client=connected.client(log);
                     callMs=GoTo.now();
-                    GoTo.PositionResult position=client.goToPosition(connected.setup(),vp.point,ref,()->!destroyed,begin);
+                    GoTo.PositionResult position=client.goToPosition(connected.setup(),vp.point,ref,this::motionAllowed,begin,tiltDisabled(settings));
                     dispatchReport=position.report();
-                    bothStartsAcknowledgedAtMs=position.bothStartsAcknowledgedAtMs();
+                    requiredStartsAcknowledgedAtMs=position.requiredStartsAcknowledgedAtMs();
                 } catch(Exception e) {
                     dispatchReport="Blocked before Start · "+Objects.toString(e.getMessage(),e.getClass().getSimpleName());
                 }
             }
-            boolean startAcknowledged=bothStartsAcknowledgedAtMs!=null;
+            boolean startAcknowledged=requiredStartsAcknowledgedAtMs!=null;
             if(startAcknowledged) acknowledged++;
             else if(dispatchReport.startsWith("Blocked before Start")) blocked++;
             previousResult=GoTo.now();
@@ -1524,7 +2026,7 @@ public final class FmService extends Service {
                     " · +"+sinceReplayStartMs+" ms from replay start · Since previous call "+
                     (sincePreviousCallMs==null?"—":sincePreviousCallMs+" ms");
             }
-            Long callToBothStartsMs=startAcknowledged?bothStartsAcknowledgedAtMs-callMs:null;
+            Long callToRequiredStartsMs=startAcknowledged?requiredStartsAcknowledgedAtMs-callMs:null;
             Long stopCheckWaitMs=stop==null?null:stop.elapsedMs();
             Long rowToBothStoppedMs=stop!=null&&stop.stopped()?stop.completedAtMs()-rowStarted:null;
             String stopMotorReport=stopMotorMs==null?stopMotorState:stopMotorState+" · "+stopMotorMs+" ms";
@@ -1542,10 +2044,11 @@ public final class FmService extends Service {
             log.event("viewpoint_result","row",vp.row,"callMs",callMs,"callWallTimeMs",callWallTimeMs,
                 "sinceReplayStartMs",sinceReplayStartMs,"sincePreviousCallMs",sincePreviousCallMs,
                 "stopMotorResult",stopMotorState,"stopMotorMs",stopMotorMs,
-                "callToBothStartsMs",callToBothStartsMs,"stopCheckWaitMs",stopCheckWaitMs,"rowToBothStoppedMs",rowToBothStoppedMs,
+                "callToBothStartsMs",tiltDisabled(settings)?null:callToRequiredStartsMs,
+                "callToRequiredStartsMs",callToRequiredStartsMs,"stopCheckWaitMs",stopCheckWaitMs,"rowToBothStoppedMs",rowToBothStoppedMs,
                 "outcome",outcome,"display",rowReport);
             reportPoints.add(new ReplayKml.Viewpoint(index,vp.row,vp.point,startAcknowledged,rowReport));
-            reportReplayRow(new ReplayRowReport(index,callTime,sincePreviousCallMs,stopMotorReport,vp.delayMs,waited,callToBothStartsMs,
+            reportReplayRow(new ReplayRowReport(index,callTime,sincePreviousCallMs,stopMotorReport,vp.delayMs,waited,callToRequiredStartsMs,
                 stopCheckWaitMs,rowToBothStoppedMs,rowReport));
         }
         log.attempt=null;
@@ -1597,11 +2100,11 @@ public final class FmService extends Service {
             HighSpeedReplay.SpeedUp[] speedUps=new HighSpeedReplay.SpeedUp[views.size()];
             for(int i=0;i<views.size();i++) speedUps[i]=views.get(i).speedUp();
             lineUpFirstViewpoint(views.get(0),log);
-            if(destroyed) throw new IOException("HS replay closed");
+            if(!motionAllowed()) throw new IOException("HS replay closed");
             updateResult("Starting HS pan");
             main.post(()->{ hsCanCancel=true; publish(); });
             result=HighSpeedReplay.goToPositionHS(client,plan,timing,period,speedUps,
-                ()->!destroyed&&!hsCancelled,this::readGps,this::showHsProgress,log);
+                ()->motionAllowed()&&!hsCancelled,this::readGps,this::showHsProgress,log);
         } catch(IOException|RuntimeException e) {
             failure=Objects.toString(e.getMessage(),e.getClass().getSimpleName());
         } finally {
@@ -1764,15 +2267,16 @@ public final class FmService extends Service {
         log.event("replay_line_up_start","row",first.row,"latitude",first.point.lat(),
             "longitude",first.point.lon(),"elevation",first.point.elevation());
         try {
-            if(destroyed) throw new IOException("Replay closed");
+            if(!motionAllowed()) throw new IOException("Replay closed");
             MountConnection connected=connectedMount();
             GoTo.Reference ref=reference();
             GoTo client=connected.client(log);
             long callMs=GoTo.now();
-            GoTo.PositionResult position=client.goToPosition(connected.setup(),first.point,ref,()->!destroyed,callMs);
+            GoTo.PositionResult position=client.goToPosition(connected.setup(),first.point,ref,this::motionAllowed,callMs,tiltDisabled(settings));
             log.event("replay_line_up_goto","callMs",callMs,
-                "bothStartsAcknowledgedAtMs",position.bothStartsAcknowledgedAtMs(),"display",position.report());
-            if(position.bothStartsAcknowledgedAtMs()==null)
+                "bothStartsAcknowledgedAtMs",tiltDisabled(settings)?null:position.requiredStartsAcknowledgedAtMs(),
+                "requiredStartsAcknowledgedAtMs",position.requiredStartsAcknowledgedAtMs(),"display",position.report());
+            if(position.requiredStartsAcknowledgedAtMs()==null)
                 throw new IOException(position.report().split("\nTarget ",2)[0]);
 
             StopCheck stop=checkReplayStop(client,log,"lineUp");
@@ -1905,7 +2409,7 @@ public final class FmService extends Service {
     }
 
     private void waitUntil(long due) {
-        while(!destroyed && GoTo.now()<due) {
+        while(motionAllowed() && GoTo.now()<due) {
             readGps();
             SystemClock.sleep(Math.min(75,Math.max(0,due-GoTo.now())));
         }
@@ -1918,7 +2422,7 @@ public final class FmService extends Service {
         log.event("replay_stop_check_start","phase",phase,"timeoutMs",REPLAY_STOP_TIMEOUT_MS,
             "pollIntervalMs",REPLAY_STOP_POLL_MS);
         try {
-            while(!destroyed && GoTo.now()<deadline) {
+            while(motionAllowed() && GoTo.now()<deadline) {
                 GoTo.MotionStatus status=client.readMotionStatus();
                 log.event("replay_stop_poll","poll",++polls,"panMoving",status.panMoving(),"tiltMoving",status.tiltMoving());
                 if(status.stopped()) {
@@ -1927,7 +2431,7 @@ public final class FmService extends Service {
                 }
                 waitUntil(Math.min(deadline,GoTo.now()+REPLAY_STOP_POLL_MS));
             }
-            if(destroyed) failure="Replay closed";
+            if(!motionAllowed()) failure="Replay closed";
         } catch(IOException e) {
             failure=e.getMessage();
         }
@@ -1940,6 +2444,8 @@ public final class FmService extends Service {
 
     static String replayOutcomeLine(int index,String dispatchReport) {
         String prefix="Viewpoint "+index+" — ";
+        if(dispatchReport.startsWith("GoTo sent · pan Start acknowledged"))
+            return prefix+"Pan Start acknowledged. Tilt disabled. Arrival unverified.";
         if(dispatchReport.startsWith("GoTo sent"))
             return prefix+"Start acknowledged. Pan and tilt both replied successfully. Arrival unverified.";
         if(dispatchReport.equals("Blocked before Start · Axis 1 is already moving"))
@@ -2026,7 +2532,7 @@ public final class FmService extends Service {
         if(!connected.endpoint().equals(target))
             throw new IOException("Save the GTi endpoint, then tap Connect GTi");
         try {
-            DeviceDiscovery.Link link=DeviceDiscovery.selectLink(network,null,settings[4]);
+            DeviceDiscovery.Link link=deviceLink(settings[4]);
             if(connected.link().equals(link)) return connected;
         } catch(IOException|RuntimeException e) {
             gtiConnection=null;
@@ -2037,7 +2543,7 @@ public final class FmService extends Service {
     }
 
     private GoTo.Reference reference() {
-        if(!LandmarkCalibration.hasReference(settings))
+        if(calibrationSession.reasonFor(settings)!=null)
             throw new IllegalArgumentException(LandmarkCalibration.requiredMessage(calibrationError()));
         GoTo.Point pivot=point(MountCoordinates.LATITUDE,MountCoordinates.LONGITUDE,LandmarkCalibration.PIVOT_ELEVATION);
         double bearing=number(12), elevation=number(13);
@@ -2062,8 +2568,23 @@ public final class FmService extends Service {
         } catch(NumberFormatException ignored) {}
         throw new IllegalArgumentException("Enter a valid "+KEYS[index]);
     }
-    private int port(int index) {
-        double n=number(index);
+    static void validateEditedField(String[] values,int index) {
+        switch(index) {
+            case 0,4 -> {
+                if(!DeviceDiscovery.ipv4(values[index])) throw new IllegalArgumentException("Invalid "+KEYS[index]);
+            }
+            case 1,2,5 -> port(values,index);
+            case 3,10,11,20 -> number(values,index);
+            case 16,17 -> {
+                if(Math.abs(number(values,index))!=1) throw new IllegalArgumentException(KEYS[index]+" must be 1 or -1");
+            }
+        }
+    }
+
+    private int port(int index) { return port(settings,index); }
+
+    private static int port(String[] values,int index) {
+        double n=number(values,index);
         if(n<1||n>65535||n!=Math.rint(n)) throw new IllegalArgumentException("Invalid "+KEYS[index]);
         return (int)n;
     }
@@ -2071,7 +2592,7 @@ public final class FmService extends Service {
         if(!DeviceDiscovery.ipv4(settings[host])) throw new IOException("Invalid "+KEYS[host]);
         return new InetSocketAddress(InetAddress.getByName(settings[host]),port(port));
     }
-    private static final class Trace implements GoTo.Trace,Closeable {
+    private final class Trace implements GoTo.Trace,Closeable {
         final BufferedWriter out;
         final File local;
         final AttemptDownload download;
@@ -2108,6 +2629,12 @@ public final class FmService extends Service {
         }
 
         void axisEvent(int axis,String name,long at,Object... fields) {
+            if ((name.equals("gti_rx") && gtiExchangeFailed) || (name.equals("gti_exchange_failed") && !gtiExchangeFailed)) {
+                gtiExchangeFailed=name.equals("gti_exchange_failed");
+                main.post(FmService.this::publish);
+            }
+            if(name.equals("gti_tx") && fields.length>=4 && (":J1\r".equals(fields[3]) || ":J2\r".equals(fields[3])))
+                lastMovingMount=gtiConnection;
             if(name.equals("start_acknowledged")) {
                 long reply=(Long)fields[3];
                 if(firstStartMs==null||reply<firstStartMs) firstStartMs=reply;

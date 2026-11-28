@@ -226,8 +226,29 @@ public class GpsPadSimulatorTest {
         return gps;
     }
 
+    @Test public void defaultOneHzAndRateSwitchPreserveEveryPlaybackRow() {
+        var simulator = new GpsPadSimulator(LANDMARK.lat(), LANDMARK.lon());
+        assertEquals(LANDMARK.lat(), receive(simulator, 1000).lat, 0);
+        assertNull(simulator.poll(1999));
+        assertEquals(LANDMARK.lon(), receive(simulator, 2000).lon, 0);
+        var target = Geo.destination(LANDMARK, 90, 3);
+        simulator.apply(java.util.List.of(target, target, LANDMARK), 2100, false);
+        var first = simulator.poll(2100);
+        assertEquals(target.lon(), LoRaTelemetry.parse(first.line()).lon, 0);
+        assertNull(simulator.poll(2599));
+        simulator.setRateHz(2);
+        var repeat = simulator.poll(2600);
+        assertEquals(2, repeat.playbackFix());
+        assertEquals(target.lon(), LoRaTelemetry.parse(repeat.line()).lon, 0);
+        simulator.setRateHz(1);
+        assertNull(simulator.poll(3599));
+        assertEquals(3, simulator.poll(3600).playbackFix());
+    }
+
     private static GpsPadSimulator newSimulator() {
-        return new GpsPadSimulator(LANDMARK.lat(), LANDMARK.lon());
+        var simulator = new GpsPadSimulator(LANDMARK.lat(), LANDMARK.lon());
+        simulator.setRateHz(2);
+        return simulator;
     }
 
     private static LoRaTelemetry receive(GpsPadSimulator simulator, long now) {

@@ -18,7 +18,7 @@ final class GoTo {
     record MountSetup(int panCpr,int tiltCpr,String panFirmware,String tiltFirmware) {}
     record Reference(Point pivot, double bearing, double elevation, int pan, int tilt,
                      int panSign, int tiltSign) {}
-    record PositionResult(String report,Long bothStartsAcknowledgedAtMs) {}
+    record PositionResult(String report,Long requiredStartsAcknowledgedAtMs) {}
     private record Reply(String payload,long receivedAtMs) {}
     final SocketFactory sockets;
     final InetSocketAddress endpoint;
@@ -45,6 +45,12 @@ final class GoTo {
 
 
     PositionResult goToPosition(MountSetup setup, Point target, Reference ref, BooleanSupplier canStart, long press) throws IOException {
+        return goToPosition(setup,target,ref,canStart,press,false);
+    }
+
+    PositionResult goToPosition(MountSetup setup, Point target, Reference ref, BooleanSupplier canStart, long press,
+                                boolean tiltDisabled) throws IOException {
+        int axisCount=tiltDisabled?1:2;
         if (!Geo.valid(target.lat, target.lon) || !Double.isFinite(target.elevation))
             throw new IOException("Invalid target coordinates or elevation");
         double range = Geo.distance(ref.pivot.lat, ref.pivot.lon, target.lat, target.lon);
@@ -58,22 +64,22 @@ final class GoTo {
         int[] cpr = {setup.panCpr(),setup.tiltCpr()}, baseline = new int[2], goal = new int[2], step = new int[2];
         String startIssue = "";
         // POS-01 lists the two encoder reads before the two status checks.
-        for (int i=0; i<2; i++) {
+        for (int i=0; i<axisCount; i++) {
             baseline[i]=decode(exchange("j"+(i+1)).payload());
         }
-        for (int i=0; i<2; i++) {
+        for (int i=0; i<axisCount; i++) {
             int axis=i+1;
             trace.event("axis_setup","axis",axis,"countsPerRevolution",cpr[i],
                 "firmware",i==0?setup.panFirmware():setup.tiltFirmware(),"source","GTi connection");
             if (moving(axis)) throw new IOException("Axis "+axis+" is already moving");
         }
-        for (int i=0; i<2; i++) {
+        for (int i=0; i<axisCount; i++) {
             goal[i] = i==0 ? panTarget(bearing,ref,cpr[i]) : tiltTarget(elevation,ref,cpr[i]);
             step[i] = delta(goal[i], baseline[i]);
             trace.event("axis_target", "axis",i+1,"baseline",baseline[i],"target",goal[i],"delta",step[i]);
         }
 
-        for (int i=0; i<2; i++) {
+        for (int i=0; i<axisCount; i++) {
             int axis=i+1;
             setPositionMode(axis, positionMode(step[i], cpr[i]), step[i]);
             setAbsoluteTarget(axis, goal[i]);
@@ -81,17 +87,21 @@ final class GoTo {
         trace.event("setters_accepted");
         if (!canStart.getAsBoolean()) throw new IOException("Move cancelled or selected GPS fix expired before Start");
         int startReplies=0;
-        Long firstStartAcknowledgedAtMs=null,bothStartsAcknowledgedAtMs=null;
+        Long firstStartAcknowledgedAtMs=null,requiredStartsAcknowledgedAtMs=null;
         long firstStart=now();
         long[] replyMs={-1,-1};
-        for (int i=0; i<2; i++) {
+        for (int i=0; i<axisCount; i++) {
+            if(i>0 && !canStart.getAsBoolean()) {
+                startIssue="Move cancelled before tilt Start";
+                break;
+            }
             long sentAt=now();
             trace.event("start_requested","axis",i+1,"pressToStartMs",sentAt-press);
             try {
                 long receivedAt=startAxis(i+1,null);
                 if(firstStartAcknowledgedAtMs==null) firstStartAcknowledgedAtMs=receivedAt;
                 startReplies++;
-                if(startReplies==2) bothStartsAcknowledgedAtMs=receivedAt;
+                if(startReplies==axisCount) requiredStartsAcknowledgedAtMs=receivedAt;
                 replyMs[i]=now()-sentAt;
             }
             catch (IOException e) {
@@ -101,18 +111,20 @@ final class GoTo {
             }
         }
         long done=now();
-        String outcome=startIssue.isEmpty() ? "GoTo sent · pan and tilt Start acknowledged" :
-            "GoTo Start issue: "+startIssue+"\nStart acknowledgments: "+startReplies+" of 2";
+        String success=tiltDisabled?"GoTo sent · pan Start acknowledged · tilt disabled":"GoTo sent · pan and tilt Start acknowledged";
+        String outcome=startIssue.isEmpty() ? success :
+            "GoTo Start issue: "+startIssue+"\nStart acknowledgments: "+startReplies+" of "+axisCount;
+        String tiltCounts=tiltDisabled?"disabled":baseline[1]+" → "+goal[1]+" counts";
         String report=String.format(Locale.US,
             "%s\nTarget %.7f, %.7f · %.2f m elevation\nBearing %.2f° true · Elevation angle %+.2f° · Range %.1f m"+
-            "\nGTi pan %d → %d counts · Tilt %d → %d counts"+
+            "\nGTi pan %d → %d counts · Tilt %s"+
             "\nRequest to first Start reply %s · Press to Start %d ms · Pan Start reply %s · Tilt Start reply %s"+
             "\nPress to result %d ms · Arrival unverified",
             outcome,target.lat,target.lon,target.elevation,bearing,elevation,range,
-            baseline[0],goal[0],baseline[1],goal[1],
+            baseline[0],goal[0],tiltCounts,
             duration(firstStartAcknowledgedAtMs==null?-1:firstStartAcknowledgedAtMs-press),
-            firstStart-press,duration(replyMs[0]),duration(replyMs[1]),done-press);
-        return new PositionResult(report,bothStartsAcknowledgedAtMs);
+            firstStart-press,duration(replyMs[0]),tiltDisabled?"disabled":duration(replyMs[1]),done-press);
+        return new PositionResult(report,requiredStartsAcknowledgedAtMs);
     }
 
     private static String duration(long elapsed) { return elapsed<0?"unavailable":elapsed+" ms"; }

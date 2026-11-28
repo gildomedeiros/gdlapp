@@ -7,7 +7,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import android.media.MediaScannerConnection;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,7 +28,7 @@ final class SettingsFile {
     private static final int ACCESS=Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
     static final String LOCATION=PATH+NAME;
 
-    record Loaded(String[] values,String location) {}
+    record Loaded(String[] values,String location,String warning) {}
     private record DownloadRow(Uri uri,String name) {}
 
     static Uri initialFolder() {
@@ -46,23 +48,29 @@ final class SettingsFile {
     }
 
     static Loaded read(Context context,SharedPreferences prefs) throws Exception {
+        DownloadRow row=locate(context,prefs);
+        return row==null?null:loadFile(context,prefs,row.uri(),row.name());
+    }
+
+    private static DownloadRow locate(Context context,SharedPreferences prefs) throws IOException {
         ContentResolver resolver=context.getContentResolver();
         String tree=prefs.getString(TREE,"");
-        if(!tree.isEmpty())
-            return new Loaded(readLinked(resolver,prefs,Uri.parse(tree)),LOCATION);
+        if(!tree.isEmpty()) return new DownloadRow(linkedFile(resolver,Uri.parse(tree)),NAME);
         if(Build.VERSION.SDK_INT<29) {
             File file=legacy();
             if(!file.exists()) return null;
-            try(InputStream in=new FileInputStream(file)) { return new Loaded(decode(in,prefs),LOCATION); }
+            return new DownloadRow(Uri.fromFile(file),NAME);
         }
-        DownloadRow row=find(resolver,prefs);
-        if(row==null) return null;
-        try(InputStream in=resolver.openInputStream(row.uri())) {
-            return new Loaded(decode(in,prefs),PATH+row.name());
-        }
+        return find(resolver,prefs);
     }
 
-    static String[] linkFolder(Context context,SharedPreferences prefs,Uri tree,int resultFlags) throws Exception {
+    static byte[] contents(Context context,SharedPreferences prefs) throws IOException {
+        DownloadRow row=locate(context,prefs);
+        if(row==null) return null;
+        try(InputStream in=context.getContentResolver().openInputStream(row.uri())) { return readBytes(in); }
+    }
+
+    static Loaded linkFolder(Context context,SharedPreferences prefs,Uri tree,int resultFlags) throws Exception {
         requireFmFolder(tree);
         if((resultFlags&ACCESS)!=ACCESS)
             throw new IOException("Allow read and write access to the Download/FM folder");
@@ -70,10 +78,10 @@ final class SettingsFile {
         resolver.takePersistableUriPermission(tree,ACCESS);
         boolean alreadyLinked=tree.toString().equals(prefs.getString(TREE,""));
         try {
-            String[] values=readLinked(resolver,prefs,tree);
+            Loaded loaded=readLinked(context,prefs,tree);
             if(!prefs.edit().putString(TREE,tree.toString()).commit())
                 throw new IOException("Could not remember the FM settings folder");
-            return values;
+            return loaded;
         } catch(Exception e) {
             if(!alreadyLinked) {
                 try { resolver.releasePersistableUriPermission(tree,ACCESS); }
@@ -117,29 +125,60 @@ final class SettingsFile {
         return null;
     }
 
-    private static String[] readLinked(ContentResolver resolver,SharedPreferences prefs,Uri tree) throws Exception {
-        try(InputStream in=resolver.openInputStream(linkedFile(resolver,tree))) { return decode(in,prefs); }
+    private static Loaded readLinked(Context context,SharedPreferences prefs,Uri tree) throws Exception {
+        try { return loadFile(context,prefs,linkedFile(context.getContentResolver(),tree),NAME); }
         catch(SecurityException e) {
             throw new IOException("Access to "+LOCATION+" expired. Use Link FM settings folder again.",e);
         }
     }
 
-    private static String[] decode(InputStream in,SharedPreferences prefs) throws Exception {
+    private static Loaded loadFile(Context context,SharedPreferences prefs,Uri uri,String name) throws Exception {
+        ContentResolver resolver=context.getContentResolver();
+        JSONObject document;
+        try(InputStream in=resolver.openInputStream(uri)) { document=parseDocument(readBytes(in)); }
+        JSONObject fields=document.getJSONObject("settings");
+        String[] values=decode(fields,cached(prefs));
+        String warning="";
+        if(upgradeSettingsFields(fields,values)) {
+            try {
+                byte[] bytes=encode(document);
+                if("file".equals(uri.getScheme())) writeLegacy(bytes);
+                else writeBytes(resolver,uri,bytes);
+                refreshFileMetadata(context,name);
+            } catch(IOException|SecurityException failure) {
+                warning="Could not update settings in "+PATH+name+" · "+failure.getMessage();
+            }
+        }
+        return new Loaded(values,PATH+name,warning);
+    }
+
+    private static byte[] readBytes(InputStream in) throws IOException {
         if(in==null) throw new IOException("Cannot open "+LOCATION);
         ByteArrayOutputStream data=new ByteArrayOutputStream();
         byte[] buffer=new byte[4096];
         for(int n;(n=in.read(buffer))!=-1;) {
-            if(data.size()+n>65536) throw new IOException("Settings file exceeds 64 KB");
+            if(data.size()+n>MAX_BYTES) throw new IOException("Settings file exceeds 1 MB");
             data.write(buffer,0,n);
         }
-        JSONObject json=new JSONObject(new String(data.toByteArray(),StandardCharsets.UTF_8));
+        return data.toByteArray();
+    }
+
+    static JSONObject parseDocument(byte[] bytes) throws Exception {
+        JSONObject json=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
         if(json.optInt("schema")!=1) throw new IOException("Unsupported FM settings format");
-        JSONObject fields=json.getJSONObject("settings");
-        String[] previous=cached(prefs);
+        return json;
+    }
+
+    private static final int MAX_BYTES=1024*1024;
+
+    static String[] decode(JSONObject fields,String[] previous) throws Exception {
         String[] values=previous.clone();
         for(int i=0;i<values.length;i++) if(fields.has(FmService.KEYS[i])) {
             Object entry=fields.get(FmService.KEYS[i]);
-            if(!(entry instanceof String) && !(entry instanceof Number))
+            if(!(entry instanceof String) && !(entry instanceof Number)
+                && !((i==FmService.TILT_DISABLE || i==FmService.MANUAL_CAMERA) && entry instanceof Boolean)
+                && !(i==CameraSettings.BANDS && entry instanceof JSONObject)
+                && !((i==CameraSettings.MAPPING || i==CameraSettings.SCALES) && entry instanceof JSONArray))
                 throw new IOException("Invalid setting: "+FmService.KEYS[i]);
             values[i]=entry.toString();
         }
@@ -149,11 +188,55 @@ final class SettingsFile {
                 LandmarkCalibration.LANDMARK_LAT,LandmarkCalibration.LANDMARK_LON,LandmarkCalibration.COORDINATES);
         FmService.hsGapWarningM(values);
         FmService.validateLiveSettings(values);
+        new CameraSettings(values);
         LandmarkCalibration.clearStaleReference(previous,values);
         return values;
     }
 
-    static void write(Context context,SharedPreferences prefs,String[] values) throws Exception {
+    /** Merge only fields changed by this operation into the most recent valid external file. */
+    static String[] mergeEdit(String[] base,String[] edited,String[] disk) {
+        String[] merged=disk.clone();
+        for(int i=0;i<merged.length;i++) if(!java.util.Objects.equals(base[i],edited[i])) merged[i]=edited[i];
+        LandmarkCalibration.clearStaleReference(disk,merged);
+        return merged;
+    }
+
+    private static Object fileValue(int index,String value) throws Exception {
+        if(index==FmService.TILT_DISABLE || index==FmService.MANUAL_CAMERA) return Boolean.valueOf(value);
+        if(index==CameraSettings.BANDS) return new JSONObject(value);
+        if(index==CameraSettings.MAPPING) return new JSONArray(value);
+        if(index==CameraSettings.SCALES) return new JSONArray(ZoomPlan.parse(value,true));
+        return value;
+    }
+
+    // Keep existing values and unrelated keys when upgrading an older public file.
+    static boolean upgradeSettingsFields(JSONObject fields,String[] values) throws Exception {
+        // Live Tracking now starts at maximum and selects restart speed from range.
+        boolean changed=fields.remove("Live HS pan speed (× sidereal)")!=null;
+        for(int i=0;i<values.length;i++) {
+            if(i!=6 && i!=7 && i!=FmService.TILT_DISABLE && i<CameraSettings.FIRST) continue;
+            String key=FmService.KEYS[i];
+            boolean table=i==CameraSettings.BANDS || i==CameraSettings.MAPPING || i==CameraSettings.SCALES;
+            if(!fields.has(key) || (table && fields.get(key) instanceof String)) {
+                fields.put(key,fileValue(i,values[i]));
+                changed=true;
+            }
+        }
+        return changed;
+    }
+
+    private static byte[] encode(JSONObject document) throws Exception {
+        byte[] bytes=(document.toString(2)+"\n").getBytes(StandardCharsets.UTF_8);
+        if(bytes.length>MAX_BYTES) throw new IOException("Settings file exceeds 1 MB");
+        return bytes;
+    }
+
+    private static void refreshFileMetadata(Context context,String name) {
+        File path=new File(legacy().getParentFile(),name);
+        MediaScannerConnection.scanFile(context,new String[]{path.getPath()},null,null);
+    }
+
+    static JSONObject settingsDocument(String[] values) throws Exception {
         JSONObject settings=new JSONObject();
         for(int i=0;i<values.length;i++) {
             if(i==MountCoordinates.LATITUDE) settings.put(MountCoordinates.KEY,MountCoordinates.format(values));
@@ -161,28 +244,25 @@ final class SettingsFile {
                 settings.put(LandmarkCalibration.COORDINATES,
                     MountCoordinates.format(values,LandmarkCalibration.LANDMARK_LAT,LandmarkCalibration.LANDMARK_LON));
             else if(i!=MountCoordinates.LONGITUDE&&i!=LandmarkCalibration.LANDMARK_LON)
-                settings.put(FmService.KEYS[i],values[i]);
+                settings.put(FmService.KEYS[i],fileValue(i,values[i]));
         }
-        byte[] bytes=(new JSONObject().put("schema",1).put("settings",settings).toString(2)+"\n")
-            .getBytes(StandardCharsets.UTF_8);
+        return new JSONObject().put("schema",1).put("settings",settings);
+    }
+
+    static void write(Context context,SharedPreferences prefs,String[] values) throws Exception {
+        byte[] bytes=encode(settingsDocument(values));
         ContentResolver resolver=context.getContentResolver();
         String tree=prefs.getString(TREE,"");
         if(!tree.isEmpty()) {
-            try { writeBytes(resolver,linkedFile(resolver,Uri.parse(tree)),bytes); }
+            try { writeBytes(resolver,linkedFile(resolver,Uri.parse(tree)),bytes); refreshFileMetadata(context,NAME); }
             catch(SecurityException e) {
                 throw new IOException("Access to "+LOCATION+" expired. Use Link FM settings folder again.",e);
             }
             return;
         }
         if(Build.VERSION.SDK_INT<29) {
-            File destination=legacy();
-            File dir=destination.getParentFile();
-            if(!dir.isDirectory()&&!dir.mkdirs()) throw new IOException("Cannot create the folder for "+LOCATION);
-            File staging=File.createTempFile("FM-settings-",null,dir);
-            try {
-                try(FileOutputStream out=new FileOutputStream(staging)) { out.write(bytes); }
-                Files.move(staging.toPath(),destination.toPath(),StandardCopyOption.REPLACE_EXISTING);
-            } finally { if(staging.exists()) staging.delete(); }
+            writeLegacy(bytes);
+            refreshFileMetadata(context,NAME);
             return;
         }
         DownloadRow found=find(resolver,prefs);
@@ -210,10 +290,22 @@ final class SettingsFile {
                 if(resolver.update(row,published,null,null)!=1) throw new IOException("Could not publish settings file");
             }
             prefs.edit().putString(ROW,row.toString()).apply();
+            refreshFileMetadata(context,found==null?NAME:found.name());
         } catch(Exception e) {
             if(created) resolver.delete(row,null,null);
             throw e;
         }
+    }
+
+    private static void writeLegacy(byte[] bytes) throws IOException {
+        File destination=legacy();
+        File dir=destination.getParentFile();
+        if(!dir.isDirectory()&&!dir.mkdirs()) throw new IOException("Cannot create the folder for "+LOCATION);
+        File staging=File.createTempFile("FM-settings-",null,dir);
+        try {
+            try(FileOutputStream out=new FileOutputStream(staging)) { out.write(bytes); }
+            Files.move(staging.toPath(),destination.toPath(),StandardCopyOption.REPLACE_EXISTING);
+        } finally { if(staging.exists()) staging.delete(); }
     }
 
     private static void writeBytes(ContentResolver resolver,Uri row,byte[] bytes) throws IOException {

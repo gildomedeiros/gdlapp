@@ -23,7 +23,7 @@ public class GoToTest {
             });
             GoTo.PositionResult position=client.goToPosition(SETUP,TARGET,REFERENCE,()->true,GoTo.now());
             String result=position.report();
-            assertEquals(Long.valueOf(lastReply[0]),position.bothStartsAcknowledgedAtMs());
+            assertEquals(Long.valueOf(lastReply[0]),position.requiredStartsAcknowledgedAtMs());
             assertTrue(result,result.startsWith("GoTo sent"));
             assertTrue(result,result.contains("GTi pan "));
             assertTrue(result,result.contains("Pan Start reply "));
@@ -36,6 +36,17 @@ public class GoToTest {
             assertTrue(mount.index("J1")<mount.index("J2"));
             assertEquals(2,mount.commands.stream().filter(c->c.startsWith("J")).count());
             assertFalse(mount.commands.stream().anyMatch(c->c.matches("[aFe][12]")));
+        }
+    }
+
+    @Test public void tiltDisabledFinishesOnPanReplyWithoutTiltCommands() throws Exception {
+        try (Mount mount=new Mount(null)) {
+            GoTo.PositionResult result=mount.client().goToPosition(SETUP,TARGET,REFERENCE,()->true,GoTo.now(),true);
+            assertNotNull(result.requiredStartsAcknowledgedAtMs());
+            assertTrue(result.report().contains("tilt disabled"));
+            assertTrue(FmService.replayOutcomeLine(1,result.report()).contains("Tilt disabled"));
+            assertEquals(java.util.List.of("j1","f1","G1","S1","J1"),
+                mount.commands.stream().map(command->command.substring(0,2)).toList());
         }
     }
 
@@ -66,7 +77,7 @@ public class GoToTest {
             try(Mount mount=new Mount("timeout-"+axis)) {
                 GoTo.PositionResult position=mount.client().goToPosition(SETUP,TARGET,REFERENCE,()->true,GoTo.now());
                 String result=position.report();
-                assertNull(position.bothStartsAcknowledgedAtMs());
+                assertNull(position.requiredStartsAcknowledgedAtMs());
                 assertTrue(result,result.contains(":"+axis+" reply timed out"));
                 assertTrue(result,result.contains(axis.equals("J1")?"0 of 2":"1 of 2"));
                 java.util.List<String> expected=new java.util.ArrayList<>(java.util.List.of(
@@ -103,6 +114,29 @@ public class GoToTest {
             }
             assertTrue(mount.index("S2")>=0);
             assertFalse(mount.commands.stream().anyMatch(c->c.startsWith("J")));
+        }
+    }
+
+    @Test public void returnToLandmarkUsesTheTwoSavedEncoderCounts() throws Exception {
+        GoTo.Point pivot=new GoTo.Point(0,0,12);
+        GoTo.Point landmark=new GoTo.Point(0.001,0.001,4);
+        LandmarkCalibration calibration=LandmarkCalibration.calculate(pivot,landmark);
+        GoTo.Reference reference=new GoTo.Reference(pivot,calibration.bearing(),calibration.elevation(),
+            0x800121,0x800232,1,-1);
+        try(Mount mount=new Mount(null)) {
+            mount.client().goToPosition(SETUP,landmark,reference,()->true,GoTo.now());
+            assertTrue(mount.commands.toString(),mount.commands.contains("S1210180"));
+            assertTrue(mount.commands.toString(),mount.commands.contains("S2320280"));
+        }
+    }
+
+    @Test public void shutdownAfterPanStartAbortsTiltStart() throws Exception {
+        try(Mount mount=new Mount(null)) {
+            GoTo.PositionResult result=mount.client().goToPosition(SETUP,TARGET,REFERENCE,
+                ()->!mount.commands.contains("J1"),GoTo.now());
+            assertTrue(result.report().contains("cancelled before tilt Start"));
+            assertTrue(mount.commands.contains("J1"));
+            assertFalse(mount.commands.contains("J2"));
         }
     }
 

@@ -14,7 +14,6 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.*;
 import android.widget.*;
-import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -22,13 +21,13 @@ import java.util.List;
 import java.util.Locale;
 
 public final class MainActivity extends Activity {
-    private static final int CHOOSE_REPLAY_CSV=1, EXPORT_LOG=2, LINK_SETTINGS_FOLDER=5;
-    private static final String SETTINGS_OPEN="settingsExpanded", CALIBRATION_OPEN="calibrationExpanded";
+    private static final int CHOOSE_REPLAY_CSV=1, LINK_SETTINGS_FOLDER=5, CHOOSE_SIM_KML=6;
+    private static final String SETTINGS_OPEN="settingsExpanded", CALIBRATION_OPEN="calibrationExpanded", REPORT_OPEN="reportExpanded";
     private static final String REPLAY_URI="replayCsvUri", REPLAY_NAME="replayCsvName";
     private static final String GPS_PAD_STEP="gpsPadStep";
     private static final String SURFER_SEQUENCE="surferSequence", SURFER_RIDE_SECONDS="surferRideSecondsText";
     private static final String[] REPLAY_TIMING_COLUMNS={"Viewpoint","GoToPosition time","Since previous call",
-        "Stop motor","Stop check wait","Row → both stopped","CSV delay","Actual wait","Call → both Start replies"};
+        "Stop motor","Stop check wait","Row → both stopped","CSV delay","Actual wait","Call → required Start replies"};
     private static final int[] REPLAY_TIMING_WIDTHS={82,128,108,134,112,130,96,102,144};
     private record TimingColumn(String title,int widthDp) {}
     private static final int HS_GAP_COLUMN=1;
@@ -41,15 +40,30 @@ public final class MainActivity extends Activity {
     };
     private final EditText[] inputs=new EditText[FmService.KEYS.length];
     private final ArrayList<Button> buttons=new ArrayList<>();
-    private TextView gpsStatus,gtiStatus,result,savedStatus,calibrationStatus,aimCalibrationStatus,replayFileStatus;
+    private TextView gpsStatus,gtiStatus,result,savedStatus,calibrationStatus,replayFileStatus;
     private TextView replayTotalTime,replayMotion,replayFirstStart,landmarkGpsStatus;
     private EditText mountCoordinates,landmarkCoordinates;
-    private LinearLayout settingsPanel,calibrationPanel;
-    private CheckBox calibrationConfirmed;
+    private LinearLayout settingsPanel,calibrationPanel,reportPanel;
+    private TextView cameraStatus,settingsSaveStatus;
+    private final EnumMap<ConnectionFlag.Channel,TextView> connectionFlags=new EnumMap<>(ConnectionFlag.Channel.class);
+    private TextView dashboardTelemetry;
+    private boolean restoringSettings;
+    private long displayedSettingsRevision=-1;
+    private String displayedFileStatus="";
+    private static final int GDL_PERMISSION=7;
+    private boolean showGdlCredentials;
+    private final SettingsAutosave autosave=new SettingsAutosave(this::writeSettingsEdit,this::settingsSaveResult);
+    private CheckBox calibrationConfirmed, disableTilt, manualCamera;
+    private Button cameraPreviewButton, liveStart, cancelCapture, stopFm, discoverCanon;
+    private TextView landmarkRangeBanner;
+    private LiveMapDialog liveMap;
+    private boolean cameraPreviewPending;
     private Button startMonitoring,replayResults,hsResults,hsCancel,liveStop;
     private LinearLayout liveOffsetControls,gpsPadControls;
     private Button gpsPadToggle;
-    private Button saveSurferModes,loadSurferModes,applySurferModes;
+    private Button saveSurferModes,loadSurferModes,loadKml,applySurferModes;
+    private RadioButton oneHz,twoHz;
+    private Uri pendingSimKml;
     private record ContinuousModeControls(CheckBox select,Button duration) {}
     private final EnumMap<SurferModes.Mode,ContinuousModeControls> continuousSurferModes=new EnumMap<>(SurferModes.Mode.class);
     private EditText gpsPadStep;
@@ -61,7 +75,7 @@ public final class MainActivity extends Activity {
     private SharedPreferences prefs;
     private FmService service,formService;
     private SettingsFolderSelection pendingSettingsFolder;
-    private boolean bound,exporting;
+    private boolean bound;
     private record SettingsFolderSelection(Uri uri,int flags) {}
     private final FmService.Listener listener=this::render;
     private final ServiceConnection connection=new ServiceConnection() {
@@ -78,16 +92,68 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs=getSharedPreferences("fm",MODE_PRIVATE);
+        if(state!=null && state.getString("pendingSimKml")!=null) pendingSimKml=Uri.parse(state.getString("pendingSimKml"));
         ScrollView scroll=new ScrollView(this);
         LinearLayout root=new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setFocusableInTouchMode(true);
         int padding=(int)(20*getResources().getDisplayMetrics().density);
-        root.setPadding(padding,padding*2,padding,padding);
+        LinearLayout screen=new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setPadding(padding,padding*2,padding,0);
+        setContentView(screen);
+        TextView title=text(screen,"FM "+BuildConfig.VERSION_NAME,24);
+        addConnectionFlags(screen);
+        dashboardTelemetry=text(screen,LiveMapFrame.dashboardStatus(null),14);
+        stopFm=new Button(this);
+        stopFm.setAllCaps(false);
+        stopFm.setText("Stop FM");
+        screen.addView(stopFm);
+        stopFm.setOnClickListener(v->{ if(service!=null) service.requestStopFm(); });
+        root.setPadding(0,0,0,padding);
         scroll.addView(root);
-        setContentView(scroll);
-        TextView title=text(root,"FM "+BuildConfig.VERSION_NAME,30);
+        screen.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
         if(Build.VERSION.SDK_INT>=28) title.setAccessibilityHeading(true);
+        landmarkRangeBanner=text(root,"",22);
+        landmarkRangeBanner.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+        landmarkRangeBanner.setBackgroundColor(0xffa51220);
+        landmarkRangeBanner.setTextColor(0xffffffff);
+        landmarkRangeBanner.setPadding(padding,padding,padding,padding);
+        landmarkRangeBanner.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_ASSERTIVE);
+        landmarkRangeBanner.setVisibility(View.GONE);
+        cameraPreviewButton=new Button(this);
+        cameraPreviewButton.setAllCaps(false);
+        cameraPreviewButton.setText("Update camera preview");
+        root.addView(cameraPreviewButton);
+        ImageView preview=new ImageView(this);
+        preview.setAdjustViewBounds(true);
+        root.addView(preview);
+        TextView previewStatus=text(root,"",14);
+        cameraPreviewButton.setOnClickListener(v->{
+            FmService connected=service;
+            if(connected==null || cameraPreviewPending) return;
+            cameraPreviewPending=true;
+            cameraPreviewButton.setEnabled(false);
+            previewStatus.setText("Requesting preview…");
+            connected.cameraPreview((image,error)->{
+                cameraPreviewPending=false;
+                if(service==connected) {
+                    if(image!=null) {
+                        preview.setImageBitmap(image);
+                        previewStatus.setText("Updated "+java.time.LocalTime.now().withNano(0));
+                    } else previewStatus.setText(error);
+                } else previewStatus.setText("Preview request ended");
+                if(bound) render();
+            });
+        });
+        Button openMap=new Button(this);
+        openMap.setAllCaps(false);
+        openMap.setText("Live Map");
+        root.addView(openMap);
+        openMap.setOnClickListener(v->{
+            liveMap=new LiveMapDialog(this,()->service==null?null:service.liveMapFrame());
+            liveMap.show();
+        });
         String[] values=SettingsFile.cached(prefs);
         text(root,"Move report",18);
         result=text(root,"Starting FM",16);
@@ -96,12 +162,11 @@ public final class MainActivity extends Activity {
         liveGpsRuleStatus.setVisibility(View.GONE);
         addGpsPad(root,state);
         gtiStatus=text(root,"GTi disconnected",15);
-        button(root,"Connect GTi",()->service.connectGti());
+        button(root,"Connect to GDL",this::chooseGdl);
+        button(root,"Connect GTi",()->afterSettings(()->service.connectGti()));
         savedStatus=text(root,"",15);
-        aimCalibrationStatus=text(root,"Checking calibration…",15);
-        aimCalibrationStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        button(root,"Aim at Surfer HS",()->service.launchAim(SettingsFile.cached(prefs)));
-        button(root,"Live Tracking",()->service.launchLiveTracking(SettingsFile.cached(prefs)));
+        liveStart=button(root,"Live Tracking",this::startLiveTracking);
+        button(root,"Aim at Surfer HS",()->afterSettings(()->service.launchAim(SettingsFile.cached(prefs))));
         liveStop=new Button(this);
         liveStop.setAllCaps(false);
         liveStop.setText("Stop Live Tracking");
@@ -117,18 +182,19 @@ public final class MainActivity extends Activity {
         liveOffsetButton(liveOffsetControls,0.5);
         liveOffsetButton(liveOffsetControls,-0.5);
         liveOffsetStatus=text(liveOffsetControls,"",14);
-        button(root,"GoToMe",()->service.launch("GoToMe",null,SettingsFile.cached(prefs)));
-        button(root,"Go to start",()->service.launch("GoHome",null,SettingsFile.cached(prefs)));
-        button(root,"Replay viewpoints",this::replayViewpoints);
-        replayFileStatus=text(root,"",14);
+        button(root,"GoToMe",()->afterSettings(()->service.launch("GoToMe",null,SettingsFile.cached(prefs))));
+        button(root,"Go to start",()->afterSettings(()->service.launch("GoHome",null,SettingsFile.cached(prefs))));
+        reportPanel=collapsibleSection(root,"Report",state!=null && state.getBoolean(REPORT_OPEN));
+        button(reportPanel,"Replay viewpoints",()->afterSettings(this::replayViewpoints));
+        replayFileStatus=text(reportPanel,"",14);
         updateReplayFileStatus();
         replayResults=new Button(this);
         replayResults.setAllCaps(false);
         replayResults.setText("View replay reports");
         replayResults.setEnabled(false);
         replayResults.setOnClickListener(v->showReplayReports());
-        root.addView(replayResults);
-        button(root,"Replay viewpoints (HS)",this::replayHighSpeed);
+        reportPanel.addView(replayResults);
+        button(reportPanel,"Replay viewpoints (HS)",()->afterSettings(this::replayHighSpeed));
         hsCancel=new Button(this);
         hsCancel.setAllCaps(false);
         hsCancel.setText("Stop HS replay");
@@ -140,7 +206,7 @@ public final class MainActivity extends Activity {
         hsResults.setText("View HS replay report");
         hsResults.setEnabled(false);
         hsResults.setOnClickListener(v->showHsReport());
-        root.addView(hsResults);
+        reportPanel.addView(hsResults);
         startMonitoring=new Button(this);
         startMonitoring.setText("Start FM");
         startMonitoring.setAllCaps(false);
@@ -149,58 +215,98 @@ public final class MainActivity extends Activity {
         root.addView(startMonitoring);
         settingsPanel=collapsibleSection(root,"Settings",state!=null&&state.getBoolean(SETTINGS_OPEN));
         mountCoordinates=addSetting(settingsPanel,values,MountCoordinates.LATITUDE);
-        button(settingsPanel,"Save mount coordinates",this::saveMountCoordinates);
         button(settingsPanel,"Choose replay CSV",this::chooseReplayCsv);
-        text(settingsPanel,"Replay CSV columns\nlatitude,longitude,elevation_m,delay_ms,wait for moto full stop,stop motor,speed up\n"+
-            "For HS, set delay_ms to 0 on the first viewpoint and to the travel time from the previous viewpoint (ms) on each later row. "+
-            "Use 1.5x or 2.0x under speed up at intermediate HS viewpoints.",14);
-        text(settingsPanel,"Save settings to apply changes and write "+SettingsFile.LOCATION+".",14);
+        settingsSaveStatus=text(settingsPanel,"Autosave on",14);
+        settingsSaveStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         button(settingsPanel,"Link FM settings folder",this::chooseSettingsFolder);
-        for(int i=0;i<MountCoordinates.LATITUDE;i++) addSetting(settingsPanel,values,i);
-        button(settingsPanel,"Discover GTi",()->discover(true));
-        button(settingsPanel,"Discover Canon SX",()->discover(false));
+        for(int i=0;i<6;i++) addSetting(settingsPanel,values,i);
+        LinearLayout canon=collapsibleSection(settingsPanel,"Canon camera",false);
+        manualCamera=new CheckBox(this);
+        manualCamera.setText("Manual camera");
+        manualCamera.setChecked(Boolean.parseBoolean(values[FmService.MANUAL_CAMERA]));
+        canon.addView(manualCamera);
+        manualCamera.setOnCheckedChangeListener((button,checked)->{
+            if(restoringSettings || formService==null) return;
+            autosave.edit(FmService.MANUAL_CAMERA,Boolean.toString(checked));
+            autosave.finishField(FmService.MANUAL_CAMERA);
+        });
+        addSetting(canon,values,6);
+        addSetting(canon,values,7);
+        cameraStatus=text(canon,"Canon waiting for FM",14);
+        discoverCanon=button(canon,"Discover Canon SX",()->afterSettings(()->discover(false)));
+        for(int i=CameraSettings.FIRST;i<=CameraSettings.LAST;i++) {
+            if(i!=CameraSettings.BANDS && i!=CameraSettings.MAPPING) addSetting(canon,values,i);
+        }
+        button(settingsPanel,"Discover GTi",()->afterSettings(()->discover(true)));
         addSetting(settingsPanel,values,LandmarkCalibration.PIVOT_ELEVATION);
         addSetting(settingsPanel,values,11);
         addSetting(settingsPanel,values,FmService.HS_GAP_WARNING);
-        addSetting(settingsPanel,values,FmService.LIVE_PAN_SPEED);
+        disableTilt=new CheckBox(this);
+        disableTilt.setText("Disable tilt motor");
+        disableTilt.setChecked(FmService.tiltDisabled(values));
+        settingsPanel.addView(disableTilt);
+        disableTilt.setOnCheckedChangeListener((button,checked)->{
+            if(restoringSettings || formService==null) return;
+            autosave.edit(FmService.TILT_DISABLE,Boolean.toString(checked));
+            autosave.finishField(FmService.TILT_DISABLE);
+        });
+        addSetting(settingsPanel,values,FmService.LIVE_MIN_RANGE);
         addSetting(settingsPanel,values,FmService.LIVE_TILT_SPEED);
         addSetting(settingsPanel,values,FmService.LIVE_GPS_HOLD);
         addSetting(settingsPanel,values,FmService.LIVE_GPS_STATIONARY_MS);
         addSetting(settingsPanel,values,FmService.LIVE_PAN_LEAD);
         addSetting(settingsPanel,values,FmService.SIMULATOR_SHOT_WIDTH);
-        button(settingsPanel,"Save settings",this::submitSettings);
 
         calibrationPanel=collapsibleSection(root,"Landmark calibration",state!=null&&state.getBoolean(CALIBRATION_OPEN));
-        text(calibrationPanel,"Enter the coordinates and height of the exact point you will centre. Use the same height reference as the camera pivot.",14);
         landmarkCoordinates=addSetting(calibrationPanel,values,LandmarkCalibration.LANDMARK_LAT);
+        button(calibrationPanel,"Go to landmark",()->afterSettings(()->service.launch("Go to landmark",null,SettingsFile.cached(prefs))));
         button(calibrationPanel,"Capture landmark from LoRa GPS",this::captureLandmarkGps);
-        text(calibrationPanel,"Place the LoRa GPS unit at the landmark before capturing.",14);
+        text(calibrationPanel,"Capture with the LoRa unit at the landmark.",14);
+        cancelCapture=new Button(this);
+        cancelCapture.setAllCaps(false);
+        cancelCapture.setText("Cancel GPS capture");
+        cancelCapture.setOnClickListener(v->{ if(service!=null) service.cancelLandmarkCapture(); });
+        cancelCapture.setVisibility(View.GONE);
+        calibrationPanel.addView(cancelCapture);
         landmarkGpsStatus=text(calibrationPanel,"",14);
         landmarkGpsStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         landmarkGpsStatus.setVisibility(View.GONE);
         addSetting(calibrationPanel,values,LandmarkCalibration.LANDMARK_HEIGHT);
         addSetting(calibrationPanel,values,16);
         addSetting(calibrationPanel,values,17);
-        text(calibrationPanel,"Centre the landmark in the camera. Calibrate again after moving the tripod, adjusting the camera, releasing a clutch or restarting the GTi.",14);
+        text(calibrationPanel,"Centre the landmark in the preview.",14);
         calibrationConfirmed=new CheckBox(this);
-        calibrationConfirmed.setText("Mount is level and secure, and Right / Up directions have been checked");
+        calibrationConfirmed.setText("Mount level and secure · Right/Up checked");
         calibrationPanel.addView(calibrationConfirmed);
         calibrationStatus=text(calibrationPanel,"Checking calibration…",15);
         calibrationStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        button(calibrationPanel,"Calibrate here",()->service.calibrateHere(snapshot(),
-            mountCoordinates.getText().toString(),landmarkCoordinates.getText().toString(),calibrationConfirmed.isChecked()));
+        button(calibrationPanel,"Calibrate here",()->afterSettings(()->service.calibrateHere(SettingsFile.cached(prefs),
+            mountCoordinates.getText().toString(),landmarkCoordinates.getText().toString(),calibrationConfirmed.isChecked())));
 
-        text(root,"Logs",22);
-        text(root,"Automatic logs · "+AttemptDownload.DIRECTORY,14);
-        button(root,"Save a copy of the last log",this::chooseLogDestination);
+        if(state!=null) {
+            Bundle drafts=state.getBundle("settingsDrafts");
+            if(drafts!=null) for(String key:drafts.keySet()) {
+                int index=Integer.parseInt(key);
+                String value=drafts.getString(key);
+                if(inputs[index]!=null) inputs[index].setText(value);
+                else if(index==FmService.TILT_DISABLE) disableTilt.setChecked(Boolean.parseBoolean(value));
+                else if(index==FmService.MANUAL_CAMERA) manualCamera.setChecked(Boolean.parseBoolean(value));
+                autosave.edit(index,value);
+            }
+        }
         root.requestFocus();
         render();
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
+        Bundle drafts=new Bundle();
+        for(SettingsAutosave.Edit edit:autosave.drafts()) drafts.putString(Integer.toString(edit.index()),edit.value());
+        state.putBundle("settingsDrafts",drafts);
+        state.putBoolean(REPORT_OPEN,reportPanel.getVisibility()==View.VISIBLE);
         state.putBoolean(SETTINGS_OPEN,settingsPanel.getVisibility()==View.VISIBLE);
         state.putBoolean(CALIBRATION_OPEN,calibrationPanel.getVisibility()==View.VISIBLE);
+        if(pendingSimKml!=null) state.putString("pendingSimKml",pendingSimKml.toString());
         state.putString(GPS_PAD_STEP,gpsPadStep.getText().toString());
         state.putString(SURFER_SEQUENCE,surferSequence.getText().toString());
         state.putString(SURFER_RIDE_SECONDS,surferRideSeconds.getText().toString());
@@ -222,6 +328,13 @@ public final class MainActivity extends Activity {
     @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] result) {
         super.onRequestPermissionsResult(code,permissions,result);
         if(code==3 && !isFinishing()) connect();
+        if(code==GDL_PERMISSION && !isFinishing()) {
+            if(gdlPermissionGranted()) { showGdlCredentials=true; render(); }
+            else {
+                if(service!=null) service.gdlPermissionDenied();
+                Toast.makeText(this,"GDL Wi-Fi permission denied",Toast.LENGTH_LONG).show();
+            }
+        }
     }
     private void connect() {
         if(bound) return;
@@ -239,49 +352,135 @@ public final class MainActivity extends Activity {
         service=null;
     }
     @Override protected void onStop() {
+        if(service!=null && service.ready()) autosave.finishAll(null);
+        if(liveMap!=null) { liveMap.dismiss(); liveMap=null; }
         disconnect();
         super.onStop();
     }
+    private void addConnectionFlags(LinearLayout parent) {
+        if(getResources().getConfiguration().screenWidthDp>=480) {
+            addFlagRow(parent,ConnectionFlag.Channel.GDL,ConnectionFlag.Channel.GPS,ConnectionFlag.Channel.GTI,ConnectionFlag.Channel.CALIBRATION);
+        } else {
+            addFlagRow(parent,ConnectionFlag.Channel.GDL,ConnectionFlag.Channel.GPS);
+            addFlagRow(parent,ConnectionFlag.Channel.GTI,ConnectionFlag.Channel.CALIBRATION);
+        }
+        addFlagRow(parent,ConnectionFlag.Channel.CANON,ConnectionFlag.Channel.RECORDING,
+            ConnectionFlag.Channel.EVENTS,ConnectionFlag.Channel.ZOOM);
+    }
+
+    private void addFlagRow(LinearLayout parent,ConnectionFlag.Channel... channels) {
+        LinearLayout row=new LinearLayout(this);
+        parent.addView(row);
+        for(ConnectionFlag.Channel channel:channels) {
+            TextView badge=new TextView(this);
+            badge.setTextSize(12);
+            badge.setPadding(dp(3),dp(2),dp(3),dp(2));
+            LinearLayout.LayoutParams cell=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.MATCH_PARENT,1);
+            cell.setMargins(0,0,dp(3),dp(3));
+            row.addView(badge,cell);
+            connectionFlags.put(channel,badge);
+        }
+    }
+
+    private void renderConnectionFlags() {
+        for(var entry:connectionFlags.entrySet()) {
+            ConnectionFlag.Channel channel=entry.getKey();
+            ConnectionFlag flag=service==null?(channel==ConnectionFlag.Channel.GDL?ConnectionFlag.failed("Disconnected"):ConnectionFlag.idle("FM offline")):service.connectionFlag(channel);
+            TextView badge=entry.getValue();
+            if(flag.equals(badge.getTag())) continue;
+            badge.setTag(flag);
+            badge.setText(channel.title+"\n"+flag.label());
+            badge.setTextColor(0xffffffff);
+            badge.setBackgroundColor(switch(flag.level()) {
+                case GOOD -> 0xff20603a;
+                case FAILED -> 0xff9c2431;
+                case PENDING -> 0xff775307;
+                case IDLE -> 0xff505b64;
+            });
+        }
+    }
+
     private void render() {
         if(service!=null && service.stopped()) {
+            result.setText(service.resultText());
             disconnect();
             gpsStatus.setText("FM stopped");
             gtiStatus.setText("GTi disconnected");
             startMonitoring.setVisibility(View.VISIBLE);
         }
-        boolean ready=service!=null && service.ready();
-        if(ready && formService!=service) {
+        renderConnectionFlags();
+        String telemetry=LiveMapFrame.dashboardStatus(service==null?null:service.liveMapFrame());
+        if(!TextUtils.equals(dashboardTelemetry.getText(),telemetry)) dashboardTelemetry.setText(telemetry);
+        if(cameraStatus!=null) cameraStatus.setText(service==null?"Canon waiting for FM":service.cameraStatus());
+        boolean ready=service!=null && service.ready() && !autosave.waitingForAction();
+        long revision=service==null?-1:service.settingsRevision();
+        boolean reloaded=service!=null && formService==service && displayedSettingsRevision!=revision;
+        if((ready && formService!=service) || reloaded) {
+            restoringSettings=true;
             String[] saved=SettingsFile.cached(prefs);
-            for(int i=0;i<inputs.length;i++) if(inputs[i]!=null) inputs[i].setText(displayValue(saved,i));
+            for(int i=0;i<inputs.length;i++) if(inputs[i]!=null && !autosave.hasDraft(i)
+                && !TextUtils.equals(inputs[i].getText(),displayValue(saved,i))) inputs[i].setText(displayValue(saved,i));
+            if(!autosave.hasDraft(FmService.MANUAL_CAMERA)) manualCamera.setChecked(Boolean.parseBoolean(saved[FmService.MANUAL_CAMERA]));
+            displayedSettingsRevision=revision;
+            if(!autosave.hasDraft(FmService.TILT_DISABLE)) disableTilt.setChecked(FmService.tiltDisabled(saved));
+            restoringSettings=false;
             formService=service;
         }
-        for(Button b:buttons) b.setEnabled(ready&&!exporting);
-        for(EditText input:inputs) if(input!=null) input.setEnabled(ready&&!exporting);
-        calibrationConfirmed.setEnabled(ready&&!exporting);
+        if(service!=null && !displayedFileStatus.equals(service.settingsFileStatus())) {
+            displayedFileStatus=service.settingsFileStatus();
+            if(!displayedFileStatus.isEmpty()) settingsSaveStatus.setText(displayedFileStatus);
+        }
+        for(Button b:buttons) b.setEnabled(ready);
+        stopFm.setEnabled(service!=null && !service.stopping());
+        stopFm.setText(service!=null && service.stopping()?"Waiting for full stop":"Stop FM");
+        discoverCanon.setEnabled(ready && !service.manualCamera());
+        manualCamera.setEnabled(ready);
+        if(ready && showGdlCredentials) {
+            showGdlCredentials=false;
+            gdlCredentials();
+        }
+        String block=service==null?"":service.landmarkRangeBlock();
+        if(!TextUtils.equals(landmarkRangeBanner.getText(),block)) landmarkRangeBanner.setText(block);
+        landmarkRangeBanner.setVisibility(block.isEmpty()?View.GONE:View.VISIBLE);
+        liveStart.setEnabled(ready&&block.isEmpty());
+        boolean capturing=service!=null&&service.capturingLandmark();
+        cancelCapture.setVisibility(capturing?View.VISIBLE:View.GONE);
+        if(service!=null && !service.captureProgress().isEmpty()) {
+            landmarkGpsStatus.setVisibility(View.VISIBLE);
+            landmarkGpsStatus.setText(service.captureProgress());
+        }
+        for(EditText input:inputs) if(input!=null) input.setEnabled(ready);
+        disableTilt.setEnabled(ready);
+        calibrationConfirmed.setEnabled(ready);
         hsCancel.setVisibility(service!=null&&service.canCancelHs()?View.VISIBLE:View.GONE);
         boolean tracking=service!=null&&service.canStopLiveTracking();
+        cameraPreviewButton.setEnabled((ready||tracking)&&!cameraPreviewPending&&!service.manualCamera());
         String gpsRule=tracking?service.liveGpsRuleText():"";
         liveGpsRuleStatus.setVisibility(gpsRule.isEmpty()?View.GONE:View.VISIBLE);
         if(!TextUtils.equals(liveGpsRuleStatus.getText(),gpsRule)) liveGpsRuleStatus.setText(gpsRule);
         liveStop.setVisibility(tracking?View.VISIBLE:View.GONE);
         boolean simulating=service!=null&&service.gpsSimulatorActive();
-        gpsPadToggle.setEnabled((ready||tracking)&&!exporting);
+        gpsPadToggle.setEnabled(ready||tracking);
         gpsPadToggle.setText(simulating?"Use LoRa GPS":"GP Simulator");
         gpsPadControls.setVisibility(simulating?View.VISIBLE:View.GONE);
         if(simulating) {
             SurferModes.Mode activeMode=service.continuousSurferMode();
-            boolean canSelectMode=(ready||tracking)&&!exporting;
+            boolean canSelectMode=(ready||tracking);
             continuousSurferModes.forEach((mode,controls)->{
                 controls.select().setChecked(mode==activeMode);
                 controls.select().setEnabled(canSelectMode);
                 if(controls.duration()!=null) controls.duration().setEnabled(canSelectMode);
             });
-            boolean canPrepare=(ready||tracking)&&!exporting&&!service.preparingSurferFixes();
+            boolean canPrepare=(ready||tracking)&&!service.preparingSurferFixes();
             surferSequence.setEnabled(canPrepare);
             surferRideSeconds.setEnabled(canPrepare);
             saveSurferModes.setEnabled(canPrepare);
             loadSurferModes.setEnabled(canPrepare);
-            applySurferModes.setEnabled(!exporting&&service.canApplySurferModes());
+            loadKml.setEnabled(canPrepare);
+            oneHz.setEnabled(canSelectMode);
+            twoHz.setEnabled(canSelectMode);
+            (service.simulatorRateHz()==1?oneHz:twoHz).setChecked(true);
+            applySurferModes.setEnabled(service.canApplySurferModes());
             surferFileStatus.setText(service.surferFileStatus());
             String playback=service.surferPlaybackStatus();
             surferPlaybackStatus.setText(playback);
@@ -299,6 +498,11 @@ public final class MainActivity extends Activity {
         FmService.Saved saved=service.loadSaved();
         savedStatus.setText(saved==null?"No saved start position":
             "Start position · GPS #"+saved.sequence()+" · "+saved.point().lat()+", "+saved.point().lon());
+        if(pendingSimKml!=null && simulating && (ready||tracking) && !service.preparingSurferFixes()) {
+            Uri file=pendingSimKml;
+            pendingSimKml=null;
+            service.prepareSurferModes(List.of(),0,FmService.SimulatorFile.LOAD_KML,file,replayDisplayName(file));
+        }
         if(ready&&pendingSettingsFolder!=null) {
             SettingsFolderSelection selection=pendingSettingsFolder;
             pendingSettingsFolder=null;
@@ -331,7 +535,7 @@ public final class MainActivity extends Activity {
         replayFirstStart=text(content,replayFirstStartLabel(),16);
         replayTotalTime=text(content,replayTotalTimeLabel(),16);
         replayMotion=text(content,service.replayMotionText(),16);
-        text(content,"Green · Both Starts acknowledged\nRed · Blocked or Start issue",13);
+        text(content,"Green · Required Starts acknowledged\nRed · Blocked or Start issue",13);
         text(content,"Swipe to see all columns. Tap a viewpoint for details.",13);
 
         HorizontalScrollView horizontal=new HorizontalScrollView(this);
@@ -350,14 +554,14 @@ public final class MainActivity extends Activity {
             @Override public View getView(int position,View convertView,ViewGroup parent) {
                 FmService.ReplayRowReport item=getItem(position);
                 LinearLayout row=convertView==null?timingRow(false):(LinearLayout)convertView;
-                boolean startAcknowledged=item.callToBothStartsMs()!=null;
+                boolean startAcknowledged=item.callToRequiredStartsMs()!=null;
                 row.setBackgroundColor(startAcknowledged?0x332e7d32:0x33c62828);
                 setTimingCells(row,new String[]{Integer.toString(item.viewpoint()),item.callTime(),
                     timingDuration(item.sincePreviousCallMs()),item.stopMotor(),timingDuration(item.stopCheckWaitMs()),
                     timingDuration(item.rowToBothStoppedMs()),timingDuration(item.csvDelayMs()),
-                    timingDuration(item.actualWaitMs()),timingDuration(item.callToBothStartsMs())});
+                    timingDuration(item.actualWaitMs()),timingDuration(item.callToRequiredStartsMs())});
                 row.getChildAt(0).setContentDescription("Viewpoint "+item.viewpoint()+
-                    (startAcknowledged?", both Starts acknowledged":", blocked or Start issue"));
+                    (startAcknowledged?", required Starts acknowledged":", blocked or Start issue"));
                 return row;
             }
         };
@@ -500,16 +704,10 @@ public final class MainActivity extends Activity {
         if(checking) status="Capturing the landmark…";
         else if(failed) status="Last calibration failed\n"+failure;
         else if(LandmarkCalibration.hasReference(values)) status=LandmarkCalibration.describe(values);
-        else status="Calibration required. Centre the landmark and tap Calibrate here.";
+        else status="Calibration required";
 
-        for(TextView view:new TextView[]{aimCalibrationStatus,calibrationStatus}) {
-            int color=failed?0xff8b1616:0xff263238;
-            if(view.getCurrentTextColor()!=color) {
-                view.setTextColor(color);
-                view.setBackgroundColor(failed?0xffffebeb:android.graphics.Color.TRANSPARENT);
-            }
-            if(!TextUtils.equals(view.getText(),status)) view.setText(status);
-        }
+        calibrationStatus.setTextColor(failed?0xff8b1616:0xff263238);
+        if(!TextUtils.equals(calibrationStatus.getText(),status)) calibrationStatus.setText(status);
     }
 
     private TextView text(LinearLayout root,String value,int size) {
@@ -531,7 +729,12 @@ public final class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         root.addView(content);
         setSectionExpanded(header,content,label,expanded);
-        header.setOnClickListener(v->setSectionExpanded(header,content,label,content.getVisibility()!=View.VISIBLE));
+        header.setOnClickListener(v->{
+            boolean closing=content.getVisibility()==View.VISIBLE;
+            View focused=content.findFocus();
+            if(closing && focused!=null) focused.clearFocus();
+            setSectionExpanded(header,content,label,!closing);
+        });
         return content;
     }
 
@@ -545,13 +748,23 @@ public final class MainActivity extends Activity {
         gpsPadToggle=new Button(this);
         gpsPadToggle.setAllCaps(false);
         gpsPadToggle.setText("GP Simulator");
-        gpsPadToggle.setOnClickListener(v->{ if(service!=null) service.toggleGpsSimulator(); });
+        gpsPadToggle.setOnClickListener(v->{
+            if(service==null) return;
+            if(service.canStopLiveTracking()) service.toggleGpsSimulator();
+            else afterSettings(()->service.toggleGpsSimulator());
+        });
         root.addView(gpsPadToggle);
 
         gpsPadControls=new LinearLayout(this);
         gpsPadControls.setOrientation(LinearLayout.VERTICAL);
         gpsPadControls.setVisibility(View.GONE);
         root.addView(gpsPadControls);
+        text(gpsPadControls,"Raw GPS fixes per second",14);
+        RadioGroup rates=new RadioGroup(this);
+        rates.setOrientation(LinearLayout.HORIZONTAL);
+        gpsPadControls.addView(rates);
+        oneHz=rateOption(rates,1);
+        twoHz=rateOption(rates,2);
         TextView label=text(gpsPadControls,"Offset per tap (m)",14);
         gpsPadStep=new EditText(this);
         gpsPadStep.setId(View.generateViewId());
@@ -565,9 +778,18 @@ public final class MainActivity extends Activity {
         gpsPadRow(GpsPadSimulator.Move.LEFT,null,GpsPadSimulator.Move.RIGHT);
         gpsPadRow(GpsPadSimulator.Move.DOWN_LEFT,GpsPadSimulator.Move.DOWN,GpsPadSimulator.Move.DOWN_RIGHT);
         LinearLayout continuousModes=collapsibleSection(gpsPadControls,"Continuous surfer mode",true);
-        text(continuousModes,"Tap the time beside a mode to change its duration. Clear the selection or use an arrow for manual control.",14);
+        text(continuousModes,"Tap a duration to edit. Tap an arrow for manual control.",14);
         for(SurferModes.Mode mode:SurferModes.Mode.values()) addContinuousMode(continuousModes,mode);
         addSurferModes(state);
+    }
+
+    private RadioButton rateOption(RadioGroup rates,int hz) {
+        RadioButton option=new RadioButton(this);
+        option.setText(hz+" Hz");
+        option.setId(View.generateViewId());
+        rates.addView(option);
+        option.setOnClickListener(v->{ if(service!=null) service.setSimulatorRate(hz); });
+        return option;
     }
 
     private void addContinuousMode(LinearLayout parent,SurferModes.Mode mode) {
@@ -649,7 +871,7 @@ public final class MainActivity extends Activity {
             if(legend.length()>0) legend.append('\n');
             legend.append(mode.number).append("  ").append(mode.label);
         }
-        text(controls,legend.toString(),14);
+        text(collapsibleSection(controls,"Mode numbers",false),legend.toString(),14);
 
         TextView label=text(controls,"Wave riding duration (s)",14);
         surferRideSeconds=new EditText(this);
@@ -662,10 +884,13 @@ public final class MainActivity extends Activity {
         watchSurferInput(surferRideSeconds);
         controls.addView(surferRideSeconds);
 
-        text(controls,SurferFixFile.LOCATION,14);
-        text(controls,"Start Live Tracking before Apply to measure pan reaction time.",14);
         saveSurferModes=surferButton(controls,"Save selected surfer modes",()->prepareSurferModes(false));
         loadSurferModes=surferButton(controls,"Load surfer behaviour from existing file",()->prepareSurferModes(true));
+        loadKml=surferButton(controls,"Load LoRa Tester KML",()->{
+            Intent picker=new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+            picker.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(picker,CHOOSE_SIM_KML);
+        });
         applySurferModes=surferButton(controls,"Apply surfer modes",()->{if(service!=null)service.applySurferModes();});
         surferFileStatus=text(controls,"",14);
         surferPlaybackStatus=text(controls,"",14);
@@ -711,7 +936,7 @@ public final class MainActivity extends Activity {
             }
         }
         surferRideSeconds.setError(null);
-        service.prepareSurferModes(selected,seconds,load);
+        service.prepareSurferModes(selected,seconds,load?FmService.SimulatorFile.LOAD_CSV:FmService.SimulatorFile.SAVE_CSV,null,null);
     }
 
     private void gpsPadRow(GpsPadSimulator.Move... moves) {
@@ -752,10 +977,10 @@ public final class MainActivity extends Activity {
         parent.addView(button);
     }
 
-    private void button(LinearLayout root,String label,Runnable action) {
+    private Button button(LinearLayout root,String label,Runnable action) {
         Button b=new Button(this);
         b.setText(label); b.setAllCaps(false);
-        b.setOnClickListener(v->action.run()); root.addView(b); buttons.add(b);
+        b.setOnClickListener(v->action.run()); root.addView(b); buttons.add(b); return b;
     }
 
     private EditText addSetting(LinearLayout root,String[] values,int index) {
@@ -765,18 +990,41 @@ public final class MainActivity extends Activity {
         input.setId(View.generateViewId());
         caption.setLabelFor(input.getId());
         if(isCoordinatePair(index)) input.setHint("e.g. "+MountCoordinates.EXAMPLE);
-        if(index==FmService.HS_GAP_WARNING||index==FmService.LIVE_PAN_SPEED||index==FmService.LIVE_TILT_SPEED
-            ||index==FmService.LIVE_PAN_LEAD||index==FmService.SIMULATOR_SHOT_WIDTH)
+        if(index==FmService.HS_GAP_WARNING||index==FmService.LIVE_TILT_SPEED
+            ||index==FmService.LIVE_PAN_LEAD||index==FmService.SIMULATOR_SHOT_WIDTH||index==FmService.LIVE_MIN_RANGE)
             input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         if(index==FmService.LIVE_GPS_HOLD||index==FmService.LIVE_GPS_STATIONARY_MS)
             input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         input.setText(displayValue(values,index));
         root.addView(input);
         inputs[index]=input;
+        input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+        input.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s,int start,int count,int after) {}
+            @Override public void onTextChanged(CharSequence s,int start,int before,int count) {
+                if(!restoringSettings && formService!=null) {
+                    autosave.edit(index,s.toString().trim());
+                    input.setError(null);
+                    settingsSaveStatus.setText("Editing · "+settingLabel(index));
+                }
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+        input.setOnFocusChangeListener((v,focused)->{
+            if(!focused && !restoringSettings && service!=null) autosave.finishField(index);
+        });
+        input.setOnEditorActionListener((v,action,event)->{
+            if(action==android.view.inputmethod.EditorInfo.IME_ACTION_DONE ||
+                (event!=null && event.getKeyCode()==KeyEvent.KEYCODE_ENTER && event.getAction()==KeyEvent.ACTION_UP))
+                autosave.finishField(index);
+            return false;
+        });
         return input;
     }
 
     private static String settingLabel(int index) {
+        if(index==CameraSettings.FIRST) return "Canon clip limit (minutes, 0 = continuous)";
+        if(index==CameraSettings.FIRST+1) return "Canon zoom mode (off / bands / auto-fit)";
         if(index==MountCoordinates.LATITUDE) return MountCoordinates.KEY;
         if(index==LandmarkCalibration.LANDMARK_LAT) return LandmarkCalibration.COORDINATES;
         return FmService.KEYS[index];
@@ -792,62 +1040,127 @@ public final class MainActivity extends Activity {
 
     private void captureLandmarkGps() {
         FmService connected=service;
-        landmarkGpsStatus.setText("Reading latest LoRa GPS fix…");
+        if(connected==null || !connected.ready() || autosave.waitingForAction()) return;
+        long press=GoTo.now(),wallTime=System.currentTimeMillis();
+        View focused=getCurrentFocus();
+        if(focused instanceof EditText) focused.clearFocus();
+        landmarkGpsStatus.setText("Waiting for 10 fresh LoRa GPS fixes…");
         landmarkGpsStatus.setVisibility(View.VISIBLE);
-        connected.captureLandmarkGps(capture->{
-            if(!bound||service!=connected) return;
+        autosave.afterPendingWrites(()->connected.captureLandmarkGps(press,wallTime,capture->{
             if(capture.coordinates()!=null) {
-                landmarkCoordinates.setText(capture.coordinates());
-                landmarkCoordinates.setError(null);
+                autosave.discardDraft(LandmarkCalibration.LANDMARK_LAT);
+                formService=null; // Reload the committed pair without triggering a second write.
             }
-            landmarkGpsStatus.setText(capture.status());
-        });
+            if(bound && service==connected) {
+                if(capture.coordinates()!=null) landmarkCoordinates.setError(null);
+                landmarkGpsStatus.setText(capture.message());
+            }
+        }));
+        if(autosave.waitingForAction()) render();
     }
 
-    private void saveMountCoordinates() {
-        String[] values=SettingsFile.cached(prefs);
-        if(!readPair(mountCoordinates,values,MountCoordinates.LATITUDE)) return;
-        if(values[MountCoordinates.LATITUDE].isEmpty()) {
-            mountCoordinates.setError("Paste the Google Maps latitude, longitude pair");
-            mountCoordinates.requestFocus();
+    private void writeSettingsEdit(SettingsAutosave.Edit edit, java.util.function.Consumer<String> completed) {
+        if(formService==null) {
+            completed.accept("Settings are still loading");
             return;
         }
-        service.saveSettings(values);
+        settingsSaveStatus.setText("Saving settings…");
+        formService.saveEdit(edit,completed);
     }
 
-    private void submitSettings() {
-        String[] values=snapshot();
-        if(!readPair(mountCoordinates,values,MountCoordinates.LATITUDE)||
-           !readPair(landmarkCoordinates,values,LandmarkCalibration.LANDMARK_LAT)) return;
-        service.saveSettings(values);
+    private void settingsSaveResult(SettingsAutosave.Edit edit,String error) {
+        EditText input=inputs[edit.index()];
+        if(input!=null) input.setError(error);
+        String message=error==null?"Saved · "+settingLabel(edit.index()):"Settings not saved · "+error;
+        settingsSaveStatus.setText(message);
+        if(error!=null && bound) Toast.makeText(this,message,Toast.LENGTH_LONG).show();
+        if(bound) settingsSaveStatus.post(()->{ if(bound) render(); });
     }
 
-    private boolean readPair(EditText field,String[] values,int index) {
-        try {
-            MountCoordinates.apply(field.getText().toString(),values,index,index+1,settingLabel(index));
-            field.setError(null);
-            return true;
-        } catch(IllegalArgumentException e) {
-            field.setError(e.getMessage());
-            field.requestFocus();
-            return false;
-        }
+    private void afterSettings(Runnable action) {
+        FmService connected=service;
+        if(connected==null || !connected.ready() || autosave.waitingForAction()) return;
+        autosave.finishAll(()->{
+            if(service==connected && connected.ready()) action.run();
+            if(bound) render();
+        });
+        if(autosave.waitingForAction()) render();
     }
 
-    private String[] snapshot() {
-        String[] values=SettingsFile.cached(prefs);
-        for(int i=0;i<values.length;i++) if(inputs[i]!=null&&!isCoordinatePair(i)) values[i]=inputs[i].getText().toString().trim();
-        return values;
+    private void startLiveTracking() {
+        FmService connected=service;
+        if(connected==null || !connected.ready() || autosave.waitingForAction()) return;
+        long press=GoTo.now();
+        java.time.Instant pressedAt=java.time.Instant.now();
+        autosave.finishAll(()->{
+            connected.launchLiveTracking(SettingsFile.cached(prefs),press,pressedAt);
+            if(bound) render();
+        });
+        if(autosave.waitingForAction()) render();
     }
 
     private void discover(boolean mount) {
-        service.discover(mount,snapshot(),found->{
+        service.discover(mount,SettingsFile.cached(prefs),found->{
             if(!bound || found.isEmpty()) return;
             String[] options=found.stream().map(DeviceDiscovery.Device::label).toArray(String[]::new);
             new AlertDialog.Builder(this).setTitle(mount?"Select GTi":"Select Canon")
-                .setItems(options,(dialog,index)->inputs[mount?4:6].setText(found.get(index).address())).show();
+                .setItems(options,(dialog,index)->{
+                    int host=mount?4:6;
+                    inputs[host].setText(found.get(index).address());
+                    autosave.finishField(host);
+                }).show();
         });
     }
+    private boolean gdlPermissionGranted() {
+        String permission=Build.VERSION.SDK_INT>=33?Manifest.permission.NEARBY_WIFI_DEVICES:Manifest.permission.ACCESS_FINE_LOCATION;
+        return checkSelfPermission(permission)==PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void chooseGdl() {
+        if(Build.VERSION.SDK_INT<29) {
+            startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
+            return;
+        }
+        if(!gdlPermissionGranted()) {
+            requestPermissions(Build.VERSION.SDK_INT>=33?new String[]{Manifest.permission.NEARBY_WIFI_DEVICES}:
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},GDL_PERMISSION);
+            return;
+        }
+        gdlCredentials();
+    }
+
+    private void gdlCredentials() {
+        LinearLayout fields=new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(dp(20),dp(4),dp(20),0);
+        Spinner security=new Spinner(this);
+        security.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"WPA2","WPA3","Open network"}));
+        fields.addView(security);
+        EditText password=new EditText(this);
+        password.setSingleLine();
+        password.setHint("GDL Wi-Fi password");
+        password.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        fields.addView(password);
+        security.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent,View view,int position,long id) {
+                password.setVisibility(position==2?View.GONE:View.VISIBLE);
+            }
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Connect to GDL").setView(fields)
+            .setNegativeButton("Cancel",null).setPositiveButton("Connect",null).create();
+        dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            String pass=password.getText().toString();
+            if(security.getSelectedItemPosition()!=2 && (pass.length()<8 || pass.length()>63)) {
+                password.setError("Enter the 8–63 character Wi-Fi password");
+                return;
+            }
+            if(service!=null) service.connectGdl(security.getSelectedItem().toString(),pass);
+            dialog.dismiss();
+        }));
+        dialog.show();
+    }
+
     private void chooseSettingsFolder() {
         Intent picker=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         picker.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI,SettingsFile.initialFolder());
@@ -862,20 +1175,14 @@ public final class MainActivity extends Activity {
         startActivityForResult(picker,CHOOSE_REPLAY_CSV);
     }
 
-    private void chooseLogDestination() {
-        String last=prefs.getString("lastLog","");
-        if(last.isEmpty()) { result.setText("No attempt log yet"); return; }
-        Intent picker=new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
-            .setType("application/x-ndjson").putExtra(Intent.EXTRA_TITLE,last);
-        startActivityForResult(picker,EXPORT_LOG);
-    }
-
     @Override protected void onActivityResult(int request,int code,Intent data) {
         super.onActivityResult(request,code,data);
         if(code!=RESULT_OK || data==null || data.getData()==null) return;
         Uri uri=data.getData();
-        if(request==CHOOSE_REPLAY_CSV) saveReplayCsv(uri);
-        else if(request==EXPORT_LOG) export(uri);
+        if(request==CHOOSE_SIM_KML) {
+            pendingSimKml=uri;
+            render();
+        } else if(request==CHOOSE_REPLAY_CSV) saveReplayCsv(uri);
         else if(request==LINK_SETTINGS_FOLDER) {
             pendingSettingsFolder=new SettingsFolderSelection(uri,data.getFlags());
             render();
@@ -935,22 +1242,6 @@ public final class MainActivity extends Activity {
         service.launchHs(Uri.parse(selected),SettingsFile.cached(prefs));
     }
 
-    private void export(Uri uri) {
-        String last=prefs.getString("lastLog","");
-        exporting=true;
-        render();
-        new Thread(()->{
-            String status;
-            try(InputStream in=new FileInputStream(new File(getFilesDir(),last));
-                OutputStream out=getContentResolver().openOutputStream(uri)) {
-                if(out==null) throw new IOException("Log destination unavailable");
-                byte[] buffer=new byte[8192];
-                for(int n;(n=in.read(buffer))!=-1;) out.write(buffer,0,n);
-                status="Exported "+last;
-            } catch(IOException e) { status="Export failed: "+e.getMessage(); }
-            String display=status;
-            runOnUiThread(()->{exporting=false;render();result.setText(display);});
-        },"FM log export").start();
-    }
+
 }
 

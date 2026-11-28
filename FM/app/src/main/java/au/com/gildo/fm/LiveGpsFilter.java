@@ -9,7 +9,7 @@ import java.util.Locale;
 /** GP's filtered, revisioned output for one Live Tracking session. */
 final class LiveGpsFilter {
     static final int DEFAULT_HOLD_FIXES = 4;
-    static final int DEFAULT_PAN_LEAD_M = 5;
+    static final int DEFAULT_PAN_LEAD_M = 35;
     static final int DEFAULT_STATIONARY_CONFIRMATION_MS = 2_000;
     private static final int REQUIRED_DIRECTION_FIXES = 3;
     private static final double STATIONARY_RADIUS_M = 1.5;

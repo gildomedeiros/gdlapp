@@ -7,6 +7,21 @@ final class MountCoordinates {
     static final String KEY="Mount coordinates";
     static final String EXAMPLE="-28.070070, 153.387300";
 
+    static GoTo.Point point(String[] values,int index) {
+        try {
+            double lat=Double.parseDouble(values[index]),lon=Double.parseDouble(values[index+1]);
+            return Geo.valid(lat,lon)?new GoTo.Point(lat,lon,0):null;
+        } catch(NumberFormatException e) { return null; }
+    }
+
+    static String liveStartBlock(String[] values) {
+        GoTo.Point mount=point(values,LATITUDE),landmark=point(values,LandmarkCalibration.LANDMARK_LAT);
+        if(mount==null||landmark==null) return "";
+        double metres=Geo.distance(mount.lat(),mount.lon(),landmark.lat(),landmark.lon());
+        return metres>2000 ? String.format(java.util.Locale.US,
+            "LIVE TRACKING BLOCKED — Mount and landmark are %.3f km apart (limit 2 km). Check both coordinates.",metres/1000) : "";
+    }
+
     static String format(String[] values) {
         return format(values,LATITUDE,LONGITUDE);
     }

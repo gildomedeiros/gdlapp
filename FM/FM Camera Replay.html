@@ -68,6 +68,7 @@ button:disabled { opacity:.55; cursor:default; }
 #map .fix-pin { fill:var(--surface); stroke:var(--gps); stroke-width:1.5; }
 #map .selected-pin { fill:none; stroke:var(--target); stroke-width:2; }
 #map .fix-label { fill:var(--gps); }
+#map[data-hide-positions] :is(.track,.trail,.gps,.gps-halo,.selected-pin,#map-fix-ids) { display:none; }
 .viewer { display:grid; gap:8px; min-width:0; }
 .legend span { display:inline-flex; gap:6px; align-items:center; color:var(--muted); font-size:.86rem; }
 .legend i { width:20px; border-top:2px solid var(--gps); }
@@ -75,16 +76,25 @@ button:disabled { opacity:.55; cursor:default; }
 .legend .aim-line { border-color:var(--target); border-top-style:dashed; }
 .readouts { font-variant-numeric:tabular-nums; font-size:.88rem; }
 .readouts > span:empty { display:none; }
+.readout-highlight { background:var(--surface); color:var(--camera); padding:3px 7px; border-radius:4px; font-weight:650; }
 .map-pick [hidden] { display:none; }
 .error { color:var(--danger); }
 .controls { display:grid; gap:5px; }
 [hidden] { display:none !important; }
 #live-step { width:6em; }
 .clock { margin-left:auto; font-variant-numeric:tabular-nums; }
+#recording-timestamp { font-variant-numeric:tabular-nums; }
+#recording-name { overflow-wrap:anywhere; }
 input[type=range] { width:100%; accent-color:var(--camera); }
 #fix-index { flex:1 1 10rem; width:auto; min-width:6rem; }
 #fix-id { width:7rem; }
 #current-fix { font-variant-numeric:tabular-nums; }
+#fix-pan-lead { font-variant-numeric:tabular-nums; }
+#fix-pan-lead[data-applied] { color:var(--target); font-weight:650; }
+#next-position-distance { width:6rem; }
+#pan-crossing-status { display:inline-flex; align-items:center; gap:6px; }
+#pan-crossing-status[data-crossed] { color:var(--gps); font-weight:650; }
+#pan-crossing-icon { font-size:1.65rem; line-height:1; }
 a { color:var(--camera); }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 </style>
@@ -105,6 +115,7 @@ a { color:var(--camera); }
         <input type="file" id="vt-log" accept=".jsonl,.ndjson,.log,.txt,application/x-ndjson">
         <label class="file-button" for="vt-log">Open VT log</label>
       </span>
+      <button type="button" id="fm-log-folder" class="primary">Open FM logs folder</button>
       <button type="button" id="recent-toggle" aria-controls="recent-panel" aria-expanded="false">Recent files</button>
       <button type="button" id="example">Load example</button>
       <span class="filename" id="file-name"></span>
@@ -115,6 +126,7 @@ a { color:var(--camera); }
       <ul id="recent-files" class="recent-list"></ul>
     </div>
     <form id="setup" class="setup">
+      <label id="recorded-calibration-option" hidden><input type="checkbox" id="recorded-calibration"> Use each log’s mount and landmark</label>
       <div class="coordinate-grid">
         <div class="field">
           <label for="mount">Mount position</label>
@@ -160,17 +172,24 @@ a { color:var(--camera); }
     <div id="replay-controls" class="controls">
       <div class="row">
         <button type="button" id="play">Play</button>
+        <button type="button" id="next-bullseye" aria-describedby="next-bullseye-help" disabled>Skip to next bullseye</button>
         <label>Speed <select id="playback-speed"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="10">10×</option></select></label>
         <button type="button" id="jump" hidden>Jump to #1324</button>
         <span id="clock" class="clock">0:00.0</span>
       </div>
+      <p id="next-bullseye-help" class="subtle" hidden></p>
       <label class="sr-only" for="time">Replay time</label>
       <input id="time" type="range" min="0" max="1" step="1" value="0">
+      <div class="row subtle">
+        <time id="recording-timestamp"></time>
+        <span id="recording-name" hidden></span>
+      </div>
     </div>
     <div class="controls" aria-label="GPS fix navigation">
       <div class="row">
         <strong id="current-fix">Current fix —</strong>
         <span id="browsed-fix" class="subtle" hidden></span>
+        <span id="fix-pan-lead" class="subtle" hidden></span>
         <span id="fix-video" class="subtle" hidden></span>
         <button type="button" id="follow-live" hidden>Follow latest</button>
       </div>
@@ -197,6 +216,13 @@ a { color:var(--camera); }
     <div class="legend" aria-label="Map legend">
       <span><i></i>Recorded GPS</span><span><i class="camera-line"></i>Simulated camera</span><span><i class="aim-line"></i>GP aim target</span>
       <button type="button" id="fix-ids" aria-pressed="true">Hide fix IDs</button>
+      <button type="button" id="clear-positions" aria-controls="map">Clear GPS positions</button>
+      <button type="button" id="rotate-map" aria-controls="map">Rotate map 90° clockwise</button>
+    </div>
+    <div id="map-replay-actions" class="row">
+      <span id="pan-crossing-status" class="subtle" hidden><span id="pan-crossing-icon" aria-hidden="true">◎</span> <span id="pan-crossing-text"></span></span>
+      <label>Distance (m) <input id="next-position-distance" type="number" min="0.01" step="any" required></label>
+      <button type="button" id="next-position">Skip to next position</button>
     </div>
     <p id="camera-setup" class="subtle" role="status" hidden></p>
     <svg id="map" role="img" aria-label="GPS route and simulated camera pointing direction"></svg>
@@ -206,7 +232,13 @@ a { color:var(--camera); }
       <button type="button" id="map-mount" disabled>Use as mount</button>
       <button type="button" id="map-landmark" disabled>Use as landmark</button>
     </div>
-    <div class="readouts"><span id="fix"></span><span id="pan"></span><span id="shot"></span><span id="target"></span></div>
+    <div class="readouts">
+      <span id="fix"></span>
+      <strong id="fix-zoom" class="readout-highlight"></strong>
+      <strong id="hs-speed" class="readout-highlight"></strong>
+      <strong id="fix-range" class="readout-highlight"></strong>
+      <span id="pan"></span><span id="shot"></span><span id="frame-width"></span><span id="target"></span>
+    </div>
     <small>Camera pan model uses 180 ms encoder samples. <a id="credits" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Example map © OpenStreetMap contributors</a></small>
   </section>
 </main>
@@ -218,6 +250,8 @@ const EARTH_M = 6371000;
 const RAD = Math.PI / 180;
 const COUNTS_PER_TURN = 2073600;
 const ENCODER_POLL_MS = 180;
+const CAMERA_ZOOM_MAX_AGE_MS = 5000;
+const CANON_WIDE_FRAME_FACTOR_SETTING = 32;
 const PAN_COUNTS_PER_MS_AT_800 = 19.143;
 const UINT_MAX = 0xffffffff;
 const DIRECTION_ZERO_DEG = 1e-7;
@@ -526,6 +560,16 @@ async function readVtLog(file) {
       valid: true });
   }
 
+  await readLogLines(file, acceptLine);
+  if (!fixes.length) throw new Error("This VT log contains no accepted surfer GPS fixes.");
+  const clock = fixes.every(fix => fix.received !== null) ? "received" :
+    fixes.every(fix => fix.logMono !== null) ? "logMono" : null;
+  for (const fix of fixes) fix.mono = clock ? fix[clock] * 1e6 : null;
+  return { routes: [{ name: "VT received GPS fixes", fixes }],
+    refs: { mount: null, landmark: null }, vt: { positions: positions.size, ignored } };
+}
+
+async function readLogLines(file, acceptLine) {
   const reader = file.stream().getReader();
   const decoder = new TextDecoder();
   let pending = "";
@@ -546,16 +590,162 @@ async function readVtLog(file) {
   } finally {
     reader.releaseLock();
   }
+}
 
-  if (!fixes.length) throw new Error("This VT log contains no accepted surfer GPS fixes.");
-  const clock = fixes.every(fix => fix.received !== null) ? "received" :
-    fixes.every(fix => fix.logMono !== null) ? "logMono" : null;
-  for (const fix of fixes) fix.mono = clock ? fix[clock] * 1e6 : null;
-  return { routes: [{ name: "VT received GPS fixes", fixes }],
-    refs: { mount: null, landmark: null }, vt: { positions: positions.size, ignored } };
+function logPoint(latitude, longitude) {
+  const point = [optionalNumber(longitude), optionalNumber(latitude)];
+  return validPoint(...point) ? point : null;
+}
+
+async function readFmRecording(file, name) {
+  let origin = null;
+  let started = null;
+  let refs = null;
+  let wideFrameFactor = null;
+  let leadSource = null;
+  const fixes = [];
+  const panEvents = [];
+  const panSpeeds = [];
+  const zoomReadbacks = [];
+  let selectedPanSpeed = null;
+  let startingPanSpeed = null;
+  let appliedPanSpeed = null;
+  const latestFixByPacket = new Map();
+  const fixByReceipt = new Map();
+  const publicationsByRevision = new Map();
+  await readLogLines(file, line => {
+    if (!/"(?:run_start|run_setup|live_gps_raw_fix|gps_input|live_gps_published_fix|gp_target|live_target|live_target_unusable|pan_target|live_pan_crossing|camera_zoom_response|live_pan_speed_selected|live_pan_start_sent|start_acknowledged|live_pan_stop_ack|live_final_stop_ack)"/.test(line)) return;
+    let row;
+    try { row = JSON.parse(line.trim()); } catch { return; }
+    if (row?.event === "camera_zoom_response") {
+      const time = optionalNumber(row.wallTimeMs);
+      const zoom = optionalNumber(row.opticalZoomX);
+      if (time > 0 && zoom > 0) zoomReadbacks.push({ time, zoom });
+    } else if (row?.event === "live_pan_speed_selected") {
+      const rate = optionalNumber(row.rateSidereal);
+      const period = optionalNumber(row.period);
+      selectedPanSpeed = rate > 0 && period > 0 ? { rate, period } : null;
+      startingPanSpeed = null;
+    } else if (row?.event === "live_pan_start_sent") {
+      const period = optionalNumber(row.period);
+      startingPanSpeed = selectedPanSpeed?.period === period ? selectedPanSpeed.rate : null;
+      selectedPanSpeed = null;
+    } else if (row?.event === "start_acknowledged" && row.axis === 1 && startingPanSpeed !== null) {
+      const time = optionalNumber(row.receivedAtMs) ?? optionalNumber(row.elapsedMs);
+      appliedPanSpeed = startingPanSpeed;
+      startingPanSpeed = null;
+      if (time !== null) panSpeeds.push({ time, rate: appliedPanSpeed, active: true });
+    } else if (row?.event === "live_pan_stop_ack" || (row?.event === "live_final_stop_ack" && row.axis === 1)) {
+      const time = optionalNumber(row.replyMs) ?? optionalNumber(row.elapsedMs);
+      startingPanSpeed = null;
+      if (time !== null && appliedPanSpeed !== null) panSpeeds.push({ time, rate: appliedPanSpeed, active: false });
+    } else if (row?.event === "run_start") {
+      started = optionalNumber(row.wallTimeMs);
+      const pressed = optionalNumber(row.pressMs) ?? optionalNumber(row.elapsedMs);
+      if (started !== null && pressed !== null) origin = started - pressed;
+      if (Array.isArray(row.settings)) {
+        refs = { mount: logPoint(row.settings[8], row.settings[9]),
+          landmark: logPoint(row.settings[18], row.settings[19]) };
+        const factor = optionalNumber(row.settings[CANON_WIDE_FRAME_FACTOR_SETTING]);
+        if (factor >= .01 && factor <= 10) wideFrameFactor = factor;
+      }
+    } else if (row?.event === "run_setup") {
+      started = utcTime(row.startUtc);
+      origin = started;
+      refs = { mount: logPoint(row.mount?.latitude, row.mount?.longitude),
+        landmark: logPoint(row.landmark?.latitude, row.landmark?.longitude) };
+    } else if (row?.event === "live_gps_raw_fix" || row?.event === "gps_input") {
+      leadSource = row.event === "gps_input" ? "Saved simulation" : "Logged";
+      const point = logPoint(row.latitude, row.longitude);
+      const sequence = unsigned(row.packet ?? row.fixId);
+      if (!point || sequence === null) return;
+      const received = optionalNumber(row.receivedMs) ?? optionalNumber(row.elapsedMs);
+      const utc = optionalNumber(row.wallTimeMs) ?? utcTime(row.timestamp);
+      const fix = { point, sequence, received, utc, sender: unsigned(row.senderMs), valid: row.receiverAccepted !== false };
+      fixes.push(fix);
+      if (fix.valid) {
+        latestFixByPacket.set(sequence, fix);
+        if (received !== null) fixByReceipt.set(sequence + "/" + received, fix);
+      }
+    } else if (row?.event === "live_gps_published_fix" || row?.event === "gp_target") {
+      const packet = unsigned(row.sourcePacket ?? row.sourceFixId);
+      const received = optionalNumber(row.sourceReceivedMs);
+      const fix = fixByReceipt.get(packet + "/" + received) ?? latestFixByPacket.get(packet);
+      const lead = optionalNumber(row.panLeadM ?? row.appliedLeadM);
+      const revision = optionalNumber(row.positionRevision ?? row.targetRevision);
+      if (fix) fix.leadPublication = { packet, lead };
+      if (revision !== null) publicationsByRevision.set(revision, { fix, lead });
+    } else if (row?.event === "live_pan_crossing") {
+      const elapsed = optionalNumber(row.crossingMs) ?? optionalNumber(row.elapsedMs);
+      if (elapsed !== null) panEvents.push({ event: "crossing", elapsed, packet: unsigned(row.packet) });
+    } else if (row?.event === "live_target" || row?.event === "live_target_unusable" || row?.event === "pan_target") {
+      const elapsed = optionalNumber(row.elapsedMs);
+      if (elapsed === null) return;
+      const packet = unsigned(row.packet ?? row.sourceFixId);
+      const publication = publicationsByRevision.get(optionalNumber(row.positionRevision ?? row.targetRevision));
+      const usable = row.event !== "live_target_unusable";
+      const lead = optionalNumber(row.panLeadM ?? row.appliedLeadM) ?? publication?.lead ?? null;
+      const target = { event: "target", elapsed, packet, usable, lead, simulated: row.event === "pan_target" };
+      panEvents.push(target);
+      const fix = publication?.fix ?? latestFixByPacket.get(packet);
+      if (fix && usable) fix.leadTarget = target;
+    }
+  });
+  if (!fixes.some(fix => fix.valid)) return { recording: null, zoomReadbacks };
+  panSpeeds.sort((a, b) => a.time - b.time);
+  for (const fix of fixes) {
+    if (panSpeeds.length) fix.panSpeed = panSpeeds[lastIndex(panSpeeds, fix.received ?? -Infinity)] ?? null;
+    if (fix.received === null) continue;
+    fix.mono = fix.received * 1e6;
+    if (fix.utc === null && origin !== null) fix.utc = origin + fix.received;
+  }
+  panEvents.sort((a, b) => a.elapsed - b.elapsed);
+  for (const event of panEvents) event.utc = origin === null ? null : origin + event.elapsed;
+  const recording = { name, fixes, refs, panEvents, leadSource, wideFrameFactor,
+    started: started ?? fixes.find(fix => Number.isFinite(fix.utc))?.utc ?? Infinity };
+  return { recording, zoomReadbacks };
 }
 
 function readTimeline(route, interval) {
+  if (route.recordings) {
+    const fixes = [];
+    const recordedReferences = [];
+    const panEvents = [];
+    let offset = 0;
+    let end = 0;
+    let estimated = 0;
+    for (const [recordingIndex, recording] of route.recordings.entries()) {
+      const segment = readTimeline(recording, interval);
+      const refs = recording.refs;
+      if (refs?.mount && refs.landmark && distance(refs.mount, refs.landmark) >= .1) {
+        const indexOf = point => {
+          const index = segment.fixes.findIndex(fix => distance(fix.point, point) < .1);
+          return index < 0 ? -1 : fixes.length + index;
+        };
+        recordedReferences.push({ ...refs, mountIndex: indexOf(refs.mount), landmarkIndex: indexOf(refs.landmark) });
+      } else recordedReferences.push(null);
+      for (const fix of segment.fixes) {
+        fixes.push({ ...fix, time: fix.time + offset, index: fixes.length, recordingIndex, recording: recording.name,
+          leadSource: recording.leadSource, wideFrameFactor: recording.wideFrameFactor });
+      }
+      end = fixes.at(-1).time;
+      const timeAnchor = recording.fixes.findIndex(fix => Number.isFinite(fix.received));
+      if (timeAnchor >= 0) {
+        const start = offset + segment.fixes[timeAnchor].time - recording.fixes[timeAnchor].received;
+        for (const event of recording.panEvents ?? []) {
+          const time = start + event.elapsed;
+          if (time < offset) continue;
+          panEvents.push({ ...event, time, recordingIndex });
+          end = Math.max(end, time);
+        }
+      }
+      offset = end + interval;
+      estimated += segment.estimated;
+    }
+    return { fixes, estimated, recordedReferences, end, panEvents: panEvents.filter(item => !item.simulated),
+      leadTargets: panEvents.filter(item => item.event === "target"),
+      panCrossings: panEvents.filter(item => item.event === "crossing") };
+  }
   const raw = route.fixes;
   const hasMono = raw.filter(fix => Number.isFinite(fix.mono)).length >= 2;
   const hasUtc = raw.filter(fix => Number.isFinite(fix.utc)).length >= 2;
@@ -579,7 +769,8 @@ function readTimeline(route, interval) {
     const recordedSender = explicitSequences && Number.isInteger(fix.sender);
     const sender = recordedSender ? fix.sender : Math.max(lastSender + 1, time) >>> 0;
     lastSender = sender;
-    return { point: fix.point, sequence, sender, time, utc: fix.utc, video: fix.video, valid: fix.valid !== false, index };
+    return { point: fix.point, sequence, sender, time, utc: fix.utc, video: fix.video, valid: fix.valid !== false, index,
+      leadPublication: fix.leadPublication, leadTarget: fix.leadTarget, panSpeed: fix.panSpeed };
   });
   return { fixes, estimated };
 }
@@ -881,11 +1072,15 @@ async function simulate(timeline, settings) {
   const fixes = timeline.fixes;
   const first = fixes[settings.startIndex].time;
   const last = fixes[fixes.length - 1].time;
-  const receiver = new Receiver();
-  const gps = new GpsProducer(settings);
-  const pan = new Pan(settings);
+  let recordingIndex = fixes[settings.startIndex].recordingIndex;
+  let refs = replayReferences(timeline, settings, recordingIndex);
+  let receiver = new Receiver();
+  let gps = refs && new GpsProducer({ ...settings, ...refs });
+  let pan = refs && new Pan({ ...settings, ...refs });
+  const events = [];
   const frames = [];
   const targets = [];
+  const targetsByFix = new Map();
   let accepted = null;
   let cursor = settings.startIndex;
   let target = null;
@@ -897,32 +1092,51 @@ async function simulate(timeline, settings) {
   for (;;) {
     while (cursor < fixes.length && fixes[cursor].time <= time) {
       const fix = fixes[cursor++];
+      if (fix.recordingIndex !== recordingIndex) {
+        if (pan?.moving) pan.stop(pan.target, "Recording ended", undefined, fix.time);
+        for (const event of pan?.events ?? []) events.push(event);
+        recordingIndex = fix.recordingIndex;
+        refs = replayReferences(timeline, settings, recordingIndex);
+        receiver = new Receiver();
+        gps = refs && new GpsProducer({ ...settings, ...refs });
+        pan = refs && new Pan({ ...settings, ...refs });
+        accepted = target = null;
+        revision = 0;
+      }
       if (!receiver.accept(fix)) { rejected++; continue; }
       accepted = fix;
+      if (!gps) continue;
       const before = gps.revision;
       gps.accept(fix);
       if (gps.revision !== before) publications++;
     }
-    gps.expire(time);
-    const latest = gps.latest;
+    gps?.expire(time);
+    const latest = gps?.latest;
     const usable = latest && time - latest.fresh <= settings.age;
     if (usable && latest.revision !== revision) {
       revision = latest.revision;
-      target = panTarget(latest, settings.mount, pan, time);
+      target = { ...panTarget(latest, refs.mount, pan, time), recordingIndex };
       targets.push(target);
+      targetsByFix.set(latest.fix.index, target);
     }
-    pan.tick(time, usable ? target : null);
-    frames.push({ time, angle: pan.angle, moving: pan.moving, stationary: Boolean(latest?.stationary),
+    pan?.tick(time, usable ? target : null);
+    frames.push({ time, angle: pan?.angle ?? null, moving: Boolean(pan?.moving), stationary: Boolean(latest?.stationary),
       gpsTime: accepted?.time ?? null });
-    if (cursor === fixes.length && !pan.moving) break;
+    if (cursor === fixes.length && !pan?.moving) break;
 
     time += ENCODER_POLL_MS;
-    if (!pan.moving && cursor < fixes.length && accepted && time - accepted.time > settings.age + ENCODER_POLL_MS) {
+    if (!pan?.moving && cursor < fixes.length && accepted && time - accepted.time > settings.age + ENCODER_POLL_MS) {
       time = first + Math.ceil((fixes[cursor].time - first) / ENCODER_POLL_MS) * ENCODER_POLL_MS;
     }
+    if (fixes[cursor] && fixes[cursor].recordingIndex !== recordingIndex) time = Math.min(time, fixes[cursor].time);
     if (++polls % 3000 === 0) await yieldToBrowser();
   }
-  return { first, last, end: frames[frames.length - 1].time, frames, targets, events: pan.events, publications, rejected };
+  return { first, last, end: frames[frames.length - 1].time, frames, targets, targetsByFix,
+    events: events.concat(pan?.events ?? []), publications, rejected };
+}
+
+function replayReferences(timeline, settings, recordingIndex) {
+  return settings.useRecordedReferences ? timeline.recordedReferences?.[recordingIndex] ?? null : settings;
 }
 </script>
 <script>
@@ -955,6 +1169,7 @@ let sourceDirectory = null;
 let live = null;
 let projection = null;
 let structure = null;
+let mapRotation = 0;
 let showFixIds = true;
 let mapSelection = null;
 const linkedVideos = new Map();
@@ -980,6 +1195,57 @@ function lastIndex(items, value, getter = item => item.time) {
 function formatTime(ms) {
   const tenths = Math.floor(ms / 100);
   return Math.floor(tenths / 600) + ":" + String(Math.floor(tenths / 10) % 60).padStart(2, "0") + "." + tenths % 10;
+}
+
+const recordingTime = new Intl.DateTimeFormat("en-AU", {
+  timeZone: "Australia/Brisbane", year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3, hourCycle: "h23"
+});
+
+function renderRecordingTime(fix) {
+  const clock = $("recording-timestamp");
+  const date = new Date(fix.utc);
+  if (Number.isFinite(fix.utc) && Number.isFinite(date.getTime())) {
+    const utc = date.toISOString();
+    if (clock.dateTime !== utc) {
+      clock.dateTime = utc;
+      clock.textContent = recordingTime.format(date) + " AEST";
+    }
+  } else {
+    clock.removeAttribute("datetime");
+    clock.textContent = "Recording timestamp unavailable";
+  }
+  const name = $("recording-name");
+  name.hidden = !fix.recording;
+  if (fix.recording && name.textContent !== fix.recording) name.textContent = fix.recording;
+}
+
+function nextPanCrossing() {
+  const crossings = timeline?.panCrossings ?? [];
+  return crossings[lastIndex(crossings, time) + 1];
+}
+
+function renderPanCrossing(fix) {
+  const events = timeline.panEvents ?? [];
+  const status = $("pan-crossing-status");
+  const button = $("next-bullseye");
+  const help = $("next-bullseye-help");
+  button.disabled = !nextPanCrossing();
+  const reason = !button.disabled ? "" : timeline.panCrossings?.length ? "No later pan crossing in this replay."
+    : source.fmFolder ? "These FM logs contain no pan crossings." : "Open FM logs folder to load pan crossings.";
+  if (help.textContent !== reason) help.textContent = reason;
+  help.hidden = !reason;
+  status.hidden = !events.length;
+  if (!events.length) return;
+  const latest = events[lastIndex(events, time)];
+  const current = latest?.recordingIndex === fix.recordingIndex ? latest : null;
+  const crossed = current?.event === "crossing";
+  status.toggleAttribute("data-crossed", crossed);
+  const target = current?.packet === null || current?.packet === undefined ? "" : " #" + current.packet;
+  const stamp = crossed && Number.isFinite(current.utc) ? " · " + recordingTime.format(current.utc) + " AEST" : "";
+  const label = crossed ? "Logged pan crossing · target" + target + stamp
+    : current ? "Waiting for pan crossing · target" + target : "Waiting for recorded pan crossing";
+  if ($("pan-crossing-text").textContent !== label) $("pan-crossing-text").textContent = label;
 }
 
 function formatPosition(point) { return point ? point[1].toFixed(8) + ", " + point[0].toFixed(8) : ""; }
@@ -1045,6 +1311,72 @@ function renderFixVideo(fix, browsing) {
   output.hidden = !text;
 }
 
+function renderFixPanLead(fix) {
+  const output = $("fix-pan-lead");
+  let label = "";
+  let target = null;
+  let previous = null;
+  if (fix?.leadSource) {
+    label = fix.leadSource + " pan lead";
+    target = fix.leadTarget;
+    const before = timeline.leadTargets[lastIndex(timeline.leadTargets, fix.time)];
+    if (before?.recordingIndex === fix.recordingIndex && before?.usable) previous = before;
+  } else if (fix && live) {
+    label = "Simulated pan lead";
+    target = fix.leadTarget;
+    previous = fix.previousLeadTarget;
+  } else if (fix && result && fix.index >= configuration.startIndex) {
+    label = "Simulated pan lead";
+    target = result.targetsByFix.get(fix.index);
+    const before = result.targets[lastIndex(result.targets, fix.time)];
+    if (before?.recordingIndex === fix.recordingIndex) previous = before;
+  }
+
+  const amount = value => value === null ? "amount unavailable" : value.toLocaleString(undefined, {
+    maximumFractionDigits: 2
+  }) + " m";
+  let text = "";
+  if (label) {
+    if (target) text = label + " · " + amount(target.lead)
+      + (target.lead > 0 ? " applied to this fix’s target" : " on this fix’s target");
+    else if (fix.leadPublication) text = label + " · " + amount(fix.leadPublication.lead) + " published · no pan selection recorded";
+    else if (previous) text = label + " · " + amount(previous.lead) + " carried from #" + (previous.packet ?? previous.sequence);
+    else text = label + " · waiting for target";
+  }
+  output.hidden = !text;
+  output.toggleAttribute("data-applied", Boolean(target?.lead > 0));
+  const appliedAt = new Date(target?.utc);
+  output.title = Number.isFinite(target?.utc) && Number.isFinite(appliedAt.getTime())
+    ? "Target selected " + recordingTime.format(appliedAt) + " AEST" : "";
+  if (output.textContent !== text) output.textContent = text;
+}
+
+function zoomReadbackAtFix(fix) {
+  const samples = fix?.leadSource === "Logged" ? source.zoomReadbacks : null;
+  const latest = samples && Number.isFinite(fix.utc) ? samples[lastIndex(samples, fix.utc)] : null;
+  return latest && fix.utc - latest.time <= CAMERA_ZOOM_MAX_AGE_MS ? latest : null;
+}
+
+function renderMapTelemetry(fix, range, settings, frame) {
+  const output = $("fix-zoom");
+  const readback = zoomReadbackAtFix(fix);
+  const text = "Applied zoom · " + (readback ? readback.zoom.toFixed(1) + "×" : "unavailable");
+  if (output.textContent !== text) output.textContent = text;
+  output.title = readback ? "Canon readback " + recordingTime.format(readback.time) + " AEST" : "";
+  const speed = fix?.panSpeed;
+  const formatRate = rate => rate.toLocaleString("en-AU", { maximumFractionDigits: 1 }) + "× sidereal";
+  const speedText = speed
+    ? "HS speed · " + formatRate(speed.rate) + (speed.active ? "" : " (last applied)")
+    : speed === null ? "HS speed · awaiting Start"
+    : frame && Number.isFinite(settings?.speed)
+      ? "Simulated HS speed · " + formatRate(settings.speed) + (frame.moving ? "" : " (idle)")
+      : "HS speed · unavailable";
+  if ($("hs-speed").textContent !== speedText) $("hs-speed").textContent = speedText;
+  const rangeText = "Surfer-to-mount · " + (fix && range !== null ? range.toFixed(1) + " m" : "unavailable");
+  if ($("fix-range").textContent !== rangeText) $("fix-range").textContent = rangeText;
+  return readback?.zoom;
+}
+
 function renderFixNavigation(fixes, currentIndex, browsedIndex = null) {
   const fix = fixes[currentIndex];
   const current = fix ? (live ? "Live fix #" : "Current fix #") + fix.sequence : "Live fix —";
@@ -1063,6 +1395,7 @@ function renderFixNavigation(fixes, currentIndex, browsedIndex = null) {
   const index = browsedIndex ?? currentIndex;
   fixSlider.value = String(Math.max(0, index));
   const selected = fixes[index];
+  renderFixPanLead(selected);
   renderFixVideo(selected, showingEarlier);
   if (selected) fixSlider.setAttribute("aria-valuetext", "GPS #" + selected.sequence + " · " + formatTime(selected.time));
   else fixSlider.removeAttribute("aria-valuetext");
@@ -1104,19 +1437,27 @@ function readCameraSettings(fixes) {
   if (distance(mount.point, landmark.point) < .1) {
     throw new Error("Choose a landmark at least 0.1 m from the mount to set a camera direction.");
   }
-  const read = name => $(name).valueAsNumber;
   return { mount: mount.point, mountIndex: mount.index, landmark: landmark.point, landmarkIndex: landmark.index,
-    hold: read("hold"), stationary: read("stationary"), age: read("age"), speed: read("speed"),
+    ...readSimulationSettings() };
+}
+
+function readSimulationSettings() {
+  const read = name => $(name).valueAsNumber;
+  return { hold: read("hold"), stationary: read("stationary"), age: read("age"), speed: read("speed"),
     lead: read("lead"), width: read("width") };
 }
 
-function readSettings(fixes, currentIndex) {
-  const settings = readCameraSettings(fixes);
+function readSettings(prepared, currentIndex) {
+  const { fixes } = prepared;
+  const settings = $("recorded-calibration").checked
+    ? { ...readSimulationSettings(), useRecordedReferences: true } : readCameraSettings(fixes);
   const start = $("replay-start").value;
   let startIndex = 0;
   if (start === "landmark") {
-    startIndex = settings.landmarkIndex;
-    if (startIndex < 0 || startIndex >= fixes.length - 1) {
+    const refs = replayReferences(prepared, settings, (fixes[currentIndex] ?? fixes[0]).recordingIndex);
+    startIndex = refs?.landmarkIndex ?? -1;
+    if (startIndex < 0 || startIndex >= fixes.length - 1 ||
+        (settings.useRecordedReferences && fixes[startIndex].recordingIndex !== fixes[startIndex + 1].recordingIndex)) {
       throw new Error("To start at the landmark, select a landmark fix with at least one later fix in the track.");
     }
   } else if (start === "current") {
@@ -1158,7 +1499,7 @@ function preview() {
   result = null;
   configuration = null;
   timeSlider.min = 0;
-  timeSlider.max = timeline.fixes[timeline.fixes.length - 1].time;
+  timeSlider.max = timeline.end ?? timeline.fixes.at(-1).time;
   time = 0;
   currentReplayIndex = null;
   $("fix-id").value = "";
@@ -1186,10 +1527,14 @@ function setSource(documentData, name, file = null, handle = null) {
   $("route-field").hidden = source.routes.length < 2;
   $("mount").value = source.refs.mountField ?? formatPosition(source.refs.mount);
   $("landmark").value = source.refs.landmarkField ?? formatPosition(source.refs.landmark);
+  const useRecorded = Boolean(source.fmFolder && source.refs.mount && source.refs.landmark);
+  $("recorded-calibration-option").hidden = !useRecorded;
+  $("recorded-calibration").checked = useRecorded;
   $("replay-start").value = "beginning";
   $("jump").hidden = !source.example;
   $("credits").hidden = !source.example;
   preview();
+  updateReferenceFields();
   const total = timeline.fixes.length;
   const details = [total.toLocaleString() + (total === 1 ? " fix loaded" : " fixes loaded")];
   if (source.vt) {
@@ -1197,11 +1542,12 @@ function setSource(documentData, name, file = null, handle = null) {
     details.push(positions.toLocaleString() + (positions === 1 ? " distinct GPS position" : " distinct GPS positions"));
     if (ignored) details.push(ignored.toLocaleString() + " rejected or invalid GPS records skipped");
   }
+  if (source.fmFolder) details.unshift(fmFolderSummary(source.fmFolder));
   if (timeline.estimated) details.push(timeline.estimated.toLocaleString() + " timed using the selected interval");
   describeStatus(details.join(" · "));
 }
 
-async function runReplay() {
+async function runReplay(playAfter = false, preservePosition = false) {
   if (live || !source || !$("setup").reportValidity()) return;
   const ticket = ++generation;
   $("run").disabled = true;
@@ -1209,8 +1555,9 @@ async function runReplay() {
   try {
     const prepared = readTimeline(source.routes[selected], $("interval").valueAsNumber);
     const currentIndex = currentReplayIndex ?? currentFix()?.index;
-    const settings = readSettings(prepared.fixes, currentIndex);
+    const settings = readSettings(prepared, currentIndex);
     describeStatus("Calculating replay…");
+    updateCameraSetup();
     await yieldToBrowser();
     if (ticket !== generation) return;
     const replay = await simulate(prepared, settings);
@@ -1219,9 +1566,16 @@ async function runReplay() {
     configuration = settings;
     result = replay;
     timeSlider.min = replay.first;
-    timeSlider.max = Math.max(replay.end, replay.last);
-    time = replay.first;
-    currentReplayIndex = settings.startIndex;
+    timeSlider.max = Math.max(replay.end, replay.last, timeline.end ?? 0);
+    if (preservePosition) {
+      time = Math.min(Number(timeSlider.max), Math.max(replay.first, time));
+      if (timeline.fixes[currentReplayIndex]?.time !== time) {
+        currentReplayIndex = time === replay.first ? settings.startIndex : null;
+      }
+    } else {
+      time = replay.first;
+      currentReplayIndex = settings.startIndex;
+    }
     timeSlider.value = String(Math.round(time));
     drawMap();
     const starts = replay.events.filter(event => event.type === "Start").length;
@@ -1232,11 +1586,16 @@ async function runReplay() {
     if (settings.startIndex > 0) details.unshift("Started at GPS #" + prepared.fixes[settings.startIndex].sequence);
     if (replay.rejected) details.push(replay.rejected + " receiver rejections");
     if (timeline.estimated) details.push("estimated timing for " + timeline.estimated.toLocaleString() + " fixes");
+    if (source.fmFolder) details.unshift(fmFolderSummary(source.fmFolder));
     describeStatus(details.join(" · "));
+    if (playAfter) setPlaying(true);
   } catch (error) {
     if (ticket === generation) describeStatus(error.message || "Replay could not be calculated.", true);
   } finally {
-    if (ticket === generation) $("run").disabled = false;
+    if (ticket === generation) {
+      $("run").disabled = false;
+      updateCameraSetup();
+    }
   }
 }
 
@@ -1247,17 +1606,17 @@ function node(tag, properties, parent = map) {
   return element;
 }
 
-function position(point, origin) {
+function position(point, origin, rotation) {
   const meters = distance(origin, point);
-  const angle = bearing(origin, point) * RAD;
+  const angle = (bearing(origin, point) + rotation) * RAD;
   return [meters * Math.sin(angle), meters * Math.cos(angle)];
 }
 
-function fitProjection(width, height, origin, points, fitRadius) {
+function fitProjection(width, height, origin, points, fitRadius, rotation) {
   const margin = 22;
   let minX = -fitRadius, maxX = fitRadius, minY = -fitRadius, maxY = fitRadius;
   for (const pt of points) {
-    const [x, y] = position(pt, origin);
+    const [x, y] = position(pt, origin, rotation);
     minX = Math.min(x, minX); maxX = Math.max(x, maxX);
     minY = Math.min(y, minY); maxY = Math.max(y, maxY);
   }
@@ -1265,10 +1624,11 @@ function fitProjection(width, height, origin, points, fitRadius) {
   const cx = width / 2 - (maxX + minX) * scale / 2;
   const cy = height / 2 + (maxY + minY) * scale / 2;
   return { scale, cx, cy, unplot: (x, y) => {
-    const east = (x - cx) / scale, north = (cy - y) / scale;
-    return destination(origin, Math.atan2(east, north) / RAD, Math.min(Math.PI * EARTH_M, Math.hypot(east, north)));
+    const viewX = (x - cx) / scale, viewY = (cy - y) / scale;
+    const heading = Math.atan2(viewX, viewY) / RAD - rotation;
+    return destination(origin, heading, Math.min(Math.PI * EARTH_M, Math.hypot(viewX, viewY)));
   }, plot: pt => {
-    const [x, y] = position(pt, origin);
+    const [x, y] = position(pt, origin, rotation);
     return [cx + x * scale, cy - y * scale];
   }};
 }
@@ -1276,6 +1636,19 @@ function fitProjection(width, height, origin, points, fitRadius) {
 function path(points) {
   return points.length < 2 ? "" : points.map((p, index) =>
     (index === 0 ? "M" : "L") + p.map(value => value.toFixed(2)).join(",")).join("");
+}
+
+function recordedPath(points, first = 0, end = points.length) {
+  if (!source.fmFolder) return path(points.slice(first, end));
+  const segments = [];
+  while (first < end) {
+    const recording = timeline.fixes[first].recordingIndex;
+    let next = first + 1;
+    while (next < end && timeline.fixes[next].recordingIndex === recording) next++;
+    segments.push(path(points.slice(first, next)));
+    first = next;
+  }
+  return segments.join(" ");
 }
 
 function line(element, a, b) {
@@ -1379,6 +1752,10 @@ function selectFix(index) {
 
 function assignReference(key, selection) {
   if (!selection) return;
+  if ($("recorded-calibration").checked) {
+    $("recorded-calibration").checked = false;
+    updateReferenceFields();
+  }
   const fix = selection.index === null ? null : timeline.fixes[selection.index];
   pickedReference[key] = selection.index;
   $(key).value = fix ? "#" + fix.sequence : formatPosition(selection.point);
@@ -1392,10 +1769,38 @@ function hasCameraReferences() {
   return Boolean($("mount").value.trim() && $("landmark").value.trim());
 }
 
+function updateReferenceFields() {
+  const automatic = $("recorded-calibration").checked;
+  $("mount").readOnly = $("landmark").readOnly = automatic;
+  if (automatic) {
+    const refs = timeline?.recordedReferences?.[currentFix()?.recordingIndex];
+    for (const key of ["mount", "landmark"]) {
+      const input = $(key);
+      const coordinate = formatPosition(refs?.[key]);
+      if (input.value !== coordinate) input.value = coordinate;
+    }
+  }
+}
+
+function displayedCameraReferences(fix) {
+  if (configuration) return replayReferences(timeline, configuration, fix.recordingIndex);
+  return $("recorded-calibration").checked ? timeline.recordedReferences?.[fix.recordingIndex] ?? null : null;
+}
+
 function updateCameraSetup() {
   const hint = $("camera-setup");
-  hint.hidden = Boolean(result || live);
+  const recorded = configuration ? configuration.useRecordedReferences : $("recorded-calibration").checked;
+  const missing = recorded && !timeline.recordedReferences?.[currentFix()?.recordingIndex];
+  hint.hidden = Boolean(live || (result && !missing));
   if (hint.hidden) return;
+  if (missing) {
+    hint.textContent = "This log has no recorded mount and landmark. Showing raw GPS.";
+    return;
+  }
+  if ($("run").disabled) {
+    hint.textContent = "Preparing simulated camera…";
+    return;
+  }
   const mount = $("mount").value.trim();
   const landmark = $("landmark").value.trim();
   if (hasCameraReferences()) {
@@ -1416,7 +1821,7 @@ function drawMap() {
   const height = Math.round(map.getBoundingClientRect().height);
   map.setAttribute("viewBox", "0 0 " + width + " " + height);
   const raw = timeline.fixes.map(fix => fix.point);
-  const cameraSettings = live?.settings ?? configuration;
+  const cameraSettings = live?.settings ?? displayedCameraReferences(currentFix());
   const origin = cameraSettings?.mount ?? raw[0];
   let reach = 8;
   if (cameraSettings) {
@@ -1426,7 +1831,8 @@ function drawMap() {
   }
   const livePoints = live?.fixes.length
     ? [live.fixes.at(-1).point, live.fixes[live.browsedFixIndex]?.point].filter(Boolean) : [];
-  projection = fitProjection(width, height, origin, livePoints.length ? [...raw, ...livePoints] : raw, reach);
+  if (cameraSettings) livePoints.push(cameraSettings.landmark);
+  projection = fitProjection(width, height, origin, livePoints.length ? [...raw, ...livePoints] : raw, reach, mapRotation);
   const { plot, scale, cx, cy } = projection;
   const gap = niceStep(width / scale / 6) * scale;
   for (let x = mod(cx, gap); x <= width; x += gap) line(node("line", { class: "grid-line" }), [x, 0], [x, height]);
@@ -1438,7 +1844,7 @@ function drawMap() {
     }
   }
   const plotted = raw.map(plot);
-  node("path", { class: "track", d: path(plotted) });
+  node("path", { class: "track", d: recordedPath(plotted) });
   const wedge = node("path", { class: "wedge" });
   const trail = node("path", { class: "trail" });
   const aim = node("line", { class: "aim" });
@@ -1465,7 +1871,7 @@ function drawMap() {
   }
   const gpsHalo = node("circle", { class: "gps-halo", r: live ? 12 : 10, "pointer-events": "none" });
   const gps = node("circle", { class: "gps", r: live ? 8 : 5.5, "pointer-events": live ? "auto" : "none" });
-  text(node("text", {}), [10, 17], "N ↑");
+  text(node("text", {}), [10, 17], "N " + "↑→↓←"[mapRotation / 90]);
   const meters = niceStep(width / scale * .18);
   const size = meters * scale;
   line(node("line", { class: "scale" }), [width - 12 - size, height - 9], [width - 12, height - 9]);
@@ -1473,7 +1879,7 @@ function drawMap() {
     meters >= 1000 ? meters / 1000 + " km" : meters + " m");
   if (!live) drawFixIds(plotted, references, width, height);
   const selectionPin = node("circle", { class: "selected-pin", r: 9, "pointer-events": "none" });
-  structure = { wedge, trail, aim, camera, cameraTip, gps, gpsHalo, plotted, selectionPin, trailEnd: -1 };
+  structure = { wedge, trail, aim, camera, cameraTip, gps, gpsHalo, plotted, selectionPin, trailEnd: -1, cameraSettings };
   updateCameraSetup();
   render();
 }
@@ -1492,6 +1898,9 @@ function render() {
   if (!structure || !timeline) return;
   if (live) { renderLive(); return; }
   const activeFix = currentFix();
+  const refs = displayedCameraReferences(activeFix);
+  if (structure.cameraSettings !== refs) { drawMap(); return; }
+  if ($("recorded-calibration").checked) updateReferenceFields();
   const beforeStart = currentReplayIndex !== null && currentReplayIndex < (configuration?.startIndex ?? 0);
   renderFixNavigation(timeline.fixes, activeFix.index, beforeStart ? currentReplayIndex : null);
   const startFix = timeline.fixes[currentReplayIndex] ?? activeFix;
@@ -1501,31 +1910,40 @@ function render() {
   const { plot } = projection;
   if (activeFix.index !== structure.trailEnd) {
     const first = configuration?.startIndex ?? 0;
-    trail.setAttribute("d", path(plotted.slice(first, activeFix.index + 1)));
+    trail.setAttribute("d", recordedPath(plotted, first, activeFix.index + 1));
     structure.trailEnd = activeFix.index;
   }
   renderRawFix(activeFix);
   selectionPin.style.display = mapSelection ? "" : "none";
   if (mapSelection) circle(selectionPin, plot(mapSelection.point));
   $("clock").textContent = formatTime(time) + " / " + formatTime(Number(timeSlider.max));
+  renderRecordingTime(activeFix);
+  renderPanCrossing(activeFix);
   timeSlider.setAttribute("aria-valuetext", formatTime(time) + " · GPS #" + activeFix.sequence);
   $("fix").textContent = "GPS #" + activeFix.sequence;
   const frame = result?.frames[Math.max(0, lastIndex(result.frames, time))];
-  const target = result?.targets[lastIndex(result.targets, time)];
+  const previousTarget = result?.targets[lastIndex(result.targets, time)];
+  const target = previousTarget?.recordingIndex === activeFix.recordingIndex ? previousTarget : null;
   const usable = frame && frame.gpsTime !== null && time - frame.gpsTime <= configuration.age && activeFix.valid;
-  renderCamera(configuration, activeFix.point, frame, target, usable);
+  renderCamera(refs && { ...configuration, ...refs }, activeFix, refs ? frame : null, target, usable);
 }
 
-function renderCamera(settings, point, frame, target, usable) {
+function renderCamera(settings, fix, frame, target, usable) {
   const { camera, cameraTip, wedge, aim } = structure;
   const { plot } = projection;
   for (const element of [aim, camera, cameraTip, wedge]) element.style.display = "none";
   $("pan").textContent = "";
   $("shot").textContent = "";
   $("target").textContent = "";
+  const point = fix?.point;
+  const range = settings ? distance(settings.mount, point ?? settings.landmark) : null;
+  const zoom = renderMapTelemetry(fix, range, settings, frame);
+  const estimatedWidth = range >= .1 && point && zoom && fix.wideFrameFactor
+    ? range * fix.wideFrameFactor / zoom : null;
+  $("frame-width").textContent = estimatedWidth !== null ? "Est. Canon frame width · " + estimatedWidth.toFixed(1) + " m"
+    : point && frame && range >= .1 ? "Simulated frame width · " + settings.width.toFixed(1) + " m" : "";
   if (!frame) return;
   const { mount, width } = settings;
-  const range = distance(mount, point ?? settings.landmark);
   const heading = frame.angle;
   const pivot = plot(mount);
   const end = plot(destination(mount, heading, Math.max(range, 2)));
@@ -1533,11 +1951,10 @@ function renderCamera(settings, point, frame, target, usable) {
   $("pan").textContent = frame.moving ? "Pan moving" : "Pan idle";
   if (point) {
     const gap = Math.abs(angleDelta(bearing(mount, point), heading));
-    $("fix").textContent += " · " + range.toFixed(1) + " m from mount";
     $("shot").textContent = !usable ? "GPS unavailable" : range < .1 ? "GPS at mount" :
       gap <= halfAngle ? "In simulated shot" : "Outside simulated shot";
   }
-  $("target").textContent = target ? "GP aim #" + target.sequence + " · " + target.lead + " m lead" : "Waiting for GP aim";
+  $("target").textContent = target ? "Simulated GP aim #" + target.sequence + " · " + target.lead + " m lead" : "Waiting for GP aim";
   line(camera, pivot, end);
   circle(cameraTip, end);
   camera.style.display = cameraTip.style.display = "";
@@ -1572,6 +1989,9 @@ async function chooseLiveDirectory() {
   const options = { mode: "readwrite", id: "fm-live-aiming" };
   if (sourceHandle) options.startIn = sourceHandle;
   const folder = await window.showDirectoryPicker(options);
+  if (source?.fmFolder && !await folder.isSameEntry(sourceHandle)) {
+    throw new Error("Choose the FM logs folder " + sourceHandle.name + ".");
+  }
   if (sourceFile) {
     let matches = false;
     try {
@@ -1597,6 +2017,7 @@ function updateLiveControls() {
   $("live-aiming").textContent = active ? "Stop Live Aiming" : "Live Aiming";
   $("replay-setup").inert = active;
   $("replay-controls").hidden = $("map-pick").hidden = $("fix-ids").hidden = active;
+  $("map-replay-actions").hidden = active;
   $("live-help").hidden = !active;
   map.toggleAttribute("data-live", active);
   map.removeAttribute("data-dragging");
@@ -1621,7 +2042,7 @@ async function startLiveAiming() {
     if (!window.showDirectoryPicker) throw new Error("Open this HTML file in Chrome or Edge to use Live Aiming autosave.");
     const settings = readCameraSettings(timeline.fixes);
     liveStatus(sourceFile ? "Allow autosave in the folder containing " + sourceFile.name + "."
-      : "Choose a folder for the Live Aiming recording.");
+      : source?.fmFolder ? "Allow autosave in " + sourceHandle.name + "." : "Choose a folder for the Live Aiming recording.");
     const folder = await chooseLiveDirectory();
     const started = Date.now();
     const stamp = new Date(started).toISOString().replace(/[:.]/g, "-");
@@ -1752,7 +2173,8 @@ function addLiveFix(point, input, now = performance.now()) {
   const prior = session.fixes.at(-1);
   if (prior && samePoint(prior.point, point) && input !== "Hold") return;
   const time = Math.max(prior?.time ?? 0, now - session.origin);
-  const fix = { point, input, time, utc: session.started + time, sequence: session.fixes.length + 1 };
+  const fix = { point, input, time, utc: session.started + time, sequence: session.fixes.length + 1,
+    previousLeadTarget: session.target };
   session.fixes.push(fix);
   recordLiveEvent(session, "gps_input", time, { fixId: fix.sequence, ...tracePoint(point), inputType: input });
   const gps = session.gps;
@@ -1768,6 +2190,7 @@ function addLiveFix(point, input, now = performance.now()) {
     });
     if (decision !== "published") return;
     const target = gps.latest;
+    fix.leadPublication = { lead: target.lead };
     recordLiveEvent(session, "gp_target", time, {
       sourceFixId: fix.sequence, targetRevision: target.revision, state, rule,
       direction: turnName(target.direction), appliedLeadM: target.lead, aim: tracePoint(target.point),
@@ -1799,7 +2222,7 @@ function renderLive() {
   }
   $("fix").textContent = fix ? "Live GPS #" + fix.sequence + " · " + formatPosition(fix.point) : "Place the surfer to begin";
   const now = performance.now() - session.origin;
-  renderCamera(session.settings, fix?.point, session.pan, session.target,
+  renderCamera(session.settings, fix, session.pan, session.target,
     Boolean(fix && now - fix.time <= session.settings.age));
 }
 
@@ -1818,6 +2241,7 @@ function advanceLive() {
     if (fresh && latest.revision !== session.revision) {
       session.revision = latest.revision;
       session.target = panTarget(latest, session.settings.mount, session.pan, elapsed);
+      latest.fix.leadTarget = session.target;
     } else if (latest && !fresh && latest.revision > session.revision && latest.revision !== session.staleRevision) {
       session.staleRevision = latest.revision;
       session.pan.record("pan_target_waiting", panTarget(latest, session.settings.mount, session.pan, elapsed),
@@ -1865,7 +2289,7 @@ function loadExample() {
   runReplay();
 }
 
-$("setup").addEventListener("submit", event => { event.preventDefault(); runReplay(); });
+$("setup").addEventListener("submit", event => { event.preventDefault(); runReplay(Boolean(source?.fmFolder)); });
 $("example").addEventListener("click", loadExample);
 async function openRecording(file, label, parse, handle = null) {
   const ticket = ++importGeneration;
@@ -1907,6 +2331,82 @@ function bindRecordingPicker(id, label, extensions, mime, parse) {
 const readKmlFile = async file => readKml(await file.text());
 bindRecordingPicker("file", "KML file", [".kml"], "application/vnd.google-earth.kml+xml", readKmlFile);
 bindRecordingPicker("vt-log", "VT log", [".jsonl", ".ndjson", ".log", ".txt"], "application/x-ndjson", readVtLog);
+
+async function* folderFiles(folder, directory = []) {
+  for await (const handle of folder.values()) {
+    if (handle.kind === "directory") yield* folderFiles(handle, [...directory, handle.name]);
+    else yield { handle, directory };
+  }
+}
+
+function fmFolderSummary(info) {
+  const details = [info.loaded + (info.loaded === 1 ? " FM log loaded" : " FM logs loaded")];
+  if (info.zoomLogs) details.push(info.zoomLogs + (info.zoomLogs === 1 ? " zoom log loaded" : " zoom logs loaded"));
+  if (info.skipped) details.push(info.skipped + " without replayable GPS");
+  if (info.unreadable) details.push(info.unreadable + " unreadable");
+  return details.join(" · ");
+}
+
+async function readFmLogsFolder(folder) {
+  const recordings = [];
+  const zoomReadbacks = [];
+  let zoomLogs = 0;
+  let skipped = 0;
+  let unreadable = 0;
+  for await (const { handle, directory } of folderFiles(folder)) {
+    if (!/\.jsonl$/i.test(handle.name)) continue;
+    try {
+      const parsed = await readFmRecording(await handle.getFile(), [...directory, handle.name].join("/"));
+      const { recording } = parsed;
+      if (parsed.zoomReadbacks.length) {
+        zoomLogs++;
+        for (const sample of parsed.zoomReadbacks) zoomReadbacks.push(sample);
+      }
+      if (recording) recordings.push(recording);
+      else if (!parsed.zoomReadbacks.length) skipped++;
+    } catch {
+      unreadable++;
+    }
+  }
+  if (!recordings.length && zoomLogs) throw new Error("Zoom logs found. Choose a folder that also contains FM GPS logs.");
+  if (!recordings.length) {
+    const info = fmFolderSummary({ loaded: 0, skipped, unreadable });
+    throw new Error(skipped || unreadable ? info + ". Choose a folder with raw GPS logs."
+      : "No JSONL logs found in " + folder.name + ".");
+  }
+  recordings.sort((a, b) => a.started - b.started || a.name.localeCompare(b.name, undefined, { numeric: true }));
+  zoomReadbacks.sort((a, b) => a.time - b.time);
+  const refs = recordings.find(({ refs }) => refs?.mount && refs.landmark && distance(refs.mount, refs.landmark) >= .1)?.refs
+    ?? { mount: null, landmark: null };
+  return { routes: [{ name: "FM logs in recording order", recordings }], refs, zoomReadbacks,
+    fmFolder: { loaded: recordings.length, zoomLogs, skipped, unreadable } };
+}
+
+$("fm-log-folder").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  let ticket = null;
+  button.disabled = true;
+  try {
+    if (!window.showDirectoryPicker) throw new Error("Open this HTML file in Chrome or Edge to choose an FM logs folder.");
+    const options = { mode: "read", id: "fm-logs-folder" };
+    if (sourceHandle) options.startIn = sourceHandle;
+    const folder = await window.showDirectoryPicker(options);
+    ticket = ++importGeneration;
+    importing = true;
+    describeStatus("Reading FM logs in " + folder.name + "…");
+    const imported = await readFmLogsFolder(folder);
+    if (ticket !== importGeneration) return;
+    setSource(imported, folder.name, null, folder);
+    if ($("recorded-calibration").checked) await runReplay(false, true);
+  } catch (error) {
+    if (error.name !== "AbortError" && (ticket === null || ticket === importGeneration)) {
+      describeStatus(error.message || "Could not open the FM logs folder.", true);
+    }
+  } finally {
+    if (ticket !== null && ticket === importGeneration) importing = false;
+    button.disabled = false;
+  }
+});
 
 function displayRecentEntries(list, empty, entries, open) {
   $(empty).hidden = entries.length > 0;
@@ -1996,16 +2496,16 @@ for (const id of ["recent-toggle", "recent-folders-toggle"]) {
   });
 }
 
-async function readVideoFolder(folder, directory = [], files = []) {
-  for await (const entry of folder.values()) {
-    if (entry.kind === "directory") {
-      await readVideoFolder(entry, [...directory, entry.name.toLowerCase()], files);
-    } else if (/\.mp4$/i.test(entry.name)) {
-      files.push({ name: entry.name, directory, handle: entry });
-    } else if (/\.srt$/i.test(entry.name)) {
+async function readVideoFolder(folder) {
+  const files = [];
+  for await (const { handle, directory: path } of folderFiles(folder)) {
+    const directory = path.map(name => name.toLowerCase());
+    if (/\.mp4$/i.test(handle.name)) {
+      files.push({ name: handle.name, directory, handle });
+    } else if (/\.srt$/i.test(handle.name)) {
       try {
-        const file = await entry.getFile();
-        files.push({ name: entry.name, directory, file });
+        const file = await handle.getFile();
+        files.push({ name: handle.name, directory, file });
       } catch {
         // Keep scanning when a subtitle disappears or cannot be read.
       }
@@ -2166,6 +2666,12 @@ routeSelect.addEventListener("change", () => {
   preview();
   describeStatus(timeline.fixes.length.toLocaleString() + " fixes loaded. Check the references and run replay.");
 });
+$("recorded-calibration").addEventListener("change", () => {
+  setPlaying(false);
+  updateReferenceFields();
+  if (result) describeStatus("Run replay to apply the calibration change.");
+  else drawMap();
+});
 for (const key of ["mount", "landmark"]) {
   $(key).addEventListener("input", () => {
     pickedReference[key] = null;
@@ -2182,6 +2688,15 @@ $("fix-ids").addEventListener("click", event => {
   event.currentTarget.setAttribute("aria-pressed", showFixIds);
   event.currentTarget.textContent = showFixIds ? "Hide fix IDs" : "Show fix IDs";
   if (timeline) drawMap();
+});
+$("clear-positions").addEventListener("click", event => {
+  const hidden = map.toggleAttribute("data-hide-positions");
+  event.currentTarget.textContent = hidden ? "Show GPS positions" : "Clear GPS positions";
+  $("fix-ids").disabled = hidden;
+});
+$("rotate-map").addEventListener("click", () => {
+  mapRotation = (mapRotation + 90) % 360;
+  drawMap();
 });
 $("same-point-fixes").addEventListener("change", event => selectFix(Number(event.target.value)));
 
@@ -2238,8 +2753,9 @@ map.addEventListener("click", event => {
   let nearest = -1;
   let nearestDistance = 15 ** 2;
   const currentIndex = currentFix().index;
-  for (let index = 0; index < structure.plotted.length; index++) {
-    const [x, y] = structure.plotted[index];
+  const plotted = map.hasAttribute("data-hide-positions") ? [] : structure.plotted;
+  for (let index = 0; index < plotted.length; index++) {
+    const [x, y] = plotted[index];
     const gap = (x - hit.x) ** 2 + (y - hit.y) ** 2;
     if (gap < nearestDistance || gap === nearestDistance && Math.abs(index - currentIndex) < Math.abs(nearest - currentIndex)) {
       nearest = index;
@@ -2254,6 +2770,24 @@ map.addEventListener("click", event => {
   render();
 });
 timeSlider.addEventListener("input", () => { setPlaying(false); seek(Number(timeSlider.value)); });
+$("next-bullseye").addEventListener("click", () => {
+  const crossing = nextPanCrossing();
+  if (!crossing) return;
+  setPlaying(false);
+  fixNavigationError();
+  mapSelection = null;
+  updateMapSelection();
+  seek(crossing.time);
+});
+$("next-position").addEventListener("click", () => {
+  const input = $("next-position-distance");
+  if (!input.reportValidity()) return;
+  const from = currentFix();
+  const metres = input.valueAsNumber;
+  const next = timeline.fixes.findIndex(fix => fix.index > from.index && distance(from.point, fix.point) >= metres);
+  if (next < 0) fixNavigationError("No later fix is at least " + metres + " m from GPS #" + from.sequence + ".");
+  else selectNavigationFix(next);
+});
 fixSlider.addEventListener("input", () => selectNavigationFix(Number(fixSlider.value)));
 $("fix-id").addEventListener("input", () => fixNavigationError());
 $("find-fix").addEventListener("submit", event => {

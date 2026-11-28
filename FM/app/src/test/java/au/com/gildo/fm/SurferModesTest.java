@@ -13,7 +13,7 @@ public class SurferModesTest {
     private static final GoTo.Point LANDMARK = new GoTo.Point(-28.0792, 153.4011, Double.NaN);
 
     @Test public void recordedSittingFixesRoundTripInOrderWithRepeats() throws IOException {
-        var fixes = SurferModes.generate(LANDMARK, 90, List.of(SITTING), 5);
+        var fixes = SurferModes.generate(LANDMARK, 90, List.of(SITTING), 5, 2);
         assertEquals(LANDMARK, fixes.get(0));
         assertEquals(11, fixes.size());
         assertEquals(.982, distance(LANDMARK, fixes.get(1)), .00001);
@@ -23,16 +23,16 @@ public class SurferModesTest {
     }
 
     @Test public void waveRideDurationScalesPathAndKeepsHalfSecondFixes() {
-        var five = SurferModes.generate(LANDMARK, 90, List.of(RIDING), 5);
-        var seven = SurferModes.generate(LANDMARK, 90, List.of(RIDING), 7);
-        assertEquals(5000, (five.size() - 1) * GpsPadSimulator.FIX_INTERVAL_MS);
-        assertEquals(7000, (seven.size() - 1) * GpsPadSimulator.FIX_INTERVAL_MS);
+        var five = SurferModes.generate(LANDMARK, 90, List.of(RIDING), 5, 2);
+        var seven = SurferModes.generate(LANDMARK, 90, List.of(RIDING), 7, 2);
+        assertEquals(5000, (five.size() - 1) * 500L);
+        assertEquals(7000, (seven.size() - 1) * 500L);
         assertEquals(22.591, distance(LANDMARK, five.get(10)), .00001);
         assertEquals(22.591 * 7 / 5, distance(LANDMARK, seven.get(14)), .00001);
     }
 
     @Test public void selectedModesAppendWithoutResetAndPaddlingTurnChangesDirection() {
-        var fixes = SurferModes.generate(LANDMARK, 90, List.of(PADDLE_TURN, TAKEOFF), 5);
+        var fixes = SurferModes.generate(LANDMARK, 90, List.of(PADDLE_TURN, TAKEOFF), 5, 2);
         assertTrue(fixes.get(1).lon() < LANDMARK.lon());
         assertTrue(fixes.get(5).lon() < fixes.get(1).lon());
         assertTrue(fixes.get(10).lon() > LANDMARK.lon());
@@ -42,9 +42,10 @@ public class SurferModesTest {
 
     @Test public void preparedFixesUseNormalGpsCadenceThenPadCanTakeOver() {
         var simulator = new GpsPadSimulator(LANDMARK.lat(), LANDMARK.lon());
+        simulator.setRateHz(2);
         simulator.poll(1000);
         simulator.move(GpsPadSimulator.Move.UP, 20);
-        var fixes = SurferModes.generate(LANDMARK, 90, List.of(RIDING), 1);
+        var fixes = SurferModes.generate(LANDMARK, 90, List.of(RIDING), 1, 2);
         var playback = simulator.apply(fixes, 1100, true);
         var first = simulator.poll(1120);
         assertEquals(1, first.playbackFix());
@@ -90,10 +91,10 @@ public class SurferModesTest {
     @Test public void typedSequencePlaysInOrderAndRepeatsFromTheLastPosition() {
         var modes = SurferModes.parseSequence("3, 1,3");
         assertEquals(List.of(PADDLE_SAME, SITTING, PADDLE_SAME), modes);
-        var fixes = SurferModes.generate(LANDMARK, 90, modes, 5);
-        var firstPaddle = SurferModes.generate(LANDMARK, 90, List.of(PADDLE_SAME), 5);
-        var sitting = SurferModes.generate(firstPaddle.get(8), 90, List.of(SITTING), 5);
-        var secondPaddle = SurferModes.generate(sitting.get(10), 90, List.of(PADDLE_SAME), 5);
+        var fixes = SurferModes.generate(LANDMARK, 90, modes, 5, 2);
+        var firstPaddle = SurferModes.generate(LANDMARK, 90, List.of(PADDLE_SAME), 5, 2);
+        var sitting = SurferModes.generate(firstPaddle.get(8), 90, List.of(SITTING), 5, 2);
+        var secondPaddle = SurferModes.generate(sitting.get(10), 90, List.of(PADDLE_SAME), 5, 2);
         assertEquals(27, fixes.size());
         assertEquals(firstPaddle, fixes.subList(0, 9));
         assertEquals(sitting, fixes.subList(8, 19));
@@ -107,7 +108,17 @@ public class SurferModesTest {
         var failure = assertThrows(IllegalArgumentException.class, () -> SurferModes.parseSequence("1,7,1"));
         assertTrue(failure.getMessage().contains("position 2"));
         assertThrows(IllegalArgumentException.class, () -> SurferModes.parseSequence("1,,2"));
-        assertThrows(IllegalArgumentException.class, () -> SurferModes.generate(LANDMARK, 90, List.of(RIDING, RIDING), 3600));
+        assertThrows(IllegalArgumentException.class, () -> SurferModes.generate(LANDMARK, 90, List.of(RIDING, RIDING), 3600, 2));
+    }
+
+    @Test public void generatedOneHzRideKeepsDurationAndDistance() {
+        var modes = List.of(TAKEOFF, RIDING);
+        var one = SurferModes.generate(LANDMARK, 90, modes, 5, 1);
+        var two = SurferModes.generate(LANDMARK, 90, modes, 5, 2);
+        assertEquals(10, one.size());
+        assertEquals((two.size() - 1) * 500, (one.size() - 1) * 1000);
+        for (int i = 0; i < one.size(); ++i)
+            assertEquals(0, distance(two.get(2*i), one.get(i)), .00001);
     }
 
     private static double distance(GoTo.Point a, GoTo.Point b) {
