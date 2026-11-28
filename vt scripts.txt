@@ -1,0 +1,129 @@
+robocopy `
+  "C:\Users\gildo\.codex\worktrees\vt\gdlapp\vt" `
+  "C:\Users\gildo\gdlapp\vt" `
+  /E /XD .git .gradle build .idea `
+  /XF .git local.properties `
+  /R:2 /W:1
+  
+  
+C:\Users\gildo\gdlapp\vt\SampleCode-V5\android-sdk-v5-as
+
+
+C:\Users\gildo\gdlapp\vt> git commit -m '4.0.8 tilt cooldown reduction'
+
+
+
+
+
+
+
+
+
+python "C:\Users\gildo\gdlapp\cam3\tools\telemetry_around.py" `
+>>   --folder "C:\Users\gildo\temp\311026" `
+>>   --video-folder "E:\DCIM\100MEDIA" `
+>>   --at "2026-10-30 15:18:35.000" `
+>>   --before 10 `
+>>   --after 1 `
+>>   --granularity 1 `
+>>   --output "C:\Users\gildo\temp\telemetry-report" --all-rides
+
+
+
+python "C:\Users\gildo\gdlapp\cam3\tools\telemetry_around.py" `
+   --folder "C:\Users\gildo\temp\311026" `
+   --video-folder "E:\DCIM\100MEDIA" `
+   --at "2026-10-30 14:03:27.000" `
+   --before 2 `
+   --after 2 `
+   --granularity 1 `
+   --output "C:\Users\gildo\temp\telemetry-report" 
+   
+   
+   python "C:\Users\gildo\gdlapp\cam3\tools\telemetry_around.py" `
+    --folder "C:\Users\gildo\temp\311026" `
+    --video-folder "E:\DCIM\100MEDIA" `
+    --at "2026-10-30 14:03:18.000" `
+    --before 10 `
+    --after 1 `
+    --granularity 1 `
+    --output "C:\Users\gildo\temp\telemetry-report" --all-rides --pitch-range -46 -35
+	
+	
+	   python "C:\Users\gildo\gdlapp\cam3\tools\telemetry_around.py" `
+    --folder "C:\Users\gildo\temp\311026" `
+    --video-folder "E:\DCIM\100MEDIA" `
+    --at "2026-10-30 14:03:18.000" `
+    --before 2 `
+    --after 10 `
+    --granularity 1 `
+    --output "C:\Users\gildo\temp\telemetry-report" 
+	
+	
+	
+	python "C:\Users\gildo\gdlapp\cam3\tools\telemetry_selected_kml.py" `
+  --report "C:\Users\gildo\temp\telemetry-report\records.xlsx" 
+  
+  
+  python "C:\Users\gildo\gdlapp\cam3\tools\telemetry_to_srt.py" `
+   --folder "C:\Users\gildo\temp\311026" `
+   --srt-folder "E:\DCIM\100MEDIA" `
+   --granularity 1  --font-size 38 --gps-age-red-seconds 1
+   
+   
+python "C:\Users\gildo\gdlapp\cam3\tools\surfer_gps_map.py" `
+   --folder "C:\Users\gildo\temp\311026" `
+   --at "14:03:17.000" `
+   --next 35 `
+   --output "C:\Users\gildo\temp\surfer-gps-map" --gap-red-ms 1000 --auto-fov --serve
+   
+   
+   
+python "C:\Users\gildo\gdlapp\cam3\tools\surfer_gps_map.py" `
+>>   --folder "C:\Users\gildo\temp\311026" `
+>>   --video-folder "E:\DCIM\100MEDIA" `
+>>   --get-fov-samples `
+>>   --sample-count 3 `
+>>   --sample-bands 0 10 20 30 40 `
+>>   --sample-before 25 `
+>>   --sample-after 20 `
+>>   --sample-interval 1 `
+>>   --output "C:\Users\gildo\temp\fov-samples" `
+>>   --serve
+
+
+python "C:\Users\gildo\gdlapp\cam3\tools\surfer_gps_map.py" `
+   --folder "C:\Users\gildo\temp\311026" `
+   --video-folder "E:\DCIM\100MEDIA" `
+   --get-fov-samples `
+   --sample-count 6 `
+   --sample-bands 20 25 30 `
+   --sample-before 25 `
+   --sample-after 20 `
+   --sample-interval 1 `
+   --output "C:\Users\gildo\temp\fov-samples" `
+   --serve
+   
+   
+   python "C:\Users\gildo\gdlapp\cam3\tools\surfer_gps_map.py" `
+  --folder "C:\Users\gildo\temp\311026" `
+  --video-folder "E:\DCIM\100MEDIA" `
+  --pitch-range -40 -34 `
+  --distance-range 25 40 `
+  --sample-before 125 `
+  --sample-after 125 `
+  --sample-interval 1 `
+  --max-samples 10 `
+  --output "C:\Users\gildo\temp\pitch-minus35-map" `
+  --serve
+  
+  
+  python "C:\Users\gildo\gdlapp\cam3\tools\surfer_gps_map.py" `
+  --folder "C:\Users\gildo\temp\311026" `
+  --video-folder "E:\DCIM\100MEDIA" `
+  --number_of_rides 3 `
+  --before 15 `
+  --after 15 `
+  --granularity 0 `
+  --output "C:\Users\gildo\temp\first-three-rides" `
+  --serve

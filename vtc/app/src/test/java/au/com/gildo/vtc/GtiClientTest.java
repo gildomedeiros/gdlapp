@@ -97,6 +97,114 @@ public class GtiClientTest {
         assertThrows(IOException.class,mount::position);assertTrue(mount.referenceLost);
         assertFalse(wire.sent(":F"));assertEquals(0,wire.starts());
     }
+    @Test public void reconnectRereadsTiltPositionMisdeliveredAsPanResolution()throws Exception {
+        Wire previousWire=new Wire();
+        previousWire.cpr=2_073_600;
+        GtiClient previous=new GtiClient(previousWire);
+        previous.connect();
+
+        Wire wire=new Wire(){
+            @Override public String exchange(String command)throws IOException {
+                if(command.equals(":a1\r")&&commands.isEmpty()){
+                    commands.add(command);
+                    return "=FDB27F\r";
+                }
+                return super.exchange(command);
+            }
+        };
+        wire.cpr=2_073_600;
+        GtiClient candidate=new GtiClient(wire);
+        candidate.reconnect(previous,()->true);
+
+        assertArrayEquals(previous.cpr,candidate.cpr);
+        assertFalse(candidate.referenceLost);
+        assertEquals(List.of(":a1\r",":a1\r",":f1\r",":e1\r",":a2\r",":f2\r",":e2\r"),wire.commands);
+    }
+
+    @Test public void repeatedResolutionMismatchKeepsReferenceAndRejectsCandidate()throws Exception {
+        GtiClient previous=new GtiClient(new Wire());
+        previous.connect();
+        Wire wire=new Wire();
+        wire.cpr=8_368_893;
+        GtiClient candidate=new GtiClient(wire);
+
+        IOException failure=assertThrows(IOException.class,()->candidate.reconnect(previous,()->true));
+        assertTrue(failure.getMessage().contains("expected 360000, read 8368893, then 8368893"));
+        assertFalse(previous.referenceLost);
+        assertFalse(candidate.referenceLost);
+        assertEquals(List.of(":a1\r",":a1\r"),wire.commands);
+    }
+
+    @Test public void firmwareMismatchRejectsCandidateWithoutMarkingReferenceLost()throws Exception {
+        GtiClient previous=new GtiClient(new Wire());
+        previous.connect();
+        Wire wire=new Wire(){
+            @Override public String exchange(String command)throws IOException {
+                if(command.equals(":e2\r")){
+                    commands.add(command);
+                    return "=FDB27F\r";
+                }
+                return super.exchange(command);
+            }
+        };
+        GtiClient candidate=new GtiClient(wire);
+
+        IOException failure=assertThrows(IOException.class,()->candidate.reconnect(previous,()->true));
+        assertTrue(failure.getMessage().contains("GTi firmware during reconnect"));
+        assertFalse(previous.referenceLost);
+        assertFalse(candidate.referenceLost);
+        assertEquals(List.of(":a1\r",":f1\r",":e1\r",":a2\r",":f2\r",":e2\r"),wire.commands);
+    }
+
+    @Test public void reconnectConfirmsUninitializedStatusBeforeLosingReference()throws Exception {
+        GtiClient previous=new GtiClient(new Wire());
+        previous.connect();
+        for(String secondReply:List.of("=101\r","=100\r")) {
+            Wire wire=new Wire(){
+                private boolean first=true;
+                @Override public String exchange(String command)throws IOException {
+                    if(command.equals(":f1\r")){
+                        commands.add(command);
+                        if(first){first=false;return "=100\r";}
+                        return secondReply;
+                    }
+                    return super.exchange(command);
+                }
+            };
+            GtiClient candidate=new GtiClient(wire);
+            if(secondReply.equals("=100\r")) {
+                assertThrows(IOException.class,()->candidate.reconnect(previous,()->true));
+                assertTrue(candidate.referenceLost);
+            } else {
+                candidate.reconnect(previous,()->true);
+                assertFalse(candidate.referenceLost);
+            }
+            assertEquals(List.of(":a1\r",":f1\r",":f1\r"),wire.commands.subList(0,3));
+            assertFalse(wire.sent(":F"));
+        }
+    }
+
+    @Test public void reconnectStatusConfirmationTimeoutKeepsReference()throws Exception {
+        GtiClient previous=new GtiClient(new Wire());
+        previous.connect();
+        Wire wire=new Wire(){
+            private boolean first=true;
+            @Override public String exchange(String command)throws IOException {
+                if(command.equals(":f1\r")){
+                    commands.add(command);
+                    if(first){first=false;return "=100\r";}
+                    throw new java.net.SocketTimeoutException("Simulated lost confirmation");
+                }
+                return super.exchange(command);
+            }
+        };
+        GtiClient candidate=new GtiClient(wire);
+
+        assertThrows(java.net.SocketTimeoutException.class,()->candidate.reconnect(previous,()->true));
+        assertFalse(candidate.referenceLost);
+        assertEquals(List.of(":a1\r",":f1\r",":f1\r"),wire.commands);
+    }
+
     static class Wire implements GtiClient.Transport {
         final List<String> commands=new ArrayList<>();
         final int[] pos={0xfffff0,8000000},target={0,0};

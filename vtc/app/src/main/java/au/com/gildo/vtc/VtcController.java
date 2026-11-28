@@ -337,17 +337,18 @@ final class VtcController implements AutoCloseable {
             if(fix==null)throw new IOException("Wait for fresh, valid LoRa GPS");
             GtiClient.Position here=mount.position();
             if(here.moving)throw new IOException("Wait for the mount to stop");
-            double distance=Geo.distance(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
-            double bearing=Geo.bearing(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
-            double tilt=Geo.elevation(distance,s.height,s.targetHeight)+s.tiltOffset;
+            Readiness.AimTarget target=Readiness.aimTarget(s,fix.packet.lat,fix.packet.lon);
             if(!valid(token))return;
             continuousPlanner.reset();lastAcceptedAt=fix.receivedAt;framing.reset();planner.reset();gps.clearObservations();lastFramePacket=lastFrameSender=lastFrameAt=-1;continuity=gps.continuity();
             clearFixedGoto("New aiming session");targetWait.reset();
             long now=SystemClock.elapsedRealtime();
-            livePan.reset(here.pan,now);liveTilt.reset(here.tilt,now);nextGtiReconnectAt=-1;
+            livePan.reset(here.pan,now);liveTilt.reset(here.tilt,now);nextGtiReconnectAt=sectorCheckAt=-1;
+            targetRangeWaiting=false;
             mount.begin();
             position=here;aimingGeneration=token;surferAimingGeneration=token;active=true;gpsWaiting=false;pendingMove=false;state="AIMING";message="Large error: saved-target GoTo. Near target: live GPS corrections.";
-            log.record("aim_start","calibration",calibrationSnapshot(calibration),"gps",gpsSnapshot(fix),"rangeM",distance,"bearing",bearing,"tilt",tilt);
+            log.record("aim_start","calibration",calibrationSnapshot(calibration),"gps",gpsSnapshot(fix),
+                "rangeM",target.distance(),"bearing",target.bearing(),"tilt",target.tilt(),"rangeBlocker",target.rangeBlocker());
+            if(target.rangeBlocker()!=null)trackingTargetInRange(fix,target.distance(),token);
         });
     }
     void goToLandmark(){goToLandmark(false);}
@@ -411,32 +412,56 @@ final class VtcController implements AutoCloseable {
         emergencyStop("Exit VTC",null);
     }
     private synchronized void emergencyStop(String why,Runnable afterConfirmed) {
+        requestMountStop(why,afterConfirmed,false);
+    }
+
+    private synchronized void requestMountStop(String why,Runnable afterConfirmed,boolean keepAiming) {
         if(closed)return;
         if(afterConfirmed!=null)afterStop=afterConfirmed;
-        if(active&&surferAimingGeneration==aimingGeneration)log.event("aim_stopped",why);
-        active=false;generation.incrementAndGet();
+        if(!keepAiming){
+            if(active&&surferAimingGeneration==aimingGeneration)log.event("aim_stopped",why);
+            active=false;generation.incrementAndGet();
+        }
         GtiClient current=mount;if(current!=null)current.cancel();
         if(stopping)return;
+        long token=generation.get();
         stopping=true;
-        state="STOPPING";message=why+" — confirming both axes stopped";
-        log.record("stop_requested","reason",why,"independentWorker",true);publish();
+        state=keepAiming?"CHECKING GTi LIMITS":"STOPPING";
+        message=why+" — confirming both axes stopped";
+        log.record("stop_requested","reason",why,"independentWorker",true,"aimingRemainsArmed",keepAiming);publish();
         emergency.execute(()->{
             boolean confirmed=false;
             try{if(current!=null)current.stop();confirmed=true;log.event("stop_confirmed",why);}
             catch(Throwable e){log.event("stop_unconfirmed",why+": "+e);}
             final boolean ok=confirmed;
-            worker.execute(()->{
-                try {
-                    clearFixedGoto(why);pendingMove=false;panRate=tiltRate=0;
-                    continuousPlanner.reset();framing.reset();planner.reset();poller.reset();targetWait.reset();gpsWaiting=false;
-                    if(ok){stopUnconfirmed=false;position=null;watchdog.reset(SystemClock.elapsedRealtime());
-                        state=current==null?"DISCONNECTED":calibration==null?"CONNECTED":"CALIBRATED";message=why+"; both axes stopped";
-                        Runnable next=afterStop;afterStop=null;if(next!=null)next.run();
-                    }else {stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop unconfirmed. Reconnect Wi-Fi and retry Stop, or Disconnect / Exit. Mount stop is not confirmed.";}
-                }catch(Exception e){stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop verification failed: "+e.getMessage();log.error("stop_verification_error",e);}
-                finally{stopping=false;if(stopCompletion.pending())afterStop=null;stopCompletion.complete(ok);publish();}
-            });
+            worker.execute(()->finishMountStop(why,current,token,keepAiming,ok));
         });
+    }
+
+    private synchronized void finishMountStop(String why,GtiClient current,long token,boolean keepAiming,boolean ok) {
+        try {
+            pendingMove=false;panRate=tiltRate=0;
+            continuousPlanner.reset();
+            if(keepAiming&&!closed&&active&&generation.get()==token&&mount==current){
+                long now=SystemClock.elapsedRealtime();
+                watchdog.reset(now);
+                sectorCheckAt=now;
+                if(ok){
+                    state="CHECKING GTi LIMITS";message="Both axes stopped. Rechecking pan and tilt.";
+                }else{
+                    scheduleTrackingReconnect("GTi Stop unconfirmed. Reconnecting before resuming.");
+                }
+                return;
+            }
+            sectorCheckAt=nextGtiReconnectAt=-1;
+            clearFixedGoto(why);framing.reset();planner.reset();poller.reset();targetWait.reset();gpsWaiting=false;
+            targetRangeWaiting=false;
+            if(ok){stopUnconfirmed=false;position=null;watchdog.reset(SystemClock.elapsedRealtime());
+                state=current==null?"DISCONNECTED":calibration==null?"CONNECTED":"CALIBRATED";message=why+"; both axes stopped";
+                Runnable next=afterStop;afterStop=null;if(next!=null)next.run();
+            }else {stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop unconfirmed. Reconnect Wi-Fi and retry Stop, or Disconnect / Exit. Mount stop is not confirmed.";}
+        }catch(Exception e){stopUnconfirmed=true;state="STOP UNCONFIRMED";message="Stop verification failed: "+e.getMessage();log.error("stop_verification_error",e);}
+        finally{stopping=false;if(stopCompletion.pending())afterStop=null;stopCompletion.complete(ok);publish();}
     }
     private synchronized void stopForGpsTimeout(){
         if(stopping||closed)return;
@@ -486,7 +511,8 @@ final class VtcController implements AutoCloseable {
         return fix!=null&&fix.epoch==feed.continuity()&&now>=fix.receivedAt&&now-fix.receivedAt<=Math.min(s.gpsAge,s.gpsGapTimeout)*1000?fix:null;
     }
     private final TrackingAxis livePan=new TrackingAxis(),liveTilt=new TrackingAxis();
-    private long nextGtiReconnectAt=-1;
+    private long nextGtiReconnectAt=-1,sectorCheckAt=-1;
+    private boolean panReadTimedOut,targetRangeWaiting;
     private final java.util.concurrent.atomic.AtomicBoolean trackingWakeQueued=new java.util.concurrent.atomic.AtomicBoolean();
 
     private void wakeTracking() {
@@ -508,6 +534,13 @@ final class VtcController implements AutoCloseable {
             lastReadSent=-1;lastPollFix=null;
             raw=targetRaw=position;sampledAt=now;direction=lastDirection=unchanged=0;
             lastStart=lastAttemptFix=stopAt=stopFix=sourceFix=-1;firstMotion=finite=false;rate=0;
+        }
+        void resetAfterStop(int position,long now){
+            int previousDirection=lastDirection;
+            long previousStart=lastStart;
+            reset(position,now);
+            lastDirection=previousDirection;lastStart=previousStart;
+            lastReadSent=now;
         }
     }
 
@@ -555,6 +588,7 @@ final class VtcController implements AutoCloseable {
 
     private String loggedPanRule(GpsFeed.Fix fix,long now) {
         if(fix==null||calibration==null)return null;
+        if(Readiness.rangeBlocker(s,targetDistance(fix))!=null)return null;
         double bearing=Geo.bearing(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
         return PanHold.rule(fix,s,now,calibration.heading(livePan.raw),bearing);
     }
@@ -566,13 +600,19 @@ final class VtcController implements AutoCloseable {
             if(now>=nextGtiReconnectAt)reconnectTracking(token);
             return;
         }
+        if(sectorCheckAt>=0){
+            if(now>=sectorCheckAt)recheckTrackingSector(token);
+            return;
+        }
+        panReadTimedOut=false;
+        double range=fix==null?Double.NaN:targetDistance(fix);
         if(fix==null&&!ContinuousPlanner.gapAllowed(now,lastAcceptedAt,s.gpsGapTimeout)) {
             stopTrackingAxis(1,livePan,null,token,"GPS gap expired");
             stopTrackingAxis(2,liveTilt,null,token,"GPS gap expired");
-        }else if(fix!=null&&livePan.direction!=0&&now-livePan.sampledAt<=s.maxPositionAgeMs) {
+        }else if(fix!=null&&trackingTargetInRange(fix,range,token)
+            &&livePan.direction!=0&&now-livePan.sampledAt<=s.maxPositionAgeMs) {
             // A Stop can go out before the routine encoder exchange.
             double bearing=Geo.bearing(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
-            double range=Geo.distance(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
             double error=calibration.targetPan(Geo.wrap(bearing+s.magnitudeDegrees(Math.max(.001,range))
                 *framing.direction))-calibration.panOffset(livePan.raw);
             String rule=PanHold.rule(fix,s,now,calibration.heading(livePan.raw),bearing);
@@ -582,11 +622,27 @@ final class VtcController implements AutoCloseable {
                 &&Math.abs(error)>s.panToleranceDegrees(Math.max(.001,range))&&Math.signum(error)!=livePan.direction)
                 stopTrackingAxis(1,livePan,fix,token,"Opposite pan correction");
         }
-        if(!refreshTrackingAxis(1,livePan,fix,token,s.panPollMs))return;
-        GpsFeed.Fix panFix=trackingFix(SystemClock.elapsedRealtime());
+        boolean panReady=refreshTrackingAxis(1,livePan,fix,token,s.panPollMs);
+        if(!valid(token))return;
+        GpsFeed.Fix panFix=panReady?trackingFix(SystemClock.elapsedRealtime()):fix;
+        if(panReadTimedOut){
+            // Also mark the fix consumed for tilt so the timer cannot retry it
+            // before the next GPS-driven cycle.
+            liveTilt.lastPollFix=panFix;
+            now=SystemClock.elapsedRealtime();
+            long panAge=now-livePan.sampledAt,tiltAge=now-liveTilt.sampledAt;
+            log.record("tracking_tilt_read_skipped","reason","Pan encoder timed out","gps",gpsSnapshot(panFix),
+                "panPositionAgeMs",panAge,"tiltPositionAgeMs",tiltAge,"maxPositionAgeMs",s.maxPositionAgeMs,
+                "cachedPositionsUsable",panAge<=s.maxPositionAgeMs&&tiltAge<=s.maxPositionAgeMs);
+            if(tiltAge>s.maxPositionAgeMs&&panReady){
+                scheduleTrackingReconnect("Tilt cache expired after a pan timeout. Reconnecting GTi.");
+                return;
+            }
+        }
+        if(!panReady)return;
         if(panFix==null||SystemClock.elapsedRealtime()-livePan.sampledAt<=s.maxPositionAgeMs)
             trackAxis(1,livePan,panFix,token);
-        if(!valid(token)||!refreshTrackingAxis(2,liveTilt,panFix,token,s.tiltPollMs))return;
+        if(!valid(token)||(!panReadTimedOut&&!refreshTrackingAxis(2,liveTilt,panFix,token,s.tiltPollMs)))return;
         now=SystemClock.elapsedRealtime();
         if(panFix==null||now-liveTilt.sampledAt<=s.maxPositionAgeMs)
             trackAxis(2,liveTilt,trackingFix(now),token);
@@ -605,24 +661,30 @@ final class VtcController implements AutoCloseable {
         if(tracking.lastPollFix!=fix&&(tracking.lastReadSent<0||now-tracking.lastReadSent>=interval)){
             tracking.lastPollFix=fix;
             if(readTrackingEncoder(axis,tracking,token,false))return true;
+            if(!valid(token))return false;
         }
         if(SystemClock.elapsedRealtime()-tracking.sampledAt<=s.maxPositionAgeMs)return true;
         tracking.lastPollFix=fix;
         if(readTrackingEncoder(axis,tracking,token,true))return true;
-        nextGtiReconnectAt=SystemClock.elapsedRealtime();
-        state="RECONNECTING GTi";message="Reconnecting GTi. Aiming remains armed.";
-        publish();
+        if(valid(token))scheduleTrackingReconnect("Reconnecting GTi. Aiming remains armed.");
         return false;
+    }
+
+    private void scheduleTrackingReconnect(String detail){
+        nextGtiReconnectAt=SystemClock.elapsedRealtime();
+        state="RECONNECTING GTi";message=detail;
+        publish();
     }
 
     private boolean readTrackingEncoder(int axis,TrackingAxis tracking,long token,boolean recovery)throws IOException {
         tracking.lastReadSent=SystemClock.elapsedRealtime();
         try {
             int raw=mount.encoder(axis,()->valid(token),s.encoderTimeoutMs);
-            if(!valid(token))return false;
+            if(!valid(token)||!checkTrackingSector(axis,raw,token))return false;
             trackingSample(axis,tracking,raw,SystemClock.elapsedRealtime());
             return true;
         }catch(IOException e){
+            if(axis==1&&e instanceof java.net.SocketTimeoutException)panReadTimedOut=true;
             long age=SystemClock.elapsedRealtime()-tracking.sampledAt;
             log.error("tracking_encoder_read_failed",e,"axis",axis,"timeoutMs",s.encoderTimeoutMs,
                 "positionAgeMs",age,"cachedPositionUsable",age<=s.maxPositionAgeMs,"recoveryRead",recovery);
@@ -636,24 +698,33 @@ final class VtcController implements AutoCloseable {
         GtiClient candidate=null;
         try{
             candidate=new GtiClient(new GtiUdpTransport(manager,network,s.mountHost,s.mountPort,log));
-            candidate.reconnect();
-            if(!Arrays.equals(candidate.cpr,previous.cpr)||!candidate.firmware.equals(previous.firmware)){
-                previous.referenceLost=true;
-                fault("GTi reference changed during reconnect. Calibrate again.",true);
+            candidate.reconnect(previous,()->recoveryReadAllowed(token));
+            if(!valid(token))return;
+            if(sectorCheckAt>=0){
+                synchronized(this){
+                    if(!valid(token))return;
+                    mount=candidate;candidate=null;previous.close();
+                    nextGtiReconnectAt=-1;
+                    log.event("tracking_gti_reconnected","GTi link restored; checking sector before resuming");
+                    requestMountStop("Rechecking GTi after reconnect",null,true);
+                }
                 return;
             }
             int pan=candidate.encoder(1,()->valid(token),s.encoderTimeoutMs);
             long panAt=SystemClock.elapsedRealtime();
             int tilt=candidate.encoder(2,()->valid(token),s.encoderTimeoutMs);
-            if(!valid(token))return;
-            mount=candidate;candidate=null;previous.close();
-            trackingSample(1,livePan,pan,panAt);
-            trackingSample(2,liveTilt,tilt,SystemClock.elapsedRealtime());
-            livePan.lastReadSent=panAt;liveTilt.lastReadSent=liveTilt.sampledAt;
-            nextGtiReconnectAt=-1;
-            state="AIMING";message="GTi reconnected. Aiming resumed.";
-            log.event("tracking_gti_reconnected","Fresh pan and tilt positions");
-            publish();
+            synchronized(this){
+                if(!valid(token))return;
+                mount=candidate;candidate=null;previous.close();
+                nextGtiReconnectAt=-1;
+                if(!checkTrackingSector(1,pan,token)||!checkTrackingSector(2,tilt,token))return;
+                trackingSample(1,livePan,pan,panAt);
+                trackingSample(2,liveTilt,tilt,SystemClock.elapsedRealtime());
+                livePan.lastReadSent=panAt;liveTilt.lastReadSent=liveTilt.sampledAt;
+                state="AIMING";message="GTi reconnected. Aiming resumed.";
+                log.event("tracking_gti_reconnected","Fresh pan and tilt positions");
+                publish();
+            }
         }catch(IOException e){
             if(!valid(token))return;
             if(candidate!=null&&candidate.referenceLost){
@@ -664,6 +735,84 @@ final class VtcController implements AutoCloseable {
             log.error("tracking_gti_reconnect_failed",e);
             nextGtiReconnectAt=SystemClock.elapsedRealtime()+500;
         }finally{if(candidate!=null)candidate.close();}
+    }
+
+    private boolean recoveryReadAllowed(long token){
+        if(!valid(token))return false;
+        watchdog.healthy(SystemClock.elapsedRealtime());
+        return true;
+    }
+
+    private synchronized boolean checkTrackingSector(int axis,int raw,long token){
+        if(!valid(token))return false;
+        String violation=calibration.sectorViolation(axis,raw);
+        if(violation==null)return true;
+        sectorCheckAt=SystemClock.elapsedRealtime();
+        nextGtiReconnectAt=-1;
+        aimText="Checking GTi position against the limits";
+        log.record("tracking_sector_check_started","axis",axis,"raw",raw,"reason",violation);
+        requestMountStop(violation,null,true);
+        return false;
+    }
+
+    private void recheckTrackingSector(long token)throws IOException {
+        GtiClient current=mount;
+        try{
+            GtiClient.Position fresh=current.position(()->recoveryReadAllowed(token));
+            synchronized(this){
+                if(!valid(token)||current!=mount)return;
+                if(fresh.moving){
+                    requestMountStop("GTi still moving during limit recheck",null,true);
+                    return;
+                }
+                long now=SystemClock.elapsedRealtime();
+                String violation=calibration.sectorViolation(1,fresh.pan);
+                if(violation==null)violation=calibration.sectorViolation(2,fresh.tilt);
+                if(violation!=null){
+                    if(!"WAITING GTi LIMITS".equals(state)||!violation.equals(message))
+                        log.record("tracking_sector_outside","reason",violation,"position",positionSnapshot(fresh));
+                    state="WAITING GTi LIMITS";message=violation;aimText=violation;
+                    position=fresh;sectorCheckAt=now+1000;
+                    publishThrottled();
+                    return;
+                }
+                livePan.resetAfterStop(fresh.pan,now);liveTilt.resetAfterStop(fresh.tilt,now);
+                position=fresh;sectorCheckAt=-1;
+                current.begin();
+                state="AIMING";message="GTi position confirmed inside limits. Aiming resumed.";
+                log.record("tracking_sector_recovered","position",positionSnapshot(fresh),"gps",gpsSnapshot(freshFix()));
+                publish();
+            }
+        }catch(IOException e){
+            synchronized(this){
+                if(!valid(token)||current!=mount)return;
+                if(current.referenceLost){fault("GTi lost its motor reference. Calibrate again.",true);return;}
+                log.error("tracking_sector_recheck_failed",e);
+                scheduleTrackingReconnect("GTi limit recheck failed. Reconnecting before resuming.");
+            }
+        }
+    }
+
+    private double targetDistance(GpsFeed.Fix fix){
+        return Geo.distance(s.latitude,s.longitude,fix.packet.lat,fix.packet.lon);
+    }
+
+    private boolean trackingTargetInRange(GpsFeed.Fix fix,double distance,long token)throws IOException {
+        String blocker=Readiness.rangeBlocker(s,distance);
+        if(blocker==null){
+            if(targetRangeWaiting)log.record("tracking_target_in_range","rangeM",distance,"gps",gpsSnapshot(fix));
+            targetRangeWaiting=false;
+            return true;
+        }
+        stopTrackingAxis(1,livePan,fix,token,blocker);
+        stopTrackingAxis(2,liveTilt,fix,token,blocker);
+        if(!valid(token))return false;
+        if(!targetRangeWaiting)
+            log.record("tracking_target_out_of_range","rangeM",distance,"reason",blocker,"gps",gpsSnapshot(fix));
+        targetRangeWaiting=true;state="WAITING TARGET";
+        message=distance<s.rangeMin?"Waiting for rider to move into range":blocker;
+        aimText=blocker;
+        return false;
     }
 
     private GpsFeed.Fix trackingFix(long now) {
@@ -689,19 +838,19 @@ final class VtcController implements AutoCloseable {
             return;
         }
         boolean pan=axis==1;
-        double range=Geo.distance(s.latitude,s.longitude,f.packet.lat,f.packet.lon);
-        double safeRange=Math.max(.001,range);
+        double range=targetDistance(f);
+        if(!trackingTargetInRange(f,range,token))return;
+        double safeRange=range;
         double bearing=Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon);
         framing.distance(safeRange);
         double heading=Geo.wrap(bearing+framing.tick(now));
         double target=pan?calibration.targetPan(heading):Geo.elevation(range,s.height,s.targetHeight)+s.tiltOffset;
         double current=pan?calibration.panOffset(a.raw):calibration.tiltAngle(a.raw);
         double min=pan?s.panMin:s.tiltMin,max=pan?s.panMax:s.tiltMax;
-        if(current<min||current>max){halt("Mount is outside the configured sector");return;}
-        String blocker=Readiness.rangeBlocker(s,range);
-        if(blocker!=null||target<min||target>max){
-            stopTrackingAxis(axis,a,f,token,blocker==null?"Axis target is outside its sector":blocker);
-            if(pan){state="WAITING TARGET";message=blocker==null?"Pan target is outside its sector":blocker;}
+        if(!checkTrackingSector(axis,a.raw,token))return;
+        if(target<min||target>max){
+            stopTrackingAxis(axis,a,f,token,"Axis target is outside its sector");
+            if(pan){state="WAITING TARGET";message="Pan target is outside its sector";}
             return;
         }
         double error=target-current,tolerance=pan?s.panToleranceDegrees(safeRange):s.tiltToleranceDegrees(safeRange);
@@ -806,10 +955,11 @@ final class VtcController implements AutoCloseable {
                     "mode",s.gotoNoWait?"no-wait":"acknowledged","startSent",result.startSent(),
                     "reason",skipReason[0]==null?result.reason():skipReason[0],
                     "command",result.command(),"reply",result.reply());
-                if(valid(token)&&pan&&verified[0]!=f&&a.direction!=0){
+                if(valid(token)&&verified[0]!=f){
                     GpsFeed.Fix latest=verified[0];
+                    double rangeNow=targetDistance(latest);
+                    if(!trackingTargetInRange(latest,rangeNow,token)||!pan||a.direction==0)return;
                     double bearingNow=Geo.bearing(s.latitude,s.longitude,latest.packet.lat,latest.packet.lon);
-                    double rangeNow=Math.max(.001,Geo.distance(s.latitude,s.longitude,latest.packet.lat,latest.packet.lon));
                     double errorNow=calibration.targetPan(Geo.wrap(bearingNow+framing.direction*s.magnitudeDegrees(rangeNow)))-current;
                     String latestRule=PanHold.rule(latest,s,SystemClock.elapsedRealtime(),calibration.heading(a.raw),bearingNow);
                     if(PanHold.blocks(latestRule,a.direction)||(!PanHold.continues(latestRule,a.direction)
@@ -925,11 +1075,16 @@ final class VtcController implements AutoCloseable {
 
     private void observe(GpsFeed.Fix f) {
         if(f.receivedAt<lastFrameAt||(f.packet.sequence==lastFramePacket&&f.packet.senderMs==lastFrameSender))return;
-        framing.distance(Math.max(.001,Geo.distance(s.latitude,s.longitude,f.packet.lat,f.packet.lon)));
-        framing.observe(f.packet.senderMs,f.receivedAt,f.packet.lat,f.packet.lon,
-            Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon));
-        log.record("framing_observation","gps",gpsSnapshot(f),"bearingDegrees",Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon),"framing",framingSnapshot(f.receivedAt));
         lastFramePacket=f.packet.sequence;lastFrameSender=f.packet.senderMs;lastFrameAt=f.receivedAt;
+        double range=targetDistance(f);
+        if(Readiness.rangeBlocker(s,range)!=null){
+            framing.unavailable(f.receivedAt);
+            return;
+        }
+        double bearing=Geo.bearing(s.latitude,s.longitude,f.packet.lat,f.packet.lon);
+        framing.distance(range);
+        framing.observe(f.packet.senderMs,f.receivedAt,f.packet.lat,f.packet.lon,bearing);
+        log.record("framing_observation","gps",gpsSnapshot(f),"bearingDegrees",bearing,"framing",framingSnapshot(f.receivedAt));
     }
     private void rememberMove(GtiClient.Position here,double pan,double tilt,long timeoutMs) {
         moveOrigin=here;
@@ -1020,9 +1175,6 @@ final class VtcController implements AutoCloseable {
         log.record("last_landmark_invalidated","reason",reason,"landmark",lastLandmark.snapshot());
         try{landmarkStore.save(lastLandmark);}
         catch(IOException e){landmarkStorageError=e.getMessage();log.error("last_landmark_invalidation_save_failed",e);}
-    }
-    private void halt(String why)throws IOException {
-        log.event("aim_paused",why);emergencyStop(why,null);
     }
     private void fault(String why,boolean attemptStop) {
         fault(why,attemptStop,true);

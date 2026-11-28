@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VTC Design · 1.0.48</title>
+<style>
+:root{color-scheme:light;--ink:#172827;--muted:#49605c;--bg:#f5f8f7;--white:#fff;--line:#d5e2de;--head:#e6efed;--alt:#f7faf9;--work:#edf5f2;--accent:#245b52;--wait:#a51b24;--wait-bg:#fff0ef;--note:#fff8e7}
+*{box-sizing:border-box}body{margin:0;font:16px/1.58 system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+main{max-width:1240px;margin:auto;padding:38px 28px 60px}h1{font-size:clamp(2.15rem,4vw,3.15rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.04em}
+h2{font-size:1.66rem;line-height:1.22;margin:38px 0 12px;letter-spacing:-.025em}h3{font-size:1.16rem;margin:25px 0 8px}
+p{margin:9px 0 14px}a{color:var(--accent);text-underline-offset:3px}a:focus-visible,.flow:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+header{border-bottom:1px solid var(--line);padding-bottom:14px}.intro{max-width:85ch}.version,.sources{color:var(--muted);font-size:.9rem}
+nav{display:flex;flex-wrap:wrap;gap:8px 18px;padding:14px 0;border-bottom:1px solid var(--line);font-size:.91rem}
+table{border-collapse:collapse;width:100%;background:var(--white)}th,td{padding:10px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{background:var(--head);font-size:.92rem}tbody th{font-weight:650}tbody tr:nth-child(even) th,tbody tr:nth-child(even) td{background:var(--alt)}
+.flow{overflow:auto;margin:12px 0 16px}.flow table{min-width:780px}.flow th:first-child{white-space:nowrap}
+.sequence td:nth-child(3){min-width:260px;background:var(--work)}.sequence td:nth-child(4){min-width:186px}
+.ref{font-weight:700;font-size:.85rem;white-space:nowrap}.wait{color:var(--wait);background:var(--wait-bg);font-weight:700;padding:1px 4px;border-radius:3px}
+code{font: .88em ui-monospace,Consolas,monospace;color:#173c36;background:#edf3f1;padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+.callout{background:var(--note);border:1px solid #e9dab2;border-left:4px solid #b9872c;padding:10px 14px;margin:14px 0}.callout p{margin:0}
+ol,ul{padding-left:1.48rem}li+li{margin-top:5px}.compact p{margin:0 0 4px}section,[id]{scroll-margin-top:14px}
+:target{outline:2px solid #559282;outline-offset:-2px}footer{margin-top:38px;padding-top:12px;border-top:1px solid var(--line)}
+@media(max-width:650px){main{padding:25px 15px 38px}nav{gap:7px 13px}th,td{padding:8px 10px}h2{font-size:1.45rem}}
+@media print{body{background:#fff}main{padding:0}nav{display:none}.flow{overflow:visible}.flow table{min-width:0}.sequence td:nth-child(n){min-width:0}tr{break-inside:avoid}a{color:inherit}}
+</style>
+</head>
+<body>
+<main>
+<header id="top">
+<h1>VTC Design</h1>
+<p class="version">Android VTC 1.0.48 · version code 49</p>
+<p class="intro">How VTC turns accepted surfer GPS into pan and tilt commands, how it uses the Canon camera, and what causes steering to hold or wait. The command sequences describe the shipped build.</p>
+</header>
+<nav aria-label="Contents">
+<a href="#workers">Workers</a>
+<a href="#settings">Settings</a>
+<a href="#connect">Connect and calibrate</a>
+<a href="#gps">LoRa GPS</a>
+<a href="#aiming">Live aiming</a>
+<a href="#pan-rules">Pan rules</a>
+<a href="#gti">GTi commands and waits</a>
+<a href="#recovery">Recovery and Stop</a>
+<a href="#camera">Camera</a>
+<a href="#logs">Logs and replay</a>
+<a href="#field">Field examples</a>
+</nav>
+
+<section id="workers">
+<h2>Android screens and workers</h2>
+<p><strong>Track</strong> shows the connection, calibration and aiming states. <strong>Calibrate</strong> sets the landmark reference. <strong>Setup</strong> manages endpoints and options. <strong>Wave Ride</strong> sets the offshore heading and ride detection. <strong>Logs</strong>, <strong>Live Map</strong> and <strong>Camera Preview</strong> show diagnostic output.</p>
+<div class="flow" tabindex="0" role="region" aria-label="VTC workers"><table>
+<thead><tr><th scope="col">Worker</th><th scope="col">Responsibility</th><th scope="col">Where it can wait</th></tr></thead>
+<tbody>
+<tr><th scope="row">Android UI and foreground service</th><td>Own setup edits, control buttons and status display. The service owns the hardware session and uses a wake lock and Wi-Fi lock while a device session is active.</td><td>Long operations run on workers. The activity can reconnect to the same service after returning to the app.</td></tr>
+<tr><th scope="row"><code>vtc-gps</code></th><td>Receive UDP GPS, validate packets and publish the newest accepted fix plus recent observations.</td><td><span class="wait">WAIT</span> for a GPS datagram on its own socket. Accepted fixes can arrive while the mount worker is waiting on GTi.</td></tr>
+<tr><th scope="row"><code>vtc-mount</code></th><td>Own routine GTi motion. The scheduled tick runs with a <strong>100 ms delay after completion</strong>. A GPS arrival can also queue a tracking tick. A tick may reuse an accepted fix for a new decision.</td><td><span class="wait">WAIT</span> for synchronous GTi exchanges. Commands in a single tick can span several GPS arrivals.</td></tr>
+<tr><th scope="row"><code>vtc-mount-replies</code></th><td>Receive and log replies to asynchronous GTi sends.</td><td>Reply windows run in the background. A No-wait Start can be logged before its mode, target or Start replies are seen.</td></tr>
+<tr><th scope="row"><code>vtc-stop</code> and watchdog</th><td>Cancel pending motion and handle verified full Stop for user Stop, disconnect, Exit and faults. The watchdog checks control health and continuous motion when GPS expires.</td><td><span class="wait">WAIT</span> for Stop acknowledgments and stopped status on full Stop. The tracking reversal timer just defers a later Start.</td></tr>
+<tr><th scope="row"><code>vtc-camera</code> and storage</th><td>Handle Canon HTTP, recording and screenshots on the camera worker. Write settings and diagnostic files separately.</td><td><span class="wait">WAIT</span> for Canon HTTP on the camera worker. A long camera request affects other camera actions.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/VtcController.java">VtcController.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/VtcService.java">VtcService.java</a></p>
+</section>
+
+<section id="settings">
+<h2>Settings and built-in defaults</h2>
+<p>On the phone, VTC uses <code>Download/VTC/Settings</code>. <code>setup.json</code> holds site, tracking, ride and camera settings. <code>gti.json</code> holds the five GoTo and encoder read settings below. <code>last-landmark.json</code> stores the saved reference. The settings snapshot at <code>aim_start_requested</code> tells you what a field run actually used.</p>
+<div class="flow" tabindex="0" role="region" aria-label="Settings and defaults"><table>
+<thead><tr><th scope="col">Field</th><th scope="col">Default</th><th scope="col">Effect</th></tr></thead>
+<tbody>
+<tr><th scope="row"><code>gotoMode</code></th><td><code>no-wait</code></td><td>Finite tracking GoTo uses <code>no-wait</code> or <code>acknowledged</code>. Values are lowercase and case-sensitive. The UI calls the second mode <strong>Acknowledged</strong>.</td></tr>
+<tr><th scope="row"><code>panPollMs</code>, <code>tiltPollMs</code></th><td>500 ms per axis</td><td>Minimum interval for routine encoder reads. Each axis also needs a newer accepted GPS fix. An expired cache can trigger an additional recovery read.</td></tr>
+<tr><th scope="row"><code>encoderTimeoutMs</code>, <code>maxPositionAgeMs</code></th><td>100 ms reply · 4,000 ms cache</td><td>Live encoder deadline and maximum age of the last valid position, per axis. Reconnect identity and full position checks have separate deadlines.</td></tr>
+<tr><th scope="row"><code>mountHost</code>, <code>mountPort</code></th><td>192.168.4.4 · UDP 11880</td><td>GTi endpoint. <strong>Find GTi</strong> can discover its current IP.</td></tr>
+<tr><th scope="row"><code>receiverHost</code>, <code>receiverPort</code>, <code>receivePort</code></th><td>192.168.4.1 · UDP 5006 · local UDP 5005</td><td>LoRa receiver HELLO endpoint and the phone’s GPS listen port.</td></tr>
+<tr><th scope="row"><code>gpsAge</code>, <code>gpsGapTimeout</code>, <code>maxGpsSpeed</code></th><td>2 s · 3 s · 20 m/s</td><td>A fix ages out after the smaller of the two time settings. The gap limit controls stopping after GPS loss. The speed cap rejects implausible GPS steps.</td></tr>
+<tr><th scope="row"><code>rangeMin</code>, <code>rangeMax</code></th><td>10 m · 2,000 m</td><td>Rider range allowed for steering. Outside the range, VTC can stay armed and wait for a usable fix.</td></tr>
+<tr><th scope="row"><code>panMin</code>, <code>panMax</code>, <code>tiltMin</code>, <code>tiltMax</code></th><td>−170° to +170° · −45° to +20°</td><td>Pan bounds are landmark-relative. Tilt bounds use the calibrated elevation angle.</td></tr>
+<tr><th scope="row"><code>panToleranceMetres</code>, <code>tiltToleranceMetres</code></th><td>2 m · 0.5 m</td><td>Allowed error on either side of the respective aim point, converted using the current rider range.</td></tr>
+<tr><th scope="row"><code>acquisitionTriggerMetres</code>, <code>gotoMaxMove</code></th><td>0 m · 45°</td><td>A nonzero correction at or above the trigger selects GoTo. With 0 m, every eligible nonzero correction selects GoTo. Each tracking GoTo step is limited by <code>gotoMaxMove</code>.</td></tr>
+<tr><th scope="row"><code>reverseSeconds</code>, <code>maxPanningSpeed</code></th><td>2 s · 5°/s configured</td><td>Opposite direction timing and requested ceiling for continuous correction. VTC’s continuous command cap is about 3.34°/s (800×).</td></tr>
+<tr><th scope="row"><code>offshoreHeadingDegrees</code>, <code>magnitudeMetres</code></th><td>Blank · 2 m</td><td>Saved direction out to sea, required to arm. 0° means due north. The second field is the framing lead during a ride.</td></tr>
+<tr><th scope="row"><code>rideStartKmh</code>, <code>rideStartConfirmations</code></th><td>12 km/h · 2 estimates</td><td>Consecutive qualifying estimates required to start a ride.</td></tr>
+<tr><th scope="row"><code>rideEndKmh</code>, <code>rideEndSeconds</code></th><td>10.8 km/h · 2 s</td><td>Qualifying speed must stay below the threshold for this long to end a ride.</td></tr>
+<tr><th scope="row"><code>cameraHost</code>, <code>cameraPort</code>, <code>maxRecordingMinutes</code></th><td>192.168.4.3 · HTTP 8080 · 20 min</td><td>Canon CCAPI endpoint and per-clip recording limit. A blank camera IP disables CCAPI. A recording limit of 0 permits one continuous clip from VTC’s side.</td></tr>
+<tr><th scope="row"><code>zoomMode</code>, <code>zoom_scales</code>, <code>zoomSwitchSeconds</code></th><td>bands · [1.0] · 10 s</td><td>Off, Bands or Auto-fit. A configured scale list cycles on the configured interval. Edit the band table, mapping and scale list in <code>setup.json</code>.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/Settings.java">Settings.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/VtcService.java">VtcService.java</a></p>
+</section>
+
+<section id="connect">
+<h2>Connect, calibrate and save offshore</h2>
+<div class="flow" tabindex="0" role="region" aria-label="Connect and calibrate sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">User and screen</th><th scope="col">VTC action</th><th scope="col">Hardware exchange</th></tr></thead>
+<tbody>
+<tr id="conn-01"><th scope="row"><a class="ref" href="#conn-01">CONN-01</a></th><td><strong>Find GTi</strong> or enter IP.</td><td>Try firmware discovery over the active Wi-Fi broadcast. Direct checks provide a fallback. A selected result updates the saved endpoint.</td><td>Read-only <a href="#cmd-e"><code>:e1</code></a> UDP, normally port 11880.</td></tr>
+<tr id="conn-02"><th scope="row"><a class="ref" href="#conn-02">CONN-02</a></th><td><strong>Connect GTi + LoRa</strong>. The button adds <strong>+ CAM</strong> when configured.</td><td>Start the LoRa receiver lifecycle separately. Select one eligible Android Wi-Fi network and bind GTi UDP to it. Verify a full stop before initialising the mount.</td><td><a href="#cmd-l"><code>:L1</code>, <code>:L2</code></a> and <a href="#cmd-f"><code>:f1</code>, <code>:f2</code></a> follow <a href="#stop-02">STOP-02</a>.</td></tr>
+<tr id="conn-03"><th scope="row"><a class="ref" href="#conn-03">CONN-03</a></th><td>Connecting to GTi.</td><td>Read counts per revolution, status and firmware on pan, then tilt. Initial Connect initialises an uninitialised motor if needed. That invalidates a saved landmark reference.</td><td><span class="wait">WAIT</span> after each command. Per axis <a href="#cmd-a"><code>:aN</code></a> → <a href="#cmd-f"><code>:fN</code></a> → optional <a href="#cmd-init"><code>:FN</code></a> → <a href="#cmd-e"><code>:eN</code></a>.</td></tr>
+<tr id="conn-04"><th scope="row"><a class="ref" href="#conn-04">CONN-04</a></th><td>GTi connected. Calibration required for the session.</td><td>Take a full position snapshot. Status before and after the encoder reads contributes to whether either axis is moving.</td><td><span class="wait">WAIT</span> per exchange. <code>:f1 → :f2 → :j1 → :j2 → :f1 → :f2</code>. This is a <a href="#full-position">full position read</a>.</td></tr>
+<tr id="cal-01"><th scope="row"><a class="ref" href="#cal-01">CAL-01</a></th><td>Level the mount, check Right and Up, centre the exact landmark, then tap <strong>Calibrate here</strong>.</td><td>Require GTi connection, site coordinates and heights, a landmark at least 20 m away, and a stationary mount. Optional camera or landmark GPS capture uses LoRa. Manual coordinates can be entered in Setup.</td><td><span class="wait">WAIT</span> for the full position read. Capture both stopped motor counts and relate them to the landmark bearing and elevation.</td></tr>
+<tr id="cal-02"><th scope="row"><a class="ref" href="#cal-02">CAL-02</a></th><td><strong>Go to landmark and calibrate here</strong>.</td><td>Use the validated saved landmark from the same setup, issue the finite return, check that it arrived and both axes are stopped, then calibrate. Save the reference and a calibration KML.</td><td>Verified finite GoTo legs. This sequence uses the fixed-move path, including both-axis position checks and acknowledgment waits.</td></tr>
+<tr id="cal-03"><th scope="row"><a class="ref" href="#cal-03">CAL-03</a></th><td>Open <strong>Wave Ride</strong> to set offshore.</td><td>After calibration VTC can pan to the saved offshore heading within limits, with tilt at its calibration angle. To first set the heading, use the manual pan steps, let the mount stop, and tap <strong>Save offshore heading</strong>.</td><td><span class="wait">WAIT</span> for a stopped position snapshot on Save. Store the calibrated heading as <code>offshoreHeadingDegrees</code>.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/VtcController.java">Connect and calibration in VtcController.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/Calibration.java">Calibration.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/DeviceDiscovery.java">DeviceDiscovery.java</a></p>
+</section>
+
+<section id="gps">
+<h2>LoRa GPS and ride detection</h2>
+<div class="flow" tabindex="0" role="region" aria-label="GPS and ride detection sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">Step</th><th scope="col">VTC decision</th><th scope="col">Output</th></tr></thead>
+<tbody>
+<tr id="gps-01"><th scope="row"><a class="ref" href="#gps-01">GPS-01</a></th><td>Open the receiver link.</td><td>Bind the phone’s UDP GPS port on the selected Wi-Fi. Send HELLO to the receiver regularly. Accept datagrams from the configured sender address and port.</td><td>Defaults are receiver <code>192.168.4.1:5006</code>, local <code>5005</code>. GPS stays independent of GTi.</td></tr>
+<tr id="gps-02"><th scope="row"><a class="ref" href="#gps-02">GPS-02</a></th><td>Accept a fix.</td><td>Parse the GPS sequence, sender time, coordinates and reception telemetry. Reject bad input, repeats, out-of-order packets and implausible motion. Track packet gaps and sender continuity. Publish the newest accepted fix with the preceding one.</td><td><code>gps_accepted</code> carries sequence, age, continuity and reception data. Old or rejected packets do not become new targets.</td></tr>
+<tr id="gps-03"><th scope="row"><a class="ref" href="#gps-03">GPS-03</a></th><td>Capture a site coordinate, when requested.</td><td>Use distinct, fresh fixes while the receiver is stationary at the capture point. The stable capture requires at least 10 fixes over 4 s, within 5 m of their mean.</td><td>Use the averaged camera or landmark coordinates. The capture times out after 120 s.</td></tr>
+<tr id="ride-01"><th scope="row"><a class="ref" href="#ride-01">RIDE-01</a></th><td>Estimate qualifying speed.</td><td>Compare GPS positions about 1–2 s apart using sender time. Resolve the displacement alongshore and offshore. Keep the entire alongshore component and any shoreward component. Set the seaward component to zero.</td><td>A straight seaward leg contributes 0 km/h. Diagonal seaward travel contributes its alongshore speed.</td></tr>
+<tr id="ride-02"><th scope="row"><a class="ref" href="#ride-02">RIDE-02</a></th><td>Enter or leave a ride.</td><td>Start after <code>rideStartConfirmations</code> estimates at or above <code>rideStartKmh</code>. End after the qualifying speed stays below <code>rideEndKmh</code> for <code>rideEndSeconds</code>. GPS becoming unavailable clears the ride observation state.</td><td>Default start is two estimates at 12 km/h or more. Default end is below 10.8 km/h for 2 s.</td></tr>
+<tr id="ride-03"><th scope="row"><a class="ref" href="#ride-03">RIDE-03</a></th><td>Set the framing lead.</td><td>During an active ride, use net sideways motion around the fixed mount over that estimate interval. At least 0.25 m clockwise or anticlockwise picks the side. Add <code>magnitudeMetres</code> in that direction to the rider’s pan aim using current range. Use 0 m lead when there is no ride or the side is unclear.</td><td><code>framing_observation</code> records qualifying speed, ride state, sideways motion and applied lead. A lead setting of 0 m still allows ride detection.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/GpsFeed.java">GpsFeed.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/StableGpsCapture.java">StableGpsCapture.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/FramingEngine.java">FramingEngine.java</a></p>
+</section>
+
+<section id="aiming">
+<h2>Start Aiming and the live tracking cycle</h2>
+<div class="flow" tabindex="0" role="region" aria-label="Live tracking sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">Step</th><th scope="col">Mount worker · decisions</th><th scope="col">GTi and timing</th></tr></thead>
+<tbody>
+<tr id="aim-01"><th scope="row"><a class="ref" href="#aim-01">AIM-01</a></th><td>Tap <strong>Start Aiming</strong>.</td><td>Require GTi, valid calibration and site data, saved offshore heading and fresh accepted GPS. Read both axes stopped. Set the aiming session active. A rider outside the allowed range starts in <strong>WAITING TARGET</strong>.</td><td><span class="wait">WAIT</span> for a <a href="#full-position">full position read</a> before arming. Recording and automatic zoom see the active aiming session on their separate worker.</td></tr>
+<tr id="aim-02"><th scope="row"><a class="ref" href="#aim-02">AIM-02</a></th><td>Inspect GPS and any active command.</td><td>Recovery runs first when pending. Otherwise check GPS availability and rider range. With a usable cached pan heading, check whether to stop an active command before polling. PR2 and PR4 hold the opposing direction only.</td><td>An indicated Stop sends <a href="#cmd-k"><code>:K1</code></a> and returns to the control flow without waiting for the Stop reply.</td></tr>
+<tr id="aim-03"><th scope="row"><a class="ref" href="#aim-03">AIM-03</a></th><td>Read pan and do the pan decision.</td><td>Read pan when a newer acceptable GPS fix and <code>panPollMs</code> permit it. Use the newest GPS available after the read. Compute the rider bearing, framing-adjusted target and current camera aim. Check range, sector, tolerance, <a href="#pan-rules">pan rule</a> and reversal timing.</td><td><a href="#cmd-j"><code>:j1</code></a> then <span class="wait">WAIT</span> for the pan encoder reply, up to <code>encoderTimeoutMs</code> (100 ms by default). Use a still-valid cached position on failure.</td></tr>
+<tr id="aim-04"><th scope="row"><a class="ref" href="#aim-04">AIM-04</a></th><td>Choose GoTo, continuous correction or hold.</td><td>For a nonzero permitted correction, aim error at or above <code>acquisitionTriggerMetres</code> selects finite GoTo. Smaller errors can select continuous pan when the trigger is positive. Within tolerance, VTC requests no new correction. PR2 and PR4 can suppress the opposing Start before this branch.</td><td><a href="#finite-goto">Finite GoTo</a> · <a href="#continuous">Continuous slew</a>. An active same-direction pan can continue under PR2 or PR4.</td></tr>
+<tr id="aim-05"><th scope="row"><a class="ref" href="#aim-05">AIM-05</a></th><td>Read tilt and do the tilt decision.</td><td>After pan has had its decision and command opportunity, read tilt when due and use the newest GPS. Tilt aims at the rider’s height relative to the lens plus <code>tiltOffset</code>. A pan timeout skips the tilt request for that cycle. A usable tilt cache can still be used.</td><td><a href="#cmd-j"><code>:j2</code></a> then <span class="wait">WAIT</span> up to <code>encoderTimeoutMs</code>. A stale cache can trigger <a href="#recovery">recovery</a>.</td></tr>
+<tr id="aim-06"><th scope="row"><a class="ref" href="#aim-06">AIM-06</a></th><td>Publish a decision and repeat.</td><td>Update position, aim diagnostics and map state. Either a GPS wake-up or the scheduled tick can run the next cycle. Freshness is checked again before a new finite Start.</td><td><code>aim_cycle</code> and <code>tracking_axis_decision</code> explain the choice. Read, send and observed motion are recorded separately.</td></tr>
+</tbody></table></div>
+<h3 id="tick-example">Example tick in Acknowledged mode</h3>
+<p>Illustrative times. GPS #102 arrives while the mount worker waits for the pan encoder. M1 is one mount tick. G1 and G2 are GPS work on the other thread.</p>
+<div class="flow" tabindex="0" role="region" aria-label="Illustrative GPS and GTi timing"><table>
+<thead><tr><th scope="col">Elapsed</th><th scope="col">Thread</th><th scope="col">Tick</th><th scope="col">Event</th><th scope="col">GTi exchange</th></tr></thead>
+<tbody>
+<tr><td>+0 ms</td><td><code>vtc-gps</code></td><td>G1</td><td>Accept GPS #101 and queue work.</td><td>—</td></tr>
+<tr><td>+6 ms</td><td><code>vtc-mount</code></td><td>M1</td><td>Send the eligible pan read.</td><td>CM#001 <code>:j1</code> (read pan encoder).</td></tr>
+<tr><td>+7 ms</td><td><code>vtc-mount</code></td><td>M1</td><td><span class="wait">WAIT for CM#001</span> (pan encoder reply).</td><td>Socket receive.</td></tr>
+<tr><td>+52 ms</td><td><code>vtc-gps</code></td><td>G2</td><td>Accept and publish GPS #102.</td><td>—</td></tr>
+<tr><td>+74 ms</td><td><code>vtc-mount</code></td><td>M1</td><td>Accept CM#001’s encoder reply. Evaluate pan using GPS #102.</td><td>Then send mode and target, waiting for each acknowledgment.</td></tr>
+<tr><td>+226 ms</td><td><code>vtc-mount</code></td><td>M1</td><td>Check the latest GPS again. The target still applies. Send Start.</td><td><code>:J1</code> then <span class="wait">WAIT</span> for Start reply.</td></tr>
+<tr><td>+294 ms</td><td><code>vtc-mount</code></td><td>M1</td><td>Start reply received. If tilt is due, begin its position read.</td><td><code>:j2</code> then <span class="wait">WAIT</span> for tilt reply.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/VtcController.java">VtcController.java · start, tickTracking and trackAxis</a></p>
+</section>
+
+<section id="pan-rules">
+<h2>Pan rule reference</h2>
+<p>The mount is at the centre of the half-clock. <strong>12 o’clock is the camera’s current aim.</strong> VTC compares the previous and newest usable GPS bearings around the mount against that aim. The framing lead uses the separate ride baseline. The pan rule uses the rider’s position, so the signed lead can affect the eventual correction without changing the reported PR number.</p>
+<div class="flow" tabindex="0" role="region" aria-label="Half-clock pan rules"><table>
+<thead><tr><th scope="col">Rule</th><th scope="col">Rider moving</th><th scope="col">Path on the half-clock</th><th scope="col">VTC behavior</th></tr></thead>
+<tbody>
+<tr id="pr1"><th scope="row"><a class="ref" href="#pr1">PR1</a></th><td>Anticlockwise</td><td>12 → 11 → 10, away from centre</td><td>Use normal aiming for an anticlockwise follow. The calculated target, tolerance and limits determine the move.</td></tr>
+<tr id="pr2"><th scope="row"><a class="ref" href="#pr2">PR2</a></th><td>Anticlockwise</td><td>2 → 1 → 12, toward centre</td><td>Hold clockwise correction only. Stop an opposing clockwise command. Let an existing anticlockwise pan continue.</td></tr>
+<tr id="pr3"><th scope="row"><a class="ref" href="#pr3">PR3</a></th><td>Clockwise</td><td>12 → 1 → 2, away from centre</td><td>Use normal aiming for a clockwise follow. The calculated target, tolerance and limits determine the move.</td></tr>
+<tr id="pr4"><th scope="row"><a class="ref" href="#pr4">PR4</a></th><td>Clockwise</td><td>10 → 11 → 12, toward centre</td><td>Hold anticlockwise correction only. Stop an opposing anticlockwise command. Let an existing clockwise pan continue.</td></tr>
+</tbody></table></div>
+<p>A stationary bearing or unavailable prior fix can leave the pan rule blank. VTC logs <code>continue_existing_pan</code>, <code>stop_opposing_pan</code> or <code>suppress_opposing_start</code> when the directional rule branches. The rule can apply during or outside a ride. Its inputs are GPS and camera heading.</p>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/PanHold.java">PanHold.java</a></p>
+</section>
+
+<section id="gti">
+<h2>GTi commands and reply waits</h2>
+<p>GTi uses UDP. <code>N</code> is <strong>1 for pan</strong> or <strong>2 for tilt</strong>. Each request ends in carriage return, shown as <code>\r</code> in logs. The response is matched by reply shape on the request socket. The six-digit position reply itself carries no axis ID.</p>
+
+<h3 id="finite-goto">Finite tracking GoTo</h3>
+<div class="flow" tabindex="0" role="region" aria-label="Finite tracking GoTo sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">Step</th><th scope="col">Acknowledged</th><th scope="col">No-wait</th></tr></thead>
+<tbody>
+<tr id="goto-01"><th scope="row"><a class="ref" href="#goto-01">GOTO-01</a></th><td>Program motion mode and direction.</td><td>Send <a href="#cmd-g"><code>:GN…</code></a>. <span class="wait">WAIT</span> for an empty acknowledgment. Leg magnitude above 1° uses high-speed GoTo mode 0. Otherwise use mode 2.</td><td>Send <code>:GN…</code>. The reply is collected in the background.</td></tr>
+<tr id="goto-02"><th scope="row"><a class="ref" href="#goto-02">GOTO-02</a></th><td>Program the target counter.</td><td>Send <a href="#cmd-s"><code>:SN…</code></a>. <span class="wait">WAIT</span> for an empty acknowledgment. A rejected or unusable setter prevents Start.</td><td>Send <code>:SN…</code>. Continue without waiting for the target reply.</td></tr>
+<tr id="goto-03"><th scope="row"><a class="ref" href="#goto-03">GOTO-03</a></th><td>Recheck GPS immediately before Start.</td><td>Re-evaluate fresh GPS, range, target, direction and relevant gates. If the latest fix changes the compatible destination, reprogram the target and check again. A hold, direction or tolerance change can suppress Start.</td><td>Same final GPS check and possible setter rewrite. Network replies may still be arriving from earlier sends.</td></tr>
+<tr id="goto-04"><th scope="row"><a class="ref" href="#goto-04">GOTO-04</a></th><td>Start pan or tilt.</td><td>Send <a href="#cmd-start"><code>:JN</code></a>. Log <code>tracking_start_sent</code> at transmission. <span class="wait">WAIT</span> for Start reply.</td><td>Send <code>:JN</code> and log <code>tracking_start_sent</code>. Reply collection continues separately.</td></tr>
+<tr id="goto-05"><th scope="row"><a class="ref" href="#goto-05">GOTO-05</a></th><td>Observe what the mount does.</td><td>Track later encoder movement. Two unchanged intervals can mark the move settled and log the difference from the programmed target. No routine motor status query precedes each live Start.</td><td>Same encoder observation. No-wait pan can attempt a replacement while VTC still believes a finite pan is active. Acknowledged pan and tilt avoid replacing an active finite command unless its command state has cleared or a Stop is in progress.</td></tr>
+</tbody></table></div>
+<p class="callout"><strong>A Start is a send event.</strong> An acknowledgment on a Start socket means a matching reply shape was received. Position change shows motion, and the final target error shows whether it got where VTC intended.</p>
+
+<h3 id="continuous">Continuous slew</h3>
+<div class="flow" tabindex="0" role="region" aria-label="Continuous slew sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">Step</th><th scope="col">VTC calculation</th><th scope="col">GTi exchange</th></tr></thead>
+<tbody>
+<tr id="slew-01"><th scope="row"><a class="ref" href="#slew-01">SLEW-01</a></th><td>Choose a rate.</td><td>With a positive acquisition trigger and an eligible smaller error, the planner uses proportional low-speed correction or one fixed high-speed rate. It applies tolerance, restart and high-speed hysteresis. It reduces the rate near the configured limit. An unchanged request issues no update.</td><td>On first use, <span class="wait">WAIT</span> for <a href="#cmd-b"><code>:bN</code></a> timer and, when needed, <a href="#cmd-ratio"><code>:gN</code></a> ratio. Those are cached by the GTi client.</td></tr>
+<tr id="slew-02"><th scope="row"><a class="ref" href="#slew-02">SLEW-02</a></th><td>Check the axis before changing the command.</td><td>VTC verifies status. A direction change, low/high mode change or changed high-speed period while moving requires a Stop and stopped status before programming the new rate.</td><td><span class="wait">WAIT</span> for <code>:fN</code>. If changing mode or high-speed period, <code>:LN</code> then <code>:fN</code> until stopped, up to four checks with 50 ms intervals.</td></tr>
+<tr id="slew-03"><th scope="row"><a class="ref" href="#slew-03">SLEW-03</a></th><td>Set mode and step period, then Start if needed.</td><td>Mode 1 is low-speed slew. Mode 3 is high-speed slew. A same-direction low-speed update can change the period while moving.</td><td><span class="wait">WAIT</span> for each needed <code>:GN</code>, <a href="#cmd-i"><code>:IN</code></a>, <code>:JN</code> reply. Continuous slew always uses acknowledged exchanges.</td></tr>
+</tbody></table></div>
+<p>The acquisition trigger was 0 m in the 1.0.48 field runs. Those runs exercised the finite path. <code>maxPanningSpeed</code> caps the continuous request, while <code>gotoMaxMove</code> caps the finite leg size.</p>
+
+<h3 id="command-reference">GTi command reference</h3>
+<div class="flow compact" tabindex="0" role="region" aria-label="GTi command reference"><table>
+<thead><tr><th scope="col">ID</th><th scope="col">Wire command</th><th scope="col">Expected reply</th><th scope="col">Default deadline and use</th></tr></thead>
+<tbody>
+<tr id="cmd-j"><th scope="row"><a class="ref" href="#cmd-j">GTI-01</a></th><td><code>:j1\r</code>, <code>:j2\r</code></td><td>Six hex digits after <code>=</code></td><td>100 ms for live tracking and the final reconnect encoder reads, via <code>encoderTimeoutMs</code>. 1,500 ms for ordinary full position reads.</td></tr>
+<tr id="cmd-f"><th scope="row"><a class="ref" href="#cmd-f">GTI-02</a></th><td><code>:f1\r</code>, <code>:f2\r</code></td><td>Three hex status digits after <code>=</code></td><td>1,500 ms. Running, blocked and initialised bits for setup, full position, recovery and slew transitions.</td></tr>
+<tr id="cmd-a"><th scope="row"><a class="ref" href="#cmd-a">GTI-03</a></th><td><code>:aN\r</code></td><td>Six hex digits</td><td>1,500 ms. Counts per revolution during connect or reconnect.</td></tr>
+<tr id="cmd-e"><th scope="row"><a class="ref" href="#cmd-e">GTI-04</a></th><td><code>:eN\r</code></td><td>Six hex digits</td><td>1,500 ms for connection exchanges. Read firmware. Discovery runs separately.</td></tr>
+<tr id="cmd-init"><th scope="row"><a class="ref" href="#cmd-init">GTI-05</a></th><td><code>:FN\r</code></td><td><code>=\r</code></td><td>700 ms. Initialise an uninitialised axis on initial Connect.</td></tr>
+<tr id="cmd-g"><th scope="row"><a class="ref" href="#cmd-g">GTI-06</a></th><td><code>:GN&lt;mode&gt;&lt;dir&gt;\r</code></td><td><code>=\r</code></td><td>700 ms. Set mode and direction. Finite GoTo uses 0 or 2, continuous slew uses 1 or 3.</td></tr>
+<tr id="cmd-s"><th scope="row"><a class="ref" href="#cmd-s">GTI-07</a></th><td><code>:SN&lt;target24&gt;\r</code></td><td><code>=\r</code></td><td>700 ms. Set an absolute finite target as little-endian hex.</td></tr>
+<tr id="cmd-start"><th scope="row"><a class="ref" href="#cmd-start">GTI-08</a></th><td><code>:JN\r</code></td><td><code>=\r</code></td><td>700 ms. Start the programmed movement. No-wait uses the deadline only for background reply logging.</td></tr>
+<tr id="cmd-k"><th scope="row"><a class="ref" href="#cmd-k">GTI-09</a></th><td><code>:KN\r</code></td><td><code>=\r</code></td><td>700 ms asynchronous reply window. Tracking Stop for one axis, in either GoTo mode.</td></tr>
+<tr id="cmd-l"><th scope="row"><a class="ref" href="#cmd-l">GTI-10</a></th><td><code>:LN\r</code></td><td><code>=\r</code></td><td>700 ms. Stop for the verified Stop path and certain slew transitions. VTC follows this with motor status verification.</td></tr>
+<tr id="cmd-b"><th scope="row"><a class="ref" href="#cmd-b">GTI-11</a></th><td><code>:bN\r</code></td><td>Six hex digits</td><td>1,500 ms. Read timer frequency for continuous slew.</td></tr>
+<tr id="cmd-ratio"><th scope="row"><a class="ref" href="#cmd-ratio">GTI-12</a></th><td><code>:gN\r</code></td><td>Two hex digits</td><td>1,500 ms. Read high-speed ratio.</td></tr>
+<tr id="cmd-i"><th scope="row"><a class="ref" href="#cmd-i">GTI-13</a></th><td><code>:IN&lt;period24&gt;\r</code></td><td><code>=\r</code></td><td>700 ms. Set step period for continuous slew.</td></tr>
+</tbody></table></div>
+<p id="full-position"><strong>Full position read.</strong> <code>:f1 → :f2 → :j1 → :j2 → :f1 → :f2</code>. Used at Connect, calibration, Start Aiming and some recovery or fixed move paths. A running bit before or after the encoder readings makes the snapshot report moving.</p>
+<p>A mismatched reply shape is discarded within the original deadline. An explicit error can end the wait. <code>!2</code> is reported as motor not stopped. In No-wait, another request may already have gone out when that error gets logged.</p>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/GtiClient.java">GtiClient.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/GtiReplyReader.java">GtiReplyReader.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/GtiUdpTransport.java">GtiUdpTransport.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/ContinuousPlanner.java">ContinuousPlanner.java</a></p>
+</section>
+
+<section id="recovery">
+<h2>Holds, Stop and GTi recovery</h2>
+<div class="flow" tabindex="0" role="region" aria-label="Holds, Stop and recovery sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">Condition</th><th scope="col">VTC action</th><th scope="col">Wait or result</th></tr></thead>
+<tbody>
+<tr id="stop-01"><th scope="row"><a class="ref" href="#stop-01">STOP-01</a></th><td>Tracking needs to stop one axis.</td><td>PR2 or PR4 can stop an opposing pan. An opposite correction, range or sector block, or GPS gap can request Stop. Send <a href="#cmd-k"><code>:KN</code></a> for the affected active axis. If movement is still observed, a retry can be sent after at least 500 ms.</td><td>No reply wait for the tracking Stop. The default 2 s software reversal timer delays only a new opposite Start, measured from the previous Start or continuous rate command. VTC rechecks on subsequent ticks.</td></tr>
+<tr id="stop-02"><th scope="row"><a class="ref" href="#stop-02">STOP-02</a></th><td>Verified full Stop. Used for Connect, Stop Aiming, Disconnect, Exit and some recovery paths.</td><td>Invalidate pending Starts for an explicit stop. For an active mount, send <code>:L1 → :L2</code>, then check both axes with <code>:f1 → :f2</code>. The full Stop tries up to three times, with up to four status pairs per attempt and 50 ms intervals while moving.</td><td><span class="wait">WAIT</span> for Stop replies and stopped status. The explicit Stop work is on <code>vtc-stop</code>. Connect runs its own initial full Stop in the connection sequence.</td></tr>
+<tr id="stop-03"><th scope="row"><a class="ref" href="#stop-03">STOP-03</a></th><td>GPS becomes stale or rider goes outside range.</td><td>Stale GPS stops new targeting. On GPS gap expiry, routine tracking may send axis Stop. The watchdog has a separate verified Stop path for continuous motion. An out-of-range fix shows <strong>WAITING TARGET</strong> and requests Stop for active axes.</td><td>Aiming normally stays armed and resumes when a fresh, in-range fix returns. The continuous watchdog’s unconfirmed full Stop can disarm. An active finite GoTo can reach the reconnect branch before the routine GPS-gap or range checks.</td></tr>
+<tr id="rec-01"><th scope="row"><a class="ref" href="#rec-01">REC-01</a></th><td>A tracking encoder read fails.</td><td>Use a cache within <code>maxPositionAgeMs</code>. For an expired cache, try a fresh read, then schedule GTi reconnect if it fails. If a pan timeout skips tilt and tilt is already stale, VTC can schedule reconnect directly.</td><td><span class="wait">WAIT</span> on any extra encoder read, using the configured deadline. <code>tracking_tilt_read_skipped</code> records both cache ages.</td></tr>
+<tr id="rec-02"><th scope="row"><a class="ref" href="#rec-02">REC-02</a></th><td><strong>RECONNECTING GTi</strong>.</td><td>Keep aiming armed. On the replacement connection read resolution, status and firmware for pan then tilt. If resolution differs from the established value, reread the same axis once. If a status says uninitialised, check that axis again before declaring reference loss.</td><td><span class="wait">WAIT</span> for each <code>:aN</code>, <code>:fN</code>, <code>:eN</code> reply. Those exchanges allow 1,500 ms each. An unresolved mismatch or read error schedules another attempt after 500 ms. Two uninitialised statuses trigger recalibration.</td></tr>
+<tr id="rec-03"><th scope="row"><a class="ref" href="#rec-03">REC-03</a></th><td>Resume after reconnect.</td><td>Read both encoders, adopt the replacement client, then check the sectors before continuing tracking. If a sector check was already pending, take the verified Stop and limit path.</td><td><code>:j1 → :j2</code> with the live encoder timeout. <code>tracking_gti_reconnected</code> identifies a successful recovery.</td></tr>
+<tr id="rec-04"><th scope="row"><a class="ref" href="#rec-04">REC-04</a></th><td>Encoder position reports outside a configured limit.</td><td>Request a full Stop while keeping aiming armed. Recheck both axes with a full position read. A fresh, stopped, in-limit position permits resuming. A confirmed violation stays stopped and is checked again after about 1 s. A failed recheck goes through reconnect.</td><td><span class="wait">WAIT</span> for the independent full Stop and then for each command in the position snapshot.</td></tr>
+<tr id="rec-05"><th scope="row"><a class="ref" href="#rec-05">REC-05</a></th><td>Full Stop cannot be verified.</td><td>Report <strong>STOP UNCONFIRMED</strong> and block further movement on the explicit-stop path. For Stop &amp; Exit, the service remains available for retry. Limit recovery instead schedules reconnect.</td><td>A Stop acknowledgment and stopped status are separate observations.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/VtcController.java">VtcController.java · Stop and live recovery</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/GtiClient.java">GtiClient.java · motor status</a></p>
+</section>
+
+<section id="camera">
+<h2>Canon camera sequence</h2>
+<p>Camera work runs on one serial worker. It takes the GTi Wi-Fi network when available, or the LoRa network when that is the active link. The regular poll is scheduled 2 s after the previous poll finishes. HTTP connection and read deadlines are each 1,500 ms for normal camera requests.</p>
+<div class="flow" tabindex="0" role="region" aria-label="Canon camera sequence"><table class="sequence">
+<thead><tr><th scope="col">ID</th><th scope="col">Action</th><th scope="col">VTC behavior</th><th scope="col">Canon exchange</th></tr></thead>
+<tbody>
+<tr id="cam-01"><th scope="row"><a class="ref" href="#cam-01">CAM-01</a></th><td><strong>Find Camera</strong> or enter its IP.</td><td>Probe the saved endpoint first, then test peers on the active subnet if needed. Show verified Canon model and IP. Selecting a result stores that endpoint.</td><td>Background discovery <code>GET /ccapi/ver100/deviceinformation</code>. Default camera port is 8080.</td></tr>
+<tr id="cam-02"><th scope="row"><a class="ref" href="#cam-02">CAM-02</a></th><td>Poll the camera.</td><td>Read Canon events and run recording control, then read zoom. Successful zoom readback sets the CAM connection state and records the confirmed optical zoom. VTC also checks and synchronises the camera clock to the phone.</td><td><span class="wait">WAIT</span> on camera worker for <code>GET /event/polling</code>, <code>GET /shooting/control/zoom</code>, and separate clock requests to <code>/functions/datetime</code>.</td></tr>
+<tr id="cam-03"><th scope="row"><a class="ref" href="#cam-03">CAM-03</a></th><td>Automatic zoom during aiming.</td><td>Bands selects the configured range-band base zoom and applies the current scale. Auto-fit requests zoom from <code>range × wideFrameFactor ÷ (desiredFrameWidthMetres ÷ scale)</code>. The request is capped by the optical and CCAPI limits. Readback keeps running after Stop Aiming and the lens is left at its last setting.</td><td><span class="wait">WAIT</span> for <code>POST /shooting/control/zoom</code> when a change is needed. Matching zoom readback confirms lens position. Frame width is estimated from range, the wide-frame factor and confirmed optical zoom.</td></tr>
+<tr id="cam-04"><th scope="row"><a class="ref" href="#cam-04">CAM-04</a></th><td>Start recording when aiming is armed.</td><td>If VTC has no recording start time, request Start. Use a successful Start reply or a Canon Start event to establish the timer. A specific unsupported-mode response can trigger Movie Mode and another Start.</td><td><span class="wait">WAIT</span> for <code>POST /shooting/control/recbutton</code> with action <code>start</code>. Camera requests are separate from GTi moves.</td></tr>
+<tr id="cam-05"><th scope="row"><a class="ref" href="#cam-05">CAM-05</a></th><td><code>maxRecordingMinutes</code> reached.</td><td>Stop the current clip and start the next one while aiming stays armed. The timer is per clip. The default is 20 min and 0 disables automatic splitting. Actual clip boundaries depend on camera polling and replies.</td><td><span class="wait">WAIT</span> for recording Stop, then Start. Log unconfirmed actions. The camera’s Start or Stop event can establish its recording state.</td></tr>
+<tr id="cam-06"><th scope="row"><a class="ref" href="#cam-06">CAM-06</a></th><td>Stop Aiming, Disconnect or Exit.</td><td>Leaving the tracked state queues recording Stop. On Exit, after verified GTi Stop, the service closes the camera worker with a final Stop attempt. Exit completes after that attempt even if the recording Stop remains unconfirmed.</td><td><span class="wait">WAIT</span> on camera worker for the recording Stop request. Check <code>camera_recording_stop</code> or <code>camera_recording_stop_failed</code>.</td></tr>
+<tr id="cam-07"><th scope="row"><a class="ref" href="#cam-07">CAM-07</a></th><td><strong>Camera Preview → Update</strong>.</td><td>Queue one snapshot on the camera worker. Enable the small preview, fetch a JPEG and turn preview off. Display the last captured image and update time.</td><td><span class="wait">WAIT</span> on the camera worker for the preview HTTP exchanges.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/CameraZoomReader.java">CameraZoomReader.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/ZoomPlan.java">ZoomPlan.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/CameraRecording.java">CameraRecording.java</a></p>
+</section>
+
+<section id="logs">
+<h2>Logs, KML and Live Map replay</h2>
+<div class="flow" tabindex="0" role="region" aria-label="Log and replay output"><table>
+<thead><tr><th scope="col">Output</th><th scope="col">What it contains</th><th scope="col">Timing or interpretation</th></tr></thead>
+<tbody>
+<tr id="logs-jsonl"><th scope="row"><a class="ref" href="#logs-jsonl">LOG-01</a> JSONL</th><td>One log per foreground service session at <code>Download/VTC/logs</code>. Each event has record number, local time, elapsed time stamp and thread. Logs GPS acceptance, settings, aiming decisions, GTi requests/replies, camera events and faults.</td><td>Stop Aiming, Disconnect and recording rollover leave the session log open. Service shutdown drains and closes it. If a log stops mid-session, check for a <code>session_end</code> record.</td></tr>
+<tr id="logs-kml"><th scope="row"><a class="ref" href="#logs-kml">LOG-02</a> KML</th><td>Same-stem Google Earth file with timestamped surfer packets, site markers and selected events. Per-packet data includes range, GPS and qualifying speed, non-seaward distance, ride/lead, encoder and zoom telemetry, target information and wait reason.</td><td>Buffered briefly so aiming telemetry can attach to a packet after GPS arrival. For exact modern tracking Start/Stop datagrams and matched replies, use JSONL.</td></tr>
+<tr id="logs-map"><th scope="row"><a class="ref" href="#logs-map">LOG-03</a> Live Map</th><td>Shows mount, surfer, connection line, estimated frame wedge, distance, zoom and the ride indicator. The line is orange during pan. It can be red if fresh measured data puts the rider beyond the estimated view while panning.</td><td>Stationary green needs a logged tolerance field. Current live <code>aim_cycle</code> records omit that field, so stationary rows can fall back to grey. Frame width and edge position are estimates.</td></tr>
+<tr id="logs-replay"><th scope="row"><a class="ref" href="#logs-replay">LOG-04</a> Replay</th><td><strong>Last run</strong> or <strong>Open log</strong> replays map telemetry. VTC shows a disconnect notice, then stops aiming, verifies GTi Stop and closes live device connections before opening the replay.</td><td>The selected file supplies its last completed aiming segment. Playback speed is adjustable from 0.25× to 8×. Ride clips include 10 s of context before and after. The map can fit the run’s largest range. Replay uses log time.</td></tr>
+<tr id="logs-sync"><th scope="row"><a class="ref" href="#logs-sync">LOG-05</a> Video and GPS</th><td>Camera recording commands and events carry log times. Accepted GPS positions carry both packet number and time. The camera clock synchronisation is logged separately.</td><td>Clip-relative times derived from Start acknowledgments or Canon events are estimates until matched to an MP4 and verified against the footage. A GPS timestamp alone does not give MP4 playback time.</td></tr>
+</tbody></table></div>
+
+<h3>Reading one decision in order</h3>
+<ol>
+<li>Find <code>gps_accepted</code> by sequence, then <code>aim_cycle</code> or <code>tracking_axis_decision</code> for its range, target, pan rule and requested direction.</li>
+<li>Check <code>tracking_start_sent</code> or <code>tracking_goto_not_started</code>. Link to <code>mount_tx</code>, <code>mount_rx</code>, <code>mount_rx_discarded</code> and <code>mount_reply_missing</code> using command, transaction and local UDP port. A reconnect may reuse transaction numbers.</li>
+<li>Compare successive <code>:j1</code> reports or <code>tracking_first_encoder_movement</code>. <code>tracking_goto_observed_settled</code> gives the remaining counter error. The encoder sampling interval and possible wrong-axis replies affect what the log can establish.</li>
+<li>If pan paused, read the recorded reason and check for explicit Stop, reversal, range, a cached encoder read or reconnect. Use the GPS and camera times to locate the clip.</li>
+</ol>
+<p class="sources"><a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/SessionLog.java">SessionLog.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/KmlDocument.java">KmlDocument.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/MapReplay.java">MapReplay.java</a> · <a href="file:///C:/Users/gildo/gdlapp/vtc/app/src/main/java/au/com/gildo/vtc/MapTimeline.java">MapTimeline.java</a></p>
+</section>
+
+<section id="field">
+<h2>Verified 1.0.48 field examples</h2>
+<p>The 21 November 2026 <strong>VTC 2111 4</strong> log contains two active aiming sessions, both in No-wait. Both ended at user Disconnect. VTC stayed armed through 29 GTi reconnects. The playback estimates below use camera Start records.</p>
+<div class="flow" tabindex="0" role="region" aria-label="Field examples"><table>
+<thead><tr><th scope="col">ID</th><th scope="col">Clip time</th><th scope="col">What the log shows</th><th scope="col">Relevant path</th></tr></thead>
+<tbody>
+<tr id="field-01"><th scope="row"><a class="ref" href="#field-01">FIELD-01</a></th><td>Clip 1 · ~00:46–00:55</td><td>9.1 s reconnect, with four unsuccessful <code>:a1</code> exchanges and 17 fresh GPS fixes during recovery.</td><td><a href="#rec-02">REC-02</a>. JSONL record 4934.</td></tr>
+<tr id="field-02"><th scope="row"><a class="ref" href="#field-02">FIELD-02</a></th><td>Clip 2 · ~00:41–00:42</td><td><code>:j1</code> accepted a value matching the tilt counter. The rider’s reported gap jumped from about 10 m anticlockwise to 75 m clockwise at the same GPS position. Three pan Stops were sent before the prior pan counter returned.</td><td><a href="#aim-03">AIM-03</a> and <a href="#stop-01">STOP-01</a>. JSONL record 14473.</td></tr>
+<tr id="field-03"><th scope="row"><a class="ref" href="#field-03">FIELD-03</a></th><td>Clip 2 · ~02:21.8–02:39.5</td><td>17.8 s of unchanged pan feedback. VTC sent 34 clockwise Starts. All 23 successful pan reads were identical and 33 target replies were missing.</td><td><a href="#goto-05">GOTO-05</a>. JSONL record 19898.</td></tr>
+<tr id="field-04"><th scope="row"><a class="ref" href="#field-04">FIELD-04</a></th><td>Clip 7 · opening to ~00:14.3</td><td>Intentional range wait. VTC armed at 6.1 m and resumed when the rider came past <code>rangeMin = 10 m</code>.</td><td><a href="#stop-03">STOP-03</a>. JSONL record 56473.</td></tr>
+</tbody></table></div>
+<p class="sources"><a href="file:///C:/Users/gildo/temp/VTC/VTC%202111%204/logs/VTC_1.0.48_20261121_150714_343_11118f3f.jsonl">VTC 2111 4 · 1.0.48 JSONL</a></p>
+</section>
+
+<footer><p class="sources">Code references reflect the VTC 1.0.48 source and the cited field log. <a href="#top">Back to top</a></p></footer>
+</main>
+</body>
+</html>

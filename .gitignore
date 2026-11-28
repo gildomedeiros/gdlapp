@@ -1,0 +1,17 @@
+# Ignore the exports folder inside VT Tools (or anywhere in the repo)
+exports/
+
+# Ignore all zip files
+*.zip
+
+# Generated Android packages and signatures
+*.apk
+*.aab
+*.idsig
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Local cam3 archive
+/cam3 dont use/

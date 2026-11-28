@@ -4,6 +4,31 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class CoordinatesAndReadinessTest {
+    @Test public void targetAtCameraWaitsForRangeWithoutComputingBearing() {
+        Settings s=GeoAndCalibrationTest.configured("rangeMin","10");
+        Readiness.AimTarget atCamera=Readiness.aimTarget(s,s.latitude,s.longitude);
+        assertEquals(0,atCamera.distance(),0);
+        assertTrue(atCamera.rangeBlocker().contains("below minimum range"));
+        assertNull(atCamera.bearing());
+        assertNull(atCamera.tilt());
+        Readiness.AimTarget inRange=Readiness.aimTarget(s,s.landmarkLat,s.landmarkLon);
+        assertNull(inRange.rangeBlocker());
+        assertNotNull(inRange.bearing());
+        assertNotNull(inRange.tilt());
+    }
+
+    @Test public void swappedPanCountTripsTiltLimitAndStoppedRecheckIsInSector(){
+        Settings s=GeoAndCalibrationTest.configured(
+            "latitude","-28.09584000","longitude","153.39902000","height","3",
+            "landmarkLat","-28.09557000","landmarkLon","153.39926000","landmarkHeight","1",
+            "panMin","-170","panMax","170","tiltMin","-45","tiltMax","20","tiltSign","-1");
+        Calibration cal=new Calibration(s,new GtiClient.Position(8388609,8388608,false),
+            new int[]{2073600,2073600});
+        assertTrue(cal.sectorViolation(2,8702419).startsWith("Tilt "));
+        assertNull(cal.sectorViolation(1,8702419));
+        assertNull(cal.sectorViolation(2,8388643));
+    }
+
     @Test public void acceptsGoogleMapsDecimalPairWithoutLosingPrecision() {
         String[] pair=Coordinates.parse(" -28.165513983264137, 153.55045722684628 ");
         assertEquals("-28.165513983264137",pair[0]);assertEquals("153.55045722684628",pair[1]);

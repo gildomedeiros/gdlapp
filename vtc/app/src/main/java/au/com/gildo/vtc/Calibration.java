@@ -28,6 +28,14 @@ final class Calibration {
     }
     double heading(int raw){return Geo.wrap(bearing+panOffset(raw));}
     double targetPan(double heading){return Geo.delta(heading,bearing);}
+    String sectorViolation(int axis,int raw){
+        boolean pan=axis==1;
+        double angle=pan?panOffset(raw):tiltAngle(raw);
+        double min=pan?settings.panMin:settings.tiltMin,max=pan?settings.panMax:settings.tiltMax;
+        if(Double.isFinite(angle)&&angle>=min&&angle<=max)return null;
+        return String.format(java.util.Locale.US,"%s %.1f° is outside the %.1f° to %.1f° limit",
+            pan?"Pan":"Tilt",angle,min,max);
+    }
     boolean allowed(double pan,double tilt){return Double.isFinite(pan)&&Double.isFinite(tilt)&&pan>=settings.panMin&&pan<=settings.panMax&&tilt>=settings.tiltMin&&tilt<=settings.tiltMax;}
 }
 

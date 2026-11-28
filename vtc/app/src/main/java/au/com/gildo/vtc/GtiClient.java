@@ -156,7 +156,7 @@ final class GtiClient implements AutoCloseable {
                 }
                 int next=stepPeriod(timer[i],cpr[i],rates[i]/(high?highRatio[i]:1));
                 // Reconcile our last command with actual motor status before updating.
-                String f=positionStatus(axis);boolean moving=running(f);
+                String f=positionStatus(axis,permitted);boolean moving=running(f);
                 if(moving&&slewDirection[i]==0)throw new IOException("Unexpected motor movement before continuous start");
                 if(moving&&(dir!=slewDirection[i]||highMode[i]!=high||(high&&period[i]!=next))) {
                     stopAxis(axis,permitted);moving=false;
@@ -174,21 +174,45 @@ final class GtiClient implements AutoCloseable {
     private final Transport transport;
     private final AtomicBoolean cancelled=new AtomicBoolean();
     GtiClient(Transport transport){this.transport=transport;}
-    void connect()throws IOException {connect(false);}
-    void reconnect()throws IOException {connect(true);}
-    private void connect(boolean recovering)throws IOException {
-        for(int a=1;a<=2;a++) {
-            cpr[a-1]=decode24(command('a',a,""));
-            if(cpr[a-1]<360||cpr[a-1]>0x7fffff)throw new IOException("Invalid mount resolution");
-            String f=status(a);
-            if(!recovering&&running(f))throw new IOException("Mount is already moving. Stop SynScan tracking first.");
-            if((Character.digit(f.charAt(2),16)&1)==0){
-                if(recovering){referenceLost=true;throw new IOException("GTi lost its motor reference");}
-                initializedDuringConnect=true;ack('F',a,"");
-            }
-            firmware+=(a==1?"":" / ")+"axis "+a+"="+command('e',a,"");
-        }
+    void connect()throws IOException {connect(null,()->true);}
+    void reconnect(GtiClient previous,BooleanSupplier permitted)throws IOException {
+        connect(java.util.Objects.requireNonNull(previous),permitted);
     }
+
+    private void connect(GtiClient previous,BooleanSupplier permitted)throws IOException {
+        for(int axis=1;axis<=2;axis++) {
+            checkRead(permitted);
+            int resolution=decode24(command('a',axis,""));
+            if(previous!=null&&resolution!=previous.cpr[axis-1]) {
+                // Position and resolution replies have the same six-digit format.
+                int expected=previous.cpr[axis-1];
+                checkRead(permitted);
+                int reread=decode24(command('a',axis,""));
+                if(reread!=expected)throw new IOException("GTi axis "+axis+" counts per revolution: expected "
+                    +expected+", read "+resolution+", then "+reread);
+                resolution=reread;
+            }
+            if(resolution<360||resolution>0x7fffff)throw new IOException("Invalid mount resolution");
+            cpr[axis-1]=resolution;
+
+            if(previous!=null) {
+                positionStatus(axis,permitted);
+            } else {
+                checkRead(permitted);
+                String status=status(axis);
+                if(running(status))throw new IOException("Mount is already moving. Stop SynScan tracking first.");
+                if(!initialized(status)) {
+                    initializedDuringConnect=true;
+                    ack('F',axis,"");
+                }
+            }
+            checkRead(permitted);
+            firmware+=(axis==1?"":" / ")+"axis "+axis+"="+command('e',axis,"");
+        }
+        if(previous!=null&&!firmware.equalsIgnoreCase(previous.firmware))
+            throw new IOException("GTi firmware during reconnect: expected "+previous.firmware+", read "+firmware);
+    }
+
     Position position()throws IOException {
         return position(()->true);
     }
@@ -196,12 +220,12 @@ final class GtiClient implements AutoCloseable {
         // Motor replies are separate samples, not an atomic position/status snapshot.
         // A counter read during deceleration must not become an "arrived" position
         // merely because a later status reply reports stopped.
-        checkRead(permitted);String beforeA=positionStatus(1);
-        checkRead(permitted);String beforeB=positionStatus(2);
+        String beforeA=positionStatus(1,permitted);
+        String beforeB=positionStatus(2,permitted);
         checkRead(permitted);int pan=decode24(command('j',1,""));
         checkRead(permitted);int tilt=decode24(command('j',2,""));
-        checkRead(permitted);String a=positionStatus(1);
-        checkRead(permitted);String b=positionStatus(2);
+        String a=positionStatus(1,permitted);
+        String b=positionStatus(2,permitted);
         checkRead(permitted);
         boolean moving=running(beforeA)||running(beforeB)||running(a)||running(b);
         return new Position(pan,tilt,moving,a,b,beforeA,beforeB);
@@ -209,10 +233,22 @@ final class GtiClient implements AutoCloseable {
     private static void checkRead(BooleanSupplier permitted) {
         if(!permitted.getAsBoolean())throw new CancellationException("Position read cancelled");
     }
-    private String positionStatus(int axis)throws IOException {
-        String f=status(axis);
-        if((Character.digit(f.charAt(2),16)&1)==0){referenceLost=true;throw new IOException("Mount axis is no longer initialized; reconnect and recalibrate");}
-        return f;
+    private String positionStatus(int axis,BooleanSupplier permitted)throws IOException {
+        checkRead(permitted);
+        String status=status(axis);
+        if(initialized(status))return status;
+
+        checkRead(permitted);
+        status=status(axis);
+        checkRead(permitted);
+        if(initialized(status))return status;
+
+        referenceLost=true;
+        throw new IOException("GTi axis "+axis+" reported uninitialized twice");
+    }
+
+    private static boolean initialized(String status) {
+        return (Character.digit(status.charAt(2),16)&1)!=0;
     }
     void cancel(){cancelled.set(true);}
     void begin(){cancelled.set(false);}

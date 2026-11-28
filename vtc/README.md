@@ -1,3 +1,18 @@
+## VTC 1.0.48 — GTi reconnect verification
+
+Install [VTC 1.0.48](VTC-1.0.48-debug.apk) with your current settings.
+
+- If a reconnect reports a different count per revolution, VTC rereads that axis. An unresolved resolution or firmware mismatch keeps aiming armed and retries reconnect with the existing calibration.
+- VTC rechecks an uninitialized motor status on the same axis before requiring recalibration. Routine tracking uses the existing command sequence.
+
+## VTC 1.0.47 — Unattended aiming recovery
+
+Install [VTC 1.0.47](VTC-1.0.47-debug.apk) with your current settings.
+
+- If the pan encoder read times out, VTC skips tilt for that cycle and logs both cached position ages. An expired position still triggers GTi recovery.
+- A suspect encoder value outside the configured limits stops both axes and starts a fresh position check while aiming stays armed. Valid, in-limit readings let VTC resume. A failed recheck triggers reconnection. Confirmed out-of-limit positions keep the mount stopped.
+- A rider inside the configured minimum range puts VTC into a wait state while aiming stays armed. Fresh GPS in range lets tracking resume, including when the rider was too close at Start Aiming.
+
 ## VTC 1.0.46 — Camera connection controls
 
 Install [VTC 1.0.46](VTC-1.0.46-debug.apk) with your current settings.

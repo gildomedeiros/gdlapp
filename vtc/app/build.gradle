@@ -7,8 +7,8 @@ android {
         applicationId 'au.com.gildo.vtc'
         minSdk 26
         targetSdk 35
-        versionCode 47
-        versionName '1.0.46'
+        versionCode 49
+        versionName '1.0.48'
     }
     buildFeatures {
         buildConfig true

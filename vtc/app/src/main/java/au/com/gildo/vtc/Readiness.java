@@ -24,6 +24,16 @@ final class Readiness {
         if(!freshGps)out.add("Fresh surfer GPS needed: "+gpsStatus);
         return out;
     }
+    record AimTarget(double distance,String rangeBlocker,Double bearing,Double tilt) {}
+
+    static AimTarget aimTarget(Settings s,double latitude,double longitude){
+        double distance=Geo.distance(s.latitude,s.longitude,latitude,longitude);
+        String blocker=rangeBlocker(s,distance);
+        if(blocker!=null)return new AimTarget(distance,blocker,null,null);
+        return new AimTarget(distance,null,Geo.bearing(s.latitude,s.longitude,latitude,longitude),
+            Geo.elevation(distance,s.height,s.targetHeight)+s.tiltOffset);
+    }
+
     static String rangeBlocker(Settings s,double distance) {
         if(!Double.isFinite(distance))return "Target range unavailable";
         if(distance<s.rangeMin)return String.format(Locale.US,"Target %.1f m is below minimum range %.1f m",distance,s.rangeMin);
